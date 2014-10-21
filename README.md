@@ -1,4 +1,4 @@
-tadan - Telescope Automatic Data Archiver
+tada - Telescope Automatic Data Archiver
 ====
 
 pre-alpha, data management
