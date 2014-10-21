@@ -1,0 +1,346 @@
+* COMMENT Yucky
+** Stream Of Consciousness notes
+To PROVE we have it right[fn:1], we need good monitoring. To support
+courageous code changes, the monitoring should be nearly identical
+between:
+- production
+- developmental (to be deployed) system (on VMs or real machines)
+- under DES (Discrete Event Simulation)[fn:2]
+  [[~/sandbox/dfsim/dfsim.py][dfsim]]
+
+*** Simulation
+Would be GREAT generally connect simulator to data-flow graph
+display. What tools?  Need graphics that support drawing graph and can
+hilite nodes. tcl/tk?  Is there something in latest networkx that
+helps? Perhaps I need to write a general OSS project.  Lauch with
+graph. It draws.  Pipe in for commands (hilite, others?). Pipe out for
+state?
+
+*** Monitor display
+Plots from DES (gnu plot?) to represent values of resources (queue
+size).  Alerts for when thresholds exceeded. (queue max size reached)
+Utilization measures.
+
+** Requirements
+I don't really know what the requirements are!  My guess is they
+generally include:
+1. Provide all the functionality of the existing system
+2. Resilient 
+   - don't break -- EVER
+3. Maintainable
+   - by new employees without large learning curve
+4. Be fast enough (need quantification)
+
+** More requirements
+*** <2014-10-10 Fri>
+JH: all software must be capable of reconnecting to database servers on connection loss
+ie, so components can be restarted
+
+** Requirements derived from "tubes_notes.txt"
+1. Increase level of automation of regular operation functions
+2. use version control always; with commit comments
+3. elliminate direct changes to live production system (from tagged version)
+4. (document minimumaly acceptable coding style)
+5. Implement regression testing (automated where possible, documented otherwise)
+6. write design documentation
+7. write installation documentation
+8. write usage documentation
+9. reproducible installs
+10. daily operations must not require manual intervention
+11. daily operations must not require human monitoring (automatic alerts instead)
+12. eliminate metadata remmediation in its present form (what form???)
+    + get metadata from file format, or
+    + get metadata from TO/observer/observatory support staff at data
+      collection time
+13. insert "archival metadata" just before final archiving (???)
+14. insert of archival metadata should be idempotent
+15. eliminate mountain copy coherency requirement (???)
+16. filename agnostic; nothing in the system should depend on the
+    structure or uniqueness of a filename
+
+** requirement for DQ
+DciTrackD limits access to specific clients (hosts via specified
+ports)
+
+#+BEGIN_SRC perl
+my %clients = ();    # client access (s)ervices;
+if($opt_c) {
+    open CLIENTS,"<$opt_c" or die "Cannot find clients file $opt_c.  Exiting";
+    while (<CLIENTS>) {
+        my ($mach,$services) = split(/ /,$_);
+        chomp $services;
+        foreach my $kv (split ',',$services) {
+            my ($p,$s) = split "=",$kv;
+            if($p == $port) {
+                # clients 'access' allowed on this 'port'.
+                $clients{$mach} = $s;
+                last;
+            }
+        }
+    }
+    close CLIENTS;
+}
+#+END_SRC
+
+** literate programming
+A REQUIREMENT of the SDM data flow software and config files: must be
+able to auto generate a document that describes the flow (including
+connectivity or data-flow diagram).
+
+** simulator requirements (DES)
+*** First
+- process for 
+  + [X] DataQ
+  + [X] Action
+  + [X] Instrument
+  + [X] monitorQ
+  + [ ] externals
+- Collect "final answers" for comparision to non-sim
+- Support random failures (for Action)
+
+*** Later
+- specify as graph
+- literate programming; spec (graph) generates code and doc
+- probes at any junction (How do I specify?)
+- hilite "active edge" (when data is flowing through it)
+
+
+* Sprint user stories
+These are the expect outcomes from progressively more complex [[https://www.scrum.org/][scrum]] sprints.
+
+In our case "user" means two kinds of people: 
+  1. scientist that want access to data,
+  2. SDM DevOps employees that need to manage the process
+
+** Thread-1: Establishes file move to archive and test
+This is minimal "thread through the system" starting at raw-data and
+terminating with files in the archive.
+- [ ] mock-LPR;  Feed each file in list to Ingest after specified delay
+- [ ] Ingest;  Copy file into mock-IRODS (a local filesystem)
+- [ ] Test;  Verify all input files are  in mock-IRODS
+
+*** 
+#+BEGIN_SRC dot :file figures/thread1.png :cmdline -Tpng :tangle src-tangles/thread1.dot
+  digraph thread1 {
+      rankdir="LR";
+      edge [len=1.0];
+      raw [shape="invhouse"];
+      expected [label="Expected\n(raw)", shape="invhouse"];
+      report [shape="house"];
+
+      raw -> mockLpr -> ingest -> archive -> test;
+      timing -> mockLpr;
+      expected -> test -> report;
+  }
+#+END_SRC
+
+** Thread-2: Touches FITS data
+- [ ] all of Thread-1
+- [ ] add minimum (level 1) set of required metadata fields to FITS
+  + minimum acceptable for archive
+- [ ] Test;  Verify all files in mock-IRODS contain required metadata 
+
+*** 
+#+BEGIN_SRC dot :file figures/thread2.png :cmdline -Tpng :tangle src-tangles/thread2.dot
+  digraph thread2 {
+      rankdir="LR";
+      edge [len=1.0];
+      raw [shape="invhouse"];
+      expected [label="Expected\n(cooked)", shape="invhouse", fontcolor="green"];
+      report [shape="house"];
+
+      raw -> mockLpr -> ingest;
+      ingest -> archive [label="insert metadata", fontcolor="green"];
+      archive -> test;
+      timing -> mockLpr;
+      expected -> test -> report;
+   }
+#+END_SRC
+
+** Thread-3: Split into 2 machines, use iRODS client/server
+- [ ] mock-LPR;  Feed each file in list to Ingest after specified delay
+- [ ] Ingest; add file to iRODS[fn:3] on remote machine
+- [ ] Test;  Verify all iRODS filesystem contains everything from orig filesystem
+*** 
+#+BEGIN_SRC dot :file figures/thread3.png :cmdline -Tpng :tangle src-tangles/thread3.dot
+  digraph thread3 {
+      rankdir="LR";
+      edge [len=1.0];
+      raw [shape="invhouse"];
+      expected [label="Expected\n(cooked)", shape="invhouse", fontcolor="green"];
+      report [shape="house"];
+      archive [label="Archive\n(iRODS)", shape="box"];
+
+      subgraph cluster_mountain {
+        label = "Mountain";
+        style="dashed";
+
+        timing -> mockLpr;
+        raw -> mockLpr -> ingest;
+      }
+
+      subgraph cluster_valley {
+        label = "Valley";
+        style="dashed";
+
+        ingest -> archive [label="iCommands", fontcolor="green"];
+        archive -> test;
+        expected -> test -> report;
+      }
+   }
+#+END_SRC
+
+** LATER
+- easy to add plugins for scientists 
+  + scientist provides program to run against (filtered) set of
+    images, stores "result" file accessable in archive
+
+* Requirements
+** MVP - Minimally Viable Product
+These are the absolute minium requirements for a DCI replacement.
+When ever possible, avoid putting anything here that is an absolutely
+essential requirement. (push "would be nice" stuff into subsequent
+release)
+
+1. Baring fatal hardware failure, every file produced by instrument
+   gets into archive
+2. 
+
+** Release 2
+1. Each site is "independent"
+   + What is a "site"?
+   + How independent do they have to be? (archive depends on telescope,
+     for instance)
+2. Must be able to re-route around broken machines
+3. Allow institutions direct access to iRODS data ("back-door")
+
+
+* New Name
+** Possible names for DCI replacement
+- [ ] MADI :: Mountain Archive Data Initiative
+- [ ] MATT :: Mountain Archive Telescope Transport
+- [ ] ADAM :: Archive Data Automated Mover
+- [X] TADA :: Telescope Automatic Data Archiver
+- [ ] MAMA :: Mountain Automated Moving Archive
+- [ ] TATO :: Telecsope Archive Transport Operation
+- [ ] DRAT :: Data Relay Archive Transporter
+- [ ] MAMI :: Mountain Archive Mover Initiative
+- [ ] MOTA :: MOuntain To Archive
+- [ ] STARI :: Send Telescope Archive Relay Initiative
+- [ ] STARE :: Send Telescope data via RElay
+
+** COMMENT Keyword terms for acro
+archive
+automated
+data
+initiative
+irods
+mountain
+mover
+operation
+relay
+send
+telescope
+transport
+
+
+
+* Secondary Goals
+My primary goal is to develop useful software.  Exactly what that
+software will be is unfolding.  It has to be an iterative process. But
+regardless of what the software is, there are some secondary goals
+that go along with it. Here are most of them:
+
+1. Documentation as built
+
+   My intent is to provide "as built" design and code documentation. Code
+   documentation will be generated directly from annotated code. Design
+   docs will be hand written, with diagrams.  It will include example
+   runs with inputs and outputs listed. The intended reader for both is
+   someone that is software tech savvy.
+
+2. Requirements addressed software as built
+
+   Whatever I develop is intended to address some requirements that I
+   have in mind.  I'll put those down in a document.  These may be
+   different than any requirements anyone gives to me because they will
+   be directly focused on functionality of the software I develop, rather
+   than on a larger system perspective (which I may have little control
+   over). The intended reader is management and/or software engineer.
+
+3. Smoke tests
+
+   Each package I write has a "smoke test".  This is a simple script that
+   can be run by anyone after the software is installed to see that it
+   works in some fashion.  My smoke tests are not exhaustive regression
+   tests.  They are intended to be used by developers to ask the
+   question: "did I break anything with the last change". Smoke tests
+   include their own test data and are checked into configuration
+   management with the code.
+
+4. Configuration Management
+
+   All my software will be checked into github or bitbucket. Related
+   documentation will be included with the code.
+
+5. Auto provisioning of everything I develop
+
+   I'll provide a "vagrant box", or similar, for all my stuff.  This will
+   allow a new Virtual Machine(s) to be created from scratch and all my
+   stuff installed on it such that my smoke tests will work on the new
+   VM(s).
+
+6. Documentation of existing system
+
+   In the process of figuring out what my new stuff has to do, I have to
+   figure out what the existing stuff does. I don't want to attempt to
+   hold all that in my head, so I document it.  You've all seen at least
+   part of my DCI "notes". That is basically the source of what I'm
+   talking about here.  I don't intend to formalize it any way unless
+   forced into it. I think it would be too time-consuming/expensive for
+   me to do and I think I have more the enough technical work on my
+   plate.  But I will provide at least a crude extraction from my notes
+   to something that might be useful to others.  The effort I put into
+   such depends on feedback from you. No feedback means I'll provide
+   something that is a similar level of informality as the notes I've
+   already shared with you. I've already exported some parts of that
+   (like my diagram) to the opswiki.
+
+
+---------
+* Footnotes
+
+[fn:1] SDM is responsibly managing data, nothing is being lost, its
+going where it should, rates and sizes of data are as expected, manual
+intervention is not required except in the most unusual circumstances
+(expected 2-4 times per YEAR). Code changes can be made with courage
+without doubt or fear of breaking something.
+
+[fn:2] https://simpy.readthedocs.org/en/latest/
+
+[fn:3] [[http://irods.org][iRODS]] 4*;  4.0 was release April 4, 2014; 4.0.3 released Aug
+20, 2014
+
+* COMMENT POSTSCRIPT
+/(this section here to keep Document Comments out of the way)/
+source: /home/pothiers/orgfiles/designs.org
+
+Something like this can be inserted into doc by invoking export dispatcher
+and selected "insert template" (C-c C-e #).
+
+
+#+TITLE:   TADA :: Telescope Automatic Data Archiver
+#+AUTHOR:    Steve Pothier
+#+EMAIL:     pothier@noao.edu
+#+KEYWORDS: 
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:nil toc:t \n:nil @:t ::t |:t ^:nil -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:nil
+#+INFOJS_OPT: view:nil toc:t ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:   
+#+LINK_HOME: 
+#+XSLT: 
+
+
