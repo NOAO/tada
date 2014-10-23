@@ -2,7 +2,6 @@
 'TADA :: Telescope Automatic Data Archiver'
 
 import sys
-import string
 import argparse
 import logging
 
@@ -34,7 +33,7 @@ def validMetadataP(fits):
         hdu = pyfits.open(fits)[0] # can be compressed
         hdr_keys = set(hdu.header.keys())
     except Exception as err:
-        return False, 'Metadata keys could not be read. %s' % err
+        return False, 'Metadata keys could not be read: %s' % err
 
     missing = sorted(requiredFitsFields - hdr_keys)
     if len(missing) > 0:
@@ -110,39 +109,46 @@ def thread2(src_dir, dst_dir, delay=None):
         shutil.copyfile(infile, archive_abs_path)
 
     for fname in getCandidateFiles(src_dir, delay=delay):
-        base = os.path.basename(fname)
-        ingest(fname, os.path.join(dst_dir, base))
+        ok, msg = validMetadataP(fname)
+        if ok:
+            base = os.path.basename(fname)
+            ingest(fname, os.path.join(dst_dir, base))
+        else:
+            logging.warning(('File "%s" did not contain expected metadata. '
+                            +'NOT INGESTING: %s')
+                            % (fname, msg))
 
     if verifyArchiveFilenamesP(src_dir, dst_dir):
         print('PASSED: thread2 archive contains expected filenames.')
     else:
         print('FAILED: thread2 archive DOES NOT contain expected filenames.')
 
-    md_failures = set()
-    for fname in getCandidateFiles(dst_dir, delay=None):
-        ok, msg = validMetadataP(fname)
-        if not ok:
-            md_failures.add((fname,msg))
-
-    if len(md_failures) == 0:
-        print('PASSED: thread2 archive contains expected metadata.')
-    else:
-        print('%d files do not containg expected metadata: %s'
-              % (len(md_failures), md_failures))
-        print('FAILED: thread2 archive DOES NOT contain expected metadata'
-              + ' in all files.')
+    #!md_failures = set()
+    #!for fname in getCandidateFiles(dst_dir, delay=None):
+    #!    ok, msg = validMetadataP(fname)
+    #!    if not ok:
+    #!        md_failures.add((fname,msg))
+    #!if len(md_failures) == 0:
+    #!    print('PASSED: thread2 archive contains expected metadata.')
+    #!else:
+    #!    print('%d files do not containg expected metadata: %s'
+    #!          % (len(md_failures), md_failures))
+    #!    print('FAILED: thread2 archive DOES NOT contain expected metadata'
+    #!          + ' in all files.')
 
 
 
 ##############################################################################
 
 def main():
+    'Main driver with argument parsing'
     default_end = 1e3
     parser = argparse.ArgumentParser(
         description='Move data from telescope instrument to archive',
-        epilog='EXAMPLE: %(prog)s --loglevel=INFO --srcDir=/data/mtn cache --archiveDir=/data/archive'
+        epilog='EXAMPLE: %(prog)s --loglevel=INFO '
+        + '--srcDir=/data/mtn cache --archiveDir=/data/archive'
         )
-    parser.add_argument('--version', action='version',  version='0.0a1')
+    parser.add_argument('--version', action='version', version='0.0a2')
     parser.add_argument('--thread',
                         help='Which thread should be run',
                         type=int,
@@ -160,13 +166,14 @@ def main():
                         action='append')
     parser.add_argument('--cfg',
                         help='Configuration file',
-                        type=argparse.FileType('r') )
+                        type=argparse.FileType('r'))
     parser.add_argument('--dfd', type=argparse.FileType('r'),
-                        help='Graphviz (dot) file. Spec for DataFlow Diagram (network).')
+                        help='Graphviz (dot) file. '
+                        + 'Spec for DataFlow Diagram (network).')
 
     parser.add_argument('--loglevel',
                         help='Kind of diagnostic output',
-                        choices=['CRTICAL', 'ERROR', 'WARNING', 
+                        choices=['CRTICAL', 'ERROR', 'WARNING',
                                  'INFO', 'DEBUG'],
                         default='WARNING',
                         )
