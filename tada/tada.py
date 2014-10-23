@@ -13,42 +13,125 @@ import random
 import time
 import functools
 import operator
+import fnmatch
+import pyfits
+
+def validMetadataP(fits):
+    requiredFitsFields = set([
+        'DATE-OBS',
+        'DTACQNAM',
+        'DTINSTRU',
+        'DTNSANAM',
+        'DTPI',
+        'DTSITE',
+        'DTSITE',
+        'DTTELESC',
+        'DTTITLE',
+        'DTUTC',
+        'PROPID',
+    ])
+    try:
+        hdu = pyfits.open(fits)[0] # can be compressed
+        hdr_keys = set(hdu.header.keys())
+    except Exception as err:
+        return False, 'Metadata keys could not be read. %s' % err
+
+    missing = sorted(requiredFitsFields - hdr_keys)
+    if len(missing) > 0:
+        return (False,
+                'FITS file is missing required metadata keys: %s'
+                % (missing,))
+    return True, None
 
 
-def thread1(rawSrcDir, archiveDestDir, minDelay=.00, maxDelay=0.02):
+def verifyArchiveFilenamesP(src_dir, dst_dir):
+    # Verify
+    lls = [files for r, d, files in os.walk(src_dir)]
+    lld = [files for r, d, files in os.walk(dst_dir)]
+    orig_files = set([f for f in functools.reduce(operator.concat, lls, [])
+                      if candidateFileP(f)])
+    dest_files = set(functools.reduce(operator.concat, lld, []))
+    missed = orig_files - dest_files
+    if len(missed) > 0:
+        logging.info('Files not transfered:: %s' % (missed,))
+        logging.info('FAILED: Not all files were archived!')
+        return False, '%d files not transferred' % len(missed)
+    else:
+        return True, None
+
+def candidateFileP(filename):
+    return fnmatch.fnmatch(filename,'*.fits.fz')
+
+def getCandidateFiles(src_dir, delay=None):
+    random.seed(15)
+    for root, dirs, files in os.walk(src_dir):
+        for fname in files:
+            if not candidateFileP(fname):
+                continue
+            if delay != None:
+                seconds = random.uniform(delay[0], delay[1])
+                logging.debug('Delay file get %.2f seconds' % (seconds,))
+                time.sleep(seconds)
+            yield os.path.join(root, fname)
+
+
+def thread1(src_dir, dst_dir, delay=(.00, 0.02)):
     '''This is minimal "thread through the system" starting at raw-data
-and terminating with files in the archive.  Input from rawSrcDir,
-output to archiveDestDir.
+and terminating with files in the archive.  Input from src_dir,
+output to dst_dir.
 - [ ] mock-LPR;  Feed each file in list to Ingest after specified delay
 - [ ] Ingest;  Copy file into mock-IRODS (a local filesystem)
 - [ ] Test;  Verify all input files are  in mock-IRODS
     '''
-    def ingest(infile, archiveAbsolutePath):
-        shutil.copyfile(infile, archiveAbsolutePath)
+    def ingest(infile, archive_abs_path):
+        shutil.copyfile(infile, archive_abs_path)
 
-    logging.info('Copying files from "%s" to "%s"' % (rawSrcDir, archiveDestDir))
-    random.seed(15)
-    for root, dirs, files in os.walk(rawSrcDir):
-        for fname in files:
-            delay = random.uniform(minDelay,maxDelay)
-            logging.info('  Archiving file "%s" to "%s" after %.2f seconds' % (rawSrcDir, archiveDestDir, delay))
-            time.sleep(delay)
-            ingest(os.path.join(root,fname), os.path.join(archiveDestDir,fname))
+    logging.info('Copying files from "%s" to "%s"' % (src_dir, dst_dir))
+    for fname in getCandidateFiles(src_dir, delay=delay):
+        logging.debug('  Ingest file "%s" to "%s" after %s seconds'
+                      % (fname, dst_dir, delay))
+        base = os.path.basename(fname)
+        ingest(fname, os.path.join(dst_dir, base))
 
-    # Verify
-    lls = [files for r, d, files in os.walk(rawSrcDir)]
-    lld = [files for r, d, files in os.walk(archiveDestDir)]
-    origFiles = set(functools.reduce(operator.concat, 
-                                     lls, 
-                                     []))
-    destFiles = set(functools.reduce(operator.concat, 
-                                     lld, 
-                                     []))
-    missed = origFiles - destFiles
-    if len(missed) > 0:
-        print('ERROR: Not all files were archived! Missed: %s' % (missed,))
+    if verifyArchiveFilenamesP(src_dir, dst_dir):
+        print('PASSED: thread1 archive matches expected results.')
     else:
-        print('SUCCESS: thread1 past test')
+        print('FAILED: thread1 archive does NOT MATCH expected results.')
+
+def thread2(src_dir, dst_dir, delay=None):
+    '''Touches FITS data (verifies selected metadata in archive)
+- [ ] all of Thread-1
+- [ ] insure minimum (level 0) set of required metadata fields in FITS
+  + minimum acceptable for archive
+- [ ] Test;  Verify all files in mock-IRODS contain required metadata
+    '''
+
+    def ingest(infile, archive_abs_path):
+        shutil.copyfile(infile, archive_abs_path)
+
+    for fname in getCandidateFiles(src_dir, delay=delay):
+        base = os.path.basename(fname)
+        ingest(fname, os.path.join(dst_dir, base))
+
+    if verifyArchiveFilenamesP(src_dir, dst_dir):
+        print('PASSED: thread2 archive contains expected filenames.')
+    else:
+        print('FAILED: thread2 archive DOES NOT contain expected filenames.')
+
+    md_failures = set()
+    for fname in getCandidateFiles(dst_dir, delay=None):
+        ok, msg = validMetadataP(fname)
+        if not ok:
+            md_failures.add((fname,msg))
+
+    if len(md_failures) == 0:
+        print('PASSED: thread2 archive contains expected metadata.')
+    else:
+        print('%d files do not containg expected metadata: %s'
+              % (len(md_failures), md_failures))
+        print('FAILED: thread2 archive DOES NOT contain expected metadata'
+              + ' in all files.')
+
 
 
 ##############################################################################
@@ -60,12 +143,18 @@ def main():
         epilog='EXAMPLE: %(prog)s --loglevel=INFO --srcDir=/data/mtn cache --archiveDir=/data/archive'
         )
     parser.add_argument('--version', action='version',  version='0.0a1')
+    parser.add_argument('--thread',
+                        help='Which thread should be run',
+                        type=int,
+                        choices=[1, 2],
+                        default=1
+                        )
     parser.add_argument('--profile', action='store_true')
     parser.add_argument('--end',
                         help='Time (seconds) to end simulation [default=%s]'
                         %(default_end),
-                        type = int,
-                        default = default_end,)
+                        type=int,
+                        default=default_end,)
     parser.add_argument('--summarize',
                         default=[],
                         action='append')
@@ -75,8 +164,9 @@ def main():
     parser.add_argument('--dfd', type=argparse.FileType('r'),
                         help='Graphviz (dot) file. Spec for DataFlow Diagram (network).')
 
-    parser.add_argument('--loglevel',      help='Kind of diagnostic output',
-                        choices=['CRTICAL', 'ERROR', 'WARNING',
+    parser.add_argument('--loglevel',
+                        help='Kind of diagnostic output',
+                        choices=['CRTICAL', 'ERROR', 'WARNING', 
                                  'INFO', 'DEBUG'],
                         default='WARNING',
                         )
@@ -113,8 +203,11 @@ def main():
 
     assert os.path.isdir(args.srcDir), args.srcDir
     assert os.path.isdir(args.archiveDir), args.archiveDir
-    thread1(args.srcDir, args.archiveDir)
-    
+
+    if args.thread == 1:
+        thread1(args.srcDir, args.archiveDir)
+    elif args.thread == 2:
+        thread2(args.srcDir, args.archiveDir)    
 
 if __name__ == '__main__':
     main()
