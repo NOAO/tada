@@ -30,6 +30,64 @@ stake-holders to provide prompt feedback.  In the absence of such
 feedback, developers will simply guess on what is important next and
 move on.  
 
+We refer to "mountain" and "valley" sites/machines.  These aren't
+necessarily to be taken literally. "Mountain" means the computer(s)
+connected to telescope instruments directly or through LAN. The
+connection is assumed to be very unlikely to be lost unless the
+instruments and computers go down also.  "Valley" emans the
+computer(s) far away from the telescope instruments and connected
+only the internet. 
+
+The software described here is intended to solve a general problem --
+collecting remote data and storing in an archive without loss in the
+face of failures in hardware and software.  But the document focuses
+on that problem in a more specific domain (optical astronomy data).
+Where there are domain specific issues, they will be described
+elsewhere but links retained from this document to those domain
+specific issues.
+
+* Config
+irodsHost valley
+irodsPort 1247
+irodsUserName rods
+irodsZone tempZone
+
+* As-Built
+This section documents specific builds.  When a requirement or feature
+is described outside of the /As-Built/ section, it should be
+considered a future possibility, *not* something that has been
+implemented. 
+
+I record dated sub-sections below but will typically hide all but the
+most recent.  Ask if you want it for some reason.
+
+** <2014-10-24 Fri>
+*** Thread-2: Touches FITS data  (verifies selected metadata in archive)
+Given a "source directory" tree that may contain FITS files, 
+*** Open Issues
+- Which files from input list ("printed" files) should get moved to archive?
+  + DEFAULT ANSWER: only *.fitz.fz
+
+- What if a FITS file does NOT contain minimum required metadata?
+  + DEFAULT ANSWER: Reject file, move to remediation store, log error
+
+- What is the minium required metadata?
+  + DEFAULT ANSWER: Presence of following fields in FITS hdr without
+    regard to their value:
+    - DATE-OBS
+    - DTACQNAM
+    - DTINSTRU
+    - DTNSANAM
+    - DTPI
+    - DTSITE
+    - DTSITE
+    - DTTELESC
+    - DTTITLE
+    - DTUTC
+    - PROPID
+
+    
+
 * Sprint user stories
 These are the expect outcomes from progressively more complex [[https://www.scrum.org/][scrum]] sprints.
 
@@ -40,9 +98,9 @@ In our case "user" means two kinds of people:
 ** Thread-1: Establishes file move to archive and test
 This is minimal "thread through the system" starting at raw-data and
 terminating with files in the archive.
-- [X] mock-LPR;  Feed each file in list to Ingest after specified delay
+- [X] mock-LPR;  Feed each file in list to Ingest after random delay
 - [X] Ingest;  Copy file into mock-IRODS (a local filesystem)
-- [ ] Test;  Verify all input files are  in mock-IRODS
+- [X] Test;  Verify all input files are  in mock-IRODS
 
 *** 
 #+BEGIN_SRC dot :file figures/thread1.png :cmdline -Tpng :tangle src-tangles/thread1.dot
@@ -60,10 +118,15 @@ terminating with files in the archive.
 #+END_SRC
 
 ** Thread-2: Touches FITS data  (verifies selected metadata in archive)
-- [ ] all of Thread-1
-- [ ] insure minimum (level 0) set of required metadata fields in FITS
+- [X] all of Thread-1
+- [X] only transfer files matchin: *.fits.fz 
+- [X] insure minimum (level 0) set of required metadata fields in FITS
   + minimum acceptable for archive
-- [ ] Test;  Verify all files in mock-IRODS contain required metadata 
+- On inadequate metadata:
+  - [X] reject (don't archive) 
+  - [ ] move to remediation store
+  - [ ] log error
+- [X] Test;  Verify all files in mock-IRODS contain required metadata;
 
 *** 
 #+BEGIN_SRC dot :file figures/thread2.png :cmdline -Tpng :tangle src-tangles/thread2.dot
@@ -81,11 +144,17 @@ terminating with files in the archive.
       expected -> test -> report;
    }
 #+END_SRC
-
+    
 ** Thread-3: Split into 2 machines, use iRODS client/server
-- [ ] mock-LPR;  Feed each file in list to Ingest after specified delay
+- [ ] mock-LPR;  Feed each file in list to Ingest after random delay
 - [ ] Ingest; add file to iRODS[fn:3] on remote machine
-- [ ] Test;  Verify all iRODS filesystem contains everything from orig filesystem
+- [ ] Verify integrity of file across machines (checksum)
+  + Retry N times if integrity violated
+- [ ] Test; Verify all iRODS filesystem contains everything from orig
+  filesystem
+
+
+
 *** 
 #+BEGIN_SRC dot :file figures/thread3.png :cmdline -Tpng :tangle src-tangles/thread3.dot
   digraph thread3 {
@@ -119,13 +188,6 @@ terminating with files in the archive.
 - easy to add plugins for scientists 
   + scientist provides program to run against (filtered) set of
     images, stores "result" file accessable in archive
-
-* Assumptions
-- Number of users of an instances of this system is very small (under
-  20).  "Users" in this case are data-managent operators of some
-  sort.  People that make sure the data is still flowing and correct
-  problems as they come up (which should be very rare).
-  
 * Goals
 ** Prove its done right
 To PROVE we have it right[fn:1], we need good monitoring. To support
@@ -148,160 +210,6 @@ state?
 Plots from DES (gnu plot?) to represent values of resources (queue
 size).  Alerts for when thresholds exceeded. (queue max size reached)
 Utilization measures.
-
-* Requirements                                                       :export:
-** General systemic requirements
-1. Provide all required the functionality of system this replaces
-2. Resilient 
-   - don't break -- EVER
-3. Maintainable
-   - by new employees without large learning curve
-4. Operate fast enough (need quantification)
-
-
-** Candidate requirements
-These requirements have *not been committed to*.  In many case they
-need to be made more precise.
-
-- All database clients must be capable of reconnecting to database
-  servers on connection loss (so components can be restarted)
-- Increase level of automation of regular operation functions
-- use version control always; with commit comments
-- elliminate direct changes to live production system (from tagged version)
-- (document minimumaly acceptable coding style)
-- Implement regression testing (automated where possible, documented otherwise)
-- write design documentation
-- write installation documentation
-- write usage documentation
-- reproducible installs
-- daily operations must not require manual intervention
-- daily operations must not require human monitoring (automatic alerts instead)
-- eliminate metadata remmediation in its present form (what form???)
-  + get metadata from file format, or
-  + get metadata from TO/observer/observatory support staff at data
-    collection time
-- insert "archival metadata" just before final archiving (???)
-- insert of archival metadata should be idempotent
-- eliminate mountain copy coherency requirement (???)
-- filename agnostic; nothing in the system should depend on the
-  structure or uniqueness of a filename
-- limit access to internals connection points (ports, databases)
-  + perhaps by host, port, user
-- literate programming: data flow software and config files: must be
-  able to auto generate a document that describes the flow (including
-  connectivity or data-flow diagram).
-
-** simulator requirements (DES)                                    :noexport:
-*** First
-- process for 
-  + [X] DataQ
-  + [X] Action
-  + [X] Instrument
-  + [X] monitorQ
-  + [ ] externals
-- Collect "final answers" for comparision to non-sim
-- Support random failures (for Action)
-
-*** Later
-- specify as graph
-- literate programming; spec (graph) generates code and doc
-- probes at any junction (How do I specify?)
-- hilite "active edge" (when data is flowing through it)
-
-
-
-
-** Meta data required for ingest into archive
-- [ ] PROPID
-- [ ] DATE-OBS
-- [ ] DTTITLE
-- [ ] DTACQNAM
-- [ ] DTNSANAM
-- [ ] DTINSTRU
-- [ ] DTTELESC
-- [ ] DTSITE
-- [ ] DTUTC
-- [ ] DTPI
-- [ ] DTSITE
-
-from https://support.sdm.noao.edu/browse/OPS-1991
-
-
-** MVP - Minimally Viable Product
-These are the absolute minium requirements for a DCI replacement.
-When ever possible, avoid putting anything here that is an absolutely
-essential requirement. (push "would be nice" stuff into subsequent
-release)
-
-1. Baring fatal hardware failure, every file produced by instrument
-   gets into archive
-2. 
-
-** Release 2
-1. Each site is "independent"
-   + What is a "site"?
-   + How independent do they have to be? (archive depends on telescope,
-     for instance)
-2. Must be able to re-route around broken machines
-3. Allow institutions direct access to iRODS data ("back-door")
-
-** Deferred requirements
-- *Dashboard* for monitoring health of TADA system
-  - web based
-* Open Issues
-** Which files from input list ("printed" files) should get moved to archive?
-  - [ ] All of them?
-  - [ ] *.fits.fz?
-  - [ ] *.fits?
-  - [ ] *.hdr
-  - DEFAULT ANSWER: only *.fitz.fz
-** What if FITS files do NOT contain minimum required metadata (fields/values)?
-  - Insert dummy (not realistic) values.
-  - Calculate values. How?
-  - Reject file (report and do not archive)
-  - DEFAULT ANSWER: Reject file
-
-* Closed Issues
-
-* New Name
-** Possible names for DCI replacement
-- [ ] MADI :: Mountain Archive Data Initiative
-- [ ] MATT :: Mountain Archive Telescope Transport
-- [ ] ADAM :: Archive Data Automated Mover
-- [X] TADA :: Telescope Automatic Data Archiver
-- [ ] MAMA :: Mountain Automated Moving Archive
-- [ ] TATO :: Telecsope Archive Transport Operation
-- [ ] DRAT :: Data Relay Archive Transporter
-- [ ] MAMI :: Mountain Archive Mover Initiative
-- [ ] MOTA :: MOuntain To Archive
-- [ ] STARI :: Send Telescope Archive Relay Initiative
-- [ ] STARE :: Send Telescope data via RElay
-
-** COMMENT Keyword terms for acro
-archive
-automated
-data
-initiative
-irods
-mountain
-mover
-operation
-relay
-send
-telescope
-transport
-
-
-
-* Release checklist
-** Maintainability 
-- [ ] Documentation as built
-- [ ] Requirements addressed in software as built
-- [ ] Tests
-- [ ] Configuration Management
-- [ ] Auto provisioning of everything I develop
-- [ ] Documentation of existing system
-
 * Secondary Goals
 My primary goal is to develop useful software.  Exactly what that
 software will be is unfolding.  It has to be an iterative process. But
@@ -363,19 +271,292 @@ that go along with it. Here are most of them:
    already shared with you. I've already exported some parts of that
    (like my diagram) to the opswiki.
 
+7. Keep It Super Simple
+   
+   Work very hard to keep the structure of the system and code
+   simple.  If there is a temptation to "optimize", make sure its
+   worth it. To be worth it, there must be an existing case of
+   inadequate performance and a requirement must exist to perform at a
+   quantifiable level that the better than the current one. Before
+   changing code, *measure* the system to identify where the ill
+   performing area is.  Don't add optimatizations unless they are
+   *proven* to help meet requirements.
 
 ---------
+
+* Requirements
+                                                      
+** General systemic requirements
+1. Provide all required the functionality of system this replaces
+2. Resilient 
+   - don't break -- EVER
+3. Maintainable
+   - by new employees without large learning curve
+4. Operate fast enough (need quantification)
+
+
+** Candidate requirements
+These requirements have *not been committed to*.  In many case they
+need to be made more precise.
+
+- All database clients must be capable of reconnecting to database
+  servers on connection loss (so components can be restarted)
+- Increase level of automation of regular operation functions
+- use version control always; with commit comments
+- elliminate direct changes to live production system (from tagged version)
+- (document minimumaly acceptable coding style)
+- Implement regression testing (automated where possible, documented otherwise)
+- write design documentation
+- write installation documentation
+- write usage documentation
+- reproducible installs
+- daily operations must not require manual intervention
+- daily operations must not require human monitoring (automatic alerts instead)
+- eliminate metadata remmediation in its present form (what form???)
+  + get metadata from file format, or
+  + get metadata from TO/observer/observatory support staff at data
+    collection time
+- insert "archival metadata" just before final archiving (???)
+- insert of archival metadata should be idempotent
+- eliminate mountain copy coherency requirement (???)
+- filename agnostic; nothing in the system should depend on the
+  structure or uniqueness of a filename
+- limit access to internals connection points (ports, databases)
+  + perhaps by host, port, user
+- literate programming: data flow software and config files: must be
+  able to auto generate a document that describes the flow (including
+  connectivity or data-flow diagram).
+- Continue to store on mountain if connection to valley is severed.
+  + How long? [DEFAULT ANSWER: 7 days]
+  + Automatically dump stored mountain data to valley when connection
+    restored
+- Mountain machines run unattended. Disk "never" overflows.
+  + Data that has been successfully transfered to valley is deleted
+    from mountain.
+  + If connection to valley remains severed for extend time and data
+    continues to be collected on mountain, data will be lost.  How?
+    [DEFAULT ANSWER: oldest will be thrown away first]
+- Data submitted to NSA (archive) must have PROPID that is in the NSA
+  metadata-DB
+  + How is NSA metadata-DB retrieved
+  + What if PROPID is not in metadata-DB? [DEFAULT ANSWER: File is
+    moved to remediation store; error logged; no ingest happens]
+- Handle "typical" failure modes gracefully with no loss of data:
+  + reboot of any machine at any time [IMPORTANT - automate test?]
+  + Lost of DNS
+  + filesystem corruption (within "reason")
+- Verify no errors on submit of file to archive (NSA) via socket
+  + How?
+  + What does NSA return back?  Does it return error for every case in
+    which file is not archived?
+- Same version of iRODS in TADA as NSA?
+  + Not required if API is identical for used commands. 
+  + [[http://irods.org/][iRODS]] says that version 3.+ and 4.+ can be combined in one collection
+- Security ???
+  + firewalls configured to only allow access to key ports from
+    trusted hosts
+- Files must be renamed according to TBD scheme before submit to
+  archive
+  + How is name derived? 
+  + Assume name is derived from header -- but this limits to
+    processing of FITS (known header info) only.
+
+
+** From 2010 iDCI project definition
+(minor editing done on language of requirements)
+
+#+BEGIN_VERSE
+iDCI: Integrated Data Cache Initiative
+Version 0.1 (02/24/2010)
+The [[http://chive.tuc.noao.edu:8080/DPPDOCS/operations-documentation/software-system/application-components/noao-e2e/e2ev1.5/iDCI_project_definition.pdf/at_download/file][PDF]] contains a bit more detail on each requirement.
+#+END_VERSE
+
+*Status* below is per Irene.  Some might not be true anymore. 
+
+1. Retain the existing DCI configuration, physical and logical
+   resources. 
+   *Status: Satisfied*
+2. Implement design changes that lower Operations maintenance while
+   maintaining the overall functionality of the existing DCI.
+   *Status: Not Satisfied*
+3. Provide an interface for external E2E boundary objects.
+   *Status: Satisfied*
+4. Guarantee the reliable and immutable transfer of data between all start and
+   end points controlled by the iDCI.
+   *Status: Satisfied*
+5. Maximize use of available bandwidth for bulk data transfer without
+   interfering significantly with normal network traffic.
+   *Status: Satisfied*
+6. Persist the state of pending data transfers across network outages, system
+   failures and unexpected crashes of the software, recovering automatically once local or
+   remote services become available.
+   *Status: Satisfied*
+7. Be configurable to as to provide flexible routing of data to alternate sites.
+   *Status: Satisfied*
+8. Provide a means to monitor and change the state of the system by
+   operations staff.
+   *Status: Not Satisfied*
+9. Provide a choice of transfer protocols to be used, allowing the operator
+   to choose a protocol
+   *Status: Somewhat Satisfied*
+
+
+
+
+** simulator requirements (DAFLSIM)                                :noexport:
+*** First
+- process for 
+  + [X] DataQ
+  + [X] Action
+  + [X] Instrument
+  + [X] monitorQ
+  + [ ] externals
+- Collect "final answers" for comparision to non-sim
+- Support random failures (for Action)
+
+*** Later
+- specify as graph
+- literate programming; spec (graph) generates code and doc
+- probes at any junction (How do I specify?)
+- hilite "active edge" (when data is flowing through it)
+
+
+
+
+** Meta data required for ingest into archive
+- [ ] PROPID
+- [ ] DATE-OBS
+- [ ] DTTITLE
+- [ ] DTACQNAM
+- [ ] DTNSANAM
+- [ ] DTINSTRU
+- [ ] DTTELESC
+- [ ] DTSITE
+- [ ] DTUTC
+- [ ] DTPI
+- [ ] DTSITE
+
+from https://support.sdm.noao.edu/browse/OPS-1991
+
+
+** MVP - Minimally Viable Product
+These are the absolute minium requirements for a DCI replacement.
+When ever possible, avoid putting anything here that is an absolutely
+essential requirement. (push "would be nice" stuff into subsequent
+release)
+
+1. Baring fatal hardware failure, every file produced by instrument
+   gets into archive
+2. 
+
+** Release 2
+1. Each site is "independent"
+   + What is a "site"?
+   + How independent do they have to be? (archive depends on telescope,
+     for instance)
+2. Must be able to re-route around broken machines
+3. Allow institutions direct access to iRODS data ("back-door")
+
+** Deferred requirements
+- *Dashboard* for monitoring health of TADA system
+  + web based
+- Support for analytics
+  + shared results (algorithms run against data from archive)
+  + loose coupling of archive data to results
+  + auto expire of results (warning 1, warning 2, delete)
+* Open Issues
+** Which files from input list ("printed" files) should get moved to archive?
+  - [ ] All of them?
+  - [ ] *.fits.fz?
+  - [ ] *.fits?
+  - [ ] *.hdr
+  - DEFAULT ANSWER: only *.fitz.fz
+** What if FITS files do NOT contain minimum required metadata (fields/values)?
+  - Insert dummy (not realistic) values.
+  - Calculate values. How?
+  - Reject file (report and do not archive)
+  - DEFAULT ANSWER: Reject file, move to remediation store, log error
+** What are the expected workflows?
+For instance:
+- Load Proposal ID, etc.
+- Reingest remediated files.  a) mountain, b) valley
+* Closed Issues
+*/<NONE>/*
+
+* Assumptions
+- Number of users of an instances of this system is very small (under
+  20).  "Users" in this case are data-managent operators of some
+  sort.  People that make sure the data is still flowing and correct
+  problems as they come up (which should be very rare).
+
+* COMMENT New Name
+** Possible names for DCI replacement
+- [ ] MADI :: Mountain Archive Data Initiative
+- [ ] MATT :: Mountain Archive Telescope Transport
+- [ ] ADAM :: Archive Data Automated Mover
+- [X] TADA :: Telescope Automatic Data Archiver
+- [ ] MAMA :: Mountain Automated Moving Archive
+- [ ] TATO :: Telecsope Archive Transport Operation
+- [ ] DRAT :: Data Relay Archive Transporter
+- [ ] MAMI :: Mountain Archive Mover Initiative
+- [ ] MOTA :: MOuntain To Archive
+- [ ] STARI :: Send Telescope Archive Relay Initiative
+- [ ] STARE :: Send Telescope data via RElay
+
+** COMMENT Keyword terms for acro
+archive
+automated
+data
+initiative
+irods
+mountain
+mover
+operation
+relay
+send
+telescope
+transport
+** COMMENT For mountain (iSTB etc) replacement
+ASTRO: Automated Submission To Repository Observations
+CACHED: Capture And Cache HEavenly Data
+ 
+The original was called STB: Save The Bits  (very bad name)
+
+The purpose of this piece:
+Allow an observer at an observatory to "print" their data (image, picture, spectograph) to the mountain cache and to the archive  This is essentially a way of saving their data to a database.
+
+I'm much more fuzzy on what the boundary of this piece is so my words are questionable:
+Save the data collection
+instrument to database/archive
+print to archive
+instrument to cache
+Cache it
+Submit this to repository/archive
+Spool my images/data/collection
+Capture In Archive (CIA?)/Database/Cache
+
+Capture And Cache HEavenly  Data (CACHED)
+
+
+* Release checklist
+** Maintainability 
+- [ ] Documentation as built
+- [ ] Requirements addressed in software as built
+- [ ] Tests
+- [ ] Configuration Management
+- [ ] Auto provisioning of everything I develop
+- [ ] Documentation of existing system
 * Footnotes
 
 [fn:1] SDM is responsibly managing data, nothing is being lost, its
 going where it should, rates and sizes of data are as expected, manual
-intervention is not required except in the most unusual circumstances
-(expected 2-4 times per YEAR). Code changes can be made with courage
+intervention is not *required* except in the most unusual circumstances
+(expected 2-4 times per YEAR). Code changes can be made with courage,
 without doubt or fear of breaking something.
 
 [fn:2] https://simpy.readthedocs.org/en/latest/
 
-[fn:3] [[http://irods.org][iRODS]] 4*;  4.0 was release April 4, 2014; 4.0.3 released Aug
+[fn:3] [[http://irods.org][iRODS]] 4.x;  4.0 was release April 4, 2014; 4.0.3 released Aug
 20, 2014
 
 * COMMENT POSTSCRIPT

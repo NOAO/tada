@@ -15,6 +15,8 @@ import operator
 import fnmatch
 import pyfits
 
+import icmd
+
 def validMetadataP(fits):
     requiredFitsFields = set([
         'DATE-OBS',
@@ -61,11 +63,14 @@ def verifyArchiveFilenamesP(src_dir, dst_dir):
 def candidateFileP(filename):
     return fnmatch.fnmatch(filename,'*.fits.fz')
 
-def getCandidateFiles(src_dir, delay=None):
+def allFileP(filename):
+    return True
+
+def getCandidateFiles(src_dir, delay=None, filterP=candidateFileP):
     random.seed(15)
     for root, dirs, files in os.walk(src_dir):
         for fname in files:
-            if not candidateFileP(fname):
+            if not filterP(fname):
                 continue
             if delay != None:
                 seconds = random.uniform(delay[0], delay[1])
@@ -99,10 +104,15 @@ output to dst_dir.
 
 def thread2(src_dir, dst_dir, delay=None):
     '''Touches FITS data (verifies selected metadata in archive)
-- [ ] all of Thread-1
-- [ ] insure minimum (level 0) set of required metadata fields in FITS
+- [X] all of Thread-1
+- [X] only transfer files matchin: *.fits.fz 
+- [X] insure minimum (level 0) set of required metadata fields in FITS
   + minimum acceptable for archive
-- [ ] Test;  Verify all files in mock-IRODS contain required metadata
+- On inadequate metadata:
+  - [X] reject (don't archive) 
+  - [ ] move to remediation store
+  - [ ] log error
+- [X] Test;  Verify all files in mock-IRODS contain required metadata;
     '''
 
     def ingest(infile, archive_abs_path):
@@ -123,20 +133,27 @@ def thread2(src_dir, dst_dir, delay=None):
     else:
         print('FAILED: thread2 archive DOES NOT contain expected filenames.')
 
-    #!md_failures = set()
-    #!for fname in getCandidateFiles(dst_dir, delay=None):
-    #!    ok, msg = validMetadataP(fname)
-    #!    if not ok:
-    #!        md_failures.add((fname,msg))
-    #!if len(md_failures) == 0:
-    #!    print('PASSED: thread2 archive contains expected metadata.')
-    #!else:
-    #!    print('%d files do not containg expected metadata: %s'
-    #!          % (len(md_failures), md_failures))
-    #!    print('FAILED: thread2 archive DOES NOT contain expected metadata'
-    #!          + ' in all files.')
 
 
+# The src_dir serves as cache. Remove files from it after transfer to
+# archive has been confirmed!!!
+# Do in batches.  Let delay and yield work together!!!
+def thread3(src_dir, dst_dir,
+                   delay=None,
+                   irodsHost='172.16.1.12',
+                   irodsPort='1247',
+                   irodsUserName='rods',
+                   irodsZone='tempZone',
+               ):
+    ienv = icmd.Icommands(host=irodsHost, port=irodsPort,
+                          user_name=irodsUserName,
+                          zone=irodsZone)
+    #!for fname in getCandidateFiles(src_dir, delay=delay):
+    #!    ienv.iput([fname], os.path.join('/'+irodsZone, 'valley'))
+    src_files = list(getCandidateFiles(src_dir, delay=delay))
+    ienv.iput(src_files, os.path.join('/'+irodsZone, 'valley'))
+        
+        
 
 ##############################################################################
 
@@ -152,7 +169,7 @@ def main():
     parser.add_argument('--thread',
                         help='Which thread should be run',
                         type=int,
-                        choices=[1, 2],
+                        choices=[1, 2, 3],
                         default=1
                         )
     parser.add_argument('--profile', action='store_true')
@@ -215,6 +232,8 @@ def main():
         thread1(args.srcDir, args.archiveDir)
     elif args.thread == 2:
         thread2(args.srcDir, args.archiveDir)    
+    elif args.thread == 3:
+        thread3(args.srcDir, args.archiveDir)    
 
 if __name__ == '__main__':
     main()
