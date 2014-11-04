@@ -137,7 +137,7 @@ def thread2(src_dir, dst_dir, delay=None):
 
 # The src_dir serves as cache. Remove files from it after transfer to
 # archive has been confirmed!!!
-# Do in batches.  Let delay and yield work together!!!
+# TODO: Do in batches.  Let delay and yield work together!!!
 def thread3(src_dir, dst_dir,
                    delay=None,
                    irodsHost='172.16.1.12',
@@ -148,10 +148,24 @@ def thread3(src_dir, dst_dir,
     ienv = icmd.Icommands(host=irodsHost, port=irodsPort,
                           user_name=irodsUserName,
                           zone=irodsZone)
+    #!try:
+    #!    ienv.imkdir('/tempZone/valley')
+    #!except:
+    #!    pass
+
     #!for fname in getCandidateFiles(src_dir, delay=delay):
     #!    ienv.iput([fname], os.path.join('/'+irodsZone, 'valley'))
-    src_files = list(getCandidateFiles(src_dir, delay=delay))
-    ienv.iput(src_files, os.path.join('/'+irodsZone, 'valley'))
+
+    #!src_files = list(getCandidateFiles(src_dir, delay=delay))
+    #!ienv.iput('-f',src_files, os.path.join('/'+irodsZone, 'valley'))
+
+    # Rejected use of iput since it as more complex, less flexible, and slower.
+    # rsync -
+    ienv.irsync('-r',   # recursive
+                '-s',   # use the size instead of the checksum value
+                        # for determining  synchronization.
+                # '-K', # calc and verify checksum
+                src_dir, 'i:'+os.path.join('/'+irodsZone, 'valley'))
         
         
 

@@ -47,10 +47,18 @@ elsewhere but links retained from this document to those domain
 specific issues.
 
 * Config
+** iinit
 irodsHost valley
 irodsPort 1247
 irodsUserName rods
 irodsZone tempZone
+** irod directory structure
+
+#+BEGIN_EXAMPLE
+/sd_zone/
+        from_cache/
+        for_archive/
+#+END_EXAMPLE
 
 * As-Built
 This section documents specific builds.  When a requirement or feature
@@ -188,6 +196,15 @@ terminating with files in the archive.
 - easy to add plugins for scientists 
   + scientist provides program to run against (filtered) set of
     images, stores "result" file accessable in archive
+* Classes of supporting machines (hosts)
+ - T :: Telescope; The machine from which observer does the "print". We
+        *can't touch this* except to add a printcap entry.
+ - M :: Mountain cache; Contains all instrument data that hasn't
+        successfull made it into the archive. And maybe some that has.
+ - V :: Valley; The first stop of data coming from Mountain
+ - A :: Archive; the final resting place of the data made available to
+        scientists. We *can't touch this* directly. Only by "submit to
+        ingest". 
 * Goals
 ** Prove its done right
 To PROVE we have it right[fn:1], we need good monitoring. To support
@@ -360,45 +377,69 @@ need to be made more precise.
   + How is name derived? 
   + Assume name is derived from header -- but this limits to
     processing of FITS (known header info) only.
-
+- allow disabling of auto cache-file expiration
+- on "submit to archive" retry N times (N given by config file)
+- tests to include simulation of irods stop-delay-start
 
 ** From 2010 iDCI project definition
 (minor editing done on language of requirements)
 
-#+BEGIN_VERSE
+#+BEGIN_EXAMPLE
 iDCI: Integrated Data Cache Initiative
 Version 0.1 (02/24/2010)
 The [[http://chive.tuc.noao.edu:8080/DPPDOCS/operations-documentation/software-system/application-components/noao-e2e/e2ev1.5/iDCI_project_definition.pdf/at_download/file][PDF]] contains a bit more detail on each requirement.
-#+END_VERSE
+#+END_EXAMPLE
 
 *Status* below is per Irene.  Some might not be true anymore. 
 
 1. Retain the existing DCI configuration, physical and logical
    resources. 
    *Status: Satisfied*
+   + [-sp-] Need to retain physical resources, but why the logical ones?
 2. Implement design changes that lower Operations maintenance while
    maintaining the overall functionality of the existing DCI.
    *Status: Not Satisfied*
 3. Provide an interface for external E2E boundary objects.
    *Status: Satisfied*
+   + [-sp-] I don't see a well defined/documented interface.
 4. Guarantee the reliable and immutable transfer of data between all start and
    end points controlled by the iDCI.
    *Status: Satisfied*
+   + [-sp-] Not happening, unless requirement allows for manual fudging
 5. Maximize use of available bandwidth for bulk data transfer without
    interfering significantly with normal network traffic.
    *Status: Satisfied*
+   + [-sp-] Why?  Certainly not "maximized" (maybe "improved")
 6. Persist the state of pending data transfers across network outages, system
    failures and unexpected crashes of the software, recovering automatically once local or
    remote services become available.
    *Status: Satisfied*
+   + [-sp-] Not happening.  People regularly have to start/restart pieces.
 7. Be configurable to as to provide flexible routing of data to alternate sites.
    *Status: Satisfied*
+   + [-sp-] At what touch point?  I don't see any way of doing this
+     simply by changing a config file.
 8. Provide a means to monitor and change the state of the system by
    operations staff.
    *Status: Not Satisfied*
 9. Provide a choice of transfer protocols to be used, allowing the operator
    to choose a protocol
    *Status: Somewhat Satisfied*
+   + [-sp-] Why? What is the operational requirement hidden in this?
+     Speed? Bandwidth? Quantify.
+
+
+** TADA migration from 2010 iDCI project requriements 
+1. Retain existing physical resources
+2. ACCEPTED. Improve upon iDCI. Qualify. Quantify
+3. REJECTED. Except: will submit ingest to archive
+4. ACCEPTED. Improve upon iDCI. Qualify. Quantify
+5. REJECTED. If there is a bandwidth requirement, add as such.
+6. ACCEPTED with caveats.
+7. REJECTED. Not a requirement, but a goal I expect to happen.
+8. REJECTED. Not clear.
+9. REJECTED. No need.
+
 
 
 
@@ -517,7 +558,7 @@ send
 telescope
 transport
 ** COMMENT For mountain (iSTB etc) replacement
-ASTRO: Automated Submission To Repository Observations
+ASTRO: Automated Submission To Repository,Observations
 CACHED: Capture And Cache HEavenly Data
  
 The original was called STB: Save The Bits  (very bad name)

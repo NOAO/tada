@@ -21,7 +21,7 @@ class Icommands():
         self.port      = '1247'
         self.user_name = user_name
         self.zone      = zone
-        self.cmds  = set('iput iget'.split())
+        self.cmds  = set('iput iget imkdir irsync ils'.split())
 
         self.env = os.environ.copy()
         #self.env['irodsEnvFile'] = '/path/to/desired/file'
@@ -47,9 +47,18 @@ class Icommands():
 
 
     # iput returns error if attempt to write to existing file
-    def iput(self,local_fname_list, irod_fname):
-        return self.run_icmd('iput',arg_list=local_fname_list+[irod_fname])
+    def iput(self, flags, local_fname_list, irod_fname):
+        return self.run_icmd('iput',arg_list=[flags]+local_fname_list+[irod_fname])
 
     def iget(self,irod_fname, local_fname):
         return self.run_icmd('iget',arg_list=[irod_fname, local_fname])
+
+    def imkdir(self, path):
+        return self.run_icmd('imkdir',arg_list=[path])
+
+    def irsync(self, *args):
+        return self.run_icmd('irsync',list(args))
+
+    def ils(self, *args):
+        return self.run_icmd('ils',list(args))
 
