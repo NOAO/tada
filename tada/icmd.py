@@ -39,7 +39,7 @@ class Icommands():
         if arg_list == None:
             arg_list = []
 
-        logging.debug('icmd env=%s'%(self.env,))
+        #! logging.debug('icmd env=%s'%(self.env,))
         args = [icmd] + arg_list
         #!logging.debug('icmd call=%s'%(' '.join(args),))
         logging.debug('icmd call=%s'%(args,))
@@ -54,7 +54,7 @@ class Icommands():
         return self.run_icmd('iget',arg_list=[irod_fname, local_fname])
 
     def imkdir(self, path):
-        return self.run_icmd('imkdir',arg_list=[path])
+        return self.run_icmd('imkdir',  arg_list=['-p', path])
 
     def irsync(self, *args):
         return self.run_icmd('irsync',list(args))

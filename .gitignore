@@ -1,5 +1,6 @@
 tt
 tt[0-9]
+sdm-test-data
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

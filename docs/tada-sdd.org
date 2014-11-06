@@ -69,6 +69,10 @@ implemented.
 I record dated sub-sections below but will typically hide all but the
 most recent.  Ask if you want it for some reason.
 
+** Changes from iDCI
+- All files "printed" from telescope are sent to valley.
+- 
+
 ** <2014-10-24 Fri>
 *** Thread-2: Touches FITS data  (verifies selected metadata in archive)
 Given a "source directory" tree that may contain FITS files, 
@@ -93,8 +97,6 @@ Given a "source directory" tree that may contain FITS files,
     - DTTITLE
     - DTUTC
     - PROPID
-
-    
 
 * Sprint user stories
 These are the expect outcomes from progressively more complex [[https://www.scrum.org/][scrum]] sprints.
@@ -529,6 +531,30 @@ For instance:
   20).  "Users" in this case are data-managent operators of some
   sort.  People that make sure the data is still flowing and correct
   problems as they come up (which should be very rare).
+
+* DEFERRED
+** (mountain) copy and morph
+Copy the files from the ASTRO created file structure into a structure
+that mirrors the old iDCI directory tree.
+: /mtncache/fits/<DATE>/<TELESCOPE>/<PROPID>/<datafile>
+This will require reading FITS header to get the fields and some may
+not even be there.  Implications: more software packages to load, more
+edge conditions.  This should be done as a complete seperate process.
+I won't break anything else since its just grabbing a copy and
+stashing it. 
+** FPACK before transmit from Mountain to Valley
+Compress FITS files before transmitting.   Since we use irsync (as of
+this writing) to move files from M->V, this needs to be done in place
+for all non-compressed FITS files in the directory tree *before* the
+irsync is done.
+** sdpost writes to /tmp/mountaincache
+Might be better to write to non-/tmp directory.  But there are
+security issues related to such which I didn't spend the time to
+understand. Just setting the setuid bit of the backend end 
+: sudo chmod u+s /usr/lib/cups/backend/sdpost 
+is *not* good as CUPS traps such as a potential security hole.
+
+Other cleanup needed in sdpost.  See reference files at top of script.
 
 * COMMENT New Name
 ** Possible names for DCI replacement

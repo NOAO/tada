@@ -66,6 +66,7 @@ def candidateFileP(filename):
 def allFileP(filename):
     return True
 
+# /dtskp_noaocache_mtn/20140921/kp4m/2014B-0461/k4k_140921_235746_zri.fits.fz
 def getCandidateFiles(src_dir, delay=None, filterP=candidateFileP):
     random.seed(15)
     for root, dirs, files in os.walk(src_dir):
@@ -134,40 +135,55 @@ def thread2(src_dir, dst_dir, delay=None):
         print('FAILED: thread2 archive DOES NOT contain expected filenames.')
 
 
+def transfer_via_iput_list(ienv, src_path, irods_path, delay=None):        
+    src_files = list(getCandidateFiles(src_path, delay=delay, filterP=allFileP))
+    logging.debug('Transfer %d files via single iput' % (len(src_files)))
+    if len(src_files) > 0:
+        ienv.iput('-f',src_files, irods_path)
+    return src_files
+
+def transfer_via_iput_single(ienv, src_path, irods_path, delay=None):        
+    src_files = []
+    for fname in getCandidateFiles(src_path, delay=delay):
+        ienv.iput('-f', [fname], irods_path)
+        src_files.append(fname)
+    return src_files
+
+def transfer_via_irsync(ienv, src_path, irods_path, delay=None):        
+    ienv.irsync('-r',   # recursive
+                '-s',   # use the size instead of the checksum value
+                        # for determining  synchronization.
+                # '-K', # calc and verify checksum
+                src_dir, 'i:'+irods_path)
+    
 
 # The src_dir serves as cache. Remove files from it after transfer to
 # archive has been confirmed!!!
 # TODO: Do in batches.  Let delay and yield work together!!!
-def thread3(src_dir, dst_dir,
+def thread3(src_dir, irods_path, archive_dir,
                    delay=None,
                    irodsHost='172.16.1.12',
                    irodsPort='1247',
                    irodsUserName='rods',
                    irodsZone='tempZone',
                ):
+    logging.debug('THREAD-3: src_dir=%s, archive_dir=%s', 
+                  src_dir, archive_dir)
     ienv = icmd.Icommands(host=irodsHost, port=irodsPort,
                           user_name=irodsUserName,
                           zone=irodsZone)
-    #!try:
-    #!    ienv.imkdir('/tempZone/valley')
-    #!except:
-    #!    pass
 
-    #!for fname in getCandidateFiles(src_dir, delay=delay):
-    #!    ienv.iput([fname], os.path.join('/'+irodsZone, 'valley'))
 
-    #!src_files = list(getCandidateFiles(src_dir, delay=delay))
-    #!ienv.iput('-f',src_files, os.path.join('/'+irodsZone, 'valley'))
+    ienv.imkdir(irods_path)
 
-    # Rejected use of iput since it as more complex, less flexible, and slower.
-    # rsync -
-    ienv.irsync('-r',   # recursive
-                '-s',   # use the size instead of the checksum value
-                        # for determining  synchronization.
-                # '-K', # calc and verify checksum
-                src_dir, 'i:'+os.path.join('/'+irodsZone, 'valley'))
-        
-        
+    #! transfer_via_iput_list(ienv, src_dir, irods_path, delay=delay)
+    #! transfer_via_irsync(src_path, irods_path, delay=None):                
+    # Both yields
+    #   ERROR: connectToRhostPortal: connectTo Rhost 127.0.0.1 port 20069 error, status = -305111
+    
+    transfer_via_iput_single(ienv, src_dir, irods_path, delay=delay)
+
+    
 
 ##############################################################################
 
@@ -214,6 +230,10 @@ def main():
     parser.add_argument('--archiveDir', 
                         help='Directory to treat as archive',
                         )
+    parser.add_argument('--irodsPath',
+                        default='/tempZone/valley',
+                        help='iRODS collection to receive Mountain files',
+                        )
 
 
 
@@ -242,12 +262,13 @@ def main():
     assert os.path.isdir(args.srcDir), args.srcDir
     assert os.path.isdir(args.archiveDir), args.archiveDir
 
+
     if args.thread == 1:
-        thread1(args.srcDir, args.archiveDir)
+        thread1(args.srcDir, args.irodsPath, args.archiveDir)
     elif args.thread == 2:
-        thread2(args.srcDir, args.archiveDir)    
+        thread2(args.srcDir, args.irodsPath, args.archiveDir)    
     elif args.thread == 3:
-        thread3(args.srcDir, args.archiveDir)    
+        thread3(args.srcDir, args.irodsPath, args.archiveDir)    
 
 if __name__ == '__main__':
     main()
