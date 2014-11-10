@@ -1,50 +1,151 @@
 * About this document
 This document is intended for system software developers and
 maintainers.  It may also be shared with decision makers to provide
-a common context including requirements, goals, and plans.
+a common context that includes requirements, goals, and plans.  The
+primary audiance is employees of NOAO, but an attempt was made to keep
+it general enough for use in other domains.
 
-* Overview
-This System Design Document (SDD) attempts to describe software as
-built. Since the document and software are being written at the same
-time, the may not match until the project is completed.
-
-The software described is: /TADA (Telescope Automatic Data Archiver)/
+* Document Overview
+The software described here is: /TADA (Telescope Automatic Data Archiver)/
 The purpose of TADA is to provide an end-to-end flow of data from
 telescope instruments to archives at machines around the world. By its
-very nature, TADA is a multi-machine system. 
+very nature, TADA is a multi-machine system.  The *general purpose*
+might be described as:
+   #+BEGIN_QUOTE
+   Collect data from remote instruments and save in nearby
+   cache. Transfer cache data across network with dubiuos reliability
+   to a local archive. Remove cache data after it has been
+   successfully transferred.
+   #+END_QUOTE
+
+
+This System Design Document (SDD) attempts to describe software as
+built. Since the document and software are being written at the same
+time, they may not match until the project is completed. (Maybe not
+even then!  If in doubt ask me (Steve P).
 
 The project must proceed without the benefit of known
 requirements. Therefore, development will proceed with a series of
 alpha releases that represent various "threads through the system".
-Each thread may contain arbitrary amounts of mockup code but will at
-the very least simulate the end-to-end flow of data.  Later
+Each thread may contain arbitrary amounts of mock-component code but
+will at the very least simulate the end-to-end flow of data.  Later
 alpha-versions will contain progressively more real (non-mockup)
-components. The first beta release will contain no-mockup for the
-thread but may contain mocked up modules on either side of the
-thread. e.g. A mockup will pretend to be telescope instruments sending
-data. 
+components. The first beta release will contain no mockup-components
+for the thread but may contain mockup-components on either side of the
+thread. e.g. A mockup-component will pretend to be telescope
+instruments sending data.
 
 At each alpha-release, stake-holders have the opportunity to affect
 what is done for the next release.  Its *very important* for
-stake-holders to provide prompt feedback.  In the absence of such
-feedback, developers will simply guess on what is important next and
-move on.  
+stake-holders to provide prompt feedback when needed.  In the absence
+of such feedback, developers will simply guess on what is important
+next and move on.
 
 We refer to "mountain" and "valley" sites/machines.  These aren't
 necessarily to be taken literally. "Mountain" means the computer(s)
 connected to telescope instruments directly or through LAN. The
-connection is assumed to be very unlikely to be lost unless the
-instruments and computers go down also.  "Valley" emans the
+connection is assumed to be unlikely to be lost unless the
+instruments and computers go down also.  "Valley" means the
 computer(s) far away from the telescope instruments and connected
-only the internet. 
+only via the internet. 
 
 The software described here is intended to solve a general problem --
 collecting remote data and storing in an archive without loss in the
 face of failures in hardware and software.  But the document focuses
 on that problem in a more specific domain (optical astronomy data).
-Where there are domain specific issues, they will be described
-elsewhere but links retained from this document to those domain
-specific issues.
+Where there are domain specific issues, they are described elsewhere.
+Links in this document may refer to those domain specific issues. For
+non-NOAO readers, those links will be unresolvable.  If you are
+reading this for an application that does not involve mountain-top
+telescopes, you should be able to translate.  For a more general
+application or domain, you can roughly think:
+  - telescope :: "data collection instrument"
+  - mountain-top :: "collection point for several instruments"
+  - Mountain Cache :: "storage for several instruments" that is very
+                      reliably connected to the instruments
+  - Mountain Mirror :: "off-site storage for several instruments". Not
+       reliably connected to instruments. 
+
+* TODO Design Overview
+The TADA system consists of a set of processes that communciate with
+each other across multiple machines. 
+
+** TERMS
+Terms relevent to this section:
+- Mountain Cache :: temporary storage for all files accepted from any
+                    telescope on the same mountain as the cache.
+- Mountain Mirror :: duplicate of the Mountain Cache, but off of the
+     mountain (near the archive). Cache and Mirror are seperated by
+     possibly unreliable network connection.
+- Archive Staging :: vetted, scrubbed, and ready for archive ingest
+- Mitigate :: files that need to be corrected before they can go to
+              Archive Staging
+- Non-Archive :: files not suitable for archival. They will be deleted
+   from here using a First In First Out (trashed) method.
+
+** Process: Store file submitted via "lp" in Mountain Cache
+*** Summary
+Captures files sent from telescope via "print".
+*** Description
+From the telescope, a user or program uses the command:
+: lp -d astrorepo<filename>
+to submit data.  This process is a [[http://www.cups.org/documentation.php/man-backend.html][CUPS backend]] ("sdpost") and honors
+that API.  It simply copies the file to a location under the mountain
+cache root directory that is determined by backend parameters (user,
+jobid, etc.).
+
+*** Preconditions
+The "lpd" protocol handling of CUPS must be enabled (it isn't enabled
+by default).
+
+*** Postconditions
+The mountain cache directory tree is populated with printed files.
+Uniqueness *of path* is maintained by the combination of jobid and
+username. Its still possible (likely) for there to be duplicates of
+base filenames in the tree.
+
+** Process: Transfer content of Mountain Cache to Mountain Mirror
+*** Summary
+Transfer all data from Mountain (Mountain Cache) to Valley (Mountain Mirror).
+
+*** Description
+When simple, avoid transfering large files that have already been
+successfully transfered. (e.g. rsync)
+
+
+** Process: Morph Mountain Mirror to Archive Stage
+*** Summary
+Renames and copies files from the Mountain Mirror directory tree to
+the Archive Stage directory tree.
+
+*** Description
+Uses fields from FITS headers to create new fields and create a filename
+that satisfies the [[http://ast.noao.edu/data/docs][file naming convention]].  Maintains "backward
+pointing" fields in the FITS header so that the path to the same data
+on the Mountain Cache can be reproduced.
+
+*** Preconditions
+Mountain Mirror directory tree is on local machine file system.
+
+*** Postconditions
+All data files from the Mountain Mirror exist in one of three
+places. See TERMS above for description of what these contain.
+1. Archive Staging
+2. Mitigate 
+3. Non-Archive 
+
+** Process: Remove confirmed transfers from Mountain Cache
+*** Summary
+Remove files from the Mountain Cache if they can be confirmed to exist
+on the Valley machine (in Mountian Mirror). 
+
+*** Description
+Use checksum comparison to determine if file was transfered ok.
+There may be considerable delay between when a file appears in the
+Mountain Mirror and it is deleted from the Mountain Cache.  (But don't
+count on it!) Mountian machines must have sufficient storage to
+weather a long disconnect between Mountain and Valley machines. 
+
 
 * Config
 ** iinit
@@ -199,6 +300,13 @@ terminating with files in the archive.
   + scientist provides program to run against (filtered) set of
     images, stores "result" file accessable in archive
 * Classes of supporting machines (hosts)
+The machines that are used in the TADA system can be categorized into
+the following classes of hosts. The software that runs on each machine
+of the same class should be identical and come from a single source
+code repository.  Any difference between the behavior of
+software on different machines of the same class comes from
+configuration files unqiue to the machine.
+
  - T :: Telescope; The machine from which observer does the "print". We
         *can't touch this* except to add a printcap entry.
  - M :: Mountain cache; Contains all instrument data that hasn't
@@ -207,6 +315,32 @@ terminating with files in the archive.
  - A :: Archive; the final resting place of the data made available to
         scientists. We *can't touch this* directly. Only by "submit to
         ingest". 
+
+Roughly, data flows top to bottom through the classes of machines
+listed above.  Meaning; data is generated at the Telescope, gets
+collected at Mountain cache, then transfered to the Valley, and
+finally scrubbed and submitted to the Archive.
+
+There are more than one instance of each of these classes of hosts, so
+things get a little more complicated with regard to collecting and
+distributing. 
+
+Here's a rough schematics of what we end up with.  Arcs represent data
+flow.  Note that data only flows bewteen "adjacent" classes of hosts.[fn:4]
+
+#+BEGIN_SRC dot :file figures/general-machine-schematic.png :cmdline -Tpng :tangle src-tangles/thread1.dot
+  digraph schematic1 {
+      rankdir="LR";
+
+      T1 -> M1 -> V1 -> A1 ;
+      T2 -> M2;
+      T3 -> M3;
+      {M2;M3} -> V2 -> A2 ;
+      A1 -> A2 -> A1;
+  }
+#+END_SRC
+
+
 * Goals
 ** Prove its done right
 To PROVE we have it right[fn:1], we need good monitoring. To support
@@ -625,6 +759,10 @@ without doubt or fear of breaking something.
 
 [fn:3] [[http://irods.org][iRODS]] 4.x;  4.0 was release April 4, 2014; 4.0.3 released Aug
 20, 2014
+
+[fn:4] In the NOAO case, these hosts map to the following: T1=Mayall
+4m, M1=Kitt Peak, V1=Tucson, T2=SOAR, T3=Blanco 4m, M2=Cerro Pachon,
+M3=Cerro Tololo; V2=La Serena
 
 * COMMENT POSTSCRIPT
 /(this section here to keep Document Comments out of the way)/

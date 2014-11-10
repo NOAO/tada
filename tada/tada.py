@@ -14,7 +14,7 @@ import functools
 import operator
 import fnmatch
 import pyfits
-
+import subprocess
 import icmd
 
 def validMetadataP(fits):
@@ -68,6 +68,7 @@ def allFileP(filename):
 
 # /dtskp_noaocache_mtn/20140921/kp4m/2014B-0461/k4k_140921_235746_zri.fits.fz
 def getCandidateFiles(src_dir, delay=None, filterP=candidateFileP):
+    'Yield successive absolute paths of files matching filterP'
     random.seed(15)
     for root, dirs, files in os.walk(src_dir):
         for fname in files:
@@ -145,7 +146,10 @@ def transfer_via_iput_list(ienv, src_path, irods_path, delay=None):
 def transfer_via_iput_single(ienv, src_path, irods_path, delay=None):        
     src_files = []
     for fname in getCandidateFiles(src_path, delay=delay):
-        ienv.iput('-f', [fname], irods_path)
+        assert fname.index(src_path) == 0
+        tail = fname[len(src_path):]
+        ienv.imkdir(os.path.dirname(irods_path+tail))
+        ienv.iput('-f', [fname], irods_path+tail)
         src_files.append(fname)
     return src_files
 
@@ -155,20 +159,28 @@ def transfer_via_irsync(ienv, src_path, irods_path, delay=None):
                         # for determining  synchronization.
                 # '-K', # calc and verify checksum
                 src_dir, 'i:'+irods_path)
-    
+
+def transfer_via_rsync(src_path, mirror_path):
+    subprocess.check_call(['rsync', '-r',
+                           src_path,
+                           #'rsync://valley.test.noao.edu/'+mirror_path
+                           'vagrant@valley.test.noao.edu:'+mirror_path
+                       ])
+                          
 
 # The src_dir serves as cache. Remove files from it after transfer to
 # archive has been confirmed!!!
 # TODO: Do in batches.  Let delay and yield work together!!!
-def thread3(src_dir, irods_path, archive_dir,
+def thread3(src_dir, irods_path, mirror_dir, archive_dir,
                    delay=None,
                    irodsHost='172.16.1.12',
                    irodsPort='1247',
                    irodsUserName='rods',
                    irodsZone='tempZone',
                ):
-    logging.debug('THREAD-3: src_dir=%s, archive_dir=%s', 
-                  src_dir, archive_dir)
+    logging.debug('THREAD-3: '
+                  +'src_dir=%s, irods_path=%s, mirror_dir=%s, archive_dir=%s', 
+                  src_dir, irods_path, mirror_dir, archive_dir)
     ienv = icmd.Icommands(host=irodsHost, port=irodsPort,
                           user_name=irodsUserName,
                           zone=irodsZone)
@@ -181,7 +193,8 @@ def thread3(src_dir, irods_path, archive_dir,
     # Both yields
     #   ERROR: connectToRhostPortal: connectTo Rhost 127.0.0.1 port 20069 error, status = -305111
     
-    transfer_via_iput_single(ienv, src_dir, irods_path, delay=delay)
+    #!transfer_via_iput_single(ienv, src_dir, irods_path, delay=delay)
+    transfer_via_rsync(src_dir, mirror_dir)
 
     
 
@@ -224,8 +237,11 @@ def main():
                                  'INFO', 'DEBUG'],
                         default='WARNING',
                         )
-    parser.add_argument('--srcDir', 
-                        help='Directory containing source data files (images)',
+    parser.add_argument('--cacheDir', 
+                        help='Directory containing mountain cache data files (images)',
+                        )
+    parser.add_argument('--mirrorDir', 
+                        help='Directory to treat as mirror',
                         )
     parser.add_argument('--archiveDir', 
                         help='Directory to treat as archive',
@@ -259,16 +275,19 @@ def main():
     # env.run(until=args.end)
     # print_summary(env, G, summarizeNodes=args.summarize)
 
-    assert os.path.isdir(args.srcDir), args.srcDir
-    assert os.path.isdir(args.archiveDir), args.archiveDir
+    assert os.path.isdir(args.cacheDir), args.cacheDir
+    assert os.path.isdir(args.mirrorDir), args.mirrorDir
 
 
     if args.thread == 1:
-        thread1(args.srcDir, args.irodsPath, args.archiveDir)
+        thread1(args.cacheDir, args.irodsPath, args.mirrorDir)
     elif args.thread == 2:
-        thread2(args.srcDir, args.irodsPath, args.archiveDir)    
+        thread2(args.cacheDir, args.irodsPath, args.mirrorDir)    
     elif args.thread == 3:
-        thread3(args.srcDir, args.irodsPath, args.archiveDir)    
+        thread3(args.cacheDir,
+                args.irodsPath,
+                args.mirrorDir,
+                args.archiveDir)    
 
 if __name__ == '__main__':
     main()

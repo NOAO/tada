@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 '''\
 Simulate "printing" of instrument data from telescope.
 '''
@@ -35,6 +35,10 @@ def main():
     parser.add_argument('--version', action='version',  version='1.0.1')
     parser.add_argument('datafiles', nargs='*',
                         help='Data files')
+    parser.add_argument('--cacheDir', 
+                        help='Directory to contain mountain cache data files',
+    )
+
 
     parser.add_argument('--loglevel',      help='Kind of diagnostic output',
                         choices=['CRTICAL', 'ERROR', 'WARNING',
