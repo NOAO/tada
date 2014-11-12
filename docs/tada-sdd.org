@@ -112,7 +112,6 @@ Transfer all data from Mountain (Mountain Cache) to Valley (Mountain Mirror).
 When simple, avoid transfering large files that have already been
 successfully transfered. (e.g. rsync)
 
-
 ** Process: Morph Mountain Mirror to Archive Stage
 *** Summary
 Renames and copies files from the Mountain Mirror directory tree to
@@ -170,11 +169,19 @@ implemented.
 I record dated sub-sections below but will typically hide all but the
 most recent.  Ask if you want it for some reason.
 
+** Touch Points
+- INPUT queue
+  via lpd protocol
+- INPUT to submit queue (after mitigation, for pipeline)
+- OUTPUT to archive ingest
 ** Changes from iDCI
 - All files "printed" from telescope are sent to valley.
 - 
 
-** <2014-10-24 Fri>
+** <2014-11-11 Tue>
+- Attempt to post a duplicate file will be ignored
+  + "duplicate" is determined by checksum of content. Filename is irrelevent.
+** COMMENT <2014-10-24 Fri>
 *** Thread-2: Touches FITS data  (verifies selected metadata in archive)
 Given a "source directory" tree that may contain FITS files, 
 *** Open Issues
