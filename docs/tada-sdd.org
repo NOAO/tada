@@ -1,11 +1,11 @@
-* About this document
+* About this document                                                :draft1:
 This document is intended for system software developers and
 maintainers.  It may also be shared with decision makers to provide
 a common context that includes requirements, goals, and plans.  The
 primary audiance is employees of NOAO, but an attempt was made to keep
 it general enough for use in other domains.
 
-* Document Overview
+* Document Overview                                                  :draft1:
 The software described here is: /TADA (Telescope Automatic Data Archiver)/
 The purpose of TADA is to provide an end-to-end flow of data from
 telescope instruments to archives at machines around the world. By its
@@ -17,7 +17,6 @@ might be described as:
    to a local archive. Remove cache data after it has been
    successfully transferred.
    #+END_QUOTE
-
 
 This System Design Document (SDD) attempts to describe software as
 built. Since the document and software are being written at the same
@@ -72,27 +71,41 @@ each other across multiple machines.
 
 ** TERMS
 Terms relevent to this section:
-- Mountain Cache :: temporary storage for all files accepted from any
-                    telescope on the same mountain as the cache.
-- Mountain Mirror :: duplicate of the Mountain Cache, but off of the
-     mountain (near the archive). Cache and Mirror are seperated by
-     possibly unreliable network connection.
-- Archive Staging :: vetted, scrubbed, and ready for archive ingest
-- Mitigate :: files that need to be corrected before they can go to
+- Mountain Cache :: temporary storage for all data files accepted from
+                    any telescope on the same mountain as the cache.
+- Mountain Mirror :: duplicate of the Mountain Cache, but moved off of
+     the mountain (to someplace logicaly near the archive). Cache and
+     Mirror are seperated by a possibly unreliable network connection.
+- Archive Staging :: data files vetted, scrubbed, and ready for archive ingest
+- Mitigate :: data files that need to be corrected before they can go to
               Archive Staging
 - Non-Archive :: files not suitable for archival. They will be deleted
    from here using a First In First Out (trashed) method.
+- Transfer Queue :: Data-queue whos contents represent data files that
+                    need to be moved from Mountain Cache (on
+                    Mountain) to Mountain Mirror (on Valley).
+- Submit Queue :: Data-queue whos contents represent data files that
+                  that have been submitting for saving. File types
+                  that are not appropriate for the archive, will be
+                  moved to a non-archive store. Else they'll be
+                  put in archive (if possible) or in "Mitigation
+                  Queue" (if invalid for archive submit)
+- Mitigation Queue :: Data-queue whos contents represent data files
+     that should find there way to the archive, but have something
+     wrong with them.  After they have been manually modified, they
+     should be put back on the Submit Queue
 
-** Process: Store file submitted via "lp" in Mountain Cache
+** ASTROPOST Process: Store file submitted via "lp" in Mountain Cache
 *** Summary
 Captures files sent from telescope via "print".
 *** Description
 From the telescope, a user or program uses the command:
-: lp -d astrorepo<filename>
-to submit data.  This process is a [[http://www.cups.org/documentation.php/man-backend.html][CUPS backend]] ("sdpost") and honors
-that API.  It simply copies the file to a location under the mountain
+: lp -d astro <filename>
+to submit data.  This process is a [[http://www.cups.org/documentation.php/man-backend.html][CUPS backend]] ("astropost") and honors
+the CUPS API.  It simply copies the file to a location under the mountain
 cache root directory that is determined by backend parameters (user,
-jobid, etc.).
+jobid, etc.) and adds the full name of the moved file (with checksum)
+to the Transfer Queue.
 
 *** Preconditions
 The "lpd" protocol handling of CUPS must be enabled (it isn't enabled
@@ -145,8 +158,7 @@ Mountain Mirror and it is deleted from the Mountain Cache.  (But don't
 count on it!) Mountian machines must have sufficient storage to
 weather a long disconnect between Mountain and Valley machines. 
 
-
-* Config
+* TODO Config
 ** iinit
 irodsHost valley
 irodsPort 1247
@@ -161,13 +173,14 @@ irodsZone tempZone
 #+END_EXAMPLE
 
 * As-Built
+** General
 This section documents specific builds.  When a requirement or feature
 is described outside of the /As-Built/ section, it should be
 considered a future possibility, *not* something that has been
 implemented. 
 
 I record dated sub-sections below but will typically hide all but the
-most recent.  Ask if you want it for some reason.
+most recent.  Ask if you want older sections for some reason.
 
 ** Touch Points
 - INPUT queue
@@ -175,12 +188,28 @@ most recent.  Ask if you want it for some reason.
 - INPUT to submit queue (after mitigation, for pipeline)
 - OUTPUT to archive ingest
 ** Changes from iDCI
-- All files "printed" from telescope are sent to valley.
-- 
-
+- All files "printed" to printer "astro" are sent to valley (not just
+  selected types)
+- No gratuitous waiting or "spinning"!
+  Data flow from "print" to submit to archive never involves arbitrary
+  wait. The flow is data driven, so that as soon as one process
+  finishes with it, the next process does its job (provided it isn't
+  already working on another file).  No CRON jobs are used for any of
+  the main data flow.  Some CRON may be introduced for optional pieces
+  (such as monitoring). 
+  
 ** <2014-11-11 Tue>
 - Attempt to post a duplicate file will be ignored
   + "duplicate" is determined by checksum of content. Filename is irrelevent.
+- The same filename with different content can be printed to
+  "astro". Since the full pathname makes use of user and job id, no
+  collision will occur in Mountain Cache or Mountain Mirror.
+- Upon successful transfer of a file from Cache to Mirror, the file
+  will be immediately removed from the Cache. (if longer lived copies
+  are wanted on the mountain, they can be done with a seperate process).
+- On failure to transfer a file from Cache to Mirror, the file will be
+  retained in the Cache and retained on the transfer queue with an
+  incremented error count.
 ** COMMENT <2014-10-24 Fri>
 *** Thread-2: Touches FITS data  (verifies selected metadata in archive)
 Given a "source directory" tree that may contain FITS files, 
@@ -205,6 +234,19 @@ Given a "source directory" tree that may contain FITS files,
     - DTTITLE
     - DTUTC
     - PROPID
+
+** Caveats and Warnings
+- Assume irods documentation is correct when it says that transfers
+  are guaranteed using checksum.  I have not done an experiment to
+  prove this.
+- It is possible for a queue push to fail (perhaps the queue service
+  was killed). If so, there may be items in the associate storage that
+  are not in the queue.  See "Deferred" below for how to handle this case.
+** Deferred
+- Process to monitor error counts on queues.  Demand human attention
+  for any files that get high (config setting) error count.
+- Process to compare queue and associated data storage.  Add items to
+  queue that aren't there already but are in storage.
 
 * Sprint user stories
 These are the expect outcomes from progressively more complex [[https://www.scrum.org/][scrum]] sprints.
@@ -347,8 +389,7 @@ flow.  Note that data only flows bewteen "adjacent" classes of hosts.[fn:4]
   }
 #+END_SRC
 
-
-* Goals
+* Goals                                                              :draft1:
 ** Prove its done right
 To PROVE we have it right[fn:1], we need good monitoring. To support
 courageous code changes, the monitoring should be nearly identical
@@ -357,6 +398,12 @@ between:
 - developmental (to be deployed) system (on VMs or real machines)
 - under DES (Discrete Event Simulation)[fn:2]
   [[~/sandbox/dfsim/dfsim.py][dfsim]]
+** Easy to maintain
+Create a system that can be maintained using no more than 25% of one
+full time employee.  We expect maintenance to include:
+- correcting problems in FITS files stored in Mitigation queue and store
+- replacing broken hardware (disks, computers) and installing required
+  software from scratch
 
 *** Simulation                                                     :noexport:
 It would be GREAT to generally connect simulator to data-flow graph
@@ -370,7 +417,7 @@ state?
 Plots from DES (gnu plot?) to represent values of resources (queue
 size).  Alerts for when thresholds exceeded. (queue max size reached)
 Utilization measures.
-* Secondary Goals
+* Secondary Goals                                                    :draft1:
 My primary goal is to develop useful software.  Exactly what that
 software will be is unfolding.  It has to be an iterative process. But
 regardless of what the software is, there are some secondary goals
@@ -444,8 +491,7 @@ that go along with it. Here are most of them:
 
 ---------
 
-* Requirements
-                                                      
+* TODO Requirements
 ** General systemic requirements
 1. Provide all required the functionality of system this replaces
 2. Resilient 
@@ -453,7 +499,6 @@ that go along with it. Here are most of them:
 3. Maintainable
    - by new employees without large learning curve
 4. Operate fast enough (need quantification)
-
 
 ** Candidate requirements
 These requirements have *not been committed to*.  In many case they
@@ -571,7 +616,6 @@ The [[http://chive.tuc.noao.edu:8080/DPPDOCS/operations-documentation/software-s
    + [-sp-] Why? What is the operational requirement hidden in this?
      Speed? Bandwidth? Quantify.
 
-
 ** TADA migration from 2010 iDCI project requriements 
 1. Retain existing physical resources
 2. ACCEPTED. Improve upon iDCI. Qualify. Quantify
@@ -582,7 +626,6 @@ The [[http://chive.tuc.noao.edu:8080/DPPDOCS/operations-documentation/software-s
 7. REJECTED. Not a requirement, but a goal I expect to happen.
 8. REJECTED. Not clear.
 9. REJECTED. No need.
-
 
 
 
@@ -606,7 +649,6 @@ The [[http://chive.tuc.noao.edu:8080/DPPDOCS/operations-documentation/software-s
 
 
 
-
 ** Meta data required for ingest into archive
 - [ ] PROPID
 - [ ] DATE-OBS
@@ -621,7 +663,6 @@ The [[http://chive.tuc.noao.edu:8080/DPPDOCS/operations-documentation/software-s
 - [ ] DTSITE
 
 from https://support.sdm.noao.edu/browse/OPS-1991
-
 
 ** MVP - Minimally Viable Product
 These are the absolute minium requirements for a DCI replacement.
@@ -648,13 +689,13 @@ release)
   + shared results (algorithms run against data from archive)
   + loose coupling of archive data to results
   + auto expire of results (warning 1, warning 2, delete)
-* Open Issues
+* TODO Open Issues
 ** Which files from input list ("printed" files) should get moved to archive?
   - [ ] All of them?
   - [ ] *.fits.fz?
   - [ ] *.fits?
   - [ ] *.hdr
-  - DEFAULT ANSWER: only *.fitz.fz
+  - DEFAULT ANSWER: only *.fits.fz and *.fits
 ** What if FITS files do NOT contain minimum required metadata (fields/values)?
   - Insert dummy (not realistic) values.
   - Calculate values. How?
@@ -664,7 +705,7 @@ release)
 For instance:
 - Load Proposal ID, etc.
 - Reingest remediated files.  a) mountain, b) valley
-* Closed Issues
+* TODO Closed Issues
 */<NONE>/*
 
 * Assumptions
@@ -674,6 +715,11 @@ For instance:
   problems as they come up (which should be very rare).
 
 * DEFERRED
+These features are *not* implemented. They may or may not be
+implemented in the future.  They are listed for 2 reasons:
+1. To explicitly identify features not in the release
+2. To offer candidates for future implementation
+
 ** (mountain) copy and morph
 Copy the files from the ASTRO created file structure into a structure
 that mirrors the old iDCI directory tree.
@@ -696,6 +742,17 @@ understand. Just setting the setuid bit of the backend end
 is *not* good as CUPS traps such as a potential security hole.
 
 Other cleanup needed in sdpost.  See reference files at top of script.
+
+* COMMENT notes for Sean
+I've had trouble diagnosing when something goes wrong with
+"printing".  Trouble probably from:
+- CUPS is security minded so permissions are tricky
+- what gets logged and where it gets logged is often unclear to me
+- some of the initial futzing to get things going (that probably won't
+  occur in maintenance mode)
+- print queue is automatically disabled (this can be changed through
+  cups config) when any print error occurs.  Since I was debugging,
+  this happened alot.  Each time, had to clear print jobs, re-enable.
 
 * COMMENT New Name
 ** Possible names for DCI replacement
@@ -745,8 +802,8 @@ Capture In Archive (CIA?)/Database/Cache
 
 Capture And Cache HEavenly  Data (CACHED)
 
-
-* Release checklist
+* COMMENT Release checklist
+Before each release, make sure the following are done.
 ** Maintainability 
 - [ ] Documentation as built
 - [ ] Requirements addressed in software as built
@@ -754,7 +811,7 @@ Capture And Cache HEavenly  Data (CACHED)
 - [ ] Configuration Management
 - [ ] Auto provisioning of everything I develop
 - [ ] Documentation of existing system
-* Footnotes
+* Footnotes                                                          :draft1:
 
 [fn:1] SDM is responsibly managing data, nothing is being lost, its
 going where it should, rates and sizes of data are as expected, manual
@@ -794,3 +851,4 @@ and selected "insert template" (C-c C-e #).
 #+XSLT: 
 
 
+#+TAGS: draft1(1)  review(r) 

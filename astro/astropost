@@ -1,6 +1,6 @@
 #!/bin/bash
 # Have debug info in /var/log/cups/error_log:
-#! set -x
+set -x
 
 # This CUPS backend allows you to "print to file".
 
@@ -18,6 +18,7 @@
 #   sudo service cups restart
 #   sudo lpadmin -p astro -v astropost:/tmp/mountain_cache -E
 # There are restrictions on what directory can be written to.
+# This script runs as "lp" user.
 #
 # Then you can do things like:
 #   lpstat -a  # should see the printer is "accepting requests"
@@ -60,7 +61,7 @@ error() {
 }
 
 export LOG=/tmp/astropost.log #!!!
-#!trap 'error ${LOG} ${LINENO}' ERR
+trap 'error ${LOG} ${LINENO}' ERR
 #!trap "echo \"$0 completed successfully\" >> ${LOG}" EXIT
 
 JOBID=$1 ;
@@ -141,16 +142,28 @@ fullfname="${destdir}/${TARGETFILE}"
 echo "Copying to: "  ${fullfname}  >> ${LOG}
 cat $FILE > ${fullfname}             # Add posted file to CACHE
 
-#!echo "Calculate checksum" >> ${LOG}
-#!#!md5sum ${fullfname} >>  ${LOG} #!!!
-#!#!md5sum ${fullfname} >>  ${LOG} #!!!
+echo "DEBUG2: posting file: ${fullfname}" 1>&2
+echo "id: " `id` >> ${LOG}
+ls -l $0 >> ${LOG} 2>&1 
+ls -l `type -p md5sum` >> ${LOG}
+
+echo "Calculate checksum" >> ${LOG}
+md5sum ${fullfname} >>  ${LOG} 
+
+echo "Trying script: /usr/lib/cups/lib/astro/pushfile.sh" >> ${LOG}
+/usr/lib/cups/lib/astro/pushfile.sh ${fullfname} >> ${LOG} 2>&1 
+
 #!echo "Pushing ${fullfname} to Transfer Queue" >> ${LOG}
-#!#!/home/pothiers/PYTHON_ENV/data-queue/bin/dqcli --push /tmp/foo
-#!#!/tmp/dqcli --help >> ${LOG} #!!!
-#!#do_nothing.sh >> ${LOG} #!!!
+#!source /home/pothiers/PYTHON_ENV/data-queue/bin/activate >> ${LOG} 2>&1 
+#!#!ls -l `type -p dqcli` >> ${LOG} 2>&1 
+#!#!dqcli --help >> ${LOG}
+#!#!
+#!md5sum ${fullfname} | dqcli --post - >> ${LOG} 2>&1
 #!echo "Pushed" >> ${LOG}
 
+
 # we reach this line only if we actually "printed something"
+echo "Done" >> ${LOG}
 echo 1>&2
 echo "NOTICE: processed Job ${JOBID} to file ${destdir}/${TARGETFILE}" 1>&2
 echo "NOTICE: End of \"${0}\" run...."                                 1>&2
