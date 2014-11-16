@@ -138,9 +138,11 @@ fi
 
 # now do the job....
 mkdir -p $destdir
+chmod -R a+rwX ${rootDir}
 fullfname="${destdir}/${TARGETFILE}"
 echo "Copying to: "  ${fullfname}  >> ${LOG}
 cat $FILE > ${fullfname}             # Add posted file to CACHE
+chmod a+rw ${fullfname}
 
 echo "DEBUG2: posting file: ${fullfname}" 1>&2
 echo "id: " `id` >> ${LOG}

@@ -9,18 +9,18 @@ with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='sample',
+    name='tada',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='1.2.0',
+    version='0.0.dev1',
 
-    description='A sample Python project',
+    description='Collect telescope data from mountain tops, deliver to far-away archives',
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/pypa/sampleproject',
+    url='https://github.com/pothiers/tada',
 
     # Author details
     author='The Python Packaging Authority',
@@ -39,24 +39,23 @@ setup(
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
-        'Topic :: Software Development :: Build Tools',
+        'Intended Audience :: Information Technology',
+        'Intended Audience :: Science/Research',
+        'Intended Audience :: System Administrators',
+        'Intended Audience :: Telecommunications Industry',
+        'Topic :: Scientific/Engineering :: Astronomy',
 
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: MIT License',
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
     ],
 
     # What does your project relate to?
-    keywords='sample setuptools development',
+    keywords='networked queue management data-flow',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
@@ -66,7 +65,7 @@ setup(
     # project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/technical.html#install-requires-vs-requirements-files
-    install_requires=['peppercorn'],
+    install_requires=['dataq',],
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these

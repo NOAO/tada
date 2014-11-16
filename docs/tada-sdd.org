@@ -85,13 +85,13 @@ Terms relevent to this section:
                     need to be moved from Mountain Cache (on
                     Mountain) to Mountain Mirror (on Valley).
 - Submit Queue :: Data-queue whos contents represent data files that
-                  that have been submitting for saving. File types
+                  have been submitted for saving. File types
                   that are not appropriate for the archive, will be
                   moved to a non-archive store. Else they'll be
                   put in archive (if possible) or in "Mitigation
                   Queue" (if invalid for archive submit)
 - Mitigation Queue :: Data-queue whos contents represent data files
-     that should find there way to the archive, but have something
+     that should find their way to the archive, but have something
      wrong with them.  After they have been manually modified, they
      should be put back on the Submit Queue
 
@@ -247,7 +247,9 @@ Given a "source directory" tree that may contain FITS files,
   for any files that get high (config setting) error count.
 - Process to compare queue and associated data storage.  Add items to
   queue that aren't there already but are in storage.
-
+- dq: dbvar.py => constants.py; change names to UPCASE (in
+  constants.py and <user>.py
+- Add redis host:port to dq.config
 * Sprint user stories
 These are the expect outcomes from progressively more complex [[https://www.scrum.org/][scrum]] sprints.
 
@@ -743,7 +745,11 @@ is *not* good as CUPS traps such as a potential security hole.
 
 Other cleanup needed in sdpost.  See reference files at top of script.
 
+** Multi data-queues on one machine (same redis server)
+Instead of two instances.  Should be one with different namespaces for
+each queue.
 * COMMENT notes for Sean
+** "printing"
 I've had trouble diagnosing when something goes wrong with
 "printing".  Trouble probably from:
 - CUPS is security minded so permissions are tricky
@@ -753,6 +759,20 @@ I've had trouble diagnosing when something goes wrong with
 - print queue is automatically disabled (this can be changed through
   cups config) when any print error occurs.  Since I was debugging,
   this happened alot.  Each time, had to clear print jobs, re-enable.
+- Dataq SVC config:
+  + stored in typical/expected config place
+  + allow set of host/port for BOTH data-queue and redis
+  + allow default values for all queues (set once instead of N times)
+  + maximum_errors_per_"RECORD" => "FILE"
+
+** Metadata
+As expected, the fields in metadata of fits are ad-hoc.  Even the file
+naming standards makes assumptions about what is available and I've
+found that what it assumes isn't always true.   This will continue to
+be a fact of life for our chain.  I think the "solution" is to make it
+easy and clear how to programmatically add metadata when it can be
+done automatically.  It may also be useful to provide a stand-alone
+tool that can be used to add fields with user interaction.
 
 * COMMENT New Name
 ** Possible names for DCI replacement
