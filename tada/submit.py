@@ -85,7 +85,7 @@ prodLUT = {
     'Graphics (size)     ': 'gN',   
     'Weight              ': 'w ',   
     'NOTA':                 'u ',   
-]
+    }
 
 
 def valid_header(fits_file):
@@ -149,7 +149,7 @@ def molest_header(fits_file):
         )
     new_fname = "{instrument}_{date}_{time}_{obstype}{proctype}{prodtype}.{ext}".format(**fields)
     
-    
+    """    
 DTACCOUN= 'cache             '  /  observing account name                       
 DTACQNAM= '/home/data/data16923.fits'  /  file name supplied at telescope       
 DTACQUIS= 'nfdca-KP.kpno.noao.edu'  /  host name of data acquisition computer   
@@ -176,17 +176,18 @@ SB_LOCAL= 'kp                '  /  locale of iSTB daemon
 SB_NAME = 'kp680491.fits     '  /  name assigned by iSTB                        
 SB_RECNO=               680491  /  iSTB sequence number                         
 SB_SITE = 'kp                '  /  iSTB host site                               
-    
+    """    
     return new_fits_file
 
 
     
-def submit(fits_file):
-    "Ingest a FITS file into archive, or stash it in Mitigation queue"
-    validate_header(fits_file)
-    new_name = molest_header()
-    stuff_in_irods()
-    ingest()
+def submit_to_archive(fits_file):
+    "Ingest a FITS file into archive, or stash it in Mitigation queue."
+    #!validate_header(fits_file)
+    #!new_name = molest_header()
+    #!stuff_in_irods()
+    #!ingest()
+    raise Exception('tada.submit.sumbit_to_archive() is a stub!!!')
 
 
 

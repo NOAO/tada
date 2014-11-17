@@ -23,7 +23,7 @@ def validMetadataP(fits):
         'DTACQNAM',
         'DTINSTRU',
         'DTNSANAM',
-        'DTPI',g
+        'DTPI',
         'DTSITE',
         'DTSITE',
         'DTTELESC',

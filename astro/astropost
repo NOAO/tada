@@ -130,11 +130,15 @@ fi
 mkdir -p ${rootDir}
 chmod +rwX ${rootDir}
 
-if file --brief $FILE | grep "FITS image data"; then
-    destdir=${rootDir}/fits/${USER}/${JOBID}
-else
-    destdir=${rootDir}/other/${USER}/${JOBID}/${CONTENT_TYPE}
-fi
+################################################################################
+### Retained in case someone wants to disable transfer of non-fits files.
+################################################################################
+#!  if file --brief $FILE | grep "FITS image data"; then
+#!      destdir=${rootDir}/fits/${USER}/${JOBID}
+#!  else
+#!      destdir=${rootDir}/other/${USER}/${JOBID}/${CONTENT_TYPE}
+#!  fi
+destdir=${rootDir}/${USER}/${JOBID}
 
 # now do the job....
 mkdir -p $destdir

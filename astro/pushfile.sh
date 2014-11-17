@@ -1,5 +1,5 @@
 #!/bin/bash --verbose
-# Time-stamp: <11-13-2014 12:36:41 pothiers /home/pothiers/sandbox/tada/astro/pushfile.sh>
+# Time-stamp: <2014-11-17 14:06:09 pothiers>
 #
 # PURPOSE: Push a filename (with its checksum) to the Transfer queue
 #
@@ -13,7 +13,7 @@ fullfname=$1
 
 if [ -f "${fullfname}" ]; then
     echo "Pushing \"${fullfname}\" to xfer Queue."
-    md5sum ${fullfname} | dqcli --push - 
+    md5sum ${fullfname} | dqcli --queue transfer --push  - 
     echo "Pushed"
 else
     echo "ERROR: File \"${fullname}\" not found. Not pushing" 1>&2
