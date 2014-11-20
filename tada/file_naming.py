@@ -87,19 +87,19 @@ instrumentLUT = {
 }
 
 obsLUT = {
-    #Observation-type:             code  
-    'object':                     'o',  
-    'Photometric standard': 'p',
-    'Bias': 'z',
-    'Dome or projector flat': 'f',
-    'sky':                        's',
-    'Dark': 'd',
+    #Observation-type:           code  
+    'object':                    'o',  
+    'Photometric standard':      'p',
+    'Bias':                      'z',
+    'Dome or projector flat':    'f',
+    'sky':                       's',
+    'Dark':                      'd',
     'Calibration or comparison': 'c',
-    'Illumination calibration': 'i',
-    'Focus': 'g',
-    'Fringe': 'h',
-    'Pupil': 'r',
-    'NOTA': 'u',
+    'Illumination calibration':  'i',
+    'Focus':                     'g',
+    'Fringe':                    'h',
+    'Pupil':                     'r',
+    'NOTA':                      'u',
 }
 
 procLUT = {
@@ -126,18 +126,19 @@ prodLUT = {
 
 
 def generate_fname(instrument, datetime, obstype, proctype, prodtype):
-    "Generate standard filename from metadata values."
+    """Generate standard filename from metadata values.
+e.g. k4k_140923_024819_uri.fits.fz"""
+
 
     (date,time) = datetime.split('.')[1].split('T')
 
-    # e.g. "k4k_140923_024819_uri.fits.fz"
     fields = dict(
         instrument=instrumentLUT[instrument],
         date=date,
         time=time,
-        obstype=obsLUT[obstype],
-        proctype=procLUT[proctype],
-        prodtype=prodLUT[prodtype],
+        obstype=obsLUT[obstype],    
+        proctype=procLUT.get(proctype, 'u'), # if not in LUT, use "u"!!!
+        prodtype=prodLUT.get(prodtype, 'u'), # if not in LUT, use "u"!!!
         ext='fits',
         )
     new_fname = "{instrument}_{date}_{time}_{obstype}{proctype}{prodtype}.{ext}".format(**fields)

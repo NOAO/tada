@@ -7,25 +7,64 @@ import sys
 import argparse
 import logging
 import pyfits
+import os, os.path
 
 from . import fits_utils as fu
+from dataq import dqutils as du
+from dataq import irods_utils as iu
 
-def ingest(fname):
-    logging.error('Executing STUB: {}.ingest_stub'.format(__file__))
+def stuff_into_irods(fname, iname):
+    logging.debug('Registering {} to {} prior to ingest'.format(fname, iname))
+    iu.irods_reg(fname, iname)
+
+def archive_ingest(fname):
+    'Touch-point for archive ingest. Stub!!!'
+    import random #!!! only needed for mockup
+    import inspect
+
+    logging.debug('Executing STUB: {}:archive_ingest()'.format(__file__))
+    prop_fail = 0.60
+    if random.random() <= prop_fail:  #!!! remove
+        logging.debug('Simulated FAILURE [p(Fail)={}] on archive_ingest({})'
+                      .format(prop_fail, fname))
+        raise Exception('Failed archive_ingest for unknown reason'
+                        .format(fname))
+    else:
+        logging.debug('Simulated SUCCESS [p(Fail)={}] on archive_ingest({})'
+                        .format(prop_fail, fname))
+    return True
     
-def stuff_into_irods(fname):
-    logging.error('Executing STUB: {}.stuff_into_irods'.format(__file__))
-    
-def submit_to_archive(fname):
+
+# Entry point to archive
+#
+# Problem: We need to change the filename to reflect naming
+# standard. Ingest requires the new name be registered and to be on
+# the local file system.  But if something goes wrong, we want the old
+# name back. (reverse the side-effect of the name change) We will NOT
+# reverse the side-effect of header modification.  We don't want to
+# COPY (instead of MOVE) the file since it could be big.
+def submit_to_archive(fname, archive_root):
     "Ingest a FITS file into archive, or stash it in Mitigation queue."
-    new_fname = fu.molest(fname)
-    logging.debug('post molest fname: {}'.format(new_fname))
-    successP,message = fu.valid_header(fname)
+    irods_archive_root = '/tempZone/archive/' #!!!
+    mo_fname = fu.molest(fname)
+    new_fname = os.path.join(os.path.dirname(fname), mo_fname)
+    os.rename(fname, new_fname)
+    logging.debug('Modified header of fname: {}'.format(new_fname))
+
+    successP,message = fu.valid_header(new_fname)
     if not successP:
         raise Exception('Invalid FITS header. {}'.format(message))
 
-    stuff_into_irods(fname)
-    ingest(fname)
+    iname = du.mirror_path(archive_root, new_fname, irods_archive_root)
+    stuff_into_irods(new_fname, iname) # makes this func not idempotent? !!!
+    try:
+        archive_ingest(new_fname)
+    except:
+        logging.debug('Undo the name change: {} => {}'
+                      .format(new_fname, fname))
+        os.rename(new_fname, fname)
+        return fname
+    
     return new_fname
 
 

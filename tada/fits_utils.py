@@ -1,9 +1,9 @@
-"""Fiddling with Fits"""
+"""Fiddling with Fits (tm)"""
 
 import pyfits
-import datetime
 import logging
-
+import datetime
+ 
 from . import file_naming as fn
 
 # common between a SINGLE raw and cooked pair
@@ -278,16 +278,4 @@ def molest(fits_file):
 
     # e.g. "k4k_140923_024819_uri.fits.fz"
     return new_fname
-
-def metadata_field_use(fits_filenames):
-    "Find Common and Optional sets of fields used in list of fits files."
-    if len(fits_filenames) < 2:
-        return None, None
-
-    sets = [set(pyfits.open(fname)[0].header.keys())
-            for fname in fits_filenames]
-    common = sets[0].intersection(*sets[1:])
-    all = sets[0].union(*sets[1:])
-    optional =  all - common
-    return common, optional
 
