@@ -13,9 +13,14 @@ from . import fits_utils as fu
 from dataq import dqutils as du
 from dataq import irods_utils as iu
 
+class SubmitException (Exception):
+    pass
+
 def stuff_into_irods(fname, iname):
     logging.debug('Registering {} to {} prior to ingest'.format(fname, iname))
-    iu.irods_reg(fname, iname)
+    #!iu.irods_reg(fname, iname)
+    # unregister with "irm -U"
+    logging.error('DISABLED call to iu.irods_reg() in submit.py')
 
 def archive_ingest(fname):
     'Touch-point for archive ingest. Stub!!!'
@@ -56,14 +61,19 @@ def submit_to_archive(fname, archive_root):
         raise Exception('Invalid FITS header. {}'.format(message))
 
     iname = du.mirror_path(archive_root, new_fname, irods_archive_root)
-    stuff_into_irods(new_fname, iname) # makes this func not idempotent? !!!
+
+    logging.debug('Registering {} to {} prior to ingest'
+                  .format(new_fname, iname))
+    iu.irods_reg(new_fname, iname)  # unregister with "irm -U"
+
     try:
         archive_ingest(new_fname)
     except:
-        logging.debug('Undo the name change: {} => {}'
-                      .format(new_fname, fname))
+        logging.debug('Unregister irods {} and undo the name change: {} => {}'
+                      .format(iname, new_fname, fname))
+        iu.irods_unreg(iname)
         os.rename(new_fname, fname)
-        return fname
+        raise
     
     return new_fname
 

@@ -271,7 +271,6 @@ def molest(fits_file):
         proctype=hdr.get('PROCTYPE','NOTA'),
         prodtype=hdr.get('PRODTYPE','NOTA'),
     )
-    logging.debug('generated new_fname: {}'.format(new_fname))
 
     hdulist.flush()
     hdulist.close()

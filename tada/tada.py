@@ -14,8 +14,6 @@ import functools
 import operator
 import fnmatch
 import pyfits
-import subprocess
-import icmd
 
 def validMetadataP(fits):
     requiredFitsFields = set([
@@ -160,12 +158,12 @@ def transfer_via_irsync(ienv, src_path, irods_path, delay=None):
                 # '-K', # calc and verify checksum
                 src_dir, 'i:'+irods_path)
 
-def transfer_via_rsync(src_path, mirror_path):
-    subprocess.check_call(['rsync', '-r',
-                           src_path,
-                           #'rsync://valley.test.noao.edu/'+mirror_path
-                           'vagrant@valley.test.noao.edu:'+mirror_path
-                       ])
+#!def transfer_via_rsync(src_path, mirror_path):
+#!    subprocess.check_call(['rsync', '-r',
+#!                           src_path,
+#!                           #'rsync://valley.test.noao.edu/'+mirror_path
+#!                           'vagrant@valley.test.noao.edu:'+mirror_path
+#!                       ])
                           
 
 # The src_dir serves as cache. Remove files from it after transfer to
@@ -178,6 +176,8 @@ def thread3(src_dir, irods_path, mirror_dir, archive_dir,
                    irodsUserName='rods',
                    irodsZone='tempZone',
                ):
+    import icmd
+
     logging.debug('THREAD-3: '
                   +'src_dir=%s, irods_path=%s, mirror_dir=%s, archive_dir=%s', 
                   src_dir, irods_path, mirror_dir, archive_dir)
@@ -247,7 +247,7 @@ def main():
                         help='Directory to treat as archive',
                         )
     parser.add_argument('--irodsPath',
-                        default='/tempZone/valley',
+                        default='/tempZone',
                         help='iRODS collection to receive Mountain files',
                         )
 

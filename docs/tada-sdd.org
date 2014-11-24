@@ -182,6 +182,7 @@ implemented.
 I record dated sub-sections below but will typically hide all but the
 most recent.  Ask if you want older sections for some reason.
 
+
 ** Touch Points
 - INPUT queue
   via lpd protocol
@@ -198,7 +199,134 @@ most recent.  Ask if you want older sections for some reason.
   the main data flow.  Some CRON may be introduced for optional pieces
   (such as monitoring). 
   
-** <2014-11-11 Tue>
+** Thread-4 <2014-11-23 Sun>
+*** Data Stores
+1. Mountain:/var/tada/mountain_cache/
+2. irods (Valley) /tempZone/valley/mountain_mirror
+3. Valley:/var/tada/archive
+4. Valley:/var/tada/mitigate
+5. Valley:/var/tada/no-archive
+
+*** Data Queues
+- Mountain:transfer
+  + transfer file from Mountain to Valley using irods when irods is
+    available ("always", except for network trouble)
+- Valley:submit
+  + submit FITS files to archive.  Keep on queue (but inactive) if
+    error
+  + move non FITS files to no-archive directory without change
+  + inactive = Mitigate
+
+*** Features (mark the ones that are acceptable)
+1. [ ] Print of duplicate files, captures all (unless real quick).
+   If a file is repeatedly printed, its duplicate will go through the
+   system. Each file has unique storage (mostly)
+   since its PATH contains User and Job-id of the print.  With
+   multi-domes and the same user on each dome, files could collide.
+   For instance: if all domes use an indentical username for lp, AND
+   the print queues across domes are counting jobs in the same range
+   (colliding job-ids), AND users print files with the same name from
+   different machines, THEN we get collisions will will result in
+   overwrite. If a single user from one machine does two prints in a
+   row on the same file, the first may still be in the DataQueue when
+   the second is printed.  In this case the 2nd will be ignored.  In
+   this case its only the checksum (i.e. the content) that has to be
+   the same for the second to be ignored.
+
+2. [ ] There is no way to resubmit from mountain for replacement in the
+   archive.
+
+3. [ ] Directories remain when files moved/removed
+   When files are moved/removed (e.g. mountain_cache cleared after file
+   recieved in valley), their directories remain.  The directory is of
+   form: /cache/<user>/<job-id>/  It could be argued that keeping the
+   directory provides an audit trail of sorts.  Downside is nothing is
+   cleaning up those directories.  Since they don't have files, they
+   take up very little space.  Perhaps a cleanup cronjob should remove
+   old and empty dirs [DEFERRED]  This effect leaves "audit" traces in:
+   + Mountain:/var/tada/mountain_cache/
+   + Valley:/var/tada/archive/
+   + irods /tempZone/valley/mountain_mirror/
+     - Note: the base filename in mountain_mirror is different than the
+       corresponding filename in archive because the act of submitting
+       causes a rename to match file naming standards.
+
+4. [ ] Original file names retained until (before) submit to archive
+
+5. [ ] Renamed FITS files also have their headers modified (augmented)
+   We end up with identical astronomical content (raw data) in two
+   files. The two files have similar paths. "Similar" means different
+   root, identical "<username>/<job-id>" directory tail, and different
+   basename. The raw version has fewer header fields and the original
+   file basename.  The modified version has added header fields and is
+   renamed to filename standards.
+
+6. [ ] Configuration
+   Uses a single /etc/dataq/dq.conf file for configuration of:
+   + log, run (pid) directories
+   + named queues
+     - port, host
+     - action name associated with queue (definition of actions are in code)
+     - max errors allowed for automatic resubmit to queue (not tested)
+     - max queue size 
+
+7. [ ] File deleted from mountain_cache as soon as transfered to Valley
+   Immediately upon successful transfer of file from
+   Mountain:/mountain_cache to Valley:/mountain_mirror (per irods), it
+   is deleted from cache.
+
+8. [ ] Failed actions move to "inactive"
+   When fits file fails submit, it is moved to Mitigate store.
+   It should also be moved from Active to Inactive on the Submit
+   queue. Code allows batch reactivate.  
+
+9. [ ] ?? TRANSFER fail goes to inactive?
+   Have to simulate network connection break.  Haven't tested. Might
+   work. But it works for SUBMIT queue when submit action fails.
+
+*** Known Problems <2014-11-21 Fri>
+- No consistent logging
+  The logging from the pieces are not brought together in single
+  unified way.
+
+- Does not actually submit to archive (simulates only)
+  This will be tricky.  To be added in next release (the first MVP). 
+
+- Not clearing /tempZone/valley/mountain_mirror/ after:
+  + move of file to /var/tada/no-archive
+  + success of submit (should be DELETED???)
+
+- irod client setup ("iinit")
+  Provisioning does not automatically setup the "vagrant" user
+  as an irods client.  I think this has been done for a lesser user so
+  probably just need to move provisioning.  For MVP this will have to
+  formalized into specific TADA unix user and associated access
+  rights, provisioning, etc.
+
+- Services (dqpush, dqpop) can crash
+  They are not protected against crash.
+  There should be no way for them to die on error (raise
+  exception). It should be impossible to send data on port that would
+  cause service to die.  It should be impossible to push/pop items
+  from queue that would cause service to die.
+
+- Software not installed
+  Provisioning does not install software being actively developed.
+  These will be uploaded to github and PyPI so will install just like
+  other open source python packages currently are.  For now, I do it
+  in a local way. (for quicker development).  The packages are:
+  + dataq
+  + tada
+
+- There are no tests
+  The only thing that is remotely like an automatic test is
+  "sandbox/demo/demo.sh".  It: cleans the slate, initializes, runs a
+  few files through, shows results.  It does NO checking of results.
+
+- (maybe not problem) All records on queue should be reflected in
+  exactly one of Active, Inactive.  Have not confirmed this.
+
+*** COMMENT ???
 - Attempt to post a duplicate file will be ignored
   + "duplicate" is determined by checksum of content. Filename is irrelevent.
 - The same filename with different content can be printed to
@@ -210,6 +338,61 @@ most recent.  Ask if you want older sections for some reason.
 - On failure to transfer a file from Cache to Mirror, the file will be
   retained in the Cache and retained on the transfer queue with an
   incremented error count.
+*** Requirements met
+- [X] all software committed to github repositories
+- [X] reproducible installs
+  + single line script against source repo.
+- [X] insert "archival metadata" just before final archiving
+  + Define this more precisely
+- [X] filename agnostic; nothing in the system depends on the
+  structure or uniqueness of a filename 
+  + up to call to archive ingest; archive ingest may violate
+- [X] Rename fits files per standard using header values
+- [X] Continue to store on mountain if connection to valley is severed.
+  + How long? [DEFAULT ANSWER: 7 days] Currently; indefinite
+  + NOT: Automatically dump stored mountain data to valley when connection
+    restored
+- [X] Insufficient metadata in FITS causes files to be moved to
+  Mitigation. 
+  + Required raw fields:
+    - DATE-OBS
+    - INSTRUME
+    - OBSERVAT
+    - OBSID
+    - PROPID
+    - PROPOSER
+  + Required cooked fields (just prior to ingest):
+    - DATE-OBS
+    - DTACQNAM
+    - DTINSTRU
+    - DTNSANAM
+    - DTPI
+    - DTSITE
+    - DTTELESC
+    - DTTITLE
+    - DTUTC
+    - PROPID
+- [X] Eliminate use of STB
+- [X] Eliminate use of cron-jobs for main data-flow
+- [X] Provide high-bandwidth transfer Mountain -> Valley
+  + Uses parallel iput
+- [X] No machine specific code; variations held in config file
+  + There is different installation per CLASS of machine (Mountain, Valley)
+- [X] Update metadata to contain following fields:
+  + DTACQNAM
+  + DTINSTRU
+  + DTPI
+  + DTSITE
+  + DTTELESC
+  + DTTITLE
+  + DTUTC
+  + SB_DIR1
+  + SB_DIR2
+  + SB_DIR3
+- [X] Files failing submit to archive move to Inactive of Submit queue
+  
+
+
 ** COMMENT <2014-10-24 Fri>
 *** Thread-2: Touches FITS data  (verifies selected metadata in archive)
 Given a "source directory" tree that may contain FITS files, 
@@ -495,81 +678,82 @@ that go along with it. Here are most of them:
 
 * TODO Requirements
 ** General systemic requirements
-1. Provide all required the functionality of system this replaces
+1. Provide all required functionality of tje system this replaces
 2. Resilient 
    - don't break -- EVER
 3. Maintainable
-   - by new employees without large learning curve
+   - by new employees without large learning curve, under 50% FTE
 4. Operate fast enough (need quantification)
 
 ** Candidate requirements
 These requirements have *not been committed to*.  In many case they
 need to be made more precise.
 
-- All database clients must be capable of reconnecting to database
+- [ ] All database clients must be capable of reconnecting to database
   servers on connection loss (so components can be restarted)
-- Increase level of automation of regular operation functions
-- use version control always; with commit comments
-- elliminate direct changes to live production system (from tagged version)
-- (document minimumaly acceptable coding style)
-- Implement regression testing (automated where possible, documented otherwise)
-- write design documentation
-- write installation documentation
-- write usage documentation
-- reproducible installs
-- daily operations must not require manual intervention
-- daily operations must not require human monitoring (automatic alerts instead)
-- eliminate metadata remmediation in its present form (what form???)
+- [ ] Increase level of automation of regular operation functions
+- [X] use version control always; with commit comments
+  + Stored in github at: ???
+- [ ] elliminate direct changes to live production system (from tagged version)
+- [ ] (document minimumaly acceptable coding style)
+- [ ] Implement regression testing (automated where possible, documented otherwise)
+- [ ] write design documentation
+- [ ] write installation documentation
+- [ ] write usage documentation
+- [X] reproducible installs
+- [ ] daily operations must not require manual intervention
+- [ ] daily operations must not require human monitoring (automatic alerts instead)
+- [ ] eliminate metadata remmediation in its present form (what form???)
   + get metadata from file format, or
   + get metadata from TO/observer/observatory support staff at data
     collection time
-- insert "archival metadata" just before final archiving (???)
-- insert of archival metadata should be idempotent
-- eliminate mountain copy coherency requirement (???)
-- filename agnostic; nothing in the system should depend on the
+- [X] insert "archival metadata" just before final archiving
+- [ ] insert of archival metadata should be idempotent
+- [ ] eliminate mountain copy coherency requirement (???)
+- [X] filename agnostic; nothing in the system should depend on the
   structure or uniqueness of a filename
-- limit access to internals connection points (ports, databases)
+- [ ] limit access to internals connection points (ports, databases)
   + perhaps by host, port, user
-- literate programming: data flow software and config files: must be
+- [ ] literate programming: data flow software and config files: must be
   able to auto generate a document that describes the flow (including
   connectivity or data-flow diagram).
-- Continue to store on mountain if connection to valley is severed.
-  + How long? [DEFAULT ANSWER: 7 days]
-  + Automatically dump stored mountain data to valley when connection
+- [ ] Continue to store on mountain if connection to valley is severed.
+  + [ ] How long? [DEFAULT ANSWER: 7 days]
+  + [ ] Automatically dump stored mountain data to valley when connection
     restored
-- Mountain machines run unattended. Disk "never" overflows.
+- [ ] Mountain machines run unattended. Disk "never" overflows.
   + Data that has been successfully transfered to valley is deleted
     from mountain.
   + If connection to valley remains severed for extend time and data
     continues to be collected on mountain, data will be lost.  How?
     [DEFAULT ANSWER: oldest will be thrown away first]
-- Data submitted to NSA (archive) must have PROPID that is in the NSA
+- [ ] Data submitted to NSA (archive) must have PROPID that is in the NSA
   metadata-DB
   + How is NSA metadata-DB retrieved
   + What if PROPID is not in metadata-DB? [DEFAULT ANSWER: File is
     moved to remediation store; error logged; no ingest happens]
-- Handle "typical" failure modes gracefully with no loss of data:
+- [ ] Handle "typical" failure modes gracefully with no loss of data:
   + reboot of any machine at any time [IMPORTANT - automate test?]
   + Lost of DNS
   + filesystem corruption (within "reason")
-- Verify no errors on submit of file to archive (NSA) via socket
+- [ ] Verify no errors on submit of file to archive (NSA) via socket
   + How?
   + What does NSA return back?  Does it return error for every case in
     which file is not archived?
-- Same version of iRODS in TADA as NSA?
+- [ ] Same version of iRODS in TADA as NSA?
   + Not required if API is identical for used commands. 
   + [[http://irods.org/][iRODS]] says that version 3.+ and 4.+ can be combined in one collection
-- Security ???
+- [ ] Security ???
   + firewalls configured to only allow access to key ports from
     trusted hosts
-- Files must be renamed according to TBD scheme before submit to
+- [X] Files must be renamed according to TBD scheme before submit to
   archive
   + How is name derived? 
   + Assume name is derived from header -- but this limits to
     processing of FITS (known header info) only.
-- allow disabling of auto cache-file expiration
-- on "submit to archive" retry N times (N given by config file)
-- tests to include simulation of irods stop-delay-start
+- [ ] allow disabling of auto cache-file expiration
+- [ ] on "submit to archive" retry N times (N given by config file)
+- [ ] tests to include simulation of irods stop-delay-start
 
 ** From 2010 iDCI project definition
 (minor editing done on language of requirements)
