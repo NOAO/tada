@@ -59,7 +59,7 @@ def main():
                         format='%(levelname)s %(message)s',
                         datefmt='%m-%d %H:%M'
                         )
-    logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
+    logging.debug('Debug output is enabled in %s !', sys.argv[0])
 
     do_prints(args.datafiles)
 

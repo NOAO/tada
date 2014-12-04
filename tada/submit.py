@@ -1,7 +1,4 @@
-#! /usr/bin/env python
-"""<<Python script callable from command line.  Put description here.>>
-"""
-# Docstrings intended for document generation via pydoc
+"Dirt needed to submit a fits file to the archive for ingest"
 
 import sys
 import argparse
@@ -16,29 +13,34 @@ from dataq import irods_utils as iu
 class SubmitException (Exception):
     pass
 
-def stuff_into_irods(fname, iname):
-    logging.debug('Registering {} to {} prior to ingest'.format(fname, iname))
-    #!iu.irods_reg(fname, iname)
-    # unregister with "irm -U"
-    logging.error('DISABLED call to iu.irods_reg() in submit.py')
+class InvalidHeader (SubmitException):
+    pass
 
 def archive_ingest(fname):
+    # register in irods
+    # post metadata to archive port
+    pass
+    
+
+def STUB_archive_ingest(fname):
     'Touch-point for archive ingest. Stub!!!'
     import random #!!! only needed for mockup
     import inspect
 
-    logging.debug('Executing STUB: {}:archive_ingest()'.format(__file__))
+    logging.debug('Executing STUB: {}:STUB_archive_ingest()'.format(__file__))
     prop_fail = 0.60
     if random.random() <= prop_fail:  #!!! remove
-        logging.debug('Simulated FAILURE [p(Fail)={}] on archive_ingest({})'
-                      .format(prop_fail, fname))
-        raise Exception('Failed archive_ingest for unknown reason'
-                        .format(fname))
+        logging.debug(
+            'Simulated FAILURE [p(Fail)={}] on STUB_archive_ingest({})'
+            .format(prop_fail, fname))
+        raise Exception(
+            'Failed STUB_archive_ingest({}) due to cosmic ray (prob={}).'
+            .format(fname, prop_fail))
     else:
-        logging.debug('Simulated SUCCESS [p(Fail)={}] on archive_ingest({})'
-                        .format(prop_fail, fname))
+        logging.debug(
+            'Simulated SUCCESS [p(Fail)={}] on STUB_archive_ingest({})'
+            .format(prop_fail, fname))
     return True
-    
 
 # Entry point to archive
 #
@@ -48,74 +50,32 @@ def archive_ingest(fname):
 # name back. (reverse the side-effect of the name change) We will NOT
 # reverse the side-effect of header modification.  We don't want to
 # COPY (instead of MOVE) the file since it could be big.
-def submit_to_archive(fname, archive_root):
+def submit_to_archive(fname, qcfg):
     "Ingest a FITS file into archive, or stash it in Mitigation queue."
-    irods_archive_root = '/tempZone/archive/' #!!!
+    irods_archive_dir = qcfg['submit']['archive_irods']
+    archive_dir = qcfg['submit']['archive_dir']
     mo_fname = fu.molest(fname)
     new_fname = os.path.join(os.path.dirname(fname), mo_fname)
     os.rename(fname, new_fname)
     logging.debug('Modified header of fname: {}'.format(new_fname))
 
-    successP,message = fu.valid_header(new_fname)
+    successP, message = fu.valid_header(new_fname)
     if not successP:
-        raise Exception('Invalid FITS header. {}'.format(message))
+        raise InvalidHeader('Invalid FITS header. {}'.format(message))
 
-    iname = du.mirror_path(archive_root, new_fname, irods_archive_root)
+    iname = du.mirror_path(archive_dir, new_fname, irods_archive_dir)
 
     logging.debug('Registering {} to {} prior to ingest'
                   .format(new_fname, iname))
     iu.irods_reg(new_fname, iname)  # unregister with "irm -U"
 
     try:
-        archive_ingest(new_fname)
+        STUB_archive_ingest(new_fname)
     except:
         logging.debug('Unregister irods {} and undo the name change: {} => {}'
                       .format(iname, new_fname, fname))
         iu.irods_unreg(iname)
         os.rename(new_fname, fname)
         raise
-    
+
     return new_fname
-
-
-
-
-##############################################################################
-
-def main():
-    "Parse command line arguments and do the work."
-    print('EXECUTING: %s\n\n' % (' '.join(sys.argv)))
-    parser = argparse.ArgumentParser(
-        description='My shiny new python program',
-        epilog='EXAMPLE: %(prog)s a b"'
-        )
-    parser.add_argument('--version', action='version', version='1.0.1')
-    parser.add_argument('infile', type=argparse.FileType('r'),
-                        help='Input file')
-    parser.add_argument('outfile', type=argparse.FileType('w'),
-                        help='Output output')
-
-    parser.add_argument('--loglevel',
-                        help='Kind of diagnostic output',
-                        choices=['CRTICAL', 'ERROR', 'WARNING',
-                                 'INFO', 'DEBUG'],
-                        default='WARNING')
-    args = parser.parse_args()
-    #!args.outfile.close()
-    #!args.outfile = args.outfile.name
-
-    #!print 'My args=',args
-    #!print 'infile=',args.infile
-
-    log_level = getattr(logging, args.loglevel.upper(), None)
-    if not isinstance(log_level, int):
-        parser.error('Invalid log level: %s' % args.loglevel)
-    logging.basicConfig(level=log_level,
-                        format='%(levelname)s %(message)s',
-                        datefmt='%m-%d %H:%M')
-    logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
-
-    submit(args.infile)
-
-if __name__ == '__main__':
-    main()

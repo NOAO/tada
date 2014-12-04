@@ -1,4 +1,4 @@
-* About this document                                                :draft1:
+* About this document 						     :draft1:
 This document is intended for system software developers and
 maintainers.  It may also be shared with decision makers to provide
 a common context that includes requirements, goals, and plans.  The
@@ -64,6 +64,48 @@ application or domain, you can roughly think:
                       reliably connected to the instruments
   - Mountain Mirror :: "off-site storage for several instruments". Not
        reliably connected to instruments. 
+
+* TODO Installation
+* TODO Work-flows
+** FITS Mitigation (NOAO)
+When the Submit queue on a Valley machine runs the submit (ingest)
+action it separates input files (records) by file type.  Only FITS
+files will be ingested into the archive. Others will be moved to the
+local $NOARCHIVE directory.
+
+Ingest of FITS files may fail due to serveral possible reasons:
+1. Header contains in sufficient fields/values for ingest
+2. The PROPID given in the header is not in the local DB mainained by
+   the archive
+
+No mater the reason for FITS ingest failure, failure N (!!!) times
+will cause it to be put on the INACTIVE list of the Submit queue. An
+operator can view the inactive list by executing the following command
+on the Valley machine.
+: dqcli --list inactive
+
+An operator should monitor the Inactive list.  Anything on the list
+*failed* to ingest.  It will /usually/ require manual intervention to
+fix the file and ingest.  Under some circumstances, a retry of a file
+will work later without modification.  Once such circumstance may
+occur if the PROPID referenced in the FITS file was not initially in
+the archive DB, but has been added since the failure.  It is 
+/always ok/ to resubmit the entire inactive list in hopes that some of
+the files will ingest.  To do so, execute the following on the Valley
+machine:
+: dqcli --redo
+: dqcli --list inactive
+
+Whatever is still on the inactive list should be modified so that it
+can be ingested. Once modified (in place), resubmit using:
+: dqcli --redo
+
+*** WARNING: possible corruption
+Modifying in place will change checksum which may be used by irods and
+data-queue.  Work-flow needs some enhancements to allows for:
+1. files (checksum) changes
+2. ability to simply delete a file
+
 
 * TODO Design Overview
 The TADA system consists of a set of processes that communciate with
@@ -216,6 +258,7 @@ most recent.  Ask if you want older sections for some reason.
     error
   + move non FITS files to no-archive directory without change
   + inactive = Mitigate
+
 
 *** Features (mark the ones that are acceptable)
 1. [ ] Print of duplicate files, captures all (unless real quick).
