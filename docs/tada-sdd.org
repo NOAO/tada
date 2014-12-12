@@ -65,114 +65,78 @@ application or domain, you can roughly think:
   - Mountain Mirror :: "off-site storage for several instruments". Not
        reliably connected to instruments. 
 
-* TODO Missing in Thread-4
+* TODO Next up (rough prio order) [7/16]
 - [ ] install all python in github and PyPI in pythonic way
   + use wheel
   + universal format
   + see "distributing" check-list
 
-- [ ] formalizing logging 
-  + logger config
-  + option to save to /etc AND to stdout
-  + clean out old debugging output
+- [ ] mock ingest should save info (to confirm it worked),
+  + provide random prob of failure to simulate
 
-- [ ] exception handling everywhere
-  + There's some but nowhere near enough. There should be no way a SVC
-    should be able to die with exception.  Should be nothing that could
-    be sent to it via its port that would kill it. Not there.
-- [ ] svc (dqpush, dqpop) need to be made into a single actual "dataq" service
-  + that can started/stopped/restarted in the normal linux way.
+- [ ] Real ingest into archive (staging area)
+- [ ] multi: telescope, mountain, valley machine tests
+  + one config to rule them all (for multi T,M,V case)
+- [ ] connect two valley machines (share archive)
 
-- [ ] scrape all code for "!!!" indicator of stuff that needs fixing.
-  + cd $SANDBOX
-  + find data-queue tada -name "*.py" -exec grep '!!!' {} \; -print
-- [ ] Write monitor scripts to scrape from logs and queues
-  + ERRORS and WARNINGS
-
-- [ ] verify "maximum_errors_per_record" works for value > 0
-- [X] CLI program (or cmdline) to resubmit all from inactive
-  : dqcli --redo
-- [X] document underlying data structure 
-  + This includes all the /var/tada/* subdirs, the irods
-    "/tempZone/valley" structure, and 2 queues
-- [ ] new data-flow diagram 
-  + abstracted to emphasize:
-    - TWO queue/machine types
-    - N processes/threads
-  + flow fork based on action pass/fail, validation pass/fail
-- [ ] change irods: demoResc -> tadaResc
-- [ ] change irods: /tempZone -> tadaZone
 - [ ] (somehow) avoid having to do "iinit"
 - [ ] special user or group for this to all run under?
-- [ ] rename puppet-dci2
+- [ ] rename puppet-dci2 (puppet-tada, puppet-astro, puppet-noao)
+- [ ] different dir (irods) struct for ingest?
 
 - [X] make sure all logs go to /var/log/tada/
 - [X] make sure all configs come from /etc/tada 
 - [X] make sure all services write pid to /var/run/tada
 
+- [X] replace stubs (tada/submit.py)
+  + AS DONE: but archive_ingest talks to FAKE server (mock_ingest.py)
 - [X] Write management script clear/reset everything:
   : source /sandbox/demo/clean-valley.sh
-
-- [ ] try print from old machine (verify LPD protocol installed)
-  + (did this before but not in this thread
-- [ ] clean out debugging
-- [ ] replace stubs (tada/submit.py)
-- [ ] different dir (irods) struct for ingest?
-
-* TODO Next thread
-I think the next thread won't just be a thread.  It will be a working
-prototype. The first MVP.
-
-- actually ingest into archive (alternate archive? dry-run option?)
-- refactor puppet
-- add puppet modules for my stuff (dq,tada,astro)
-- multi: telescope, mountain, valley machine tests
-- one config to rule them all (for multi T,M,V case)
-- connect two valley machines (share archive)
-* TODO missing
-There are TONS of things still missing in this thread.  I stopped
-adding to my list after a while because the list was sooo long.  Here
-are just some highlights to serve as reminders.  There are pieces of
-lists all over the place (whiteboard, paper,
-files). Regroup. Consolodate.
-
-- exception handling everywhere
-  + There's some but nowhere near enough. There should be no way a SVC
-    should be able to die with exception.  Should be nothing that could
-    be sent to it via its port that would kill it. Not there.
-- svc (dqpush, dqpop) need to be made into a single actual "dataq" service
-  + that can started/stopped/restarted in the normal linux way.
-- scrape all code for "!!!" indicator of stuff that needs fixing.
-- document underlying data structure 
+- [X] CLI program (or cmdline) to resubmit all from inactive
+  : dqcli --redo
+- [X] document underlying data structure 
   + This includes all the /var/tada/* subdirs, the irods
-    "/tempZone/valley" structure, and all 3 queues
-- change irods: demoResc -> tadaResc
-- change irods: /tempZone -> tadaZone
-- (somehow) avoid having to do "iinit"
-- special user or group for this to all run under?
-- rename puppet-dci2
-- make sure all logs go to /var/log/tada/
-- make sure all configs come from /etc/tada  ???
-- make sure all services write pid to /var/run/tada
-- Write management script clear/reset everything:
-  + rm -rf /var/tada/*/*
-  + dqcli --clear
-- Write monitor scripts to scrape from logs and queues
-  + ERRORS and WARNINGS
-- install all python in github and PyPI in pythonic way
-  + use wheel
-  + universal format
-  + see "distributing" check-list
-- try print from old machine (verify LPD protocol installed)
-  + (did this before but not in this thread
-- clean out debugging
-- formalizing logging 
+    "/tempZone/valley" structure, and 2 queues
+
+* TODO next phase  [0/9]
+- [ ] change irods: 
+  + demoResc -> tadaResc
+  + /tempZone -> tadaZone
+- [ ] Combine services (dqpush, dqpop) into a single "dataq" service
+  + which can started/stopped/restarted in the normal linux way.
+
+- [ ] write hook for use by Pipeline; see [[https://bitbucket.org/noao/opswiki/wiki/ICDs/Pipeline-submit%20][ICD]]
+- [ ] verify "maximum_errors_per_record" works for value > 0
+- [ ] mechanism to bundle instrument specific data with file for
+  downstream use in modifying header 
+- [ ] formalizing logging 
   + logger config
   + option to save to /etc AND to stdout
   + clean out old debugging output
-- replace stubs (tada/submit.py)
+- [ ] clean out debugging
+- [ ] new data-flow diagram 
+  + abstracted to emphasize:
+    - TWO queue/machine types
+    - N processes/threads
+  + flow fork based on action pass/fail, validation pass/fail
+- [ ] try print from old machine (verify LPD protocol installed)
+  + (did this before but not in this thread
+- [ ] scrape all code for "!!!" indicator of stuff that needs fixing.
+  + cd $SANDBOX
+  + find data-queue tada -name "*.py" -exec grep '!!!' {} \; -print
+- [ ] exception handling everywhere
+  + There's some but nowhere near enough. There should be no way a SVC
+    should be able to die with exception.  Should be nothing that could
+    be sent to it via its port that would kill it. Not there.
+- [ ] Prepare for formalize testing by Pat
+  + change thresholds in config, run to exceed them
 
-
+* TODO Deferred
+- refactor puppet
+- Write monitor scripts to scrape from logs and queues
+  + ERRORS and WARNINGS
+- add puppet modules/classes for my stuff (dq,tada,astro)
+  + After taking puppet class
 
 * TODO Installation
 * TODO Work-flows
@@ -216,6 +180,7 @@ enhancements to allow for:
 1. files (checksum) changes
 2. ability to delete a file instead of fixing and resubmitting
 
+** Pipeline submit
 * TODO Design Overview
 The TADA system consists of a set of processes that communciate with
 each other across multiple machines. 
