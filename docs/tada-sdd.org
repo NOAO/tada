@@ -11,7 +11,7 @@ The purpose of TADA is to provide an end-to-end flow of data from
 telescope instruments to archives at machines around the world. By its
 very nature, TADA is a multi-machine system.  The *general purpose*
 might be described as:
-   #+BEGIN_QUOTE
+   #+BEGIN_QUOTEb
    Collect data from remote instruments and save in nearby
    cache. Transfer cache data across network with dubiuos reliability
    to a local archive. Remove cache data after it has been
@@ -65,13 +65,122 @@ application or domain, you can roughly think:
   - Mountain Mirror :: "off-site storage for several instruments". Not
        reliably connected to instruments. 
 
+* TODO Missing in Thread-4
+- [ ] install all python in github and PyPI in pythonic way
+  + use wheel
+  + universal format
+  + see "distributing" check-list
+
+- [ ] formalizing logging 
+  + logger config
+  + option to save to /etc AND to stdout
+  + clean out old debugging output
+
+- [ ] exception handling everywhere
+  + There's some but nowhere near enough. There should be no way a SVC
+    should be able to die with exception.  Should be nothing that could
+    be sent to it via its port that would kill it. Not there.
+- [ ] svc (dqpush, dqpop) need to be made into a single actual "dataq" service
+  + that can started/stopped/restarted in the normal linux way.
+
+- [ ] scrape all code for "!!!" indicator of stuff that needs fixing.
+  + cd $SANDBOX
+  + find data-queue tada -name "*.py" -exec grep '!!!' {} \; -print
+- [ ] Write monitor scripts to scrape from logs and queues
+  + ERRORS and WARNINGS
+
+- [ ] verify "maximum_errors_per_record" works for value > 0
+- [X] CLI program (or cmdline) to resubmit all from inactive
+  : dqcli --redo
+- [X] document underlying data structure 
+  + This includes all the /var/tada/* subdirs, the irods
+    "/tempZone/valley" structure, and 2 queues
+- [ ] new data-flow diagram 
+  + abstracted to emphasize:
+    - TWO queue/machine types
+    - N processes/threads
+  + flow fork based on action pass/fail, validation pass/fail
+- [ ] change irods: demoResc -> tadaResc
+- [ ] change irods: /tempZone -> tadaZone
+- [ ] (somehow) avoid having to do "iinit"
+- [ ] special user or group for this to all run under?
+- [ ] rename puppet-dci2
+
+- [X] make sure all logs go to /var/log/tada/
+- [X] make sure all configs come from /etc/tada 
+- [X] make sure all services write pid to /var/run/tada
+
+- [X] Write management script clear/reset everything:
+  : source /sandbox/demo/clean-valley.sh
+
+- [ ] try print from old machine (verify LPD protocol installed)
+  + (did this before but not in this thread
+- [ ] clean out debugging
+- [ ] replace stubs (tada/submit.py)
+- [ ] different dir (irods) struct for ingest?
+
+* TODO Next thread
+I think the next thread won't just be a thread.  It will be a working
+prototype. The first MVP.
+
+- actually ingest into archive (alternate archive? dry-run option?)
+- refactor puppet
+- add puppet modules for my stuff (dq,tada,astro)
+- multi: telescope, mountain, valley machine tests
+- one config to rule them all (for multi T,M,V case)
+- connect two valley machines (share archive)
+* TODO missing
+There are TONS of things still missing in this thread.  I stopped
+adding to my list after a while because the list was sooo long.  Here
+are just some highlights to serve as reminders.  There are pieces of
+lists all over the place (whiteboard, paper,
+files). Regroup. Consolodate.
+
+- exception handling everywhere
+  + There's some but nowhere near enough. There should be no way a SVC
+    should be able to die with exception.  Should be nothing that could
+    be sent to it via its port that would kill it. Not there.
+- svc (dqpush, dqpop) need to be made into a single actual "dataq" service
+  + that can started/stopped/restarted in the normal linux way.
+- scrape all code for "!!!" indicator of stuff that needs fixing.
+- document underlying data structure 
+  + This includes all the /var/tada/* subdirs, the irods
+    "/tempZone/valley" structure, and all 3 queues
+- change irods: demoResc -> tadaResc
+- change irods: /tempZone -> tadaZone
+- (somehow) avoid having to do "iinit"
+- special user or group for this to all run under?
+- rename puppet-dci2
+- make sure all logs go to /var/log/tada/
+- make sure all configs come from /etc/tada  ???
+- make sure all services write pid to /var/run/tada
+- Write management script clear/reset everything:
+  + rm -rf /var/tada/*/*
+  + dqcli --clear
+- Write monitor scripts to scrape from logs and queues
+  + ERRORS and WARNINGS
+- install all python in github and PyPI in pythonic way
+  + use wheel
+  + universal format
+  + see "distributing" check-list
+- try print from old machine (verify LPD protocol installed)
+  + (did this before but not in this thread
+- clean out debugging
+- formalizing logging 
+  + logger config
+  + option to save to /etc AND to stdout
+  + clean out old debugging output
+- replace stubs (tada/submit.py)
+
+
+
 * TODO Installation
 * TODO Work-flows
 ** FITS Mitigation (NOAO)
 When the Submit queue on a Valley machine runs the submit (ingest)
 action it separates input files (records) by file type.  Only FITS
 files will be ingested into the archive. Others will be moved to the
-local $NOARCHIVE directory.
+local NOARCHIVE[fn:5] directory.
 
 Ingest of FITS files may fail due to serveral possible reasons:
 1. Header contains in sufficient fields/values for ingest
@@ -101,11 +210,11 @@ can be ingested. Once modified (in place), resubmit using:
 : dqcli --redo
 
 *** WARNING: possible corruption
-Modifying in place will change checksum which may be used by irods and
-data-queue.  Work-flow needs some enhancements to allows for:
+Modifying in place will change the checksum which may be used by irods
+and is definitely used data-queue.  The work-flow needs some
+enhancements to allow for:
 1. files (checksum) changes
-2. ability to simply delete a file
-
+2. ability to delete a file instead of fixing and resubmitting
 
 * TODO Design Overview
 The TADA system consists of a set of processes that communciate with
@@ -201,12 +310,52 @@ count on it!) Mountian machines must have sufficient storage to
 weather a long disconnect between Mountain and Valley machines. 
 
 * TODO Config
-** iinit
+** /etc/tada/dq.conf
+The /dq.conf/ file is used to configure the values listed below. See
+/dq_config.json/ for an example.
+
+| Field                    | Purpose                                        |
+|--------------------------+------------------------------------------------|
+| dirs.log_dir             | Location for all log files produced by TADA    |
+| dirs.run_dir             | Contains PIDs for running apps/services        |
+| queues.name              | Named queue                                    |
+| queues.type[fn:6]        | Indicates queue purpose/location               |
+| queues.action_name       | Action to do on files popped from queue        |
+| maxium_errors_per_record | Automatically retry action this many times     |
+| maxium_queue_size        | More than this # of items on queueraises error |
+|--------------------------+------------------------------------------------|
+| next_queue               | Push successful pops to this queue             |
+| cache_dir                | Location of cached files on mountain machine   |
+| mirror_irods             | iRODS path. Mirror of cache on valley machine  |
+|--------------------------+------------------------------------------------|
+| archive_irods            | iRODS path to files to be stored in archive    |
+| archive_dir              | location archive files on valley machine       |
+| noarchive_dir            | location nonarchive files on valley machine    |
+
+
+
+
+When the configuration file is first read, basic validation is done to
+make sure the expected fields exist. Litttle or no validation is done
+against field *values*, however.
+
+The same configuration file should be installed on all
+machines. Machine specific variations are determined by the
+"queue.name" which is specified when the data-queue services are
+started.  (*NOTE:* Rather than use the current command line option
+method for specifying queue-name, a local machine-specific config
+should be added and used!!!)
+
+*** WARNINGS
+- (some) Directory names in config and provisioning must match
+- (some) IRODS paths in config and provisioning must match
+
+** TODO iinit
 irodsHost valley
 irodsPort 1247
 irodsUserName rods
 irodsZone tempZone
-** irod directory structure
+** TODO irod directory structure
 
 #+BEGIN_EXAMPLE
 /sd_zone/
@@ -223,7 +372,6 @@ implemented.
 
 I record dated sub-sections below but will typically hide all but the
 most recent.  Ask if you want older sections for some reason.
-
 
 ** Touch Points
 - INPUT queue
@@ -258,7 +406,6 @@ most recent.  Ask if you want older sections for some reason.
     error
   + move non FITS files to no-archive directory without change
   + inactive = Mitigate
-
 
 *** Features (mark the ones that are acceptable)
 1. [ ] Print of duplicate files, captures all (unless real quick).
@@ -434,8 +581,6 @@ most recent.  Ask if you want older sections for some reason.
   + SB_DIR3
 - [X] Files failing submit to archive move to Inactive of Submit queue
   
-
-
 ** COMMENT <2014-10-24 Fri>
 *** Thread-2: Touches FITS data  (verifies selected metadata in archive)
 Given a "source directory" tree that may contain FITS files, 
@@ -476,7 +621,7 @@ Given a "source directory" tree that may contain FITS files,
 - dq: dbvar.py => constants.py; change names to UPCASE (in
   constants.py and <user>.py
 - Add redis host:port to dq.config
-* Sprint user stories
+* COMMENT Sprint user stories
 These are the expect outcomes from progressively more complex [[https://www.scrum.org/][scrum]] sprints.
 
 In our case "user" means two kinds of people: 
@@ -651,7 +796,7 @@ software will be is unfolding.  It has to be an iterative process. But
 regardless of what the software is, there are some secondary goals
 that go along with it. Here are most of them:
 
-1. Documentation as built
+1. Documentated as built
 
    My intent is to provide "as built" design and code documentation. Code
    documentation will be generated directly from annotated code. Design
@@ -975,6 +1120,46 @@ Other cleanup needed in sdpost.  See reference files at top of script.
 ** Multi data-queues on one machine (same redis server)
 Instead of two instances.  Should be one with different namespaces for
 each queue.
+* Instrument table
+| Site         | Telescope | Instrument | Type                   | Prefix |
+|--------------+-----------+------------+------------------------+--------|
+| Cerro Pachon | SOAR      | Goodman    | spectograph            | psg    |
+| Cerro Pachon | SOAR      | OSIRIS     | IR imager/spectrograph | pso    |
+| Cerro Pachon | SOAR      | SOI        | image                  | psi    |
+| Cerro Pachon | SOAR      | Spartan    | IR imager              | pss    |
+| Cerro Pachon | SOAR      | SAM        | imager                 | psa    |
+| Cerro Tololo | Blanco 4m | DECam      | imager                 | c4d    |
+| Cerro Tololo | Blanco 4m | COSMOS     | spectrograph           | c4c    |
+| Cerro Tololo | Blanco 4m | ISPI       | IR imager              | c4i    |
+| Cerro Tololo | Blanco 4m | Arcon      | imagers/spectrographs  | c4a    |
+| Cerro Tololo | Blanco 4m | Mosaic     | imager                 | c4m    |
+| Cerro Tololo | Blanco 4m | NEWFIRM    | IR imager              | c4n    |
+| Cerro Tololo | 1.5m      | Chiron     | spectrograph           | c15e   |
+| Cerro Tololo | 1.5m      | Arcon      | spectrograph           | c15s   |
+| Cerro Tololo | 1.3m      | ANDICAM    | O/IR imager            | c13a   |
+| Cerro Tololo | 1.0m      | Y4KCam     | imager                 | c1i    |
+| Cerro Tololo | 0.9m      | Arcon      | imager                 | c09i   |
+| Cerro Tololo | lab       | COSMOS     | spectrograph           | clc    |
+| Kitt Peak    | Mayall 4m | Mosaic     | imager                 | k4m    |
+| Kitt Peak    | Mayall 4m | NEWFIRM    | IR imager              | k4n    |
+| Kitt Peak    | Mayall 4m | KOSMOS     | spectograph            | k4k    |
+| Kitt Peak    | Mayall 4m | ICE        | Opt. imagers/spectro.  | k4i    |
+| Kitt Peak    | Mayall 4m | Wildfire   | IR imager/spectro.     | k4w    |
+| Kitt Peak    | Mayall 4m | Flamingos  | IR imager/spectro.     | k4f    |
+| Kitt Peak    | Mayall 4m | WHIRC      | IR imager              | kww    |
+| Kitt Peak    | Mayall 4m | Bench      | spectrograph           | kwb    |
+| Kitt Peak    | Mayall 4m | MiniMo/ICE | imager                 | kwi    |
+| Kitt Peak    | Mayall 4m | (p)ODI     | imager                 | kwo    |
+| Kitt Peak    | Mayall 4m | MOP/ICE    | imager/spectrograph    | k21i   |
+| Kitt Peak    | Mayall 4m | Wildfire   | IR imager/spectrograph | k21w   |
+| Kitt Peak    | Mayall 4m | Falmingos  | IR imager/spectrograph | k21f   |
+| Kitt Peak    | Mayall 4m | GTCam      | imager                 | k21g   |
+| Kitt Peak    | Mayall 4m | MOP/ICE    | spectrograph           | kcfs   |
+| Kitt Peak    | Mayall 4m | HDI        | imager                 | k09h   |
+| Kitt Peak    | Mayall 4m | Mosaic     | imager                 | k09m   |
+| Kitt Peak    | Mayall 4m | ICE        | imager                 | k09i   |
+  
+
 * COMMENT Release checklist
 Before each release, make sure the following are done.
 ** Maintainability 
@@ -1024,4 +1209,13 @@ and selected "insert template" (C-c C-e #).
 #+XSLT: 
 
 
-#+TAGS: draft1(1)  review(r) 
+#+TAGS: draft1(1)  review(r)
+
+* Footnotes
+
+[fn:5] Actual directory to use is set in "/etc/tada/dq.conf"
+
+[fn:6] A queueue "type" is one of: MOUNTAIN, VALLEY.  Some of the
+configuration fields are type specific.  For instance, the
+"archive_dir" field only makes sense for VALLEY machines.
+ 

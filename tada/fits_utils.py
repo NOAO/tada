@@ -1,10 +1,16 @@
+#! /usr/bin/env python3
 """Fiddling with Fits (tm)"""
+import sys
+import argparse
+import logging
+
 
 import pyfits
-import logging
 import datetime
+import os.path
  
 from . import file_naming as fn
+from . import exceptions as tex
 
 # common between a SINGLE raw and cooked pair
 common_fields = [
@@ -181,22 +187,41 @@ INGEST_REQUIRED_FIELDS = set([
 ])
 
 
+def get_archive_header(fits_file, checksum):
+    # Only look at first/primary HDU?!!! (Header Data Unit)
+    hdu = pyfits.open(fits_file)[0] # can be compressed
+    hdr_keys = set(hdu.header.keys())
+    params = dict(filename=fits_file,
+                  filesize=os.path.getsize(fits_file),
+                  checksum=checksum,
+              )
+    return """\
+#filename = {filename}
+#reference = {filename}
+#filetype = UNKNOWN
+#filesize = {filesize} bytes
+#file_md5 = {checksum}
+
+""".format(**params)
+
+    
 def valid_header(fits_file):
     """Read FITS metadata and insure it has what we need. 
- Return (success, message)."""
+Raise exception if not."""
     try:
         # Only look at first/primary HDU?!!! (Header Data Unit)
         hdu = pyfits.open(fits_file)[0] # can be compressed
         hdr_keys = set(hdu.header.keys())
     except Exception as err:
-        return False, 'Metadata keys could not be read: %s' % err
+        raise tex.InvalidHeader('Metadata keys could not be read: {}'
+                                       .format(err))
 
     missing = sorted(RAW_REQUIRED_FIELDS - hdr_keys)
     if len(missing) > 0:
-        return (False,
-                'FITS file is missing required metadata keys: %s'
-                % (missing,))
-    return True, None
+        raise tex.HeaderMissingKeys(
+            'FITS file "{}" is missing required metadata keys: {}'
+            .format(fits_file, missing))
+    return True
 
 
 """    
@@ -227,6 +252,7 @@ SB_NAME = 'kp680491.fits     '  /  name assigned by iSTB
 SB_RECNO=               680491  /  iSTB sequence number                      
 SB_SITE = 'kp                '  /  iSTB host site                            
 """    
+
 
 # Used istb/src/header.{h,c} for hints.
 # raw: nhs_2014_n14_299403.fits
@@ -278,3 +304,52 @@ def molest(fits_file):
     # e.g. "k4k_140923_024819_uri.fits.fz"
     return new_fname
 
+
+
+
+def fits_compliance(fits_file_list):
+    """Check FITS file for complaince with Archive Ingest."""
+    status = False
+    for ffile in fits_file_list:
+        valid_header(ffile)
+    return(status)
+
+
+
+##############################################################################
+
+def main():
+    "Parse command line arguments and do the work."
+    parser = argparse.ArgumentParser(
+        description='My shiny new python program',
+        epilog='EXAMPLE: %(prog)s a b"'
+        )
+    parser.add_argument('--version', action='version', version='1.0.1')
+    parser.add_argument('infiles',
+                        nargs='+',
+                        help='Input file')
+
+    parser.add_argument('--loglevel',
+                        help='Kind of diagnostic output',
+                        choices=['CRTICAL', 'ERROR', 'WARNING',
+                                 'INFO', 'DEBUG'],
+                        default='WARNING')
+    args = parser.parse_args()
+    #!args.outfile.close()
+    #!args.outfile = args.outfile.name
+
+    #!print 'My args=',args
+    #!print 'infile=',args.infile
+
+    log_level = getattr(logging, args.loglevel.upper(), None)
+    if not isinstance(log_level, int):
+        parser.error('Invalid log level: %s' % args.loglevel)
+    logging.basicConfig(level=log_level,
+                        format='%(levelname)s %(message)s',
+                        datefmt='%m-%d %H:%M')
+    logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
+
+    fits_compliance(args.infiles)
+
+if __name__ == '__main__':
+    main()

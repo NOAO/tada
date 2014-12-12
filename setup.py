@@ -85,7 +85,8 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'sample=sample:main',
+            'mockingest=tada.mock_ingest:main',
+            'fits_compliance=tada.fits_utils:main',
         ],
     },
 )
