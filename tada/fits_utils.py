@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 """Fiddling with Fits (tm)"""
+
 import sys
 import argparse
 import logging
@@ -11,6 +12,24 @@ import os.path
  
 from . import file_naming as fn
 from . import exceptions as tex
+
+# Req-A1: set of header keywords required by NSA ingestion per
+# "safestore_raw_pixel_data.pdf (Use Case Specification)
+#    DTSITE observatory location
+#    DTTELESC telescope identifier
+#    DTINSTRU instrument identifier
+#    DTCALDAT calendar date from observing schedule
+#    DTPUBDAT calendar date of public release   #
+#    DTOBSERV scheduling institution
+#    DTPROPID observing proposal ID
+#    DTPI Principal Investigator
+#    DTPIAFFL PI affiliation
+#    DTTITLE title of obser
+#    DTACQUIS host name of data acquisition computer
+#    DTACCOUN observing account name
+#    DTACQNAM file name supplied at telescope
+#    DTNSANAM file name in storage system
+#    DTCOPYRI copyright holder of data
 
 # common between a SINGLE raw and cooked pair
 common_fields = [
@@ -128,24 +147,31 @@ common_fields = [
     'TIMESYS',
     'ZD']
 
+# This information was derived from a SINGLE pair of example FITS
+# files (corresponding to the file Before and After STB modified the
+# header).
+#
+# Fields added to raw FITS before ingesting. Its unknown which of these
+# are strictly required.
 added_molested_fields = [
     'CHECKSUM',
     'DATASUM',
-    'DTACCOUN',
-    'DTACQNAM',
-    'DTACQUIS',
-    'DTCALDAT',
-    'DTCOPYRI',
-    'DTINSTRU',
-    'DTNSANAM',
-    'DTOBSERV',
-    'DTPI',
-    'DTPIAFFL',
-    'DTPROPID',
-    'DTSITE',
+    'DTACCOUN', # Req-A1: observing account name
+    'DTACQNAM', # Req-A1: file name supplied at telescope
+    'DTACQUIS', # Req-A1: host name of data acquisition computer
+    'DTCALDAT', # Req-A1: calendar date from observing schedule
+    'DTCOPYRI', # Req-A1: copyright holder of data
+    'DTINSTRU', # Req-A1: instrument identifier
+    'DTNSANAM', # Req-A1: file name in storage system
+    'DTOBSERV', # Req-A1: scheduling institution
+    'DTPI',     # Req-A1: Principal Investigator
+    'DTPIAFFL', # Req-A1: PI affiliation
+    'DTPROPID', # Req-A1: observing proposal ID
+    'DTPUBDAT', # Req-A1: calendar date of public release  ##
+    'DTSITE',   # Req-A1: observatory location
     'DTSTATUS',
-    'DTTELESC',
-    'DTTITLE',
+    'DTTELESC', # Req-A1: telescope identifier
+    'DTTITLE',  # Req-A1: title of obser
     'DTUTC',
     'DT_RTNAM',
     'ODATEOBS',
@@ -164,6 +190,7 @@ added_molested_fields = [
     'SB_SITE',
     ]
 
+# All bets are off in the original FITS file does not contain all of these.
 RAW_REQUIRED_FIELDS = set([
     'DATE-OBS',
     'INSTRUME',
@@ -172,7 +199,9 @@ RAW_REQUIRED_FIELDS = set([
     'PROPID',
     'PROPOSER',
 ])
-    
+
+# To be able to ingest a fits file into the archive, all of these must
+# be present in the header.
 INGEST_REQUIRED_FIELDS = set([
     'DATE-OBS',
     'DTACQNAM',
@@ -187,13 +216,23 @@ INGEST_REQUIRED_FIELDS = set([
 ])
 
 
+# It seems unconscionably complex for Ingest to require extra lines be
+# prepended to the text of the fits header.  The only reason those
+# same 5 fields couldn't be added to the header itself is that one of
+# them is 9 characters but fits limites field names to 8 characters.
+# Once Ingest made the decision to require special non-header fields,
+# it should have just defined exactly what it needed (not prepended);
+# including defining what is optional.  There is no published
+# "contract" for what exactly should be sent to Ingest via TCP!
 def get_archive_header(fits_file, checksum):
+    "Get the 'header' that archive ingest wants to see sent to it over TCP"
     # Only look at first/primary HDU?!!! (Header Data Unit)
     hdu = pyfits.open(fits_file)[0] # can be compressed
     hdr_keys = set(hdu.header.keys())
     params = dict(filename=fits_file,
                   filesize=os.path.getsize(fits_file),
                   checksum=checksum,
+                  hdr=dhu.header,
               )
     return """\
 #filename = {filename}
@@ -202,6 +241,7 @@ def get_archive_header(fits_file, checksum):
 #filesize = {filesize} bytes
 #file_md5 = {checksum}
 
+{hdr}
 """.format(**params)
 
     
@@ -219,11 +259,12 @@ Raise exception if not."""
     missing = sorted(RAW_REQUIRED_FIELDS - hdr_keys)
     if len(missing) > 0:
         raise tex.HeaderMissingKeys(
-            'FITS file "{}" is missing required metadata keys: {}'
-            .format(fits_file, missing))
+            'Missing required metadata keys: {}'
+            .format(missing))
     return True
 
 
+# EXAMPLE:
 """    
 DTACCOUN= 'cache             '  /  observing account name                    
 DTACQNAM= '/home/data/data16923.fits'  /  file name supplied at telescope    
@@ -266,13 +307,14 @@ def molest(fits_file):
     missing = RAW_REQUIRED_FIELDS - set(hdr.keys())
     if len(missing) > 0:
         raise Exception(
-            'Raw fits file "{}" is missing required metadata fields: {}'
-            .format(fits_file, ', '.join(sorted(missing)))
+            'Raw fits file is missing required metadata fields: {}'
+            .format(', '.join(sorted(missing)))
             )
 
     # e.g. OBSID = 'kp4m.20141114T122626'
     tele, dt_str = hdr['OBSID'].split('.')
     date, time = dt_str.split('T')
+    # "UTC epoch"
     dateobs = datetime.datetime.strptime(hdr['DATE-OBS'],'%Y-%m-%dT%H:%M:%S.%f')
     
     hdr['DTACQNAM'] = '' # file name supplied at telescope
@@ -280,10 +322,12 @@ def molest(fits_file):
     #hdr['DTNSANAM'] = '' #file name in NOAO Science Archive            
     hdr['DTPI']     = hdr['PROPOSER']
     hdr['DTSITE']   = hdr['OBSERVAT'].lower()
+    #! hdr['DTPUBDAT'] = 'NA' # doc says its required, cooked file lacks it
     hdr['DTTELESC'] = tele
     hdr['DTTITLE']  = 'Field not derivable from raw metadata!!!',
     # DTUTC cannot be derived exactly from any RAW fields
-    hdr['DTUTC']    = dateobs.strftime('%Y-%m-%dT%H:%M:%S') # slightly wrong!!!
+    # Should be: "post exposure UTC epoch from DTS"
+    hdr['DTUTC']    = dateobs.strftime('%Y-%m-%dT%H:%M:%S') #slightly wrong!!!
 
     hdr['SB_DIR1'] = date
     hdr['SB_DIR2'] = tele
@@ -311,7 +355,12 @@ def fits_compliance(fits_file_list):
     """Check FITS file for complaince with Archive Ingest."""
     status = False
     for ffile in fits_file_list:
-        valid_header(ffile)
+        try:
+            valid_header(ffile)
+        except Exception as err:
+            print('{}:\t NOT compliant; {}'.format(ffile, err))
+        else:
+            print('{}:\t IS compliant'.format(ffile))
     return(status)
 
 

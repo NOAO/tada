@@ -131,7 +131,7 @@ application or domain, you can roughly think:
 - [ ] Prepare for formalize testing by Pat
   + change thresholds in config, run to exceed them
 
-* TODO Deferred
+l* TODO Deferred
 - refactor puppet
 - Write monitor scripts to scrape from logs and queues
   + ERRORS and WARNINGS
