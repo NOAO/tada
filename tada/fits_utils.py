@@ -13,25 +13,55 @@ import os.path
 from . import file_naming as fn
 from . import exceptions as tex
 
+##############################################################################
 # Req-A1: set of header keywords required by NSA ingestion per
 # "safestore_raw_pixel_data.pdf (Use Case Specification)
-#    DTSITE observatory location
-#    DTTELESC telescope identifier
-#    DTINSTRU instrument identifier
-#    DTCALDAT calendar date from observing schedule
-#    DTPUBDAT calendar date of public release   #
-#    DTOBSERV scheduling institution
-#    DTPROPID observing proposal ID
-#    DTPI Principal Investigator
-#    DTPIAFFL PI affiliation
-#    DTTITLE title of obser
-#    DTACQUIS host name of data acquisition computer
 #    DTACCOUN observing account name
 #    DTACQNAM file name supplied at telescope
-#    DTNSANAM file name in storage system
+#    DTACQUIS host name of data acquisition computer
+#    DTCALDAT calendar date from observing schedule
 #    DTCOPYRI copyright holder of data
+#    DTINSTRU instrument identifier
+#    DTNSANAM file name in storage system
+#    DTOBSERV scheduling institution
+#    DTPI Principal Investigator
+#    DTPIAFFL PI affiliation
+#    DTPROPID observing proposal ID
+#    DTPUBDAT calendar date of public release   #
+#    DTSITE observatory location
+#    DTTELESC telescope identifier
+#    DTTITLE title of obser
+##############################################################################
 
-# common between a SINGLE raw and cooked pair
+# To be able to ingest a fits file into the archive, all of these must
+# be present in the header.
+# The commented out lines are Requirements per document, but did not seem to
+# be required in Legacy code.
+INGEST_REQUIRED_FIELDS = set([
+    'DATE-OBS',
+#    'DTACCOUN', # observing account name
+    'DTACQNAM',
+#    DTACQUIS host name of data acquisition computer
+#    DTCALDAT calendar date from observing schedule
+#    DTCOPYRI copyright holder of data
+    'DTINSTRU',
+    'DTNSANAM',
+#    DTOBSERV scheduling institution
+    'DTPI',
+#    DTPIAFFL PI affiliation
+#    DTPROPID observing proposal ID
+#    DTPUBDAT calendar date of public release 
+    'DTSITE',
+    'DTTELESC',
+    'DTTITLE',
+    'DTUTC',
+    'PROPID',
+])
+
+
+
+# common between a SINGLE Raw and Cooked pair
+#   "Cooked":: contains (at least) added fields required for Archive Ingest
 common_fields = [
     '',
     'AIRMASS',
@@ -153,7 +183,7 @@ common_fields = [
 #
 # Fields added to raw FITS before ingesting. Its unknown which of these
 # are strictly required.
-added_molested_fields = [
+added_fields = [
     'CHECKSUM',
     'DATASUM',
     'DTACCOUN', # Req-A1: observing account name
@@ -200,22 +230,19 @@ RAW_REQUIRED_FIELDS = set([
     'PROPOSER',
 ])
 
-# To be able to ingest a fits file into the archive, all of these must
-# be present in the header.
-INGEST_REQUIRED_FIELDS = set([
-    'DATE-OBS',
-    'DTACQNAM',
-    'DTINSTRU',
-    'DTNSANAM',
-    'DTPI',
-    'DTSITE',
-    'DTTELESC',
-    'DTTITLE',
-    'DTUTC',
-    'PROPID',
-])
 
+def extract_header(fits_filename=None, hdr_filename=None):
+    "Get the 'header' from FITS file. Write it to text file."
+    if fits_filename == None:
+        fits_filename = sys.argv[1]
+    if hdr_filename == None:
+        hdr_filename = sys.argv[2]
 
+    hdulist = pyfits.open(fits_filename) # can be compressed
+    hdr = hdulist[0].header
+    with open(hdr_filename, 'w') as f:
+        hdr.totextfile(f)
+    
 # It seems unconscionably complex for Ingest to require extra lines be
 # prepended to the text of the fits header.  The only reason those
 # same 5 fields couldn't be added to the header itself is that one of
@@ -244,19 +271,32 @@ def get_archive_header(fits_file, checksum):
 {hdr}
 """.format(**params)
 
-    
+def missing_in_hdr(hdr, required_fields):
+    hdr_keys = set(hdr.keys())
+    missing = sorted(required_fields - hdr_keys)
+    return missing
+
+def missing_in_raw_hdr(hdr):
+    """Header from original FITS input to TADA doesn't contain minimum
+ acceptable fields."""
+    return missing_in_hdr(hdr, RAW_REQUIRED_FIELDS)
+
+def missing_in_archive_hdr(hdr):
+    """Header from FITS oesn't contain minimum fields acceptable for
+ Archive Ingest."""
+    return missing_in_hdr(hdr, INGEST_REQUIRED_FIELDS)
+
 def valid_header(fits_file):
     """Read FITS metadata and insure it has what we need. 
 Raise exception if not."""
     try:
         # Only look at first/primary HDU?!!! (Header Data Unit)
-        hdu = pyfits.open(fits_file)[0] # can be compressed
-        hdr_keys = set(hdu.header.keys())
+        hdulist = pyfits.open(fits_file) # can be compressed
+        hdr = hdulist[0].header
     except Exception as err:
         raise tex.InvalidHeader('Metadata keys could not be read: {}'
                                        .format(err))
-
-    missing = sorted(RAW_REQUIRED_FIELDS - hdr_keys)
+    missing = missing_in_raw_hdr(hdr)
     if len(missing) > 0:
         raise tex.HeaderMissingKeys(
             'Missing required metadata keys: {}'
@@ -264,49 +304,161 @@ Raise exception if not."""
     return True
 
 
-# EXAMPLE:
+
+# EXAMPLE compliant header (included here for descriptions):
 """    
-DTACCOUN= 'cache             '  /  observing account name                    
-DTACQNAM= '/home/data/data16923.fits'  /  file name supplied at telescope    
-DTACQUIS= 'nfdca-KP.kpno.noao.edu'  /  host name of data acquisition computer
-DTCALDAT= '2008-02-24        '  /  calendar date from observing schedule     
-DTCOPYRI= 'AURA              '  /  copyright holder of data                  
-DTINSTRU= 'newfirm           '  /  instrument identifier                     
-DTNSANAM= 'kp680491.fits     '  /  file name in NOAO Science Archive         
-DTOBSERV= 'NOAO              '  /  scheduling institution                    
-DTPI    = 'Peter Frinchaboy  '  /  Principal Investigator                    
-DTPIAFFL= 'University of Wisconsin, Madison'  /  PI affiliation              
-DTPROPID= '2007B-0092        '  /  observing proposal ID                     
-DTSITE  = 'kp                '  /  observatory location                      
-DTSTATUS= 'done              '  /  data transport status                     
-DTTELESC= 'kp4m              '  /  telescope identifier                      
-DTTITLE = 'WIYN Open Cluster Study (WOCS)'  /  title of observing proposal   
-DTUTC   = '                  '  /  post exposure UTC epoch from DTS          
-    
-SB_DIR1 = '20080224          '  /  level 1 directory in NSA DS               
-SB_DIR2 = 'kp4m              '  /  level 2 directory in NSA DS               
-SB_DIR3 = '2007B-0092        '  /  level 3 directory in NSA DS               
-SB_HOST = 'dtskp.kpno.noao.edu'  /  iSTB client host                         
-SB_ID   = 'kp680491          '  /  unique iSTB identifier                    
-SB_LOCAL= 'kp                '  /  locale of iSTB daemon                     
-SB_NAME = 'kp680491.fits     '  /  name assigned by iSTB                     
-SB_RECNO=               680491  /  iSTB sequence number                      
-SB_SITE = 'kp                '  /  iSTB host site                            
+SIMPLE  =                    T / File conforms to FITS standard                 
+BITPIX  =                    8 / Bits per pixel (not used)                      
+NAXIS   =                    0 / PHU contains no image matrix                   
+EXTEND  =                    T / File contains extensions                       
+NEXTEND =                    2 / Number of extensions                           
+FILENAME= 'n3.09786.fits'      / Original host filename                         
+OBJECT  = 'SkyFlat Blue'       / Observation title                              
+OBSTYPE = 'flat    '           / Observation type                               
+OBSMODE = 'sos_slit'           / Observation mode                               
+EXPTIME =                   20 / Exposure time (sec)                            
+RADECSYS= 'FK5     '           / Default coordinate system                      
+RADECEQ =                2000. / Default equinox test4                          
+RA      = '18:12:45.72'        / RA of observation (hr)                         
+DEC     = '31:57:45.0'         / DEC of observation (deg)                       
+OBJRA   = '18:12:45.72'        / Right Ascension                                
+OBJDEC  = '31:57:45.0'         / Declination                                    
+OBJEPOCH=               2014.7 / [yr] epoch                                     
+TIMESYS = 'UTC approximate'    / Time system                                    
+DATE-OBS= '2014-09-22T01:35:48.0'  /  UTC epoch                                 
+TIME-OBS= '1:35:48 '           / Universal time                                 
+MJD-OBS =       56922.06652778 / MJD of observation start                       
+ST      = '18:13:55'           / Sidereal time                                  
+MJDSTART=      56922.066558066 / MJD of observation start                       
+MJDEND  =      56922.067317367 / MJD of observation end                         
+OBSERVAT= 'KPNO    '           / Observatory                                    
+TELESCOP= 'KPNO 4.0 meter telescope' / Telescope                                
+TELRADEC= 'FK5     '           / Telescope coordinate system                    
+TELEQUIN=               2014.7 / Equinox of tel coords                          
+TELRA   = '18:12:45.72'        / RA of telescope (hr)                           
+TELDEC  = '31:57:45.0'         / DEC of telescope (deg)                         
+HA      = '0:00:00.00'         / Telescope hour angle                           
+ZD      =                    0 / Zenith distance                                
+AIRMASS =                    1 / Airmass                                        
+INSTRUME= 'KOSMOS  '           / Kosmos detector                                
+DETSIZE = '[1:2048,1:4096]'    / Kosmos detector size                           
+NDETS   =                    1 / Number of detectors in kosmos                  
+FILTER  = 'Open    '           / Filter                                         
+DISPERSR= 'b2k kb2k'           / Disperser                                      
+SLITWHL = '4pxB k4pxB'         / Slit Wheel                                     
+DEWAR   = 'KOSMOS Dewar'       / Dewar identification                           
+OBSERVER= 'Hirschauer, Salzer' / Observer(s)                                    
+PROPOSER= 'John Salzer'        / Proposer(s)                                    
+PROPID  = '2014B-0461'         / Proposal identification                        
+OBSID   = 'kp4m.20140922T013548' / Observation ID                               
+EXPID   =                    0 / Monsoon exposure ID                            
+NOCID   =      2456922.7748827 / NOCS exposure ID                               
+DHEFILE = 'kosmos_e2v_Sequencer_roiV206.ucd' / Sequencer file                   
+NOCROIRZ=                    0 / Detector ROI row size                          
+NOCDEVIC= 'e2v     '           / Detector device                                
+NOCOFFG = '0.0 0.0 '           / ntcs_gdroffset x y offset (mm)                 
+NOCNO   =                    1 / observation number in this sequence            
+NOCGAIN = 'unknown '           / Controller gain                                
+NOCDFIL =                    0 / Dither offsets file                            
+NOCDHS  = 'STFLAT  '           / DHS script name                                
+NOCGPXPS=                    0 / Monsoon pixel row/column shift                 
+NOCFSTEP=                    0 / [um] step value for focus adjustments          
+NOCSLEW = '00:00:00.00 00:00:00.0 2010' / ntcs_moveto ra dec epoch              
+NOCFITER=                    0 / Number of focus positions                      
+NOCCSN  = 'kHeNeAr '           / Calibration lamp serial number                 
+NOCTOT  =                    1 / Total number of observations in set            
+NOCSCR  = 'STFLAT  '           / NOHS script run                                
+NOCTIM  =                   20 / [s] Requested integration time                 
+NOCOFFT = '0.0 0.0 '           / ntcs_offset RA Dec offset (arcsec)             
+NOCROIPT= 'FullFrame'          / Detector ROI pattern (FullFrame|4kx2k|4kx300|2k
+NOCSYS  = 'kpno 4m '           / system ID                                      
+NOCNUM  =                    1 / observation number request                     
+NOCLAMP = 'off     '           / Dome flat lamp status (on|off|unknown)         
+NOCRBIN =                    1 / CCD row binning                                
+NOCROICS=                    0 / Detector ROI colum start                       
+NOCNPOS =                    1 / observation number in requested number         
+NOCROI  = 'disabled'           / Detector ROI flag (enabled|disabled)           
+NOCCBIN =                    1 / CCD column binning                             
+NOCTYP  = 'FLAT    '           / Observation type (zero|dark|flat|arc|focus|acq|
+NOCPOST = 'sky     '           / Calibration position (unknown|init|sky|dfs|lamp
+NOCDPOS =                    0 / Dither position                                
+NOCROICZ=                    0 / Detector ROI column size                       
+NOCROIRS=                    0 / Detector ROI row start                         
+NOCCAL  = 'HeNeAr  '           / Calibration lamp                               
+NOCDPAT = 'unknown '           / Dither pattern                                 
+RAZERO  =               -36.13 / [arcsec] RA zero                               
+RAINDEX =                    0 / [arcsec] RA index                              
+ALT     = '90:00:00.0'         / Telescope altitude                             
+DECINST =                    0 / [arcsec] Dec instrument center                 
+DECDIFF =                    0 / [arcsec] Dec diff                              
+PARALL  =                  360 / [deg] parallactic angle                        
+RADIFF  =                    0 / [arcsec] RA diff                               
+DECZERO =                61.25 / [arcsec] Dec zero                              
+AZ      = '0:00:00.0'          / Telescope azimuth                              
+RAINST  =                    0 / [arcsec] RA instrument center                  
+DECOFF  =                    0 / [arcsec] Dec offset                            
+DECINDEX=                    0 / [arcsec] Dec index                             
+RAOFF   =                    0 / [arcsec] RA offset                             
+GCCROTAT=            90.199997 / [Degrees] Instrument rotator angle             
+KSDPOS  = 'b2k     '           / actual name {between|lo|med|high|narrow|other|o
+KSDWPOS =                    6 / wheel actual pos {0|1|2|3|4|5|6}               
+KSFILCMD= 'Open    '           / actual name {between|U|B|V|R|I|open}           
+KSFW1POS=                    2 / wheel 1 actual pos {0|1|2|3|4|5|6}             
+KSFW2POS=                    1 / wheel 2 actual pos {0|1|2|3|4|5|6}             
+KSSWPOS =                    2 / wheel actual pos {0|1|2|3|4|5|6}               
+KSSPOS  = '4pxB    '           / actual name {between|long|1px|2px|narrow|other|
+KSCAMFOC=           1849.97998 / [um] camera focus                              
+KSCAMZRO=                 1850 / [um] camera focus zeropoint                    
+DOMEERR =                    0 / [deg] Dome error as distance from target       
+DOMEAZ  =                    0 / [deg] Dome position                            
+KSTEMP1 =                 23.6 / [Celsius] temperature sensor 1                 
+KSTEMP2 =                 18.9 / [Celsius] temperature sensor 2                 
+KSTEMP3 =                 18.8 / [Celsius] temperature sensor 3                 
+KSTEMP4 =                 18.1 / [Celsius] temperature sensor 4                 
+KSCOLFOC=           499.980011 / [um] collimator focus                          
+KSCOLZRO=                  500 / [um] collimator focus zeropoint                
+DTSITE  = 'kp                '  /  observatory location                         
+DTTELESC= 'kp4m              '  /  telescope identifier                         
+DTINSTRU= 'kosmos            '  /  instrument identifier                        
+DTCALDAT= '2014-09-21        '  /  calendar date from observing schedule        
+ODATEOBS= '                  '  /  previous DATE-OBS                            
+DTUTC   = '2014-09-22T01:37:04'  /  post exposure UTC epoch from DTS            
+DTOBSERV= 'NOAO              '  /  scheduling institution                       
+DTPROPID= '2014B-0461        '  /  observing proposal ID                        
+DTPI    = 'John Salzer       '  /  Principal Investigator                       
+DTPIAFFL= 'Indiana University'  /  PI affiliation                               
+DTTITLE = 'Spectroscopy of Ultra-Low Metallicity Star-Forming Galaxies'  /  titl
+DTCOPYRI= 'AURA              '  /  copyright holder of data                     
+DTACQUIS= 'kosmosdhs-4m.kpno.noao.edu'  /  host name of data acquisition compute
+DTACCOUN= 'cache             '  /  observing account name                       
+DTACQNAM= '/home/data/n3.09786.fits'  /  file name supplied at telescope        
+DTNSANAM= 'k4k_140922_013704_fri.fits'  /  file name in NOAO Science Archive    
+DT_RTNAM= 'k4k_140922_013704_fri'  /  NSA root name                             
+DTSTATUS= 'done              '  /  data transport status                        
+SB_HOST = 'kosmosdhs-4m.kpno.noao.edu'  /  iSTB client host                     
+SB_ACCOU= 'cache             '  /  iSTB client user account                     
+SB_SITE = 'kp                '  /  iSTB host site                               
+SB_LOCAL= 'kp                '  /  locale of iSTB daemon                        
+SB_DIR1 = '20140921          '  /  level 1 directory in NSA DS                  
+SB_DIR2 = 'kp4m              '  /  level 2 directory in NSA DS                  
+SB_DIR3 = '2014B-0461        '  /  level 3 directory in NSA DS                  
+SB_RECNO=              2025139  /  iSTB sequence number                         
+SB_ID   = 'kp2025139         '  /  unique iSTB identifier                       
+SB_NAME = 'k4k_140922_013704_fri.fits'  /  name assigned by iSTB                
+SB_RTNAM= 'k4k_140922_013704_fri'  /  NSA root name                             
+RMCOUNT =                    0  /  remediation counter                          
+RECNO   =              2025139  /  NOAO Science Archive sequence number         
+CHECKSUM= 'mhElmh9lmhClmh9l'    /  ASCII 1's complement checksum                
+DATASUM = '0         '          /  checksum of data records                     
 """    
 
-
+# SIDE-EFFECTS: fields added to FITS header
 # Used istb/src/header.{h,c} for hints.
 # raw: nhs_2014_n14_299403.fits
-def molest(fits_file):
-    """Add fields to hdr and create filename that 
- satisfies http://ast.noao.edu/data/docs"""
-    
-    hdulist = pyfits.open(fits_file, mode='update') # modify IN PLACE
-    hdr = hdulist[0].header
-
-    missing = RAW_REQUIRED_FIELDS - set(hdr.keys())
+def modify_hdr(hdr, fname):
+    missing = missing_in_raw_hdr(hdr)
     if len(missing) > 0:
-        raise Exception(
+        raise tex.InsufficientRawHeader(
             'Raw fits file is missing required metadata fields: {}'
             .format(', '.join(sorted(missing)))
             )
@@ -317,7 +469,7 @@ def molest(fits_file):
     # "UTC epoch"
     dateobs = datetime.datetime.strptime(hdr['DATE-OBS'],'%Y-%m-%dT%H:%M:%S.%f')
     
-    hdr['DTACQNAM'] = '' # file name supplied at telescope
+    hdr['DTACQNAM'] = '' # file name supplied at telescope !!!
     hdr['DTINSTRU'] = hdr['INSTRUME'] # eg. 'NEWFIRM'
     #hdr['DTNSANAM'] = '' #file name in NOAO Science Archive            
     hdr['DTPI']     = hdr['PROPOSER']
@@ -329,10 +481,38 @@ def molest(fits_file):
     # Should be: "post exposure UTC epoch from DTS"
     hdr['DTUTC']    = dateobs.strftime('%Y-%m-%dT%H:%M:%S') #slightly wrong!!!
 
-    hdr['SB_DIR1'] = date
-    hdr['SB_DIR2'] = tele
-    hdr['SB_DIR3'] = hdr['PROPID']
+    dir1 = date
+    dir2 = tele
+    dir3 = hdr['PROPID']
+    hdr['SB_DIR1'] = dir1
+    hdr['SB_DIR2'] = dir2 
+    hdr['SB_DIR3'] = dir3
     # e.g. SB_DIR1='20141113', SB_DIR2='kp4m', SB_DIR3='2013B-0236'
+
+    hdr['ORIGPATH'] = fname
+
+    return hdr
+
+# [vagrant@valley ~]$ imeta set -d /tempZone/mountain_mirror/vagrant/13/nhs_2014_n14_299403.fits ftype fits
+# [vagrant@valley ~]$ imeta lsw -d /tempZone/mountain_mirror/vagrant/13/nhs_2014_n14_299403.fits
+# AVUs defined for dataObj /tempZone/mountain_mirror/vagrant/13/nhs_2014_n14_299403.fits:
+# attribute: ftype
+# value: fits
+# units: 
+
+
+
+def add_hdr_fields(fits_file):
+    """Add fields to hdr (modify in place) and create filename
+ that satisfies http://ast.noao.edu/data/docs.  This new filename is
+ just a name.  The corresponding file does not exist.  Its up the the
+ caller to rename from old to new if desired.
+    """
+
+    hdulist = pyfits.open(fits_file, mode='update') # modify IN PLACE
+    hdr = hdulist[0].header # use only first in list. 
+
+    modify_hdr(hdr, fits_file) # Validates raw fits hdr used as input
     
     new_fname = fn.generate_fname(
         instrument=hdr.get('DTINSTRU', 'NOTA'),
@@ -344,25 +524,39 @@ def molest(fits_file):
 
     hdulist.flush()
     hdulist.close()
-
     # e.g. "k4k_140923_024819_uri.fits.fz"
-    return new_fname
+    return new_fname, dir1, dir2, dir3
 
-
-
-
-def fits_compliance(fits_file_list):
+def fits_compliant(fits_file_list):
     """Check FITS file for complaince with Archive Ingest."""
-    status = False
+    bad = 0
+    bad_files = []
     for ffile in fits_file_list:
+        missing = []
         try:
-            valid_header(ffile)
+            #!valid_header(ffile)
+            hdr = pyfits.open(ffile)[0].header # use only first in list. 
+            modify_hdr(hdr)
+            missing = missing_in_archive_hdr(hdr)
         except Exception as err:
+            bad_files.append(ffile)
+            bad += 1
             print('{}:\t NOT compliant; {}'.format(ffile, err))
-        else:
+            continue
+        
+        if len(missing) == 0:
             print('{}:\t IS compliant'.format(ffile))
-    return(status)
+        else:
+            bad_files.append(ffile)
+            bad += 1
+            print('{}:\t NOT compliant; Missing fields: {}'
+                  .format(ffile, missing))
 
+    #!if (bad > 0):
+    #!    print('Non-complaint files: {}'
+    #!          .format(', '.join(bad_files)))
+    print('\n{} of {} files are NOT compliant (for Archive Ingest)'
+          .format(bad, len(fits_file_list)))
 
 
 ##############################################################################
@@ -398,7 +592,7 @@ def main():
                         datefmt='%m-%d %H:%M')
     logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
-    fits_compliance(args.infiles)
+    fits_compliant(args.infiles)
 
 if __name__ == '__main__':
     main()

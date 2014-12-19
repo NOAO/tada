@@ -65,11 +65,19 @@ application or domain, you can roughly think:
   - Mountain Mirror :: "off-site storage for several instruments". Not
        reliably connected to instruments. 
 
-* TODO Next up (rough prio order) [7/16]
-- [ ] install all python in github and PyPI in pythonic way
+* TODO Next up (rough prio order) [9/16]
+- [ ] different dir (irods) structure for ingest? 
+  + use subdir names from SB_* fields
+- [ ] special user or group for this to all run under?
+- [ ] avoid having to do "iinit"
+- [X] rename puppet-dci2 (puppet-tada, puppet-astro, puppet-noao)
+
+
+- [X] install all python in github (and PyPI) in pythonic way
   + use wheel
   + universal format
   + see "distributing" check-list
+  + AS DONE: not in PyPI
 
 - [ ] mock ingest should save info (to confirm it worked),
   + provide random prob of failure to simulate
@@ -78,11 +86,6 @@ application or domain, you can roughly think:
 - [ ] multi: telescope, mountain, valley machine tests
   + one config to rule them all (for multi T,M,V case)
 - [ ] connect two valley machines (share archive)
-
-- [ ] (somehow) avoid having to do "iinit"
-- [ ] special user or group for this to all run under?
-- [ ] rename puppet-dci2 (puppet-tada, puppet-astro, puppet-noao)
-- [ ] different dir (irods) struct for ingest?
 
 - [X] make sure all logs go to /var/log/tada/
 - [X] make sure all configs come from /etc/tada 
@@ -586,6 +589,30 @@ Given a "source directory" tree that may contain FITS files,
 - dq: dbvar.py => constants.py; change names to UPCASE (in
   constants.py and <user>.py
 - Add redis host:port to dq.config
+* Diagnosing problems
+Its guaranteed that there will be no problems!
+
+Ok, maybe there will be.  If so, this sections lists ways that might
+help you can find the source.
+
+** Turn on debugging output
+Most command line invocations support the "/loglevel/" argument.  Set
+it to /DEBUG/ to get maximum output.  Example:
+  : dqsvcpop --loglevel DEBUG --queue submit
+Some places in the code catch Exceptions and emit a stack traceback
+only if the loglevel=DEBUG.  
+
+** TODO Simulate (NEEDS UPDATE)
+
+There is a simulator of the data flow in: [[https://github.com/pothiers/daflsim][daflsim]]. This can be used to
+experiment with more radical changes to the parameters and topology of
+the data-flow with zero risk of breaking anything.  Of course, since
+its a simulation, it will only give approximate results.
+
+*NB:* This code was was written to aid in understanding the previous
+legacy data-flow (iDCI).  As of <2014-12-18 Thu> it has not been
+updated to reflect the new data-flow.
+
 * COMMENT Sprint user stories
 These are the expect outcomes from progressively more complex [[https://www.scrum.org/][scrum]] sprints.
 
@@ -1085,6 +1112,15 @@ Other cleanup needed in sdpost.  See reference files at top of script.
 ** Multi data-queues on one machine (same redis server)
 Instead of two instances.  Should be one with different namespaces for
 each queue.
+** pass instrument data into data-flow
+Currently, all information needed in the data is assumed to be
+included in the single file that is posted to the start of the flow.
+If instrument data is needed, it should be included in the metadata of
+the file.  But if the file doesn't have sufficient support for
+metadata, another mechanism is needed.  Perhaps the mechanism is
+simply to zip the data and a seperate metadata file together and send
+as one.  One challenge would be that different file types would
+require different methods for metadata access.
 * Instrument table
 | Site         | Telescope | Instrument | Type                   | Prefix |
 |--------------+-----------+------------+------------------------+--------|
@@ -1183,4 +1219,5 @@ and selected "insert template" (C-c C-e #).
 [fn:6] A queueue "type" is one of: MOUNTAIN, VALLEY.  Some of the
 configuration fields are type specific.  For instance, the
 "archive_dir" field only makes sense for VALLEY machines.
+ 
  

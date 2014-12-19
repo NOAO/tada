@@ -6,8 +6,9 @@ import sys
 import argparse
 import logging
 import socketserver
+import functools
 
-class MyTCPHandler(socketserver.StreamRequestHandler):
+class MyTCPHandler(socketserver.StreamRequestHandler, outfile=None):
     """
     see: https://docs.python.org/3.4/library/socketserver.html#examples
     The RequestHandler class for our server.
@@ -16,6 +17,8 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
     override the handle() method to implement communication to the
     client.
     """
+    self.outfile = outfile
+     
     def handle(self):
         # self.rfile is a file-like object created by the handler;
         # we can now use e.g. readline() instead of raw recv() calls
@@ -26,9 +29,12 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
         # to the client
         self.wfile.write(self.data.upper())
 
-def startup(host='127.0.0.1', port=8888):
+def startup(host='127.0.0.1', port=8888, outfile='mock_ingest.out'):
     "Create the server, binding to host on port"
-    server = socketserver.TCPServer((host, port), MyTCPHandler)
+    server = socketserver.TCPServer(
+        (host, port),
+        functools.partial(MyTCPHandler, outfile=outfile)
+    )
 
     # Activate the server; this will keep running until you
     # interrupt the program with Ctrl-C

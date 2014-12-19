@@ -1,3 +1,4 @@
+"""Install TADA: data flow software from Dome to Archive."""
 from setuptools import setup, find_packages  # Always prefer setuptools over distutils
 from codecs import open  # To use a consistent encoding
 from os import path
@@ -86,7 +87,9 @@ setup(
     entry_points={
         'console_scripts': [
             'mockingest=tada.mock_ingest:main',
-            'fits_compliance=tada.fits_utils:main',
+            'fits_compliant=tada.fits_utils:main',
+            'extract_fits_header=tada.fits_utils:extract_header',
+            'prep_fits_for_ingest=tada.prep_fits_for_ingest:main',
         ],
     },
 )
