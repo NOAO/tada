@@ -101,13 +101,12 @@ application or domain, you can roughly think:
   + This includes all the /var/tada/* subdirs, the irods
     "/tempZone/valley" structure, and 2 queues
 
-* TODO next phase  [0/9]
+* TODO next phase  [0/13]
 - [ ] change irods: 
   + demoResc -> tadaResc
   + /tempZone -> tadaZone
 - [ ] Combine services (dqpush, dqpop) into a single "dataq" service
   + which can started/stopped/restarted in the normal linux way.
-
 - [ ] write hook for use by Pipeline; see [[https://bitbucket.org/noao/opswiki/wiki/ICDs/Pipeline-submit%20][ICD]]
 - [ ] verify "maximum_errors_per_record" works for value > 0
 - [ ] mechanism to bundle instrument specific data with file for
@@ -133,6 +132,11 @@ application or domain, you can roughly think:
     be sent to it via its port that would kill it. Not there.
 - [ ] Prepare for formalize testing by Pat
   + change thresholds in config, run to exceed them
+- [ ] Allow cfg["maximum_errors_per_record"] to be infinity
+  + for mountain
+- [ ] Notify on error
+  + via "dashboard" (harder, any can see state); OR
+  + email (easier, adr via config)
 
 l* TODO Deferred
 - refactor puppet
@@ -589,6 +593,31 @@ Given a "source directory" tree that may contain FITS files,
 - dq: dbvar.py => constants.py; change names to UPCASE (in
   constants.py and <user>.py
 - Add redis host:port to dq.config
+* OPS visible file flow.  aka: "Where did the file go?"
+Every file posted ("printed") to astro goes somewhere.
+#+BEGIN_SRC dot :file figures/tada-fileflow.png :cmdline -Tpng 
+  digraph fileflow {
+      astro [shape="invhouse"];
+
+      cache [label="mountain:/var/tada/mountain-cache/"];
+      noarchive [label="valley:/var/noarchive/"];
+
+      node [shape="box"];
+      mirror [label="valley:/tadaZone/mountain-mirror/"];
+      archive [label="valley:/tadaZone/archive/"];
+      
+      astro -> cache [label="lpr -P astro <filename>"];
+      
+      cache -> cache [label="no Valley"];
+      cache -> mirror [label="Valley irods accessible"]
+
+      mirror -> noarchive [label="non-FITS file"];
+      mirror -> archive [label="Successful Submit to Archive"];
+      mirror -> mirror [label="Inactive after N unsuccessful Submits"];
+
+  }
+#+END_SRC
+
 * Diagnosing problems
 Its guaranteed that there will be no problems!
 

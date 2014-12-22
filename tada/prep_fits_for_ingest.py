@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 "Intended for use by irods iexecmd.  Adds hdr fields and renames ipath of fits stored in irods"
 
 import os, sys, string, argparse, logging
@@ -9,37 +9,44 @@ from . import fits_utils as fu
 from . import file_naming as fn
 from dataq import irods_utils as iu
 
-def inside_irods_prep(fits_fname, fits_ifname):
+def inside_irods_prep(fits_fname, fits_ifname, mirror_idir, archive_idir):
     """For use by irods iexecmd. Executes on the same machine as the irods
 server.
 GIVEN: FITS local file name and irods path
 DO: Augment hdr. Rename FITS to satisfy standards. Add hdr as text file irods.
 RETURN: (and print) irods location of hdr file.
     """
+
     hdulist = pyfits.open(fits_fname, mode='update') # modify IN PLACE
     hdr = hdulist[0].header # use only first in list.
 
-    fu.modify_hdr(hdr, fits_fname)
-    new_basename = fn.generate_fname(
-        instrument=hdr.get('DTINSTRU', 'NOTA'),
-        datetime=hdr['OBSID'],
-        obstype=hdr.get('OBSTYPE', 'NOTA'),
-        proctype=hdr.get('PROCTYPE', 'NOTA'),
-        prodtype=hdr.get('PRODTYPE', 'NOTA'),
-        )
-    #!new_fname  = os.path.join(os.path.dirname(fits_fname ), new_basename)
-    new_ifname = os.path.join(os.path.dirname(fits_ifname), new_basename)
+    try:
+        fu.modify_hdr(hdr, fits_fname)
+        new_basename = fn.generate_fname(
+            instrument=hdr.get('DTINSTRU', 'NOTA'),
+            datetime=hdr['OBSID'],
+            obstype=hdr.get('OBSTYPE', 'NOTA'),
+            proctype=hdr.get('PROCTYPE', 'NOTA'),
+            prodtype=hdr.get('PRODTYPE', 'NOTA'),
+            )
+        new_ifname = os.path.join(os.path.dirname(fits_ifname), new_basename)
+
+        # Create hdr as temp file, i-put, delete tmp file (auto on close)
+        hdr_ifname = new_ifname + '.hdr'
+        with tempfile.NamedTemporaryFile(mode='w') as f:
+            hdr.totextfile(f)
+            iu.irods_put(f.name, hdr_ifname)
+    except:
+        raise
+    finally:
+        hdulist.flush()
+        hdulist.close()
 
     iu.irods_mv(fits_ifname, new_ifname)
-
-    # Create hdr as temp file, i-put, delete tmp file (auto on close)
-    hdr_ifname = new_ifname + '.hdr'
-    with tempfile.NamedTemporaryFile(mode='w') as f:
-        hdr.totextfile(f)
-        iu.irods_put(f.name, hdr_ifname)
-
-    hdulist.flush()
-    hdulist.close()
+    #imv /tempZone/mountain_mirror/vagrant/11 /tempZone/archive/vagrant/
+    origdir = os.path.dirname(new_ifname)
+    iu.irods_mv_dir(origdir,
+                    os.path.dirname(origdir.replace(mirror_idir, archive_idir)))
 
     print(hdr_ifname)
     return hdr_ifname
@@ -57,6 +64,12 @@ def main():
                         )
     parser.add_argument('irods_filename',
                         help='Full irods path to FITS file',
+                        )
+    parser.add_argument('mirror',
+                        help='Root of irods path for mountain mirror',
+                        )
+    parser.add_argument('archive',
+                        help='Root of irods path for archive',
                         )
 
     parser.add_argument('--loglevel',
@@ -79,7 +92,9 @@ def main():
     logging.debug('Debug output is enabled by nitfConvert!!!')
 
 
-    inside_irods_prep(args.fits_filename, args.irods_filename)
+    inside_irods_prep(args.fits_filename, args.irods_filename,
+                      args.mirror, args.archive)
+
 
 
 if __name__ == '__main__':

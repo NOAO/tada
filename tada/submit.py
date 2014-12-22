@@ -27,9 +27,6 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
     irods_host = qcfg[qname]['nsa_irods_host']
     irods_port = qcfg[qname]['nsa_irods_port']
     irods_archive_dir = qcfg[qname]['archive_irods']
-    archive_dir = qcfg[qname]['archive_dir']
-
-    #!iname = du.mirror_path(archive_dir, fname, irods_archive_dir)
 
     nsaserver_url = ('http://{}:{}/?hdrUri={}'
                      .format(nsa_host, nsa_port, hdr_ipath))
@@ -94,6 +91,23 @@ def STUB_archive_ingest(fname, qname, qcfg=None):
             .format(prop_fail, fname))
     return True
 
+# (-sp-) The Archive Ingest process is ugly and the interface is not
+# documented (AT ALL, as far as I can tell). It accepts a URI for an
+# irods path of a "hdr" for a FITS file. The "hdr" has to be the hdr
+# portion of a FITS with 5 lines prepended to it. Its more ugly
+# because the submit (HTTP request) may fail but both the hdr and the
+# fits irods file location cannot be changed if the submit succeeds.
+# But we want them to be a different place if the submit fails. So we
+# have to move before the submit, then undo the move if it fails. The
+# HTTP response may indicate failure, but I think it could indicate
+# success even when there is a failure.  It would make perfect sense
+# for the Archive Ingest to read what it needs directly from the FITS
+# file (header). It can be done quickly even if the data portion of
+# the FITS is large. Not doing so means extra complication and
+# additional failure modes.  Worse, because a modified hdr has to be
+# sent to Ingest, the actual fits file has to be accessed when
+# otherwise we could have just dealt with irods paths. Fortunately,
+# the irods icommand "iexecmd" lets us push such dirt to the server.
 def submit_to_archive(ifname, checksum, qname, qcfg=None):
     """Ingest a FITS file (really JUST Header) into the archive if
 possible.  Ingest involves renaming to satisfy filename
@@ -102,9 +116,16 @@ also used a specific 3 level directory structure that is NOT used
 here. However the levels are stored in hdr fields SB_DIR{1,2,3}."""
     logging.debug('submit_to_archive({},{})'.format(ifname, qname))
     logging.debug('   qcfg={})'.format(qcfg))
-
-    hdr_ipath = iu.irods_prep_fits_for_ingest(ifname)
-
+    mirror_idir =  qcfg[qname]['mirror_irods']
+    archive_idir =  qcfg[qname]['archive_irods']
+    try:
+        hdr_ipath = iu.irods_prep_fits_for_ingest(ifname,
+                                                  mirror_idir,
+                                                  archive_idir)
+    except:
+        traceback.print_exc()
+        raise
+    
     try:
         #!STUB_archive_ingest(new_fname, qname, qcfg=qcfg)
         http_archive_ingest(hdr_ipath, checksum, qname, qcfg=qcfg)
@@ -127,7 +148,6 @@ configuration field: maximum_errors_per_record)
     dq_host = qcfg[qname]['dq_host']
     dq_port = qcfg[qname]['dq_port']
 
-    archive_root = qcfg[qname]['archive_dir']
     noarc_root =  qcfg[qname]['noarchive_dir']
     irods_root =  qcfg[qname]['mirror_irods'] # '/tempZone/mountain_mirror/'
 
@@ -140,7 +160,6 @@ configuration field: maximum_errors_per_record)
     logging.debug('File type for "{}" is "{}".'
                   .format(ifname, ftype))
     if 'FITS' == ftype :  # is FITS
-        #!fname = du.move(noarc_root, fname, archive_root)
         try:
             #!fname = submit_to_archive(fname, checksum, qname, qcfg)
             fname = submit_to_archive(ifname, checksum, qname, qcfg)
