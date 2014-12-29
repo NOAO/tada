@@ -4,6 +4,7 @@
 import sys
 import argparse
 import logging
+import traceback
 
 
 import pyfits
@@ -227,7 +228,7 @@ RAW_REQUIRED_FIELDS = set([
     'OBSERVAT',
     'OBSID',
     'PROPID',
-    'PROPOSER',
+    # 'PROPOSER', #!!! will use PROPID when PROPOSER doesn't exist in raw hdr
 ])
 
 
@@ -464,24 +465,43 @@ def modify_hdr(hdr, fname):
             )
 
     # e.g. OBSID = 'kp4m.20141114T122626'
-    tele, dt_str = hdr['OBSID'].split('.')
-    date, time = dt_str.split('T')
+    # e.g. OBSID = 'soar.sam.20141220T015929.7Z'
+    #!tele, dt_str = hdr['OBSID'].split('.')
+
+    datestr = None
+    tele = None
+    if 'COSMOS' == hdr['INSTRUME']:
+        tele, dt_str = hdr['OBSID'].split('.')
+        datestr, _ = dt_str.split('T')
+    elif 'Mosaic1.1' == hdr['INSTRUME']:
+        tele, dt_str = hdr['OBSID'].split('.')
+        datestr, _ = dt_str.split('T')
+    elif 'SOI' == hdr['INSTRUME']:
+        tele, inst, dt_str1, dt_str2 = hdr['OBSID'].split('.')
+        dt_str = dt_str1 + dt_str2
+        datestr, _ = dt_str.split('T')
+
     # "UTC epoch"
-    dateobs = datetime.datetime.strptime(hdr['DATE-OBS'],'%Y-%m-%dT%H:%M:%S.%f')
-    
-    hdr['DTACQNAM'] = '' # file name supplied at telescope !!!
+    fmt = '%Y-%m-%dT%H:%M:%S.%f' if 'T' in hdr['DATE-OBS'] else '%Y-%m-%d'
+    dateobs = datetime.datetime.strptime(hdr['DATE-OBS'],fmt)
+
+    if 'PROPOSER' not in hdr:
+        hdr['PROPOSER'] = hdr['PROPID'] #!!!
+            
+    hdr['DTACQNAM'] = os.path.basename(fname) # file name supplied at telescope
     hdr['DTINSTRU'] = hdr['INSTRUME'] # eg. 'NEWFIRM'
-    #hdr['DTNSANAM'] = '' #file name in NOAO Science Archive            
+    hdr['DTNSANAM'] = fname #file name in NOAO Science Archive            
     hdr['DTPI']     = hdr['PROPOSER']
     hdr['DTSITE']   = hdr['OBSERVAT'].lower()
     #! hdr['DTPUBDAT'] = 'NA' # doc says its required, cooked file lacks it
     hdr['DTTELESC'] = tele
     hdr['DTTITLE']  = 'Field not derivable from raw metadata!!!',
+
     # DTUTC cannot be derived exactly from any RAW fields
     # Should be: "post exposure UTC epoch from DTS"
     hdr['DTUTC']    = dateobs.strftime('%Y-%m-%dT%H:%M:%S') #slightly wrong!!!
 
-    dir1 = date
+    dir1 = datestr
     dir2 = tele
     dir3 = hdr['PROPID']
     hdr['SB_DIR1'] = dir1
@@ -527,7 +547,14 @@ def add_hdr_fields(fits_file):
     # e.g. "k4k_140923_024819_uri.fits.fz"
     return new_fname, dir1, dir2, dir3
 
-def fits_compliant(fits_file_list):
+def show_hdr_values(hdr):
+    """Show the values for 'interesting' header fields"""
+    #!for key in RAW_REQUIRED_FIELDS.union(INGEST_REQUIRED_FIELDS):
+    for key in RAW_REQUIRED_FIELDS:
+        print('{}="{}"'.format(key,hdr.get(key,'<not given>')),end=', ')
+    print()
+
+def fits_compliant(fits_file_list, show_values=False):
     """Check FITS file for complaince with Archive Ingest."""
     bad = 0
     bad_files = []
@@ -535,13 +562,16 @@ def fits_compliant(fits_file_list):
         missing = []
         try:
             #!valid_header(ffile)
-            hdr = pyfits.open(ffile)[0].header # use only first in list. 
-            modify_hdr(hdr)
+            hdr = pyfits.open(ffile)[0].header # use only first in list.
+            if show_values:
+                show_hdr_values(hdr) # only the "interesting" ones
+            modify_hdr(hdr, ffile)
             missing = missing_in_archive_hdr(hdr)
         except Exception as err:
             bad_files.append(ffile)
             bad += 1
             print('{}:\t NOT compliant; {}'.format(ffile, err))
+            #!traceback.print_exc()
             continue
         
         if len(missing) == 0:
@@ -571,7 +601,9 @@ def main():
     parser.add_argument('infiles',
                         nargs='+',
                         help='Input file')
-
+    parser.add_argument('--values',
+                        action='store_true',
+                        help='Show header values for interesting fields')
     parser.add_argument('--loglevel',
                         help='Kind of diagnostic output',
                         choices=['CRTICAL', 'ERROR', 'WARNING',
@@ -592,7 +624,7 @@ def main():
                         datefmt='%m-%d %H:%M')
     logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
-    fits_compliant(args.infiles)
+    fits_compliant(args.infiles, show_values=args.values)
 
 if __name__ == '__main__':
     main()
