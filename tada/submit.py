@@ -8,8 +8,10 @@ import os, os.path
 import socket
 import traceback
 import random # for stubbing random failures (not for production)
+import tempfile
 
 from . import fits_utils as fu
+from . import file_naming as fn
 from . import exceptions as tex
 from . import prep_fits_for_ingest as pf
 from dataq import dqutils as du
@@ -97,7 +99,7 @@ def STUB_archive_ingest(fname, qname, qcfg=None):
             .format(prop_fail, fname))
     return True
 
-def prep_for_ingest(mirror_ifname, mirror_idir, archive_idir):
+def prep_for_ingest(mirror_ifname, mirror_idir, archive_idir, archive331):
     """GIVEN: FITS irods path
 DO: 
   Copy across bridge (irods-4 to irods-3 archive_idir)
@@ -107,13 +109,13 @@ DO:
 RETURN: irods location of hdr file.
     """
 
-    ifname = iu.bridge_copy(mirror_ifname, mirror_idir, archive_idir)
+    logging.debug('prep_for_ingest: ifname={}, m_dir={}, a_dir={}, a3_dir={}'
+                  .format(mirror_ifname, mirror_idir, archive_idir, archive331))
+
     # Assumes we are running on machine with access to irods3 physical file!!!
-    fname = iu.irods_get_physical(ifname)
-    logging.debug('prep_for_ingest: fname={}, ifname={}'.format(fname,ifname))
+    fname = iu.irods_get_physical(mirror_ifname)
 
     hdr_ifname = "None"
-
     try:
         hdulist = pyfits.open(fname, mode='update') # modify IN PLACE
         hdr = hdulist[0].header # use only first in list.
@@ -125,7 +127,7 @@ RETURN: irods location of hdr file.
             proctype=hdr.get('PROCTYPE', 'NOTA'),
             prodtype=hdr.get('PRODTYPE', 'NOTA'),
             )
-        new_ifname = os.path.join(os.path.dirname(ifname), new_basename)
+        new_ifname = os.path.join(os.path.dirname(mirror_ifname), new_basename)
 
         # Create hdr as temp file, i-put, delete tmp file (auto on close)
         # Archive requires extra fields prepended to hdr txt! :-<
@@ -139,9 +141,13 @@ RETURN: irods location of hdr file.
         hdulist.flush()
         hdulist.close()
 
-    # We might need to change subdirectory name to!!!
+    # We might need to change subdirectory name too!!!
     #   <root>/<SB_DIR1>/<SB_DIR2>/<SB_DIR3>/<base.fits>
-    iu.irods_mv(ifname, new_ifname) # rename FITS
+    iu.irods_mv(mirror_ifname, new_ifname) # rename FITS
+
+    #!ifname = iu.bridge_copy(new_ifname, mirror_idir, archive331)
+    #!ifname = iu.bridge_copy(ihdr, mirror_idir, archive331)
+
     logging.debug('prep_for_ingest: RETURN={}'.format(ihdr))
     return ihdr
 
@@ -172,9 +178,10 @@ here. However the levels are stored in hdr fields SB_DIR{1,2,3}."""
     #! logging.debug('   qcfg={})'.format(qcfg))
     mirror_idir =  qcfg[qname]['mirror_irods']
     archive_idir =  qcfg[qname]['archive_irods']
+    archive331 =  qcfg[qname]['archive_irods331']
     try:
         #!ihdr = iu.irods_prep_fits_for_ingest(ifname, mirror_idir,archive_idir)
-        ihdr = prep_for_ingest(ifname, mirror_idir, archive_idir)
+        ihdr = prep_for_ingest(ifname, mirror_idir, archive_idir, archive331)
     except:
         #! traceback.print_exc()
         raise
@@ -225,7 +232,7 @@ configuration field: maximum_errors_per_record)
             logging.warning('Failed to get file from irods on Valley.')
             raise
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
-        logging.info('Non-FITS1 file put in: {}'.format(fname))
+        logging.info('Non-FITS file put in: {}'.format(fname))
 
 
     return True
