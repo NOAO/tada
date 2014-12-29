@@ -79,10 +79,7 @@ application or domain, you can roughly think:
   + see "distributing" check-list
   + AS DONE: not in PyPI
 
-- [ ] mock ingest should save info (to confirm it worked),
-  + provide random prob of failure to simulate
-
-- [ ] Real ingest into archive (staging area)
+- [ ] Real ingest into archive ("PAT" area)
 - [ ] multi: telescope, mountain, valley machine tests
   + one config to rule them all (for multi T,M,V case)
 - [ ] connect two valley machines (share archive)
@@ -335,7 +332,7 @@ irodsZone tempZone
         for_archive/
 #+END_EXAMPLE
 
-* As-Built
+* As Built
 ** General
 This section documents specific builds.  When a requirement or feature
 is described outside of the /As-Built/ section, it should be
@@ -348,7 +345,7 @@ most recent.  Ask if you want older sections for some reason.
 ** Touch Points
 - INPUT queue
   via lpd protocol
-- INPUT to submit queue (after mitigation, for pipeline)
+- INPUT to submit queue (after mitigation, from pipeline)
 - OUTPUT to archive ingest
 ** Changes from iDCI
 - All files "printed" to printer "astro" are sent to valley (not just
@@ -361,6 +358,12 @@ most recent.  Ask if you want older sections for some reason.
   the main data flow.  Some CRON may be introduced for optional pieces
   (such as monitoring). 
   
+** TADA details <2014-12-23 Tue>
+** What is put in iRODS
+- datatype added (isysmeta) for:
+  + "FITS image"
+  + "jpeg image"
+
 ** Thread-4 <2014-11-23 Sun>
 *** Data Stores
 1. Mountain:/var/tada/mountain_cache/
@@ -593,6 +596,7 @@ Given a "source directory" tree that may contain FITS files,
 - dq: dbvar.py => constants.py; change names to UPCASE (in
   constants.py and <user>.py
 - Add redis host:port to dq.config
+
 * OPS visible file flow.  aka: "Where did the file go?"
 Every file posted ("printed") to astro goes somewhere.
 #+BEGIN_SRC dot :file figures/tada-fileflow.png :cmdline -Tpng 

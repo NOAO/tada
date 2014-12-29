@@ -1,5 +1,15 @@
 #! /usr/bin/env python3
-"Intended for use by irods iexecmd.  Adds hdr fields and renames ipath of fits stored in irods"
+"""
+OBSOLETE: This approach is problematic because error handling is
+more difficult.  Since this defines an executable that irods
+executes "remotely", it can not make use of exception handling for
+errors.  INSTEAD: find the physical file and work on it directly
+
+##############
+
+Intended for use by irods iexecmd.  Adds hdr fields and renames ipath
+of fits stored in irods
+"""
 
 import os, sys, string, argparse, logging
 import tempfile
@@ -17,6 +27,7 @@ DO: Augment hdr. Rename FITS to satisfy standards. Add hdr as text file irods.
 RETURN: (and print) irods location of hdr file.
     """
 
+    hdr_ifname = "None"
     hdulist = pyfits.open(fits_fname, mode='update') # modify IN PLACE
     hdr = hdulist[0].header # use only first in list.
 

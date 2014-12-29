@@ -7,6 +7,7 @@ import pyfits
 import os, os.path
 import socket
 import traceback
+import random # for stubbing random failures (not for production)
 
 from . import fits_utils as fu
 from . import exceptions as tex
@@ -27,19 +28,24 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
     irods_host = qcfg[qname]['nsa_irods_host']
     irods_port = qcfg[qname]['nsa_irods_port']
     irods_archive_dir = qcfg[qname]['archive_irods']
+    prob_fail = qcfg[qname]['action_fail_probability']
 
     nsaserver_url = ('http://{}:{}/?hdrUri={}'
                      .format(nsa_host, nsa_port, hdr_ipath))
     logging.debug('nsaserver_url = {}'.format(nsaserver_url))
 
-    return False #!!!
+    logging.warning('http_archive_ingest() using prob_fail= {}'
+                    .format(prob_fail))
+    if random.random() <= prob_fail:
+        raise tex.SubmitException('Killed by cosmic ray with probability = {}'
+                                  .format(prob_fail))
 
-    with urllib.requiest.urlopen(nsaserver_url) as f:
-        # Only two possible responses are: "Success" or "Failure"
-        response = f.readline().decode('utf-8')
-    logging.debug('NSA server resonse: = {}'.format(response))
-    result = True if response == "Success" else False
-    return result
+    #!with urllib.requiest.urlopen(nsaserver_url) as f:
+    #!    # Only two possible responses are: "Success" or "Failure"
+    #!    response = f.readline().decode('utf-8')
+    #!logging.debug('NSA server resonse: = {}'.format(response))
+    #!result = True if response == "Success" else False
+    #!return result
     
 def tcp_archive_ingest(fname, checksum, qname, qcfg=None):
     logging.debug('EXECUTING: tcp_archive_ingest({}, {}, {})'
@@ -91,6 +97,54 @@ def STUB_archive_ingest(fname, qname, qcfg=None):
             .format(prop_fail, fname))
     return True
 
+def prep_for_ingest(mirror_ifname, mirror_idir, archive_idir):
+    """GIVEN: FITS irods path
+DO: 
+  Copy across bridge (irods-4 to irods-3 archive_idir)
+  Augment hdr. 
+  Rename FITS to satisfy standards. 
+  Add hdr as text file to irods.
+RETURN: irods location of hdr file.
+    """
+
+    ifname = iu.bridge_copy(mirror_ifname, mirror_idir, archive_idir)
+    # Assumes we are running on machine with access to irods3 physical file!!!
+    fname = iu.irods_get_physical(ifname)
+    logging.debug('prep_for_ingest: fname={}, ifname={}'.format(fname,ifname))
+
+    hdr_ifname = "None"
+
+    try:
+        hdulist = pyfits.open(fname, mode='update') # modify IN PLACE
+        hdr = hdulist[0].header # use only first in list.
+        fu.modify_hdr(hdr, fname)
+        new_basename = fn.generate_fname(
+            instrument=hdr.get('DTINSTRU', 'NOTA'),
+            datetime=hdr['OBSID'],
+            obstype=hdr.get('OBSTYPE', 'NOTA'),
+            proctype=hdr.get('PROCTYPE', 'NOTA'),
+            prodtype=hdr.get('PRODTYPE', 'NOTA'),
+            )
+        new_ifname = os.path.join(os.path.dirname(ifname), new_basename)
+
+        # Create hdr as temp file, i-put, delete tmp file (auto on close)
+        # Archive requires extra fields prepended to hdr txt! :-<
+        ihdr = new_ifname + '.hdr'
+        with tempfile.NamedTemporaryFile(mode='w') as f:
+            hdr.totextfile(f)
+            iu.irods_put(f.name, ihdr)
+    except:
+        raise
+    finally:
+        hdulist.flush()
+        hdulist.close()
+
+    # We might need to change subdirectory name to!!!
+    #   <root>/<SB_DIR1>/<SB_DIR2>/<SB_DIR3>/<base.fits>
+    iu.irods_mv(ifname, new_ifname) # rename FITS
+    logging.debug('prep_for_ingest: RETURN={}'.format(ihdr))
+    return ihdr
+
 # (-sp-) The Archive Ingest process is ugly and the interface is not
 # documented (AT ALL, as far as I can tell). It accepts a URI for an
 # irods path of a "hdr" for a FITS file. The "hdr" has to be the hdr
@@ -115,29 +169,24 @@ standards. Although I've seen no requirements for it, previous systems
 also used a specific 3 level directory structure that is NOT used
 here. However the levels are stored in hdr fields SB_DIR{1,2,3}."""
     logging.debug('submit_to_archive({},{})'.format(ifname, qname))
-    logging.debug('   qcfg={})'.format(qcfg))
+    #! logging.debug('   qcfg={})'.format(qcfg))
     mirror_idir =  qcfg[qname]['mirror_irods']
     archive_idir =  qcfg[qname]['archive_irods']
     try:
-        hdr_ipath = iu.irods_prep_fits_for_ingest(ifname,
-                                                  mirror_idir,
-                                                  archive_idir)
+        #!ihdr = iu.irods_prep_fits_for_ingest(ifname, mirror_idir,archive_idir)
+        ihdr = prep_for_ingest(ifname, mirror_idir, archive_idir)
     except:
-        traceback.print_exc()
+        #! traceback.print_exc()
         raise
     
     try:
         #!STUB_archive_ingest(new_fname, qname, qcfg=qcfg)
-        http_archive_ingest(hdr_ipath, checksum, qname, qcfg=qcfg)
+        http_archive_ingest(ihdr, checksum, qname, qcfg=qcfg)
     except:
-        traceback.print_exc()
-        #! logging.debug('Unregister irods {}. Undo the name change: {} => {}'
-        #!               .format(iname, new_fname, fname))
-        #! iu.irods_unreg(iname)
-        #! os.rename(new_fname, fname)
+        #! traceback.print_exc()
         raise
 
-    return hdr_ipath
+    return ihdr
 
 def submit(rec, qname, **kwargs):
     """Try to modify headers and submit FITS to archive. If anything fails 
@@ -161,12 +210,12 @@ configuration field: maximum_errors_per_record)
                   .format(ifname, ftype))
     if 'FITS' == ftype :  # is FITS
         try:
-            #!fname = submit_to_archive(fname, checksum, qname, qcfg)
-            fname = submit_to_archive(ifname, checksum, qname, qcfg)
+            #! iu.irods_bridge_mv(ifname,  ifname2, qname, qcfg)
+            submit_to_archive(ifname, checksum, qname, qcfg)
         except Exception as sex:
             raise sex
         else:
-            logging.info('PASSED submit_to_archive({}).'  .format(fname))
+            logging.info('PASSED submit_to_archive({}).'  .format(ifname))
     else: # not FITS
         # Put irods file on filesystem. 
         fname = os.path.join(noarc_root, tail)
@@ -176,7 +225,7 @@ configuration field: maximum_errors_per_record)
             logging.warning('Failed to get file from irods on Valley.')
             raise
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
-        logging.info('Non-fits file put in: {}'.format(fname))
+        logging.info('Non-FITS1 file put in: {}'.format(fname))
 
 
     return True
