@@ -9,6 +9,7 @@ import socket
 import traceback
 import random # for stubbing random failures (not for production)
 import tempfile
+import pathlib
 
 from . import fits_utils as fu
 from . import file_naming as fn
@@ -127,14 +128,16 @@ RETURN: irods location of hdr file.
             proctype=hdr.get('PROCTYPE', 'NOTA'),
             prodtype=hdr.get('PRODTYPE', 'NOTA'),
             )
-        new_ifname = os.path.join(os.path.dirname(mirror_ifname), new_basename)
+        #new_ifname = os.path.join(os.path.dirname(mirror_ifname), new_basename)
+        ipath = pathlib.PurePath(mirror_ifname.replace(mirror_idir, archive331))
+        new_ifname = ipath.with_name(new_basename)
+        new_ihdr = str(new_ifname.with_suffix('.hdr'))
 
         # Create hdr as temp file, i-put, delete tmp file (auto on close)
         # Archive requires extra fields prepended to hdr txt! :-<
-        ihdr = new_ifname + '.hdr'
         with tempfile.NamedTemporaryFile(mode='w') as f:
             hdr.totextfile(f)
-            iu.irods_put(f.name, ihdr)
+            iu.irods_put(f.name, new_ihdr)
     except:
         raise
     finally:
@@ -143,13 +146,13 @@ RETURN: irods location of hdr file.
 
     # We might need to change subdirectory name too!!!
     #   <root>/<SB_DIR1>/<SB_DIR2>/<SB_DIR3>/<base.fits>
-    iu.irods_mv(mirror_ifname, new_ifname) # rename FITS
+    #! iu.irods_mv(mirror_ifname, new_ifname) # rename FITS
 
-    #!ifname = iu.bridge_copy(new_ifname, mirror_idir, archive331)
-    #!ifname = iu.bridge_copy(ihdr, mirror_idir, archive331)
+    ifname = iu.bridge_copy(mirror_ifname, str(new_ifname))
+    #!ihdr331 = iu.bridge_copy(ihdr, mirror_idir, archive331)
 
-    logging.debug('prep_for_ingest: RETURN={}'.format(ihdr))
-    return ihdr
+    logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
+    return new_ihdr
 
 # (-sp-) The Archive Ingest process is ugly and the interface is not
 # documented (AT ALL, as far as I can tell). It accepts a URI for an
@@ -217,7 +220,6 @@ configuration field: maximum_errors_per_record)
                   .format(ifname, ftype))
     if 'FITS' == ftype :  # is FITS
         try:
-            #! iu.irods_bridge_mv(ifname,  ifname2, qname, qcfg)
             submit_to_archive(ifname, checksum, qname, qcfg)
         except Exception as sex:
             raise sex
