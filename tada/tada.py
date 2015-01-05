@@ -208,7 +208,7 @@ def main():
         epilog='EXAMPLE: %(prog)s --loglevel=INFO '
         + '--srcDir=/data/mtn cache --archiveDir=/data/archive'
         )
-    parser.add_argument('--version', action='version', version='0.0a2')
+    parser.add_argument('--version', action='version', version='0.0a3')
     parser.add_argument('--thread',
                         help='Which thread should be run',
                         type=int,
