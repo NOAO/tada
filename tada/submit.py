@@ -107,6 +107,7 @@ DO:
   Augment hdr. 
   Rename FITS to satisfy standards. 
   Add hdr as text file to irods.
+!!! remove from mirror
 RETURN: irods location of hdr file.
     """
 
@@ -148,7 +149,7 @@ RETURN: irods location of hdr file.
     #   <root>/<SB_DIR1>/<SB_DIR2>/<SB_DIR3>/<base.fits>
     #! iu.irods_mv(mirror_ifname, new_ifname) # rename FITS
 
-    ifname = iu.bridge_copy(mirror_ifname, str(new_ifname))
+    ifname = iu.bridge_copy(mirror_ifname, str(new_ifname), remove_orig=True)
     #!ihdr331 = iu.bridge_copy(ihdr, mirror_idir, archive331)
 
     logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
@@ -229,7 +230,7 @@ configuration field: maximum_errors_per_record)
         # Put irods file on filesystem. 
         fname = os.path.join(noarc_root, tail)
         try:
-            iu.irods_get(fname, ifname)
+            iu.irods_get(fname, ifname, remove_irods=True)
         except:
             logging.warning('Failed to get file from irods on Valley.')
             raise

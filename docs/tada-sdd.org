@@ -98,7 +98,7 @@ application or domain, you can roughly think:
   + This includes all the /var/tada/* subdirs, the irods
     "/tempZone/valley" structure, and 2 queues
 
-* TODO next phase  [0/13]
+* TODO next phase  [0/16]
 - [ ] change irods: 
   + demoResc -> tadaResc
   + /tempZone -> tadaZone
@@ -134,8 +134,13 @@ application or domain, you can roughly think:
 - [ ] Notify on error
   + via "dashboard" (harder, any can see state); OR
   + email (easier, adr via config)
+- [ ] rule based validation before submit to Archive Ingest
+- [ ] incorporate current telescope schedule (from web service)
+  + cache first query for day. Means very late additions to schedule
+    will be missed.
+  + use funky Perl interface first version, grab XML result, use in Python
 
-l* TODO Deferred
+* TODO Deferred
 - refactor puppet
 - Write monitor scripts to scrape from logs and queues
   + ERRORS and WARNINGS
