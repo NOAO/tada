@@ -65,7 +65,7 @@ application or domain, you can roughly think:
   - Mountain Mirror :: "off-site storage for several instruments". Not
        reliably connected to instruments. 
 
-* TODO Next up (rough prio order) [9/16]
+* TODO Next up (rough prio order) [9/15]
 - [ ] different dir (irods) structure for ingest? 
   + use subdir names from SB_* fields
 - [ ] special user or group for this to all run under?

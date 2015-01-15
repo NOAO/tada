@@ -7,9 +7,9 @@ import pyfits
 import os, os.path
 import socket
 import traceback
-import random # for stubbing random failures (not for production)
 import tempfile
 import pathlib
+import urllib
 
 from . import fits_utils as fu
 from . import file_naming as fn
@@ -23,6 +23,8 @@ from dataq import irods_utils as iu
 def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
  Archive Ingest via REST-like interface."""
+    import random # for stubbing random failures (not for production)
+
     logging.debug('EXECUTING: http_archive_ingest({}, {}, {})'
                   .format(hdr_ipath, checksum, qname))
 
@@ -37,18 +39,23 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
                      .format(nsa_host, nsa_port, hdr_ipath))
     logging.debug('nsaserver_url = {}'.format(nsaserver_url))
 
-    logging.warning('http_archive_ingest() using prob_fail= {}'
-                    .format(prob_fail))
-    if random.random() <= prob_fail:
-        raise tex.SubmitException('Killed by cosmic ray with probability = {}'
-                                  .format(prob_fail))
+    #!logging.warning('http_archive_ingest() using prob_fail= {}'
+    #!                .format(prob_fail))
+    #!if random.random() <= prob_fail:
+    #!    raise tex.SubmitException('Killed by cosmic ray with probability {}'
+    #!                              .format(prob_fail))
 
-    #!with urllib.requiest.urlopen(nsaserver_url) as f:
-    #!    # Only two possible responses are: "Success" or "Failure"
-    #!    response = f.readline().decode('utf-8')
-    #!logging.debug('NSA server resonse: = {}'.format(response))
-    #!result = True if response == "Success" else False
-    #!return result
+
+    with urllib.request.urlopen(nsaserver_url) as f:
+        # Only two possible responses are: "Success" or "Failure"
+        response = f.readline().decode('utf-8')
+    logging.debug('NSA server response: = {}'.format(response))
+    result = True if response == "Success" else False
+    if not result:
+        raise tex.SubmitException('HTTP response from Archive: {}'
+                                  .format(response))
+
+    return result
     
 def tcp_archive_ingest(fname, checksum, qname, qcfg=None):
     logging.debug('EXECUTING: tcp_archive_ingest({}, {}, {})'
@@ -103,25 +110,32 @@ def STUB_archive_ingest(fname, qname, qcfg=None):
 def prep_for_ingest(mirror_ifname, mirror_idir, archive_idir, archive331):
     """GIVEN: FITS irods path
 DO: 
-  Copy across bridge (irods-4 to irods-3 archive_idir)
   Augment hdr. 
-  Rename FITS to satisfy standards. 
   Add hdr as text file to irods.
+  Copy hdr only across bridge (irods-4 to irods-3 archive_idir)
+  Rename FITS to satisfy standards. 
 !!! remove from mirror
+mirror_ifname :: 
+mirror_idir :: from "mirror_irods" in dq_config
+archive_idir :: from "archive_irods" in dq_config
+archive331 :: from "archive_irods331" in dq_config
 RETURN: irods location of hdr file.
     """
 
     logging.debug('prep_for_ingest: ifname={}, m_dir={}, a_dir={}, a3_dir={}'
                   .format(mirror_ifname, mirror_idir, archive_idir, archive331))
 
-    # Assumes we are running on machine with access to irods3 physical file!!!
+    # Assumes we are running on machine with access to irods physical file!!!
     fname = iu.irods_get_physical(mirror_ifname)
-
+    
     hdr_ifname = "None"
     try:
+        # augment hdr (add fields demanded of downstream process)
         hdulist = pyfits.open(fname, mode='update') # modify IN PLACE
         hdr = hdulist[0].header # use only first in list.
         fu.modify_hdr(hdr, fname)
+
+        # Generate standards conforming filename
         new_basename = fn.generate_fname(
             instrument=hdr.get('DTINSTRU', 'NOTA'),
             datetime=hdr['OBSID'],
@@ -129,31 +143,57 @@ RETURN: irods location of hdr file.
             proctype=hdr.get('PROCTYPE', 'NOTA'),
             prodtype=hdr.get('PRODTYPE', 'NOTA'),
             )
-        #new_ifname = os.path.join(os.path.dirname(mirror_ifname), new_basename)
-        ipath = pathlib.PurePath(mirror_ifname.replace(mirror_idir, archive331))
-        new_ifname = ipath.with_name(new_basename)
-        new_ihdr = str(new_ifname.with_suffix('.hdr'))
+        #new_ifname=os.path.join(os.path.dirname(mirror_ifname), new_basename)
+        ipath = pathlib.PurePath(mirror_ifname
+                                 .replace(mirror_idir, archive_idir))
+        new_ipath = ipath.with_name(new_basename)
+        new_ifname = str(new_ipath)
+        new_ihdr = str(new_ipath.with_suffix('.hdr'))
 
         # Create hdr as temp file, i-put, delete tmp file (auto on close)
         # Archive requires extra fields prepended to hdr txt! :-<
         with tempfile.NamedTemporaryFile(mode='w') as f:
+            ingesthdr = ('#filename = {filename}\n'
+                         '#reference = {filename}\n'
+                         '#filetype = UNKNOWN\n'
+                         '#filesize = {filesize} bytes\n'
+                         '#file_md5 = {checksum}\n\n'
+                     )
+            print(ingesthdr.format(filename=new_basename,
+                                   filesize=os.path.getsize(fname),
+                                   checksum=iu.get_irods_cksum(mirror_ifname)
+                               ),
+                  file=f)
             hdr.totextfile(f)
+            
+            # The only reason we do this is to satisfy Archive Ingest!!!
+            # Since it has to have a reference to the FITS file anyhow,
+            # Archive Ingest SHOULD deal with the hdr.
             iu.irods_put(f.name, new_ihdr)
+            logging.debug('iput new_ihdr to: {}'.format(new_ihdr))
     except:
         raise
-    finally:
+    finally: 
         hdulist.flush()
         hdulist.close()
-
+        
     # We might need to change subdirectory name too!!!
+    # (but there has been no stated Requirement for subdir structure)
     #   <root>/<SB_DIR1>/<SB_DIR2>/<SB_DIR3>/<base.fits>
-    #! iu.irods_mv(mirror_ifname, new_ifname) # rename FITS
+    iu.irods_mv_tree(mirror_ifname, new_ifname) # rename FITS
 
-    ifname = iu.bridge_copy(mirror_ifname, str(new_ifname), remove_orig=True)
-    #!ihdr331 = iu.bridge_copy(ihdr, mirror_idir, archive331)
+    #
+    # At this point both FITS and HDR are in archive_idir
+    #
 
-    logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
-    return new_ihdr
+    # Copy both FITS and HDR to legacy iRODS 3.3.1 server that Archive uses
+    ihdr331 = new_ihdr.replace(archive_idir, archive331)
+    iu.bridge_copy(new_ihdr, ihdr331, remove_orig=True)
+    ifname331 = new_ifname.replace(archive_idir, archive331)
+    iu.bridge_copy(new_ifname, ifname331, remove_orig=True)
+
+    logging.debug('prep_for_ingest: RETURN={}'.format(ihdr331))
+    return ihdr331
 
 # (-sp-) The Archive Ingest process is ugly and the interface is not
 # documented (AT ALL, as far as I can tell). It accepts a URI for an
@@ -204,6 +244,7 @@ def submit(rec, qname, **kwargs):
 more than N times, move the queue entry to Inactive. (where N is the 
 configuration field: maximum_errors_per_record)
 """
+    logging.debug('submit({},{})'.format(rec, qname))
     qcfg = du.get_keyword('qcfg', kwargs)
     dq_host = qcfg[qname]['dq_host']
     dq_port = qcfg[qname]['dq_port']
@@ -216,7 +257,13 @@ configuration field: maximum_errors_per_record)
     checksum = rec['checksum']          
     tail = os.path.relpath(ifname, irods_root) # changing part of path tail
 
-    ftype = iu.irods_file_type(ifname)
+    try:
+        ftype = iu.irods_file_type(ifname)
+    except Exception as ex:
+        logging.error('Execution failed: {}; ifname={}'
+                      .format(ex, ifname))
+        raise
+        
     logging.debug('File type for "{}" is "{}".'
                   .format(ifname, ftype))
     if 'FITS' == ftype :  # is FITS
