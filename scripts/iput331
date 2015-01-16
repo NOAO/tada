@@ -1,0 +1,55 @@
+#!/bin/bash -ex
+
+# PURPOSE: Change irods env and iput local file
+#
+# EXAMPLE: 
+#
+# AUTHORS: S. Pothier
+
+cmd=`basename $0`
+usage="USAGE: $cmd local_fname irods_fname
+"
+
+if [ $# -lt 2 ]; then
+	echo >&2 "$usage"
+	exit 2
+fi
+
+local_fname=$1
+irods_fname=$2
+
+
+##############################################################################
+
+export PATH=/sandbox/irods3.3.1/iRODS/clients/icommands/bin:$PATH
+which iinit
+
+mv ~/.irods/.irodsEnv ~/.irods/origIrodsEnv
+cat > ~/.irods/archIrodsEnv <<EOF
+irodsHost db5.sdm.noao.edu
+irodsPort 1247
+irodsUserName cache
+irodsZone noao-tuc-z1
+irodsDefResource tadaResc
+irodsHome /noao-tuc-z1/home/cache
+irodsCwd /noao-tuc-z1/home/cache
+EOF
+
+
+#! export irodsLogLevel=9
+
+cp ~/.irods/archIrodsEnv ~/.irods/.irodsEnv
+#!read -p "iRODS password for cache user? "
+#!iinit $REPLY
+iinit cacheMonet
+
+ienv
+
+imkdir -p `dirname ${irods_fname}`
+chmod 0664 ${local_fname}
+iput -f -K ${local_fname} ${irods_fname}
+
+cp ~/.irods/tadaIrodsEnv ~/.irods/.irodsEnv
+iinit temppasswd
+
+echo "Successfully put ${local_fname} to ${irods_fname}"

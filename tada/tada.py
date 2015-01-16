@@ -13,7 +13,8 @@ import time
 import functools
 import operator
 import fnmatch
-import pyfits
+#!import pyfits
+import astropy.io.fits as pyfits
 
 def validMetadataP(fits):
     requiredFitsFields = set([

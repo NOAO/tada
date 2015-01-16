@@ -4,6 +4,12 @@ tt
 tt[0-9]
 sdm-test-data
 
+docs/figures/
+docs/*.tex
+docs/*.dot
+docs/*.pdf
+foo.*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

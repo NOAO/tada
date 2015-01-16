@@ -7,7 +7,8 @@ import logging
 import traceback
 
 
-import pyfits
+#!import pyfits
+import astropy.io.fits as pyfits
 import datetime
 import os.path
  
@@ -232,6 +233,7 @@ RAW_REQUIRED_FIELDS = set([
 ])
 
 
+
 def extract_header(fits_filename=None, hdr_filename=None):
     "Get the 'header' from FITS file. Write it to text file."
     if fits_filename == None:
@@ -239,7 +241,7 @@ def extract_header(fits_filename=None, hdr_filename=None):
     if hdr_filename == None:
         hdr_filename = sys.argv[2]
 
-    hdulist = pyfits.open(fits_filename) # can be compressed
+    hdulist = pyfits.open(fits_filename) # ok if is compressed ('fz')
     hdr = hdulist[0].header
     with open(hdr_filename, 'w') as f:
         hdr.totextfile(f)
@@ -464,6 +466,8 @@ def modify_hdr(hdr, fname):
             .format(', '.join(sorted(missing)))
             )
 
+    hdr['TADAVERS']    = '0.0.dev1' # NOT REQUIRED, for diagnostics
+
     # e.g. OBSID = 'kp4m.20141114T122626'
     # e.g. OBSID = 'soar.sam.20141220T015929.7Z'
     #!tele, dt_str = hdr['OBSID'].split('.')
@@ -485,31 +489,29 @@ def modify_hdr(hdr, fname):
     fmt = '%Y-%m-%dT%H:%M:%S.%f' if 'T' in hdr['DATE-OBS'] else '%Y-%m-%d'
     dateobs = datetime.datetime.strptime(hdr['DATE-OBS'],fmt)
 
-    if 'PROPOSER' not in hdr:
-        hdr['PROPOSER'] = hdr['PROPID'] #!!!
-            
-    hdr['DTACQNAM'] = os.path.basename(fname) # file name supplied at telescope
-    hdr['DTINSTRU'] = hdr['INSTRUME'] # eg. 'NEWFIRM'
-    hdr['DTNSANAM'] = fname #file name in NOAO Science Archive            
-    hdr['DTPI']     = hdr['PROPOSER']
-    hdr['DTSITE']   = hdr['OBSERVAT'].lower()
+    # Use existing field if it is present, else calc new  one
+    hdr['PROPOSER'] = hdr.get('PROPOSER', hdr['PROPID']) #!!!
+    hdr['DTACQNAM'] = hdr.get('DTACQNAM', os.path.basename(fname)) 
+    hdr['DTINSTRU'] = hdr.get('DTINSTRU', hdr['INSTRUME']) # eg. 'NEWFIRM'
+    hdr['DTNSANAM'] = hdr.get('DTNSANAM', os.path.basename(fname))
+    hdr['DTPI']     = hdr.get('DTPI',     hdr['PROPOSER'])
+    hdr['DTSITE']   = hdr.get('DTSITE',   hdr['OBSERVAT'].lower())
     #! hdr['DTPUBDAT'] = 'NA' # doc says its required, cooked file lacks it
-    hdr['DTTELESC'] = tele
-    hdr['DTTITLE']  = 'Field not derivable from raw metadata!!!',
-
+    hdr['DTTELESC'] = hdr.get('DTTELESC', tele)
+    hdr['DTTITLE']  = hdr.get('DTTITLE',  'Not derivable from raw metadata!!!')
     # DTUTC cannot be derived exactly from any RAW fields
     # Should be: "post exposure UTC epoch from DTS"
-    hdr['DTUTC']    = dateobs.strftime('%Y-%m-%dT%H:%M:%S') #slightly wrong!!!
+    hdr['DTUTC']    = hdr.get('DTUTC',
+                              #slightly wrong!!!
+                              dateobs.strftime('%Y-%m-%dT%H:%M:%S')) 
 
-    dir1 = datestr
-    dir2 = tele
-    dir3 = hdr['PROPID']
-    hdr['SB_DIR1'] = dir1
-    hdr['SB_DIR2'] = dir2 
-    hdr['SB_DIR3'] = dir3
+    #! dir1 = datestr
+    #! dir2 = tele
+    #! dir3 = hdr['PROPID']
+    #! hdr['SB_DIR1'] = dir1
+    #! hdr['SB_DIR2'] = dir2 
+    #! hdr['SB_DIR3'] = dir3
     # e.g. SB_DIR1='20141113', SB_DIR2='kp4m', SB_DIR3='2013B-0236'
-
-    hdr['ORIGPATH'] = fname
 
     return hdr
 

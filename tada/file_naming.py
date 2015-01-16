@@ -1,6 +1,7 @@
 "Create filename that satisfies standard naming convention."
 
-import pyfits
+#!import pyfits
+import astropy.io.fits as pyfits
 
 # From: http://ast.noao.edu/data/docs
 table1_str = '''
@@ -47,41 +48,41 @@ table1_str = '''
 # CONTAINS DUPLICATES!!! (e.g. "Arcon") needs Telescope for disambiguation.
 instrumentLUT = {
     # Instrument, Prefix 
-    'Goodman':   'psg',  
-    'OSIRIS':    'pso',  
-    'SOI':       'psi',  
-    'Spartan':   'pss',  
-    'SAM':       'psa',  
-    'DECam':     'c4d',  
-    'COSMOS':    'c4c',  
-    'ISPI':      'c4i',  
-    'Arcon':     'c4a',  
-    'Mosaic':    'c4m',  
-    'NEWFIRM':   'c4n',  
-    'Chiron':    'c15e',  
-    'Arcon':     'c15s',  
-    'ANDICAM':   'c13a',  
-    'Y4KCam':    'c1i',  
-    'Arcon':     'c09i',  
-    'COSMOS':    'clc',  
-    'Mosaic':    'k4m',  
-    'NEWFIRM':   'k4n',  
-    'KOSMOS':    'k4k',  
-    'ICE':       'k4i',  
-    'Wildfire':  'k4w',  
-    'Flamingos': 'k4f',  
-    'WHIRC':     'kww',  
-    'Bench':     'kwb',  
-    'MiniMo/ICE':'kwi',  
-    '(p)ODI':    'kwo',  
-    'MOP/ICE':   'k21i',  
-    'Wildfire':  'k21w',  
-    'Falmingos': 'k21f',  
-    'GTCam':     'k21g',  
-    'MOP/ICE':   'kcfs',  
-    'HDI':       'k09h',  
-    'Mosaic':    'k09m',  
-    'ICE':       'k09i',
+    'goodman':   'psg',  
+    'osiris':    'pso',  
+    'soi':       'psi',  
+    'spartan':   'pss',  
+    'sam':       'psa',  
+    'decam':     'c4d',  
+    'cosmos':    'c4c',  
+    'ispi':      'c4i',  
+    'arcon':     'c4a',  
+    'mosaic':    'c4m',  
+    'newfirm':   'c4n',  
+    'chiron':    'c15e',  
+    'arcon':     'c15s',  
+    'andicam':   'c13a',  
+    'y4kcam':    'c1i',  
+    'arcon':     'c09i',  
+    'cosmos':    'clc',  
+    'mosaic':    'k4m',  
+    'newfirm':   'k4n',  
+    'kosmos':    'k4k',  
+    'ice':       'k4i',  
+    'wildfire':  'k4w',  
+    'flamingos': 'k4f',  
+    'whirc':     'kww',  
+    'bench':     'kwb',  
+    'minimo/ice':'kwi',  
+    '(p)odi':    'kwo',  
+    'mop/ice':   'k21i',  
+    'wildfire':  'k21w',  
+    'falmingos': 'k21f',  
+    'gtcam':     'k21g',  
+    'mop/ice':   'kcfs',  
+    'hdi':       'k09h',  
+    'mosaic':    'k09m',  
+    'ice':       'k09i',
     #
     'NOTA':      'uuuu',  
 }
@@ -133,10 +134,10 @@ e.g. k4k_140923_024819_uri.fits.fz"""
     (date,time) = datetime.split('.')[1].split('T')
 
     fields = dict(
-        instrument=instrumentLUT[instrument],
+        instrument=instrumentLUT[instrument.lower()],
         date=date,
         time=time,
-        obstype=obsLUT[obstype],    
+        obstype=obsLUT.get(obstype, 'u'),    # if not in LUT, use "u"!!!
         proctype=procLUT.get(proctype, 'u'), # if not in LUT, use "u"!!!
         prodtype=prodLUT.get(prodtype, 'u'), # if not in LUT, use "u"!!!
         ext='fits',

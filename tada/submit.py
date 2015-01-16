@@ -3,7 +3,8 @@
 import sys
 import argparse
 import logging
-import pyfits
+#!import pyfits
+import astropy.io.fits as pyfits
 import os, os.path
 import socket
 import traceback
@@ -20,7 +21,7 @@ from dataq import irods_utils as iu
 
 # e.g.
 # curl "http://nsaserver.pat.sdm.noao.edu:9000/?hdrUri=/noao-tuc-z1/mtn/20141123/kp4m/2013B-0528/kp2066873.hdr"
-def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
+def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None, fake=False):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
  Archive Ingest via REST-like interface."""
     import random # for stubbing random failures (not for production)
@@ -39,21 +40,25 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
                      .format(nsa_host, nsa_port, hdr_ipath))
     logging.debug('nsaserver_url = {}'.format(nsaserver_url))
 
-    #!logging.warning('http_archive_ingest() using prob_fail= {}'
-    #!                .format(prob_fail))
-    #!if random.random() <= prob_fail:
-    #!    raise tex.SubmitException('Killed by cosmic ray with probability {}'
-    #!                              .format(prob_fail))
 
 
-    with urllib.request.urlopen(nsaserver_url) as f:
-        # Only two possible responses are: "Success" or "Failure"
-        response = f.readline().decode('utf-8')
-    logging.debug('NSA server response: = {}'.format(response))
-    result = True if response == "Success" else False
-    if not result:
-        raise tex.SubmitException('HTTP response from Archive: {}'
-                                  .format(response))
+    if fake:
+        logging.warning('http_archive_ingest() using prob_fail= {}'
+                        .format(prob_fail))
+        result = True
+        if random.random() <= prob_fail:
+            raise tex.SubmitException('Killed by cosmic ray with probability {}'
+                                      .format(prob_fail))
+    else:
+        with urllib.request.urlopen(nsaserver_url) as f:
+            # As of 1/15/2015 the only two possible responses are:
+            #   "Success" or "Failure"
+            response = f.readline().decode('utf-8')
+        logging.debug('NSA server response: = {}'.format(response))
+        result = True if response == "Success" else False
+        if not result:
+            raise tex.SubmitException('HTTP response from Archive: "{}"'
+                                      .format(response))
 
     return result
     
@@ -164,7 +169,13 @@ RETURN: irods location of hdr file.
                                    checksum=iu.get_irods_cksum(mirror_ifname)
                                ),
                   file=f)
-            hdr.totextfile(f)
+            #! hdr.totextfile(f, endcard=True)
+            # Print without blank cards or trailing whitespace
+            hdrstr = hdr.tostring(sep='\n',padding=False)
+            print(*[s.rstrip() for s in hdrstr.splitlines()
+                    if s.strip() != ''],
+                  sep='\n',
+                  file=f)
             
             # The only reason we do this is to satisfy Archive Ingest!!!
             # Since it has to have a reference to the FITS file anyhow,

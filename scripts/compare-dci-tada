@@ -1,0 +1,111 @@
+# -*- mode: sh -*-
+#!/bin/bash -e
+
+# PURPOSE:
+#  Get (from irods331) files ingested thru iDCI and thru TADA.
+#  Compare them.
+#
+# EXAMPLE:
+#  compare-dci-tada 
+#
+# AUTHORS: S. Pothier
+
+cmd=`basename $0`
+usage="USAGE: $cmd irods_fname local_fname
+"
+
+if [ $# -lt 2 ]; then
+	echo >&2 "$usage"
+	exit 2
+fi
+
+irods_fname=$1
+local_fname=$2
+
+
+##############################################################################
+
+PATH=~/sandbox/irods3.3.1/iRODS/clients/icommands/bin:$PATH
+echo "PATH=$PATH"
+which iinit
+
+mv ~/.irods/.irodsEnv ~/.irods/origIrodsEnv
+cat > ~/.irods/archIrodsEnv <<EOF
+irodsHost db5.sdm.noao.edu
+irodsPort 1247
+irodsUserName cache
+irodsZone noao-tuc-z1
+irodsDefResource tadaResc
+irodsHome /noao-tuc-z1/home/cache
+irodsCwd /noao-tuc-z1/home/cache
+EOF
+#! export irodsLogLevel=9
+
+cp ~/.irods/archIrodsEnv ~/.irods/.irodsEnv
+#!read -p "iRODS password for cache user? "
+#!iinit $REPLY
+iinit cacheMonet
+ienv
+
+iget -f -K ${irods_fname} ${local_fname}
+
+##############################################################################
+ lpr -P astro /data/prev-ingest/k4n_141121_125428_ori.fits.fz
+[vagrant@mountain kp2064566]$ DEBUG Read Queue: got "193f9f36a929576a895b574fd9dacb9a"
+DEBUG RUN action: "network_move"; {'error_count': '0', 'filename': '/var/tada/mountain_cache/vagrant/16/k4n_141121_125428_ori.fits.fz', 'checksum': '193f9f36a929576a895b574fd9dacb9a'}
+
+cd ~/data
+mkdir -p ingest-pairs/k4n_141121_125428_ori/{dci,tada}
+
+iget331 /noao-tuc-z1/tada/vagrant/16/k4n_20141121_124841_oru.fits ingest-pairs/k4n_141121_125428_ori/tada/k4n_141121_125428_ori.fits
+iget331 /noao-tuc-z1/tada/vagrant/16/k4n_20141121_124841_oru.hdr ingest-pairs/k4n_141121_125428_ori/tada/k4n_141121_125428_ori.hdr
+
+mv prev-ingest/k4n_141121_125428_ori.* ingest-pairs/k4n_141121_125428_ori/dci/
+
+source /home/pothiers/PYTHON_ENV/tada/bin/activate
+
+##############################################################################
+
+cd /data/ingest-pairs/kp2064566
+fitsdiff */*fits*
+#  fitsdiff: 0.4.2
+#  a: dci/kp2064566.fits.fz
+#  b: tada/k4n_20141121_034740_oru.fits
+#  Maximum number of different data values to be reported: 10
+#  Data comparison level: 0.0
+# 
+# Primary HDU:
+# 
+#    Headers contain differences:
+#      Keyword CHECKSUM has different values:
+#         a> PhBSQh9RPhARPh7R
+#         b> k44Km14Ik14Ik14I
+#      Keyword CHECKSUM has different comments:
+#         a> ASCII 1's complement checksum
+#         b> HDU checksum updated 2015-01-16T05:43:24
+#      Keyword DATASUM  has different comments:
+#         a> checksum of data records
+#         b> data unit checksum updated 2015-01-16T05:43:24
+#      Keyword DTACQNAM has different values:
+#         a> /home/data/nhs_2014_n21_301829.fits
+#         b> kp2064566.fits.fz
+#      Keyword DTINSTRU has different values:
+#         a> newfirmx
+#         b> NEWFIRM
+#      Keyword DTNSANAM has different values:
+#         a> kp2064566.fits
+#         b> kp2064566.fits.fz
+#          ?               +++
+#      Keyword DTSITE   has different values:
+#         a> kp
+#         b> kpno
+#      Keyword DTTITLE  has different values:
+#         a> The NEWFIRM HETDEX Survey - Probing the Growth of Galaxies with Cosm
+#         b> Field not derivable from raw metadata!!!
+#      Keyword DTUTC    has different values:
+#         a> 2014-11-21T03:50:42
+#          ?               ^^  ^
+#         b> 2014-11-21T03:47:40
+#          ?               ^^  ^
+
+

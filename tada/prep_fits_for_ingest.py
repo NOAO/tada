@@ -14,7 +14,9 @@ of fits stored in irods
 import os, sys, string, argparse, logging
 import tempfile
 
-import pyfits
+#!import pyfits
+import astropy.io.fits as pyfits
+
 from . import fits_utils as fu
 from . import file_naming as fn
 from dataq import irods_utils as iu

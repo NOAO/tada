@@ -1,6 +1,7 @@
 """Fits diagnostics.  Nothing here is required for production. """
 
-import pyfits
+#import pyfits
+import astropy.io.fits as pyfits
 import logging
 import collections
 from glob import glob
