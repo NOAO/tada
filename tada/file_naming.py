@@ -1,7 +1,6 @@
 "Create filename that satisfies standard naming convention."
 
-#!import pyfits
-import astropy.io.fits as pyfits
+import logging
 
 # From: http://ast.noao.edu/data/docs
 table1_str = '''
@@ -129,12 +128,13 @@ prodLUT = {
 def generate_fname(instrument, datetime, obstype, proctype, prodtype):
     """Generate standard filename from metadata values.
 e.g. k4k_140923_024819_uri.fits.fz"""
+    logging.debug('generate_fname({},{},{},{},{})'
+                  .format(instrument, datetime, obstype, proctype, prodtype))
 
-
-    (date,time) = datetime.split('.')[1].split('T')
+    (date,time) = datetime.split('.')[-1].split('T')
 
     fields = dict(
-        instrument=instrumentLUT[instrument.lower()],
+        instrument=instrumentLUT.get(instrument.lower(),'uuuu'),
         date=date,
         time=time,
         obstype=obsLUT.get(obstype, 'u'),    # if not in LUT, use "u"!!!

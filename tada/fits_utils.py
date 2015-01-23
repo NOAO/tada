@@ -1,6 +1,11 @@
 #! /usr/bin/env python3
-"""Fiddling with Fits (tm)"""
+"""Fiddling with Fits (tm)
 
+It would be nice if our FITS files always satisified the FITS Standard.
+They do not according to:
+http://fits.gsfc.nasa.gov/fits_verify.html
+(or the standalone version of same)
+"""
 import sys
 import argparse
 import logging
@@ -14,6 +19,38 @@ import os.path
  
 from . import file_naming as fn
 from . import exceptions as tex
+
+##############################################################################
+# "Required" fields per tier per Email from Brian Thomas on 1/7/15
+# (Subject:Tiers of complaince and Archive ICD)
+#
+
+TIER0_PHDU_RAW_FIELDS = '''OBSTYPE PROCTYPE PRODTYPE DATE-OBS PROPID
+   TELESCOP OBSERVAT INSTRUME NAXIS SB_ID SB_RECNO PIPELINE PLVER'''.split()
+TIER0_EHDU_RAW_FIELDS = 'NAXIS NAXIS1 NAXIS2 EXTNAME INHERIT'.split()
+
+TIER1_PHDU_RAW_FIELDS = '''OBJECT FILENAME RA DEC EQUINOX RADESYS EXPTIME
+   TELRA TELDEC'''.split()
+TIER1_EHDU_RAW_FIELDS = 'RA1 DEC1'.split()
+
+TIER1_PHDU_PROCESSED_FIELDS = (TIER1_EHDU_RAW_FIELDS +
+                               '''DTTITLE DTACQNAM DTNSANAM DTINSTRU DTTELESC
+                               DTSITE DTUTC DTPI DTSITE'''.split())
+
+TIER2_PHDU_RAW_FIELDS = 'AIRMASS HA ZD'.split()
+TIER2_EHDU_RAW_FIELDS = 'AIRMASS1'.split()
+
+TIER2_PHDU_PROCESSED_FIELDS = (TIER2_PHDU_RAW_FIELDS +
+                               '''CORN1RA CORN2RA CORN3RA CORN4RA CORN1DEC
+                               CORN2DEC CORN3DEC CORN4DEC'''.split())
+TIER2_EHDU_PROCESSED_FIELDS = (TIER2_EHDU_RAW_FIELDS +
+                               '''COR1RA1 COR2RA1 COR3RA1 COR4RA1 COR1DEC1
+                               COR2DEC1 COR3DEC1 COR4DEC1'''.split())
+
+TIER3_PHDU_RAW_FIELDS = 'FILTER SEEING'.split()
+TIER3_EHDU_RAW_FIELDS = 'SEEING1'.split()
+
+
 
 ##############################################################################
 # Req-A1: set of header keywords required by NSA ingestion per
@@ -45,12 +82,12 @@ INGEST_REQUIRED_FIELDS = set([
     'DTACQNAM',
 #    DTACQUIS host name of data acquisition computer
 #    DTCALDAT calendar date from observing schedule
-#    DTCOPYRI copyright holder of data
+    'DTCOPYRI', # copyright holder of data (ADDED!!!)
     'DTINSTRU',
     'DTNSANAM',
 #    DTOBSERV scheduling institution
     'DTPI',
-#    DTPIAFFL PI affiliation
+    'DTPIAFFL', # PI affiliation (ADDED!!!)
 #    DTPROPID observing proposal ID
 #    DTPUBDAT calendar date of public release 
     'DTSITE',
@@ -233,8 +270,20 @@ RAW_REQUIRED_FIELDS = set([
 ])
 
 
+def print_header(msg, hdr=None, fits_filename=None):
+    """Provide HDR or FITS_FILENAME"""
+    if hdr == None:
+        hdulist = pyfits.open(fits_filename) 
+        hdr = hdulist[0].header # use only first in list.
+    # Print without blank cards or trailing whitespace
+    hdrstr = hdr.tostring(sep='\n',padding=False)
+    print('{}: '.format(msg))
+    print(*[s.rstrip() for s in hdrstr.splitlines()
+            if s.strip() != ''],
+          sep='\n')
 
-def extract_header(fits_filename=None, hdr_filename=None):
+    
+def OLDextract_header(fits_filename=None, hdr_filename=None):
     "Get the 'header' from FITS file. Write it to text file."
     if fits_filename == None:
         fits_filename = sys.argv[1]
@@ -458,7 +507,7 @@ DATASUM = '0         '          /  checksum of data records
 # SIDE-EFFECTS: fields added to FITS header
 # Used istb/src/header.{h,c} for hints.
 # raw: nhs_2014_n14_299403.fits
-def modify_hdr(hdr, fname):
+def modify_hdr(hdr, fname, forceRecalc=True):
     missing = missing_in_raw_hdr(hdr)
     if len(missing) > 0:
         raise tex.InsufficientRawHeader(
@@ -466,12 +515,15 @@ def modify_hdr(hdr, fname):
             .format(', '.join(sorted(missing)))
             )
 
-    hdr['TADAVERS']    = '0.0.dev1' # NOT REQUIRED, for diagnostics
+    chg = dict() # Fields to change/add
+    chg['TADAVERS']    = '0.0.dev1' # NOT REQUIRED, for diagnostics
+    chg['DTTITLE']  = 'Not derivable from raw metadata!!!'
+    chg['DTPIAFFL'] = 'Not derivable from raw metadata!!!'
 
     # e.g. OBSID = 'kp4m.20141114T122626'
     # e.g. OBSID = 'soar.sam.20141220T015929.7Z'
     #!tele, dt_str = hdr['OBSID'].split('.')
-
+    
     datestr = None
     tele = None
     if 'COSMOS' == hdr['INSTRUME']:
@@ -489,30 +541,42 @@ def modify_hdr(hdr, fname):
     fmt = '%Y-%m-%dT%H:%M:%S.%f' if 'T' in hdr['DATE-OBS'] else '%Y-%m-%d'
     dateobs = datetime.datetime.strptime(hdr['DATE-OBS'],fmt)
 
-    # Use existing field if it is present, else calc new  one
-    hdr['PROPOSER'] = hdr.get('PROPOSER', hdr['PROPID']) #!!!
-    hdr['DTACQNAM'] = hdr.get('DTACQNAM', os.path.basename(fname)) 
-    hdr['DTINSTRU'] = hdr.get('DTINSTRU', hdr['INSTRUME']) # eg. 'NEWFIRM'
-    hdr['DTNSANAM'] = hdr.get('DTNSANAM', os.path.basename(fname))
-    hdr['DTPI']     = hdr.get('DTPI',     hdr['PROPOSER'])
-    hdr['DTSITE']   = hdr.get('DTSITE',   hdr['OBSERVAT'].lower())
-    #! hdr['DTPUBDAT'] = 'NA' # doc says its required, cooked file lacks it
-    hdr['DTTELESC'] = hdr.get('DTTELESC', tele)
-    hdr['DTTITLE']  = hdr.get('DTTITLE',  'Not derivable from raw metadata!!!')
+    chg['PROPOSER'] = hdr['PROPID'] #!!!
+    chg['DTACQNAM'] = os.path.basename(fname)
+    chg['DTINSTRU'] = hdr['INSTRUME'] # eg. 'NEWFIRM'
+    chg['DTNSANAM'] = os.path.basename(fname)
+    chg['DTPI']     = hdr.get('PROPOSER',hdr['PROPID'])
+    chg['DTSITE']   = hdr['OBSERVAT'].lower()
+    #! chg['DTPUBDAT'] = 'NA' # doc says its required, cooked file lacks it
+    chg['DTTELESC'] = tele
     # DTUTC cannot be derived exactly from any RAW fields
     # Should be: "post exposure UTC epoch from DTS"
-    hdr['DTUTC']    = hdr.get('DTUTC',
-                              #slightly wrong!!!
-                              dateobs.strftime('%Y-%m-%dT%H:%M:%S')) 
-
+    chg['DTUTC']    = dateobs.strftime('%Y-%m-%dT%H:%M:%S')  #slightly wrong!!!
+    chg['DTCOPYRI'] = 'AURA'
     #! dir1 = datestr
     #! dir2 = tele
     #! dir3 = hdr['PROPID']
-    #! hdr['SB_DIR1'] = dir1
-    #! hdr['SB_DIR2'] = dir2 
-    #! hdr['SB_DIR3'] = dir3
+    #! chg['SB_DIR1'] = dir1
+    #! chg['SB_DIR2'] = dir2 
+    #! chg['SB_DIR3'] = dir3
     # e.g. SB_DIR1='20141113', SB_DIR2='kp4m', SB_DIR3='2013B-0236'
 
+    if forceRecalc:
+        for k,v in chg.items():
+            hdr[k] = v
+    else: # Use existing field if it is present, else use new one
+        for k,v in chg.items():
+            hdr[k] = hdr.get(k,v)
+
+    # If we have what we need in RAW and doing everything we should in
+    # this function, then we should never be missing anything in archive_hdr.
+    # This check is therefore here only to catch programming errors.
+    missing = missing_in_archive_hdr(hdr)
+    if len(missing) > 0:
+        raise tex.InsufficientRawHeader(
+            'Modified FITS file is missing required metadata fields: {}'
+            .format(', '.join(sorted(missing)))
+            )
     return hdr
 
 # [vagrant@valley ~]$ imeta set -d /tempZone/mountain_mirror/vagrant/13/nhs_2014_n14_299403.fits ftype fits
@@ -549,32 +613,39 @@ def add_hdr_fields(fits_file):
     # e.g. "k4k_140923_024819_uri.fits.fz"
     return new_fname, dir1, dir2, dir3
 
-def show_hdr_values(hdr):
+def show_hdr_values(msg, hdr):
     """Show the values for 'interesting' header fields"""
     #!for key in RAW_REQUIRED_FIELDS.union(INGEST_REQUIRED_FIELDS):
+    print('{}: '.format(msg), end='')
     for key in RAW_REQUIRED_FIELDS:
         print('{}="{}"'.format(key,hdr.get(key,'<not given>')),end=', ')
     print()
 
-def fits_compliant(fits_file_list, show_values=False):
+def fits_compliant(fits_file_list, show_values=False, show_header=False):
     """Check FITS file for complaince with Archive Ingest."""
     bad = 0
     bad_files = []
     for ffile in fits_file_list:
+
         missing = []
         try:
             #!valid_header(ffile)
             hdr = pyfits.open(ffile)[0].header # use only first in list.
-            if show_values:
-                show_hdr_values(hdr) # only the "interesting" ones
             modify_hdr(hdr, ffile)
             missing = missing_in_archive_hdr(hdr)
+
         except Exception as err:
             bad_files.append(ffile)
             bad += 1
             print('{}:\t NOT compliant; {}'.format(ffile, err))
             #!traceback.print_exc()
             continue
+        finally:
+            if show_values:
+                show_hdr_values('Post modify', hdr) # only "interesting" ones
+            if show_header:
+                print_header('Post modify', hdr=hdr)
+            
         
         if len(missing) == 0:
             print('{}:\t IS compliant'.format(ffile))
@@ -606,6 +677,9 @@ def main():
     parser.add_argument('--values',
                         action='store_true',
                         help='Show header values for interesting fields')
+    parser.add_argument('--header',
+                        action='store_true',
+                        help='Show full header')
     parser.add_argument('--loglevel',
                         help='Kind of diagnostic output',
                         choices=['CRTICAL', 'ERROR', 'WARNING',
@@ -626,7 +700,10 @@ def main():
                         datefmt='%m-%d %H:%M')
     logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
-    fits_compliant(args.infiles, show_values=args.values)
+    fits_compliant(args.infiles,
+                   show_values=args.values,
+                   show_header=args.header)
 
 if __name__ == '__main__':
+
     main()

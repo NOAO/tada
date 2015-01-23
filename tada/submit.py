@@ -21,7 +21,7 @@ from dataq import irods_utils as iu
 
 # e.g.
 # curl "http://nsaserver.pat.sdm.noao.edu:9000/?hdrUri=/noao-tuc-z1/mtn/20141123/kp4m/2013B-0528/kp2066873.hdr"
-def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None, fake=False):
+def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
  Archive Ingest via REST-like interface."""
     import random # for stubbing random failures (not for production)
@@ -42,6 +42,7 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None, fake=False):
 
 
 
+    fake = (prob_fail > 0)
     if fake:
         logging.warning('http_archive_ingest() using prob_fail= {}'
                         .format(prob_fail))
