@@ -1,6 +1,7 @@
-"""Fits diagnostics.  Nothing here is required for production. """
+"""Diagnostics. 
+Nothing here is required for production but use of it would have to be 
+commented out before this file could be removed."""
 
-#import pyfits
 import astropy.io.fits as pyfits
 import logging
 import collections
@@ -50,3 +51,13 @@ def metadata_catalog(fits_filenames):
         print('%8s: %s'%(k,', '.join(v)))
             
             
+def dbgcmd(cmdargs, msg='EXECUTING cmd: '):
+    logging.debug('{}{}'.format(msg,' '.join(cmdargs)))
+
+
+
+def traceback_if_debug():
+    "Print traceback of logging level is set to DEBUG"
+    if logging.DEBUG == logging.getLogger().getEffectiveLevel():
+        traceback.print_exc()
+    

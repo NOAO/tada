@@ -125,13 +125,16 @@ prodLUT = {
     }
 
 
-def generate_fname(instrument, datetime, obstype, proctype, prodtype):
+def generate_fname(instrument, obsdt, obstype, proctype, prodtype, ext):
     """Generate standard filename from metadata values.
 e.g. k4k_140923_024819_uri.fits.fz"""
-    logging.debug('generate_fname({},{},{},{},{})'
-                  .format(instrument, datetime, obstype, proctype, prodtype))
+    logging.debug('generate_fname({},{},{},{},{},{})'
+                  .format(instrument, obsdt, obstype, proctype, prodtype, ext))
 
-    (date,time) = datetime.split('.')[-1].split('T')
+    #!(date,time) = datetime.split('.')[-1].split('T')
+    # e.g. "20141220T015929"
+    date = obsdt.date().strftime('%Y%m%d')
+    time = obsdt.time().strftime('%H%M%S')
 
     fields = dict(
         instrument=instrumentLUT.get(instrument.lower(),'uuuu'),
@@ -140,7 +143,7 @@ e.g. k4k_140923_024819_uri.fits.fz"""
         obstype=obsLUT.get(obstype, 'u'),    # if not in LUT, use "u"!!!
         proctype=procLUT.get(proctype, 'u'), # if not in LUT, use "u"!!!
         prodtype=prodLUT.get(prodtype, 'u'), # if not in LUT, use "u"!!!
-        ext='fits',
+        ext=ext,
         )
     new_fname = "{instrument}_{date}_{time}_{obstype}{proctype}{prodtype}.{ext}".format(**fields)
     return new_fname

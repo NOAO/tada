@@ -11,6 +11,7 @@ import traceback
 import tempfile
 import pathlib
 import urllib
+import shutil
 
 from . import fits_utils as fu
 from . import file_naming as fn
@@ -139,16 +140,20 @@ RETURN: irods location of hdr file.
         # augment hdr (add fields demanded of downstream process)
         hdulist = pyfits.open(fname, mode='update') # modify IN PLACE
         hdr = hdulist[0].header # use only first in list.
-        fu.modify_hdr(hdr, fname)
+        inst, obsdt, obstype, proctype, prodtype,ext = fu.modify_hdr(hdr, fname)
+
+        info = hdulist.fileinfo(0)
+        if info['resized']:
+            logging.debug('FITS file {} was MODIFIED'
+                          .format(info['filename']))
+        else:
+            logging.debug('FITS file {} was NOT modified'
+                          .format(info['filename']))
 
         # Generate standards conforming filename
-        new_basename = fn.generate_fname(
-            instrument=hdr.get('DTINSTRU', 'NOTA'),
-            datetime=hdr['OBSID'],
-            obstype=hdr.get('OBSTYPE', 'NOTA'),
-            proctype=hdr.get('PROCTYPE', 'NOTA'),
-            prodtype=hdr.get('PRODTYPE', 'NOTA'),
-            )
+        new_basename = fn.generate_fname(inst, obsdt, obstype,
+                                         proctype, prodtype, ext)
+
         #new_ifname=os.path.join(os.path.dirname(mirror_ifname), new_basename)
         ipath = pathlib.PurePath(mirror_ifname
                                  .replace(mirror_idir, archive_idir))
@@ -188,6 +193,11 @@ RETURN: irods location of hdr file.
     finally: 
         hdulist.flush()
         hdulist.close()
+        #!info = hdulist.fileinfo(0)
+        #!if info['resized']:
+        #!    #! os.chmod(fname, 0o444)
+        #!    #! shutil.chown(fname, user="irods", group="irods")
+
         
     # We might need to change subdirectory name too!!!
     # (but there has been no stated Requirement for subdir structure)

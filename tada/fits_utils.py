@@ -508,6 +508,8 @@ DATASUM = '0         '          /  checksum of data records
 # Used istb/src/header.{h,c} for hints.
 # raw: nhs_2014_n14_299403.fits
 def modify_hdr(hdr, fname, forceRecalc=True):
+    '''Modify header to suit Archive Ingest. Return fields needed to construct
+ new filename that fullfills standards'''
     missing = missing_in_raw_hdr(hdr)
     if len(missing) > 0:
         raise tex.InsufficientRawHeader(
@@ -526,13 +528,15 @@ def modify_hdr(hdr, fname, forceRecalc=True):
     
     datestr = None
     tele = None
-    if 'COSMOS' == hdr['INSTRUME']:
+    instrument = hdr['INSTRUME']
+
+    if 'COSMOS' == instrument:
         tele, dt_str = hdr['OBSID'].split('.')
         datestr, _ = dt_str.split('T')
-    elif 'Mosaic1.1' == hdr['INSTRUME']:
+    elif 'Mosaic1.1' == instrument:
         tele, dt_str = hdr['OBSID'].split('.')
         datestr, _ = dt_str.split('T')
-    elif 'SOI' == hdr['INSTRUME']:
+    elif 'SOI' == instrument:
         tele, inst, dt_str1, dt_str2 = hdr['OBSID'].split('.')
         dt_str = dt_str1 + dt_str2
         datestr, _ = dt_str.split('T')
@@ -540,10 +544,10 @@ def modify_hdr(hdr, fname, forceRecalc=True):
     # "UTC epoch"
     fmt = '%Y-%m-%dT%H:%M:%S.%f' if 'T' in hdr['DATE-OBS'] else '%Y-%m-%d'
     dateobs = datetime.datetime.strptime(hdr['DATE-OBS'],fmt)
-
+    
     chg['PROPOSER'] = hdr['PROPID'] #!!!
     chg['DTACQNAM'] = os.path.basename(fname)
-    chg['DTINSTRU'] = hdr['INSTRUME'] # eg. 'NEWFIRM'
+    chg['DTINSTRU'] = instrument # eg. 'NEWFIRM'
     chg['DTNSANAM'] = os.path.basename(fname)
     chg['DTPI']     = hdr.get('PROPOSER',hdr['PROPID'])
     chg['DTSITE']   = hdr['OBSERVAT'].lower()
@@ -577,7 +581,14 @@ def modify_hdr(hdr, fname, forceRecalc=True):
             'Modified FITS file is missing required metadata fields: {}'
             .format(', '.join(sorted(missing)))
             )
-    return hdr
+    #!return hdr
+    _, ext = os.path.splitext(fname)
+    return (instrument,
+            dateobs,
+            hdr.get('OBSTYPE'),
+            hdr.get('PROCTYPE'),
+            hdr.get('PRODTYPE'),
+            ext)
 
 # [vagrant@valley ~]$ imeta set -d /tempZone/mountain_mirror/vagrant/13/nhs_2014_n14_299403.fits ftype fits
 # [vagrant@valley ~]$ imeta lsw -d /tempZone/mountain_mirror/vagrant/13/nhs_2014_n14_299403.fits
