@@ -2,15 +2,33 @@
 import logging
 import os
 import os.path
+import subprocess
+import magic
+import shutil
+
+#! from . import irods_utils as iu
+from . import submit as ts
+from . import diag
 
 import dataq.dqutils as du
-from . import irods_utils as iu
-from . import submit as ts
 
+# +++ Add code here if TADA needs to handle additional types of files!!!
+def file_type(filename):
+    """Return an abstracted file type string.  MIME isn't always good enough."""
+    if magic.from_file(filename).decode().find('FITS image data') >= 0:
+        return('FITS')
+    elif magic.from_file(filename).decode().find('JPEG image data') >= 0:
+        return('JPEG')
+    elif magic.from_file(filename).decode().find('script text executable') >= 0:
+        return('shell script')
+    else:
+        return('UNKNOWN')
+    
+
+##############################################################################
 
 def network_move(rec, qname, **kwargs):
     "Transfer from Mountain to Valley"
-    import tada.actions
     logging.debug('ACTION: network_move()')
     for p in ['qcfg', 'dirs']:
         if p not in kwargs:
@@ -26,9 +44,9 @@ def network_move(rec, qname, **kwargs):
     dq_host = qcfg[nextq]['dq_host']
     dq_port = qcfg[nextq]['dq_port']
 
-    #!irods_root = kwargs['irods_root']  # eg. '/tempZone/'
     source_root = qcfg['transfer']['cache_dir']
-    irods_root = qcfg['transfer']['mirror_irods']
+    sync_root = qcfg['transfer']['mirror_dir']
+    valley_root = qcfg['submit']['mirror_dir']
     fname = rec['filename']            # absolute path
 
     logging.debug('source_root={}, fname={}'.format(source_root, fname))
@@ -36,21 +54,33 @@ def network_move(rec, qname, **kwargs):
         raise Exception('Filename "{}" does not start with "{}"'
                         .format(fname, source_root))
 
-    ifname = os.path.join(irods_root, os.path.relpath(fname, source_root))
+    ifname = os.path.join(sync_root, os.path.relpath(fname, source_root))
+    #!ifname = sync_root
 
     try:
-        iu.irods_put(fname, ifname)
+        #!iu.irods_put(fname, ifname)
+        cmdline = ['rsync', '-azr',
+                   '--timeout=5',
+                   '--contimeout=3',
+                   '--password-file','/etc/tada/rsync.pwd',
+                   source_root, sync_root]
+        diag.dbgcmd(cmdline)
+        out = subprocess.check_output(cmdline)
     except Exception as ex:
-        logging.warning('Failed to transfer from Mountain to Valley. {}'
-                        .format(ex))
+        logging.warning('Failed to transfer from Mountain to Valley. {} => {}'
+                        .format(ex, ex.output.decode('utf-8')))
         # Any failure means put back on queue. Keep queue handling
         # outside of actions where possible.
         raise
     else:
+        logging.info('Successfully moved file from {} to {}'
+                     .format(fname,sync_root))
         # successfully transfered to Valley
         os.remove(fname)
         logging.info('Removed file "%s" from mountain cache'%(rec['filename'],))
-        du.push_to_q(dq_host, dq_port, ifname, rec['checksum'])
+        mirror_fname = os.path.join(valley_root,
+                                    os.path.relpath(fname, source_root))
+        du.push_to_q(dq_host, dq_port, mirror_fname, rec['checksum'])
     return True
 
 
@@ -65,15 +95,15 @@ configuration field: maximum_errors_per_record)
     dq_port = qcfg[qname]['dq_port']
 
     noarc_root =  qcfg[qname]['noarchive_dir']
-    irods_root =  qcfg[qname]['mirror_irods'] # '/tempZone/mountain_mirror/'
+    mirror_root =  qcfg[qname]['mirror_dir']
 
     # eg. /tempZone/mountain_mirror/other/vagrant/16/text/plain/fubar.txt
-    ifname = rec['filename']            # absolute irods path (mtn_mirror)
+    ifname = rec['filename']            # absolute path (mountain_mirror)
     checksum = rec['checksum']          
-    tail = os.path.relpath(ifname, irods_root) # changing part of path tail
 
     try:
-        ftype = iu.irods_file_type(ifname)
+        #! ftype = iu.irods_file_type(ifname)
+        ftype = file_type(ifname)
     except Exception as ex:
         logging.error('Execution failed: {}; ifname={}'
                       .format(ex, ifname))
@@ -88,17 +118,20 @@ configuration field: maximum_errors_per_record)
             raise sex
         else:
             logging.info('PASSED submit_to_archive({}).'  .format(ifname))
+            # successfully transfered to Archive
+            os.remove(ifname)
     else: # not FITS
-        # Put irods file on filesystem. 
-        fname = os.path.join(noarc_root, tail)
+        fname = ifname.replace(mirror_root, noarc_root)
         try:
-            iu.irods_get(fname, ifname, remove_irods=True)
+            os.makedirs(os.path.dirname(fname), exist_ok=True)
+            shutil.move(ifname, fname)
         except:
-            logging.warning('Failed to get file from irods on Valley.')
+            logging.warning('Failed to mv non-fits file from mirror on Valley.')
             raise
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
         logging.info('Non-FITS file put in: {}'.format(fname))
 
 
+        
     return True
 # END submit() action

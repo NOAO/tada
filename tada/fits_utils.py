@@ -588,7 +588,7 @@ def modify_hdr(hdr, fname, forceRecalc=True):
             hdr.get('OBSTYPE'),
             hdr.get('PROCTYPE'),
             hdr.get('PRODTYPE'),
-            ext)
+            ext[1:])
 
 # [vagrant@valley ~]$ imeta set -d /tempZone/mountain_mirror/vagrant/13/nhs_2014_n14_299403.fits ftype fits
 # [vagrant@valley ~]$ imeta lsw -d /tempZone/mountain_mirror/vagrant/13/nhs_2014_n14_299403.fits

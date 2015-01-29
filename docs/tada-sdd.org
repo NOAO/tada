@@ -97,7 +97,7 @@ application or domain, you can roughly think:
 - [X] document underlying data structure 
   + This includes all the /var/tada/* subdirs, the irods
     "/tempZone/valley" structure, and 2 queues
-
+- [ ] Keep last N on Transfer Success (Maintenance Point)
 * TODO next phase  [0/16]
 - [ ] change irods: 
   + demoResc -> tadaResc
@@ -141,12 +141,18 @@ application or domain, you can roughly think:
   + use funky Perl interface first version, grab XML result, use in Python
 
 * TODO Deferred
+- transfer Valley <==> Valley
+- keep log of basenames; don't submit if grep finds
+  + see "Keep last N on Transfer Success"
 - refactor puppet
 - Write monitor scripts to scrape from logs and queues
   + ERRORS and WARNINGS
 - add puppet modules/classes for my stuff (dq,tada,astro)
   + After taking puppet class
-
+- port rule based FITS validation from Archive Python code to Python
+- allow astropost to handle list of files at once
+  + multi-file rsync
+  + multi-entry push to Valley Submit queue
 * TODO Installation
 * TODO Work-flows
 ** FITS Mitigation (NOAO)

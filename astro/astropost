@@ -3,6 +3,7 @@
 #! set -x
 
 # This CUPS backend allows you to "print to file".
+# see also: http://www.linuxcommand.org/man_pages/backend1.html
 
 # It saves the file into a "cache" and posts the file to a "transfer
 # queue" for copying to another machine.

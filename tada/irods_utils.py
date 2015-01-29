@@ -20,7 +20,6 @@ import tada.diag as diag
 # iquest "%s" "select DATA_PATH where DATA_NAME = 'k4n_20141114_122626_oru.fits'"
 
 def irods_get_physical(ipath):
-
     #!!! Open access to vault
     out = 'NONE'
     cmdline = ['iexecmd', 'open_vault.sh']
@@ -259,20 +258,6 @@ tadaIrods = dict(
     irodsAuthFileName='/sandbox/tadaIrodsAuth'
     )
 
-def irods_put331(local_fname, irods_fname):
-    logging.debug('irods_put331({}, {})'.format(local_fname, irods_fname))
-    
-    try:
-        subprocess.check_output(
-            ['/sandbox/tada/scripts/iput331 {} {}'
-             .format(local_fname, irods_fname)],
-            stderr=subprocess.STDOUT,
-            shell=True)
-    except subprocess.CalledProcessError as ex:
-        logging.error('Execution failed: {}; {}'
-                      .format(ex, ex.output.decode('utf-8')))
-        raise
-    
 def BROKENirods_put331(local_fname, irods_fname):
     '''Put file to irods, creating parent directories if needed.
 This is HACK to support legacy iRODS 3.3.1 server.'''

@@ -17,8 +17,9 @@ from . import fits_utils as fu
 from . import file_naming as fn
 from . import exceptions as tex
 from . import prep_fits_for_ingest as pf
+from . import irods331 as iu
+#!from dataq import irods_utils as iu
 from dataq import dqutils as du
-from dataq import irods_utils as iu
 
 # e.g.
 # curl "http://nsaserver.pat.sdm.noao.edu:9000/?hdrUri=/noao-tuc-z1/mtn/20141123/kp4m/2013B-0528/kp2066873.hdr"
@@ -34,7 +35,6 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
     nsa_port = qcfg[qname]['nsa_port']
     irods_host = qcfg[qname]['nsa_irods_host']
     irods_port = qcfg[qname]['nsa_irods_port']
-    irods_archive_dir = qcfg[qname]['archive_irods']
     prob_fail = qcfg[qname]['action_fail_probability']
 
     nsaserver_url = ('http://{}:{}/?hdrUri={}'
@@ -114,49 +114,36 @@ def STUB_archive_ingest(fname, qname, qcfg=None):
             .format(prop_fail, fname))
     return True
 
-def prep_for_ingest(mirror_ifname, mirror_idir, archive_idir, archive331):
-    """GIVEN: FITS irods path
+def prep_for_ingest(mirror_fname, mirror_dir, archive331):
+    """GIVEN: FITS absolute path
 DO: 
   Augment hdr. 
-  Add hdr as text file to irods.
-  Copy hdr only across bridge (irods-4 to irods-3 archive_idir)
+  Add hdr as text file to irods331.
   Rename FITS to satisfy standards. 
-!!! remove from mirror
-mirror_ifname :: 
-mirror_idir :: from "mirror_irods" in dq_config
-archive_idir :: from "archive_irods" in dq_config
+  Add fits to irods331
+  remove from mirror
+
+mirror_fname :: Mountain mirror on valley
+mirror_dir :: from "mirror_dir" in dq_config
 archive331 :: from "archive_irods331" in dq_config
 RETURN: irods location of hdr file.
     """
 
-    logging.debug('prep_for_ingest: ifname={}, m_dir={}, a_dir={}, a3_dir={}'
-                  .format(mirror_ifname, mirror_idir, archive_idir, archive331))
-
-    # Assumes we are running on machine with access to irods physical file!!!
-    fname = iu.irods_get_physical(mirror_ifname)
+    logging.debug('prep_for_ingest: fname={}, m_dir={}, a_dir={}'
+                  .format(mirror_fname, mirror_dir, archive331))
     
     hdr_ifname = "None"
     try:
         # augment hdr (add fields demanded of downstream process)
-        hdulist = pyfits.open(fname, mode='update') # modify IN PLACE
+        hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
         hdr = hdulist[0].header # use only first in list.
-        inst, obsdt, obstype, proctype, prodtype,ext = fu.modify_hdr(hdr, fname)
-
-        info = hdulist.fileinfo(0)
-        if info['resized']:
-            logging.debug('FITS file {} was MODIFIED'
-                          .format(info['filename']))
-        else:
-            logging.debug('FITS file {} was NOT modified'
-                          .format(info['filename']))
+        fname_fields = fu.modify_hdr(hdr, mirror_fname)
 
         # Generate standards conforming filename
-        new_basename = fn.generate_fname(inst, obsdt, obstype,
-                                         proctype, prodtype, ext)
+        new_basename = fn.generate_fname(*fname_fields)
 
-        #new_ifname=os.path.join(os.path.dirname(mirror_ifname), new_basename)
-        ipath = pathlib.PurePath(mirror_ifname
-                                 .replace(mirror_idir, archive_idir))
+        ipath = pathlib.PurePath(mirror_fname
+                                 .replace(mirror_dir, archive331))
         new_ipath = ipath.with_name(new_basename)
         new_ifname = str(new_ipath)
         new_ihdr = str(new_ipath.with_suffix('.hdr'))
@@ -171,11 +158,10 @@ RETURN: irods location of hdr file.
                          '#file_md5 = {checksum}\n\n'
                      )
             print(ingesthdr.format(filename=new_basename,
-                                   filesize=os.path.getsize(fname),
-                                   checksum=iu.get_irods_cksum(mirror_ifname)
+                                   filesize=os.path.getsize(mirror_fname),
+                                   checksum='CHECKSUM'
                                ),
                   file=f)
-            #! hdr.totextfile(f, endcard=True)
             # Print without blank cards or trailing whitespace
             hdrstr = hdr.tostring(sep='\n',padding=False)
             print(*[s.rstrip() for s in hdrstr.splitlines()
@@ -186,36 +172,30 @@ RETURN: irods location of hdr file.
             # The only reason we do this is to satisfy Archive Ingest!!!
             # Since it has to have a reference to the FITS file anyhow,
             # Archive Ingest SHOULD deal with the hdr.
-            iu.irods_put(f.name, new_ihdr)
+            iu.irods_put331(f.name, new_ihdr)
             logging.debug('iput new_ihdr to: {}'.format(new_ihdr))
     except:
         raise
     finally: 
         hdulist.flush()
         hdulist.close()
-        #!info = hdulist.fileinfo(0)
-        #!if info['resized']:
-        #!    #! os.chmod(fname, 0o444)
-        #!    #! shutil.chown(fname, user="irods", group="irods")
+        info = hdulist.fileinfo(0)
+        if info['resized']:
+            logging.debug('Changed size of file: {} '.format(info['filename']))
 
         
     # We might need to change subdirectory name too!!!
     # (but there has been no stated Requirement for subdir structure)
     #   <root>/<SB_DIR1>/<SB_DIR2>/<SB_DIR3>/<base.fits>
-    iu.irods_mv_tree(mirror_ifname, new_ifname) # rename FITS
+    iu.irods_put331(mirror_fname, new_ifname) # iput renamed FITS
 
     #
-    # At this point both FITS and HDR are in archive_idir
+    # At this point both FITS and HDR are in archive331
     #
 
-    # Copy both FITS and HDR to legacy iRODS 3.3.1 server that Archive uses
-    ihdr331 = new_ihdr.replace(archive_idir, archive331)
-    iu.bridge_copy(new_ihdr, ihdr331, remove_orig=True)
-    ifname331 = new_ifname.replace(archive_idir, archive331)
-    iu.bridge_copy(new_ifname, ifname331, remove_orig=True)
 
-    logging.debug('prep_for_ingest: RETURN={}'.format(ihdr331))
-    return ihdr331
+    logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
+    return new_ihdr
 
 # (-sp-) The Archive Ingest process is ugly and the interface is not
 # documented (AT ALL, as far as I can tell). It accepts a URI for an
@@ -242,12 +222,10 @@ also used a specific 3 level directory structure that is NOT used
 here. However the levels are stored in hdr fields SB_DIR{1,2,3}."""
     logging.debug('submit_to_archive({},{})'.format(ifname, qname))
     #! logging.debug('   qcfg={})'.format(qcfg))
-    mirror_idir =  qcfg[qname]['mirror_irods']
-    archive_idir =  qcfg[qname]['archive_irods']
+    mirror_dir =  qcfg[qname]['mirror_dir']
     archive331 =  qcfg[qname]['archive_irods331']
     try:
-        #!ihdr = iu.irods_prep_fits_for_ingest(ifname, mirror_idir,archive_idir)
-        ihdr = prep_for_ingest(ifname, mirror_idir, archive_idir, archive331)
+        ihdr = prep_for_ingest(ifname, mirror_dir, archive331)
     except:
         #! traceback.print_exc()
         raise
@@ -261,51 +239,3 @@ here. However the levels are stored in hdr fields SB_DIR{1,2,3}."""
 
     return ihdr
 
-def submit(rec, qname, **kwargs):
-    """Try to modify headers and submit FITS to archive. If anything fails 
-more than N times, move the queue entry to Inactive. (where N is the 
-configuration field: maximum_errors_per_record)
-"""
-    logging.debug('submit({},{})'.format(rec, qname))
-    qcfg = du.get_keyword('qcfg', kwargs)
-    dq_host = qcfg[qname]['dq_host']
-    dq_port = qcfg[qname]['dq_port']
-
-    noarc_root =  qcfg[qname]['noarchive_dir']
-    irods_root =  qcfg[qname]['mirror_irods'] # '/tempZone/mountain_mirror/'
-
-    # eg. /tempZone/mountain_mirror/other/vagrant/16/text/plain/fubar.txt
-    ifname = rec['filename']            # absolute irods path (mtn_mirror)
-    checksum = rec['checksum']          
-    tail = os.path.relpath(ifname, irods_root) # changing part of path tail
-
-    try:
-        ftype = iu.irods_file_type(ifname)
-    except Exception as ex:
-        logging.error('Execution failed: {}; ifname={}'
-                      .format(ex, ifname))
-        raise
-        
-    logging.debug('File type for "{}" is "{}".'
-                  .format(ifname, ftype))
-    if 'FITS' == ftype :  # is FITS
-        try:
-            submit_to_archive(ifname, checksum, qname, qcfg)
-        except Exception as sex:
-            raise sex
-        else:
-            logging.info('PASSED submit_to_archive({}).'  .format(ifname))
-    else: # not FITS
-        # Put irods file on filesystem. 
-        fname = os.path.join(noarc_root, tail)
-        try:
-            iu.irods_get(fname, ifname, remove_irods=True)
-        except:
-            logging.warning('Failed to get file from irods on Valley.')
-            raise
-        # Remove files if noarc_root is taking up too much space (FIFO)!!!
-        logging.info('Non-FITS file put in: {}'.format(fname))
-
-
-    return True
-# END submit() action
