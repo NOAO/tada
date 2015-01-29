@@ -1234,15 +1234,13 @@ M3=Cerro Tololo; V2=La Serena
 
 * COMMENT POSTSCRIPT
 /(this section here to keep Document Comments out of the way)/
-source: /home/pothiers/orgfiles/designs.org
+source: ~/orgfiles/designs.org
 
 Something like this can be inserted into doc by invoking export dispatcher
 and selected "insert template" (C-c C-e #).
 
 
 #+TITLE:   TADA (Telescope Automatic Data Archiver) SDD
-#+AUTHOR:    Steve Pothier
-#+EMAIL:     pothier@noao.edu
 #+KEYWORDS: 
 #+LANGUAGE:  en
 #+OPTIONS:   H:3 num:nil toc:t \n:nil @:t ::t |:t ^:nil -:t f:t *:t <:t

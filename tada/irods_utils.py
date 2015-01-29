@@ -98,34 +98,6 @@ def irods_file_type(irods_fname):
 
     return typeStr
 
-# NB: The command "prep_fits_for_ingest" must be installed in the
-#     server/bin/cmd directory of the irods server
-def OLD_irods_prep_fits_for_ingest(irods_filepath, mirror_idir, archive_idir):
-    """Given an irods absolute path that points to a FITS file, add fields
-to its header and rename it so it is (probably) suitable for Archive
-Ingest. The name returned is an irods absolute ipath to a hdr file
-that can be passed as the hdrUri argument to the NSAserver."""
-
-    hdr_ifname = None
-    #!irods_set_meta(irods_filepath, 'prep', 'False')
-    cmdline = ['iexecmd', '-P', irods_filepath,
-               'prep_fits_for_ingest {} {} {}'
-               .format(irods_filepath, mirror_idir, archive_idir) ]
-    try:
-        diag.dbgcmd(cmdline)
-        hdr_ifname = subprocess.check_output(cmdline).decode('utf-8')[:-1]
-    except subprocess.CalledProcessError as ex:
-        cmd = ' '.join(cmdline)
-        logging.error('Execution failed: {}; {} => {}'
-                      .format(ex, cmd, ex.output.decode('utf-8')))
-        raise
-
-    # set "prep" attribute of fits_ifile
-    #!irods_set_meta(irods_filepath, 'prep', 'True')
-
-    # e.g. /noao-tuc-z1/mtn/20140930/kp4m/2014B-0108/k4m_141001_121310_ori.hdr
-    return hdr_ifname
-
 
 def irods_set_meta(ifname, att_name, att_value):
     cmdline = ['imeta', 'set', '-d', ifname, 'prep', 'True']
@@ -246,57 +218,6 @@ def irods_put(local_fname, irods_fname):
                       .format(ex, ex.output.decode('utf-8')))
         raise
 
-# For iRODS 3.3.1 server
-archiveIrods = dict(
-    irodsEnvFile='/sandbox/archIrodsEnv',
-    irodsAuthFileName='/sandbox/archIrodsAuth'
-    )
-    
-# For iRODS 4.0.3 servers
-tadaIrods = dict(
-    irodsEnvFile='/sandbox/tadaIrodsEnv',
-    irodsAuthFileName='/sandbox/tadaIrodsAuth'
-    )
-
-def BROKENirods_put331(local_fname, irods_fname):
-    '''Put file to irods, creating parent directories if needed.
-This is HACK to support legacy iRODS 3.3.1 server.'''
-    env1 = os.environ.copy()
-    env1.update(tadaIrods)
-    env2 = os.environ.copy()
-    env2.update(archiveIrods)
-    env2['PATH'] = ('/sandbox/irods3.3.1/iRODS/clients/icommands/bin:'
-                    +env2['PATH'])
-    logging.debug('irods_put331({}, {}); env2="{}"'
-                  .format(local_fname, irods_fname, env2))
-
-    try:
-        logging.debug('  rm ~/.irods/.irodsA')
-        os.remove(os.path.join(env2['HOME'],'.irods','.irodsA'))
-        logging.debug('  iinit (archiveEnv)')
-        subprocess.check_output(['iinit', '-V', 'cacheMonet'],
-                                stderr=subprocess.STDOUT,
-                                env=env2,
-                                timeout=2,
-                                shell=True)
-
-        logging.debug('  imkdir')
-        subprocess.check_output(['imkdir', '-p',  os.path.dirname(irods_fname)],
-                                env=env2)
-        logging.debug('  iput')
-        subprocess.check_output(['iput', '-f', '-K', local_fname, irods_fname],
-                                env=env2)
-        logging.debug('  iinit (tadaEnv)')
-        subprocess.check_output(['iinit', 'temppasswd'], env=env1)
-        #! top_ipath = '/' + irods_fname.split('/')[1]
-        #! subprocess.check_output(['ichmod', '-r', 'own', 'public', top_ipath])
-    except subprocess.CalledProcessError as ex:
-        logging.error('Execution failed: {}; {}'
-                      .format(ex, ex.output.decode('utf-8')))
-        raise
-
-
-
 def irods_get(local_fname, irods_fname, remove_irods=False):
     'Get file from irods, creating local parent directories if needed.'
     os.makedirs(os.path.dirname(local_fname), exist_ok=True)
@@ -363,43 +284,6 @@ located. The full path must be supplied for both paths."""
         raise
     return out
 
-def irods_reg_331(fs_path, irods_path):
-    "Like irods_reg except registers on irods 331 server"
-    logging.warning('Use of iRODS "ireg" (331) command SHOULD BE AVOIDED!')
-    logging.debug('irods_reg_331({}, {})'.format(fs_path, irods_path))
-
-    env1 = os.environ.copy()
-    env1.update(tadaIrods)
-    env2 = os.environ.copy()
-    env2.update(archiveIrods)
-    
-    out = None
-    cmdline = ['imkdir', '-p', os.path.dirname(irods_path)]
-    try:
-        diag.dbgcmd(cmdline)
-        out = subprocess.check_output(cmdline, env=env2, shell=True)
-    except subprocess.CalledProcessError as ex:
-        cmd = ' '.join(cmdline)
-        logging.error('Execution failed: {}; {} => {}'
-                      .format(ex, cmd, ex.output.decode('utf-8')))
-        raise
-    finally:
-        subprocess.check_output(['iinit', 'temppasswd'], env=env1)
-
-    os.chmod(fs_path, 0o664)
-    cmdline = ['ireg',  '-K', fs_path, irods_path]
-    try:
-        diag.dbgcmd(cmdline)
-        out = subprocess.check_output(cmdline, env=env2, shell=True)
-    except subprocess.CalledProcessError as ex:
-        cmd = ' '.join(cmdline)
-        logging.error('Execution failed: {}; {} => {}'
-                      .format(ex, cmd, ex.output.decode('utf-8')))
-        raise
-    finally:
-        subprocess.check_output(['iinit', 'temppasswd'], env=env1)
-    return out
-    
     
 def get_irods_cksum(irods_path):
     cmdline = ['ichksum', irods_path]
@@ -412,22 +296,3 @@ def get_irods_cksum(irods_path):
                       .format(ex, cmd, ex.output.decode('utf-8')))
         raise
     return(out.split()[1].decode('utf-8'))
-    
-
-'''
-iadmin mkzone noao-tuc-z1 remote
-iadmin mkuser cache#noao-tuc-z1 rodsadmin
-iadmin moduser cache#noao-tuc-z1 password money4nuthin
-
-irodsEnvFile=~/.irods/archIrodsEnv iinit money4nuthin
-
-
-iinit temppasswd
-ichmod -r own public /noao-tuc-z1
-
-irodsEnvFile='/sandbox/archIrodsEnv' iinit money4nuthin
-irodsEnvFile='/sandbox/archIrodsEnv' iput -f -K ~/foo.txt /noao-tuc-z1/foo.txt
-irodsEnvFile='/sandbox/archIrodsEnv' ils /noao-tuc-z1
-
-
-'''

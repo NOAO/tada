@@ -3,7 +3,9 @@
 #! set -x
 
 # This CUPS backend allows you to "print to file".
-# see also: http://www.linuxcommand.org/man_pages/backend1.html
+# see also:
+#   http://www.linuxcommand.org/man_pages/backend1.html
+#   http://localhost:631/help/   (on machine that has cups installed)
 
 # It saves the file into a "cache" and posts the file to a "transfer
 # queue" for copying to another machine.
@@ -131,7 +133,7 @@ mkdir -p ${rootDir}
 chmod +rwX ${rootDir}
 
 ################################################################################
-### Retained in case someone wants to disable transfer of non-fits files.
+### +++ Retained in case someone wants to disable transfer of non-fits files.
 ################################################################################
 #!  if file --brief $FILE | grep "FITS image data"; then
 #!      destdir=${rootDir}/fits/${USER}/${JOBID}
@@ -147,6 +149,8 @@ fullfname="${destdir}/${TARGETFILE}"
 echo "Copying to: "  ${fullfname}  >> ${LOG}
 cat $FILE > ${fullfname}             # Add posted file to CACHE
 chmod a+rw ${fullfname}
+echo "${OPTIONS}" > "${fullfname}.options"
+chmod a+rw "${fullfname}.options"
 
 echo "DEBUG2: posting file: ${fullfname}" 1>&2
 echo "id: " `id` >> ${LOG}

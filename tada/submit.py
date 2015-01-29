@@ -16,13 +16,10 @@ import shutil
 from . import fits_utils as fu
 from . import file_naming as fn
 from . import exceptions as tex
-from . import prep_fits_for_ingest as pf
 from . import irods331 as iu
 #!from dataq import irods_utils as iu
 from dataq import dqutils as du
 
-# e.g.
-# curl "http://nsaserver.pat.sdm.noao.edu:9000/?hdrUri=/noao-tuc-z1/mtn/20141123/kp4m/2013B-0528/kp2066873.hdr"
 def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
  Archive Ingest via REST-like interface."""
@@ -31,15 +28,15 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
     logging.debug('EXECUTING: http_archive_ingest({}, {}, {})'
                   .format(hdr_ipath, checksum, qname))
 
-    nsa_host = qcfg[qname]['nsa_host']
-    nsa_port = qcfg[qname]['nsa_port']
-    irods_host = qcfg[qname]['nsa_irods_host']
-    irods_port = qcfg[qname]['nsa_irods_port']
+    arch_host = qcfg[qname]['arch_host']
+    arch_port = qcfg[qname]['arch_port']
+    irods_host = qcfg[qname]['arch_irods_host']
+    irods_port = qcfg[qname]['arch_irods_port']
     prob_fail = qcfg[qname]['action_fail_probability']
 
-    nsaserver_url = ('http://{}:{}/?hdrUri={}'
-                     .format(nsa_host, nsa_port, hdr_ipath))
-    logging.debug('nsaserver_url = {}'.format(nsaserver_url))
+    archserver_url = ('http://{}:{}/?hdrUri={}'
+                     .format(arch_host, arch_port, hdr_ipath))
+    logging.debug('archserver_url = {}'.format(archserver_url))
 
 
 
@@ -52,11 +49,11 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
             raise tex.SubmitException('Killed by cosmic ray with probability {}'
                                       .format(prob_fail))
     else:
-        with urllib.request.urlopen(nsaserver_url) as f:
+        with urllib.request.urlopen(archserver_url) as f:
             # As of 1/15/2015 the only two possible responses are:
             #   "Success" or "Failure"
             response = f.readline().decode('utf-8')
-        logging.debug('NSA server response: = {}'.format(response))
+        logging.debug('ARCH server response: = {}'.format(response))
         result = True if response == "Success" else False
         if not result:
             raise tex.SubmitException('HTTP response from Archive: "{}"'
@@ -67,8 +64,8 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
 def tcp_archive_ingest(fname, checksum, qname, qcfg=None):
     logging.debug('EXECUTING: tcp_archive_ingest({}, {}, {})'
                   .format(fname, qname, qcfg))
-    nsa_host = qcfg[qname]['nsa_host']
-    nsa_port = qcfg[qname]['nsa_port']
+    arch_host = qcfg[qname]['arch_host']
+    arch_port = qcfg[qname]['arch_port']
     # register in irods
     # post metadata to archive port
 
@@ -80,9 +77,9 @@ def tcp_archive_ingest(fname, checksum, qname, qcfg=None):
  
     try:
         logging.debug('Connect to ingest server on {}:{}'
-                      .format(nsa_host, nsa_port))
+                      .format(arch_host, arch_port))
         # Connect to server and send data
-        sock.connect((nsa_host, nsa_port))
+        sock.connect((arch_host, arch_port))
         sock.sendall(bytes(data + "\n", "utf-8"))
 
         # Receive data from the server and shut down
@@ -131,13 +128,24 @@ RETURN: irods location of hdr file.
 
     logging.debug('prep_for_ingest: fname={}, m_dir={}, a_dir={}'
                   .format(mirror_fname, mirror_dir, archive331))
-    
+
+    # Name/values passed on LPR command line.
+    #   e.g. lpr -P astro -o _INSTRUME=KOSMOS  -o _OBSERVAT=KPNO  foo.fits
+    # Only use options starting with '_' and remove '_' from dict key.
+    # +++ Add code here to handle other kinds of options passed from LPR.
+    optfname = mirror_fname + ".options"
+    optstr = ''
+    if os.path.exists(optfname):
+        with open(optfname,encoding='utf-8') as f:
+            optstr = f.readline()
+    options = dict([s[1:].split('=') for s in optstr.split() if s[0]=='_'])
+
     hdr_ifname = "None"
     try:
         # augment hdr (add fields demanded of downstream process)
         hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
         hdr = hdulist[0].header # use only first in list.
-        fname_fields = fu.modify_hdr(hdr, mirror_fname)
+        fname_fields = fu.modify_hdr(hdr, mirror_fname, options)
 
         # Generate standards conforming filename
         new_basename = fn.generate_fname(*fname_fields)

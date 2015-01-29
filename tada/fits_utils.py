@@ -507,15 +507,25 @@ DATASUM = '0         '          /  checksum of data records
 # SIDE-EFFECTS: fields added to FITS header
 # Used istb/src/header.{h,c} for hints.
 # raw: nhs_2014_n14_299403.fits
-def modify_hdr(hdr, fname, forceRecalc=True):
+def modify_hdr(hdr, fname, options, forceRecalc=True):
     '''Modify header to suit Archive Ingest. Return fields needed to construct
- new filename that fullfills standards'''
-    missing = missing_in_raw_hdr(hdr)
-    if len(missing) > 0:
-        raise tex.InsufficientRawHeader(
-            'Raw fits file is missing required metadata fields: {}'
-            .format(', '.join(sorted(missing)))
-            )
+ new filename that fullfills standards
+    options :: e.g. {'INSTRUME': 'KOSMOS', 'OBSERVAT': 'KPNO'}
+'''
+    for k,v in options.items():
+        if k not in hdr:
+            hdr[k] = v
+
+    if len(options) == 0:
+        # only validate raw hdr fields if no extra were passed from dome.
+        # This is because extras may be used to CALCULATE field values that
+        # are usually considered required in the raw hdr.
+        missing = missing_in_raw_hdr(hdr)
+        if len(missing) > 0:
+            raise tex.InsufficientRawHeader(
+                'Raw fits file is missing required metadata fields: {}'
+                .format(', '.join(sorted(missing)))
+                )
 
     chg = dict() # Fields to change/add
     chg['TADAVERS']    = '0.0.dev1' # NOT REQUIRED, for diagnostics
@@ -540,6 +550,10 @@ def modify_hdr(hdr, fname, forceRecalc=True):
         tele, inst, dt_str1, dt_str2 = hdr['OBSID'].split('.')
         dt_str = dt_str1 + dt_str2
         datestr, _ = dt_str.split('T')
+    elif '90Prime' == instrument: # BOK
+        # FILENAME= 'bokrm.20140425.0119.fits' / base filename at acquisition
+        tele, datestr, *rest = hdr['FILENAME'].split('.')
+        
 
     # "UTC epoch"
     fmt = '%Y-%m-%dT%H:%M:%S.%f' if 'T' in hdr['DATE-OBS'] else '%Y-%m-%d'

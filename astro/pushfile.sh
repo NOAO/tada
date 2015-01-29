@@ -1,6 +1,4 @@
-#!/bin/bash --verbose
-# Time-stamp: <2014-11-17 14:06:09 pothiers>
-#
+#!/bin/bash 
 # PURPOSE: Push a filename (with its checksum) to the Transfer queue
 #
 # EXAMPLE: push-file.sh sandbox/data-queue/mandelbrot.jpg

@@ -50,7 +50,7 @@ def network_move(rec, qname, **kwargs):
     fname = rec['filename']            # absolute path
 
     logging.debug('source_root={}, fname={}'.format(source_root, fname))
-    if fname.index(source_root) != 0:
+    if fname.find(source_root) == -1:
         raise Exception('Filename "{}" does not start with "{}"'
                         .format(fname, source_root))
 
