@@ -153,6 +153,7 @@ application or domain, you can roughly think:
 - allow astropost to handle list of files at once
   + multi-file rsync
   + multi-entry push to Valley Submit queue
+- Use CUPS mechanism to provide status (file made it to Archive!)
 * TODO Installation
 * TODO Work-flows
 ** FITS Mitigation (NOAO)
@@ -353,12 +354,6 @@ implemented.
 I record dated sub-sections below but will typically hide all but the
 most recent.  Ask if you want older sections for some reason.
 
-** Touch Points
-- INPUT queue
-  via lpd protocol
-- INPUT to submit queue (after mitigation, from pipeline)
-- INPUT telescope schedule from web service
-- OUTPUT to archive ingest
 ** Changes from iDCI
 - All files "printed" to printer "astro" are sent to valley (not just
   selected types)

@@ -73,7 +73,7 @@ fi
 
 if [ "bok" = "$SYSTEM" ]; then
     options="-o _INSTRUME=90Prime -o _OBSERVAT=Steward"
-    #! options="${options} -o _PROPID=2014B-0461"  # REMOVE THIS!!!
+    options="${options} -o _PROPID=2014B-0bok" 
 elif [ "kosmos" = "$SYSTEM" ]; then
     options=""
 else

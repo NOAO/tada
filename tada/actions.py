@@ -120,6 +120,9 @@ configuration field: maximum_errors_per_record)
             logging.info('PASSED submit_to_archive({}).'  .format(ifname))
             # successfully transfered to Archive
             os.remove(ifname)
+            optfname = ifname + ".options"
+            if os.path.exists(optfname):
+                os.remove(optfname)
     else: # not FITS
         fname = ifname.replace(mirror_root, noarc_root)
         try:

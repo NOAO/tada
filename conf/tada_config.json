@@ -1,0 +1,54 @@
+{
+    "_COMMENT": "***   EXAMPLE   EXAMPLE   EXAMPLE     ***",
+    "_COMMENT": "Configuration info for TADA",
+    "dirs": {
+        "log_dir": "/var/log/tada/",
+        "run_dir": "/var/run/tada/",
+        "_COMMENT.config_dir": "/etc/tada"
+    },
+    
+    "queues" : [
+        {
+            "_DESCRIPTION": "Files to move from Mountain to Mirror (@ Valley).",
+            "name": "transfer",
+            "type": "MOUNTAIN",
+            "action_name": "network_move",
+            "maximum_errors_per_record": 0,
+            "seconds_between_retry": 1,
+            "maxium_queue_size": 11000,
+            "dq_host": "mountain.tada.org",      "_COMMENT": "Change this!!!",
+            "dq_port": 9999,                     "_COMMENT": "Change this!!!",
+            
+            "_COMMENT": "type specific fields follow",
+            "next_queue": "submit",
+            "cache_dir": "/var/tada/mountain_cache/",
+            "mirror_dir":  "valley::mountain_mirror",
+            
+            "_END": "dummy"
+        },
+        {
+            "_DESCRIPTION": "Files to submit for saving.",
+            "name": "submit",
+            "type": "VALLEY",
+            "action_name": "submit",
+            "action_fail_probability": 0.01, "_COMMENT": "REMOVE THIS!!!",
+            "maximum_errors_per_record": 0, 
+            "seconds_between_retry": 1,
+            "maxium_queue_size": 11000,
+            "dq_host": "valley.tada.org",        "_COMMENT": "Change this!!!",
+            "dq_port": 9999,                     "_COMMENT": "Change this!!!",
+            
+            "_COMMENT": "type specific fields follow",
+            
+            "arch_host": "arch.tada.org",        "_COMMENT": "Change this!!!",
+            "arch_port": 9999,                   "_COMMENT": "Change this!!!",
+            "arch_irods_host": "irods.tada.org", "_COMMENT": "Change this!!!",
+            "arch_irods_port": 1234,             "_COMMENT": "Change this!!!",
+            "archive_irods331": "/archZ/tada/",  "_COMMENT": "Change this!!!",
+            "mirror_dir":  "/var/tada/mountain-mirror",
+            "noarchive_dir": "/var/tada/noarchive",
+            "_END": "dummy"
+        }
+    ]
+}
+

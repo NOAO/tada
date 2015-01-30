@@ -3,22 +3,21 @@
 import sys
 import argparse
 import logging
-#!import pyfits
 import astropy.io.fits as pyfits
-import os, os.path
+import os
+import os.path
 import socket
 import traceback
 import tempfile
 import pathlib
-import urllib
+import urllib.request
 import shutil
 
 from . import fits_utils as fu
 from . import file_naming as fn
 from . import exceptions as tex
 from . import irods331 as iu
-#!from dataq import irods_utils as iu
-from dataq import dqutils as du
+#! from dataq import dqutils as du
 
 def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
@@ -39,9 +38,8 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
     logging.debug('archserver_url = {}'.format(archserver_url))
 
 
-
-    fake = (prob_fail > 0)
-    if fake:
+    
+    if qcfg[qname].get('disable_archive_svc',0) > 0:
         logging.warning('http_archive_ingest() using prob_fail= {}'
                         .format(prob_fail))
         result = True
@@ -49,12 +47,17 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
             raise tex.SubmitException('Killed by cosmic ray with probability {}'
                                       .format(prob_fail))
     else:
-        with urllib.request.urlopen(archserver_url) as f:
-            # As of 1/15/2015 the only two possible responses are:
-            #   "Success" or "Failure"
-            response = f.readline().decode('utf-8')
-        logging.debug('ARCH server response: = {}'.format(response))
-        result = True if response == "Success" else False
+        result = True
+        try:
+            with urllib.request.urlopen(archserver_url) as f:
+                # As of 1/15/2015 the only two possible responses are:
+                #   "Success" or "Failure"
+                response = f.readline().decode('utf-8')
+            logging.debug('ARCH server response: = {}'.format(response))
+            result = True if response == "Success" else False
+        except:
+            raise
+        
         if not result:
             raise tex.SubmitException('HTTP response from Archive: "{}"'
                                       .format(response))
