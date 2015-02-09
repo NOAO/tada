@@ -5,7 +5,7 @@ import sys
 import argparse
 import logging
 
-import simpy
+import yaml
 import os
 import shutil
 import random
@@ -196,7 +196,7 @@ def thread3(src_dir, irods_path, mirror_dir, archive_dir,
     
     #!transfer_via_iput_single(ienv, src_dir, irods_path, delay=delay)
     transfer_via_rsync(src_dir, mirror_dir)
-
+    
     
 
 ##############################################################################
@@ -228,6 +228,10 @@ def main():
     parser.add_argument('--cfg',
                         help='Configuration file',
                         type=argparse.FileType('r'))
+    parser.add_argument('--logconf',
+                        help='Logging configuration file (YAML format)',
+                        default='/var/tada/logging.yaml',
+                        type=argparse.FileType('r'))
     parser.add_argument('--dfd', type=argparse.FileType('r'),
                         help='Graphviz (dot) file. '
                         + 'Spec for DataFlow Diagram (network).')
@@ -258,23 +262,16 @@ def main():
     log_level = getattr(logging, args.loglevel.upper(), None)
     if not isinstance(log_level, int):
         parser.error('Invalid log level: %s' % args.loglevel)
-    logging.basicConfig(level=log_level,
-                        format='%(levelname)s %(message)s',
-                        datefmt='%m-%d %H:%M'
-                        )
-    logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
+    #!logging.basicConfig(level=log_level,
+    #!                    format='%(levelname)s %(message)s',
+    #!                    datefmt='%m-%d %H:%M')
+    logging.config.dictConfig(yaml.load(open(args.logconf)))
+    logging.setlevel(log_level)
+    
+    logging.debug('Debug2 output is enabled in %s !!!', sys.argv[0])
 
     if args.cfg:
         cfg = json.load(args.cfg)
-
-    # env = simpy.Environment()
-    # G = setupDataflowNetwork(env, args.infile, profile=args.profile)
-    # 
-    # if args.loglevel == 'DEBUG':
-    #     printGraphSummary(G)
-    # 
-    # env.run(until=args.end)
-    # print_summary(env, G, summarizeNodes=args.summarize)
 
     assert os.path.isdir(args.cacheDir), args.cacheDir
     assert os.path.isdir(args.mirrorDir), args.mirrorDir

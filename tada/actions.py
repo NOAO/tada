@@ -5,6 +5,7 @@ import os.path
 import subprocess
 import magic
 import shutil
+import time
 
 #! from . import irods_utils as iu
 from . import submit as ts
@@ -59,16 +60,19 @@ def network_move(rec, qname, **kwargs):
 
     try:
         #!iu.irods_put(fname, ifname)
-        cmdline = ['rsync', '-azr',
+        cmdline = ['rsync', '-rptgo',    #! '-azr',
                    '--timeout=5',
                    '--contimeout=3',
                    '--password-file','/etc/tada/rsync.pwd',
                    source_root, sync_root]
         diag.dbgcmd(cmdline)
+        tic = time.time()
         out = subprocess.check_output(cmdline)
+        logging.debug('rsync complete {} seconds'.format(time.time() - tic))
     except Exception as ex:
         logging.warning('Failed to transfer from Mountain to Valley. {} => {}'
-                        .format(ex, ex.output.decode('utf-8')))
+                        .format(ex, 'unknown'))
+                        #.format(ex, ex.output.decode('utf-8')))
         # Any failure means put back on queue. Keep queue handling
         # outside of actions where possible.
         raise

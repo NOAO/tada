@@ -40,7 +40,8 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
 
     
     if qcfg[qname].get('disable_archive_svc',0) > 0:
-        logging.warning('http_archive_ingest() using prob_fail= {}'
+        logging.warning('Ingest DISABLED. '
+                        'http_archive_ingest() using prob_fail= {}'
                         .format(prob_fail))
         result = True
         if random.random() <= prob_fail:
@@ -142,6 +143,11 @@ RETURN: irods location of hdr file.
         with open(optfname,encoding='utf-8') as f:
             optstr = f.readline()
     options = dict([s[1:].split('=') for s in optstr.split() if s[0]=='_'])
+    diag_dict = dict()  # for diagnostics. Passed like: lpr -P astro -o __x=3
+    for k,v in options.items():
+        if k[0] =='_':
+            diag_dict[k[1:]] = v
+            options.pop(k)
 
     hdr_ifname = "None"
     try:
@@ -178,12 +184,13 @@ RETURN: irods location of hdr file.
             print(*[s.rstrip() for s in hdrstr.splitlines()
                     if s.strip() != ''],
                   sep='\n',
-                  file=f)
+                  file=f, flush=True)
             
             # The only reason we do this is to satisfy Archive Ingest!!!
             # Since it has to have a reference to the FITS file anyhow,
             # Archive Ingest SHOULD deal with the hdr.
             iu.irods_put331(f.name, new_ihdr)
+            shutil.copy(f.name, '/home/vagrant/tmp/') #!!! REMOVE. diagnostic
             logging.debug('iput new_ihdr to: {}'.format(new_ihdr))
     except:
         raise

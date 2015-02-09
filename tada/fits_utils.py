@@ -80,16 +80,16 @@ INGEST_REQUIRED_FIELDS = set([
     'DATE-OBS',
 #    'DTACCOUN', # observing account name
     'DTACQNAM',
-#    DTACQUIS host name of data acquisition computer
-#    DTCALDAT calendar date from observing schedule
+#   'DTACQUIS', # host name of data acquisition computer
+    'DTCALDAT', # calendar date from observing schedule
     'DTCOPYRI', # copyright holder of data (ADDED!!!)
     'DTINSTRU',
     'DTNSANAM',
-#    DTOBSERV scheduling institution
+#   'DTOBSERV', # scheduling institution
     'DTPI',
     'DTPIAFFL', # PI affiliation (ADDED!!!)
-#    DTPROPID observing proposal ID
-#    DTPUBDAT calendar date of public release 
+#   'DTPROPID', # observing proposal ID
+#   'DTPUBDAT', # calendar date of public release 
     'DTSITE',
     'DTTELESC',
     'DTTITLE',
@@ -513,7 +513,7 @@ def modify_hdr(hdr, fname, options, forceRecalc=True):
     options :: e.g. {'INSTRUME': 'KOSMOS', 'OBSERVAT': 'KPNO'}
 '''
     for k,v in options.items():
-        if k not in hdr:
+        if forceRecalc or (k not in hdr):
             hdr[k] = v
 
     if len(options) == 0:
@@ -528,7 +528,7 @@ def modify_hdr(hdr, fname, options, forceRecalc=True):
                 )
 
     chg = dict() # Fields to change/add
-    chg['TADAVERS']    = '0.0.dev1' # NOT REQUIRED, for diagnostics
+    chg['TADAVERS']    = '0.0.dev2' # NOT REQUIRED, for diagnostics
     chg['DTTITLE']  = 'Not derivable from raw metadata!!!'
     chg['DTPIAFFL'] = 'Not derivable from raw metadata!!!'
 
@@ -556,10 +556,16 @@ def modify_hdr(hdr, fname, options, forceRecalc=True):
         
 
     # "UTC epoch"
-    fmt = '%Y-%m-%dT%H:%M:%S.%f' if 'T' in hdr['DATE-OBS'] else '%Y-%m-%d'
-    dateobs = datetime.datetime.strptime(hdr['DATE-OBS'],fmt)
+    if 'T' in hdr['DATE-OBS']: 
+        fmt = '%Y-%m-%dT%H:%M:%S.%f' 
+        dateobs = datetime.datetime.strptime(hdr['DATE-OBS'],fmt)
+    else:
+        fmt = '%Y-%m-%d'
+        dateobs = datetime.datetime.strptime(hdr['DATE-OBS'][:10],fmt)
+
     
     chg['PROPOSER'] = hdr['PROPID'] #!!!
+    chg['DTPROPID'] = hdr['PROPID'] 
     chg['DTACQNAM'] = os.path.basename(fname)
     chg['DTINSTRU'] = instrument # eg. 'NEWFIRM'
     chg['DTNSANAM'] = os.path.basename(fname)
@@ -623,7 +629,7 @@ def add_hdr_fields(fits_file):
     hdulist = pyfits.open(fits_file, mode='update') # modify IN PLACE
     hdr = hdulist[0].header # use only first in list. 
 
-    modify_hdr(hdr, fits_file) # Validates raw fits hdr used as input
+    modify_hdr(hdr, fits_file, dict()) # Validates raw fits hdr used as input
     
     new_fname = fn.generate_fname(
         instrument=hdr.get('DTINSTRU', 'NOTA'),
@@ -656,7 +662,7 @@ def fits_compliant(fits_file_list, show_values=False, show_header=False):
         try:
             #!valid_header(ffile)
             hdr = pyfits.open(ffile)[0].header # use only first in list.
-            modify_hdr(hdr, ffile)
+            modify_hdr(hdr, ffile, dict())
             missing = missing_in_archive_hdr(hdr)
 
         except Exception as err:

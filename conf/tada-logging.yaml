@@ -1,0 +1,30 @@
+version: 1
+formatters:
+  brief:
+    format: '%(levelname)-8s: %(name)-15s: %(message)s'
+  precise:
+    format: '%(asctime)s %(name)-15s %(levelname)-8s %(message)s'
+handlers:
+  console:
+    class : logging.StreamHandler
+    formatter: brief
+    level   : INFO
+    stream  : ext://sys.stdout
+  file:
+    class : logging.handlers.RotatingFileHandler
+    formatter: precise
+    filename: /var/log/tada/pop.log
+    maxBytes: 10000000
+    backupCount: 3
+  debugfile:
+    class : logging.FileHandler
+    formatter: precise
+    filename: /var/log/tada/pop-detail.log
+    mode: a
+  null:
+    class: logging.NullHandler
+root:
+  level     : DEBUG
+  handlers  : [console, null]
+incremental: False
+disable_existing_loggers: True
