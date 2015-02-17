@@ -14,9 +14,9 @@ import traceback
 
 #!import pyfits
 import astropy.io.fits as pyfits
-import datetime
 import os.path
  
+from . import fits_calc as fc
 from . import file_naming as fn
 from . import exceptions as tex
 
@@ -87,7 +87,7 @@ INGEST_REQUIRED_FIELDS = set([
     'DTNSANAM',
 #   'DTOBSERV', # scheduling institution
     'DTPI',
-    'DTPIAFFL', # PI affiliation (ADDED!!!)
+#   'DTPIAFFL', # PI affiliation (ADDED!!!)
 #   'DTPROPID', # observing proposal ID
 #   'DTPUBDAT', # calendar date of public release 
     'DTSITE',
@@ -283,17 +283,17 @@ def print_header(msg, hdr=None, fits_filename=None):
           sep='\n')
 
     
-def OLDextract_header(fits_filename=None, hdr_filename=None):
-    "Get the 'header' from FITS file. Write it to text file."
-    if fits_filename == None:
-        fits_filename = sys.argv[1]
-    if hdr_filename == None:
-        hdr_filename = sys.argv[2]
-
-    hdulist = pyfits.open(fits_filename) # ok if is compressed ('fz')
-    hdr = hdulist[0].header
-    with open(hdr_filename, 'w') as f:
-        hdr.totextfile(f)
+#!def OLDextract_header(fits_filename=None, hdr_filename=None):
+#!    "Get the 'header' from FITS file. Write it to text file."
+#!    if fits_filename == None:
+#!        fits_filename = sys.argv[1]
+#!    if hdr_filename == None:
+#!        hdr_filename = sys.argv[2]
+#!
+#!    hdulist = pyfits.open(fits_filename) # ok if is compressed ('fz')
+#!    hdr = hdulist[0].header
+#!    with open(hdr_filename, 'w') as f:
+#!        hdr.totextfile(f)
     
 # It seems unconscionably complex for Ingest to require extra lines be
 # prepended to the text of the fits header.  The only reason those
@@ -516,6 +516,7 @@ def modify_hdr(hdr, fname, options, forceRecalc=True):
         if forceRecalc or (k not in hdr):
             hdr[k] = v
 
+
     if len(options) == 0:
         # only validate raw hdr fields if no extra were passed from dome.
         # This is because extras may be used to CALCULATE field values that
@@ -527,63 +528,8 @@ def modify_hdr(hdr, fname, options, forceRecalc=True):
                 .format(', '.join(sorted(missing)))
                 )
 
-    chg = dict() # Fields to change/add
-    chg['TADAVERS']    = '0.0.dev2' # NOT REQUIRED, for diagnostics
-    chg['DTTITLE']  = 'Not derivable from raw metadata!!!'
-    chg['DTPIAFFL'] = 'Not derivable from raw metadata!!!'
 
-    # e.g. OBSID = 'kp4m.20141114T122626'
-    # e.g. OBSID = 'soar.sam.20141220T015929.7Z'
-    #!tele, dt_str = hdr['OBSID'].split('.')
-    
-    datestr = None
-    tele = None
-    instrument = hdr['INSTRUME']
-
-    if 'COSMOS' == instrument:
-        tele, dt_str = hdr['OBSID'].split('.')
-        datestr, _ = dt_str.split('T')
-    elif 'Mosaic1.1' == instrument:
-        tele, dt_str = hdr['OBSID'].split('.')
-        datestr, _ = dt_str.split('T')
-    elif 'SOI' == instrument:
-        tele, inst, dt_str1, dt_str2 = hdr['OBSID'].split('.')
-        dt_str = dt_str1 + dt_str2
-        datestr, _ = dt_str.split('T')
-    elif '90Prime' == instrument: # BOK
-        # FILENAME= 'bokrm.20140425.0119.fits' / base filename at acquisition
-        tele, datestr, *rest = hdr['FILENAME'].split('.')
-        
-
-    # "UTC epoch"
-    if 'T' in hdr['DATE-OBS']: 
-        fmt = '%Y-%m-%dT%H:%M:%S.%f' 
-        dateobs = datetime.datetime.strptime(hdr['DATE-OBS'],fmt)
-    else:
-        fmt = '%Y-%m-%d'
-        dateobs = datetime.datetime.strptime(hdr['DATE-OBS'][:10],fmt)
-
-    
-    chg['PROPOSER'] = hdr['PROPID'] #!!!
-    chg['DTPROPID'] = hdr['PROPID'] 
-    chg['DTACQNAM'] = os.path.basename(fname)
-    chg['DTINSTRU'] = instrument # eg. 'NEWFIRM'
-    chg['DTNSANAM'] = os.path.basename(fname)
-    chg['DTPI']     = hdr.get('PROPOSER',hdr['PROPID'])
-    chg['DTSITE']   = hdr['OBSERVAT'].lower()
-    #! chg['DTPUBDAT'] = 'NA' # doc says its required, cooked file lacks it
-    chg['DTTELESC'] = tele
-    # DTUTC cannot be derived exactly from any RAW fields
-    # Should be: "post exposure UTC epoch from DTS"
-    chg['DTUTC']    = dateobs.strftime('%Y-%m-%dT%H:%M:%S')  #slightly wrong!!!
-    chg['DTCOPYRI'] = 'AURA'
-    #! dir1 = datestr
-    #! dir2 = tele
-    #! dir3 = hdr['PROPID']
-    #! chg['SB_DIR1'] = dir1
-    #! chg['SB_DIR2'] = dir2 
-    #! chg['SB_DIR3'] = dir3
-    # e.g. SB_DIR1='20141113', SB_DIR2='kp4m', SB_DIR3='2013B-0236'
+    chg, dateobs = fc.calc_hdr(hdr, fname, **options)
 
     if forceRecalc:
         for k,v in chg.items():
@@ -598,51 +544,44 @@ def modify_hdr(hdr, fname, options, forceRecalc=True):
     missing = missing_in_archive_hdr(hdr)
     if len(missing) > 0:
         raise tex.InsufficientRawHeader(
-            'Modified FITS file is missing required metadata fields: {}'
+            'Modified FITS header is missing required metadata fields: {}'
             .format(', '.join(sorted(missing)))
             )
     #!return hdr
     _, ext = os.path.splitext(fname)
-    return (instrument,
+    return (hdr.get('INSTRUME'),
             dateobs,
             hdr.get('OBSTYPE'),
             hdr.get('PROCTYPE'),
             hdr.get('PRODTYPE'),
             ext[1:])
 
-# [vagrant@valley ~]$ imeta set -d /tempZone/mountain_mirror/vagrant/13/nhs_2014_n14_299403.fits ftype fits
-# [vagrant@valley ~]$ imeta lsw -d /tempZone/mountain_mirror/vagrant/13/nhs_2014_n14_299403.fits
-# AVUs defined for dataObj /tempZone/mountain_mirror/vagrant/13/nhs_2014_n14_299403.fits:
-# attribute: ftype
-# value: fits
-# units: 
 
 
-
-def add_hdr_fields(fits_file):
-    """Add fields to hdr (modify in place) and create filename
- that satisfies http://ast.noao.edu/data/docs.  This new filename is
- just a name.  The corresponding file does not exist.  Its up the the
- caller to rename from old to new if desired.
-    """
-
-    hdulist = pyfits.open(fits_file, mode='update') # modify IN PLACE
-    hdr = hdulist[0].header # use only first in list. 
-
-    modify_hdr(hdr, fits_file, dict()) # Validates raw fits hdr used as input
-    
-    new_fname = fn.generate_fname(
-        instrument=hdr.get('DTINSTRU', 'NOTA'),
-        datetime=hdr['OBSID'],
-        obstype=hdr.get('OBSTYPE','NOTA'),
-        proctype=hdr.get('PROCTYPE','NOTA'),
-        prodtype=hdr.get('PRODTYPE','NOTA'),
-    )
-
-    hdulist.flush()
-    hdulist.close()
-    # e.g. "k4k_140923_024819_uri.fits.fz"
-    return new_fname, dir1, dir2, dir3
+#!def add_hdr_fields(fits_file):
+#!    """Add fields to hdr (modify in place) and create filename
+#! that satisfies http://ast.noao.edu/data/docs.  This new filename is
+#! just a name.  The corresponding file does not exist.  Its up the the
+#! caller to rename from old to new if desired.
+#!    """
+#!
+#!    hdulist = pyfits.open(fits_file, mode='update') # modify IN PLACE
+#!    hdr = hdulist[0].header # use only first in list. 
+#!
+#!    modify_hdr(hdr, fits_file, dict()) # Validates raw fits hdr used as input
+#!    
+#!    new_fname = fn.generate_fname(
+#!        instrument=hdr.get('DTINSTRU', 'NOTA'),
+#!        datetime=hdr['OBSID'],
+#!        obstype=hdr.get('OBSTYPE','NOTA'),
+#!        proctype=hdr.get('PROCTYPE','NOTA'),
+#!        prodtype=hdr.get('PRODTYPE','NOTA'),
+#!    )
+#!
+#!    hdulist.flush()
+#!    hdulist.close()
+#!    # e.g. "k4k_140923_024819_uri.fits.fz"
+#!    return new_fname, dir1, dir2, dir3
 
 def show_hdr_values(msg, hdr):
     """Show the values for 'interesting' header fields"""
