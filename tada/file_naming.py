@@ -125,7 +125,8 @@ prodLUT = {
     }
 
 
-def generate_fname(instrument, obsdt, obstype, proctype, prodtype, ext):
+def generate_fname(instrument, obsdt, obstype, proctype, prodtype, ext,
+                   jobid=None):
     """Generate standard filename from metadata values.
 e.g. k4k_140923_024819_uri.fits.fz"""
     logging.debug('generate_fname({},{},{},{},{},{})'
@@ -145,5 +146,11 @@ e.g. k4k_140923_024819_uri.fits.fz"""
         prodtype=prodLUT.get(prodtype, 'u'), # if not in LUT, use "u"!!!
         ext=ext,
         )
-    new_fname = "{instrument}_{date}_{time}_{obstype}{proctype}{prodtype}.{ext}".format(**fields)
+
+    std='{instrument}_{date}_{time}_{obstype}{proctype}{prodtype}'
+    if jobid:
+        fields['jobid'] = jobid
+        new_fname = (std+"_{jobid}.{ext}").format(**fields)
+    else:
+        new_fname = (std+".{ext}").format(**fields)
     return new_fname

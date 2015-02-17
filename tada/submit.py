@@ -119,7 +119,7 @@ def tcp_archive_ingest(fname, checksum, qname, qcfg=None):
 #!            .format(prop_fail, fname))
 #!    return True
 
-def prep_for_ingest(mirror_fname, mirror_dir, archive331):
+def prep_for_ingest(mirror_fname, mirror_dir, archive331, use_jobid=False):
     """GIVEN: FITS absolute path
 DO: 
   Augment hdr. 
@@ -161,7 +161,11 @@ RETURN: irods location of hdr file.
         fname_fields = fu.modify_hdr(hdr, mirror_fname, options)
 
         # Generate standards conforming filename
-        new_basename = fn.generate_fname(*fname_fields)
+        
+        jobid = (pathlib.PurePath(mirror_fname).parts[-2]
+                 if use_jobid else None)
+        new_basename = fn.generate_fname(*fname_fields, jobid=jobid)
+
 
         ipath = pathlib.PurePath(mirror_fname
                                  .replace(mirror_dir, archive331))
@@ -249,8 +253,11 @@ here. However the levels are stored in hdr fields SB_DIR{1,2,3}."""
     #! logging.debug('   qcfg={})'.format(qcfg))
     mirror_dir =  qcfg[qname]['mirror_dir']
     archive331 =  qcfg[qname]['archive_irods331']
+    include_jobid = qcfg[qname].get('jobid_in_fname',0) > 0
+
     try:
-        ihdr = prep_for_ingest(ifname, mirror_dir, archive331)
+        ihdr = prep_for_ingest(ifname, mirror_dir, archive331,
+                               use_jobid=include_jobid)
     except:
         #! traceback.print_exc()
         raise

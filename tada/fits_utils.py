@@ -591,10 +591,23 @@ def show_hdr_values(msg, hdr):
         print('{}="{}"'.format(key,hdr.get(key,'<not given>')),end=', ')
     print()
 
-def fits_compliant(fits_file_list, show_values=False, show_header=False):
+def fits_compliant(fits_file_list, show_values=False, show_header=False,
+                   required=False):
     """Check FITS file for complaince with Archive Ingest."""
     bad = 0
     bad_files = []
+    if required:
+        print('These fields must be in raw fits header (or provided by '
+              'options at submit time). If not, field calculation will not '
+              'be attempted, and ingest will be aborted: {}'
+              .format( '\n\t'.join(RAW_REQUIRED_FIELDS)))
+
+        print('These fields must be in hdr given to Ingest. They may '
+              'be calculated from raw fits fields and options provided '
+              'at submit time. If any of these fields are not in hdr after '
+              'calculation ingest will be aborted: {}'
+              .format( '\n\t'.join(INGEST_REQUIRED_FIELDS)))
+
     for ffile in fits_file_list:
 
         missing = []
@@ -637,13 +650,22 @@ def fits_compliant(fits_file_list, show_values=False, show_header=False):
 def main():
     "Parse command line arguments and do the work."
     parser = argparse.ArgumentParser(
-        description='My shiny new python program',
-        epilog='EXAMPLE: %(prog)s a b"'
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=('Check for compliance of FITS files with respect '
+                     'to Archive Ingest'),
+        epilog=('EXAMPLES: '
+                '\n\t{prog} --required'
+                '\n\t{prog} foo.fits bar.fits.fz'
+                .format(prog='%(prog)s'))
         )
+
     parser.add_argument('--version', action='version', version='1.0.1')
     parser.add_argument('infiles',
-                        nargs='+',
+                        nargs='*',
                         help='Input file')
+    parser.add_argument('--required',
+                        action='store_true',
+                        help='Report on fields required for Archive Ingest')
     parser.add_argument('--values',
                         action='store_true',
                         help='Show header values for interesting fields')
@@ -671,6 +693,7 @@ def main():
     logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
     fits_compliant(args.infiles,
+                   required=args.required,
                    show_values=args.values,
                    show_header=args.header)
 
