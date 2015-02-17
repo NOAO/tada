@@ -28,12 +28,16 @@ fi
 
 ##############################################################################
 
+source KPNO.personality
 
 today=`date '+%Y-%m-%d'`
 
+opt0="-o  _OBSERVAT=${OBSERVAT}"
 opt1="-o _DTCALDAT=$today"
 
-read -p "What is your Proposal ID? " PROPID
+read -p "What is your Proposal ID? (File will not be archived without valid ID) " PROPID
 opt2="-o _PROPID=${PROPID}"
 
 
+
+lp -d astro $opto $opt1 $opt2 $1

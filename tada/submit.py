@@ -17,7 +17,8 @@ from . import fits_utils as fu
 from . import file_naming as fn
 from . import exceptions as tex
 from . import irods331 as iu
-#! from dataq import dqutils as du
+from . import ingest_decoder as idec
+
 
 def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
@@ -45,10 +46,12 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
                         .format(prob_fail))
         result = True
         if random.random() <= prob_fail:
-            raise tex.SubmitException('Killed by cosmic ray with probability {}'
-                                      .format(prob_fail))
+            raise tex.SubmitException(
+                'Killed by cosmic ray with probability {}'
+                .format(prob_fail))
     else:
         result = True
+        response = ''
         try:
             with urllib.request.urlopen(archserver_url) as f:
                 # As of 1/15/2015 the only two possible responses are:
@@ -58,10 +61,11 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
             result = True if response == "Success" else False
         except:
             raise
-        
         if not result:
-            raise tex.SubmitException('HTTP response from Archive: "{}"'
-                                      .format(response))
+            operator_msg = idec.decodeIngest(response)
+            raise tex.SubmitException(
+                'HTTP response from Archive Ingest: "{}"; {}'
+                .format(response, operator_msg))
 
     return result
     
@@ -95,25 +99,25 @@ def tcp_archive_ingest(fname, checksum, qname, qcfg=None):
     print("Received: {}".format(received))    
 
     
-def STUB_archive_ingest(fname, qname, qcfg=None):
-    'Touch-point for archive ingest. Stub!!!'
-    import random #!!! only needed for mockup
-    import inspect
-
-    logging.debug('Executing STUB: {}:STUB_archive_ingest()'.format(__file__))
-    prop_fail = 0.60
-    if random.random() <= prop_fail:  #!!! remove
-        logging.debug(
-            'Simulated FAILURE [p(Fail)={}] on STUB_archive_ingest({})'
-            .format(prop_fail, fname))
-        raise Exception(
-            'Failed STUB_archive_ingest({}) due to cosmic ray (prob={}).'
-            .format(fname, prop_fail))
-    else:
-        logging.debug(
-            'Simulated SUCCESS [p(Fail)={}] on STUB_archive_ingest({})'
-            .format(prop_fail, fname))
-    return True
+#!def STUB_archive_ingest(fname, qname, qcfg=None):
+#!    'Touch-point for archive ingest. Stub!!!'
+#!    import random #!!! only needed for mockup
+#!    import inspect
+#!
+#!    logging.debug('Executing STUB: {}:STUB_archive_ingest()'.format(__file__))
+#!    prop_fail = 0.60
+#!    if random.random() <= prop_fail:  #!!! remove
+#!        logging.debug(
+#!            'Simulated FAILURE [p(Fail)={}] on STUB_archive_ingest({})'
+#!            .format(prop_fail, fname))
+#!        raise Exception(
+#!            'Failed STUB_archive_ingest({}) due to cosmic ray (prob={}).'
+#!            .format(fname, prop_fail))
+#!    else:
+#!        logging.debug(
+#!            'Simulated SUCCESS [p(Fail)={}] on STUB_archive_ingest({})'
+#!            .format(prop_fail, fname))
+#!    return True
 
 def prep_for_ingest(mirror_fname, mirror_dir, archive331):
     """GIVEN: FITS absolute path
@@ -199,7 +203,8 @@ RETURN: irods location of hdr file.
         hdulist.close()
         info = hdulist.fileinfo(0)
         if info['resized']:
-            logging.debug('Changed size of file: {} '.format(info['filename']))
+            logging.debug('Changed size of file: {} '
+                          .format(info['filename']))
 
         
     # We might need to change subdirectory name too!!!
@@ -211,10 +216,10 @@ RETURN: irods location of hdr file.
     # At this point both FITS and HDR are in archive331
     #
 
-
     logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
     return new_ihdr
 
+##########
 # (-sp-) The Archive Ingest process is ugly and the interface is not
 # documented (AT ALL, as far as I can tell). It accepts a URI for an
 # irods path of a "hdr" for a FITS file. The "hdr" has to be the hdr
@@ -232,6 +237,8 @@ RETURN: irods location of hdr file.
 # sent to Ingest, the actual fits file has to be accessed when
 # otherwise we could have just dealt with irods paths. Fortunately,
 # the irods icommand "iexecmd" lets us push such dirt to the server.
+##########
+#
 def submit_to_archive(ifname, checksum, qname, qcfg=None):
     """Ingest a FITS file (really JUST Header) into the archive if
 possible.  Ingest involves renaming to satisfy filename
