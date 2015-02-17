@@ -153,6 +153,8 @@ RETURN: irods location of hdr file.
             diag_dict[k[1:]] = v
             options.pop(k)
 
+    #!logging.debug('Options in prep_for_ingest: {}'.format(options))
+
     hdr_ifname = "None"
     try:
         # augment hdr (add fields demanded of downstream process)

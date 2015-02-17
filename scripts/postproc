@@ -6,8 +6,8 @@
 #
 # AUTHORS: S. Pothier
 
-cmd=`basename $0`
-dir=`dirname $0`
+#!cmd=`basename $0`
+#!dir=`dirname $0`
 
 #Absolute path to this script
 SCRIPT=$(readlink -f $0)
@@ -15,7 +15,7 @@ SCRIPT=$(readlink -f $0)
 SCRIPTPATH=$(dirname $SCRIPT)
 
 
-usage="USAGE: $cmd [options] fitsFile
+usage="USAGE: $cmd [options] fitsFile ...
 "
 
 MINARGS=1
@@ -28,16 +28,20 @@ fi
 
 ##############################################################################
 
-source KPNO.personality
+# Mix personalities of observatory, instrument
+source ${SCRIPTPATH}/KPNO.personality
+source ${SCRIPTPATH}/BOK.personality
 
+opts=""
 today=`date '+%Y-%m-%d'`
 
-opt0="-o  _OBSERVAT=${OBSERVAT}"
-opt1="-o _DTCALDAT=$today"
-
-read -p "What is your Proposal ID? (File will not be archived without valid ID) " PROPID
-opt2="-o _PROPID=${PROPID}"
-
+#!read -p "What is your Proposal ID? (File will not be archived without valid ID) " PROPID
+opts="$opts -o _OBSERVAT=${OBSERVAT} -o _DTTELESC=${DTTELESC}"
+opts="$opts -o _PROPID=${PROPID} -o _INSTRUME=${INSTRUME} -o _DTTITLE=${DTTITLE}"
+opts="$opts -o _DTCALDAT=$today"
 
 
-lp -d astro $opto $opt1 $opt2 $1
+for filename; do
+    #! echo "EXECUTE: lp -d astro $opts ${filename}"
+    lp -d astro $opts ${filename}
+done
