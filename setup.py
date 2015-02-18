@@ -1,5 +1,5 @@
 """Install TADA: data flow software from Dome to Archive."""
-from setuptools import setup, find_packages  # Always prefer setuptools over distutils
+from setuptools import setup, find_packages 
 from codecs import open  # To use a consistent encoding
 from os import path
 
@@ -15,7 +15,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.0.dev2',
+    version='0.0.dev3',
 
     description='Collect telescope data from mountain tops, deliver to far-away archives',
     long_description=long_description,
@@ -39,7 +39,6 @@ setup(
         'Development Status :: 3 - Alpha',
 
         # Indicate who your project is intended for
-        'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',
         'Intended Audience :: Science/Research',
         'Intended Audience :: System Administrators',
