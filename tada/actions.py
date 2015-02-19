@@ -57,7 +57,7 @@ def network_move(rec, qname, **kwargs):
 
     ifname = os.path.join(sync_root, os.path.relpath(fname, source_root))
     #!ifname = sync_root
-
+    out = None
     try:
         #!iu.irods_put(fname, ifname)
         cmdline = ['rsync', '-rptgo',    #! '-azr',
@@ -67,12 +67,15 @@ def network_move(rec, qname, **kwargs):
                    source_root, sync_root]
         diag.dbgcmd(cmdline)
         tic = time.time()
-        out = subprocess.check_output(cmdline)
+        out = subprocess.check_output(cmdline, stderr=subprocess.STDOUT)
         logging.debug('rsync complete {} seconds'.format(time.time() - tic))
     except Exception as ex:
-        logging.warning('Failed to transfer from Mountain to Valley. {} => {}'
-                        .format(ex, ex.output))
-                        #.format(ex, ex.output.decode('utf-8')))
+        logging.warning('Failed to transfer from Mountain to Valley. '
+                        '{} => {}; {}'
+                        .format(ex,
+                                ex.output.decode('utf-8'),
+                                out
+                            ))
         # Any failure means put back on queue. Keep queue handling
         # outside of actions where possible.
         raise
