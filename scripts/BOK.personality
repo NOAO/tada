@@ -1,7 +1,12 @@
 #! PROPID="BOK"  # not in metadata database
 PROPID="2014B-0461"
-INSTRUME="KOSMOS"
+#!INSTRUME="KOSMOS"
 
 # !!! No white space allowed in value
 DTTITLE="BOK_title"
 
+
+# per Sean
+INSTRUME="90Prime"
+#! OBSID=FILENAME
+OBSERVAT="Steward"

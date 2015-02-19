@@ -71,7 +71,7 @@ def network_move(rec, qname, **kwargs):
         logging.debug('rsync complete {} seconds'.format(time.time() - tic))
     except Exception as ex:
         logging.warning('Failed to transfer from Mountain to Valley. {} => {}'
-                        .format(ex, 'unknown'))
+                        .format(ex, ex.output))
                         #.format(ex, ex.output.decode('utf-8')))
         # Any failure means put back on queue. Keep queue handling
         # outside of actions where possible.
