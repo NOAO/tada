@@ -200,7 +200,7 @@ RETURN: irods location of hdr file.
             # Since it has to have a reference to the FITS file anyhow,
             # Archive Ingest SHOULD deal with the hdr.
             iu.irods_put331(f.name, new_ihdr)
-            shutil.copy(f.name, '/home/vagrant/tmp/') #!!! REMOVE. diagnostic
+            #! shutil.copy(f.name, '/home/vagrant/tmp/') #!!! REMOVE. diagnostic
             logging.debug('iput new_ihdr to: {}'.format(new_ihdr))
     except:
         raise

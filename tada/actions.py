@@ -60,16 +60,19 @@ def network_move(rec, qname, **kwargs):
     out = None
     try:
         #!iu.irods_put(fname, ifname)
-        cmdline = ['rsync', '-rptgo',    #! '-azr',
+        cmdline = ['rsync',
+                   '-rptgo',    #! took out '-az',
                    '--timeout=5',
                    '--contimeout=3',
-                   '--password-file','/etc/tada/rsync.pwd',
+                   '--remove-source-files',
+                   '--stats',
+                   '--password-file', '/etc/tada/rsync.pwd',
                    source_root, sync_root]
         diag.dbgcmd(cmdline)
         tic = time.time()
         out = subprocess.check_output(cmdline,
                                       stderr=subprocess.STDOUT)
-        logging.debug('rsync complete {} seconds'.format(time.time() - tic))
+        logging.debug('rsync complete {:.2f} seconds'.format(time.time() - tic))
     except Exception as ex:
         logging.warning('Failed to transfer from Mountain ({}) to Valley. '
                         '{} => {}; {}'
@@ -85,11 +88,20 @@ def network_move(rec, qname, **kwargs):
         logging.info('Successfully moved file from {} to {}'
                      .format(fname,sync_root))
         # successfully transfered to Valley
-        os.remove(fname)
-        logging.info('Removed file "%s" from mountain cache'%(rec['filename'],))
         mirror_fname = os.path.join(valley_root,
                                     os.path.relpath(fname, source_root))
+        # What if QUEUE is down?!!!
         du.push_to_q(dq_host, dq_port, mirror_fname, rec['checksum'])
+        
+        # Files removed by rsync through option '--remove-source-files' above
+        #
+        #!os.remove(fname)
+        #!logging.info('Removed file "{}" from mountain cache'.format(fname))
+        #!optfname = fname + ".options"
+        #!if os.path.exists(optfname):
+        #!    os.remove(optfname)
+        #!    logging.debug('Removed options file: {}'.format(optfname))
+
     return True
 
 
@@ -130,6 +142,7 @@ configuration field: maximum_errors_per_record)
             # successfully transfered to Archive
             os.remove(ifname)
             optfname = ifname + ".options"
+            logging.debug('Remove possible options file: {}'  .format(optfname))
             if os.path.exists(optfname):
                 os.remove(optfname)
     else: # not FITS
