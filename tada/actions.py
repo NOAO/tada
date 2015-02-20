@@ -70,9 +70,10 @@ def network_move(rec, qname, **kwargs):
         out = subprocess.check_output(cmdline, stderr=subprocess.STDOUT)
         logging.debug('rsync complete {} seconds'.format(time.time() - tic))
     except Exception as ex:
-        logging.warning('Failed to transfer from Mountain to Valley. '
+        logging.warning('Failed to transfer from Mountain ({}) to Valley. '
                         '{} => {}; {}'
-                        .format(ex,
+                        .format(os.getuid(),
+                                ex,
                                 ex.output.decode('utf-8'),
                                 out
                             ))
