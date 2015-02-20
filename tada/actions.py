@@ -68,7 +68,6 @@ def network_move(rec, qname, **kwargs):
         diag.dbgcmd(cmdline)
         tic = time.time()
         out = subprocess.check_output(cmdline,
-                                      shell=True, # needed???!!!
                                       stderr=subprocess.STDOUT)
         logging.debug('rsync complete {} seconds'.format(time.time() - tic))
     except Exception as ex:
