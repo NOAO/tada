@@ -20,9 +20,11 @@ irods_fname=$2
 
 ##############################################################################
 
-PATH=/sandbox/irods3.3.1/iRODS/clients/icommands/bin:$PATH
-imkdir -p `dirname ${irods_fname}`
+#!PATH=/sandbox/irods3.3.1/iRODS/clients/icommands/bin:$PATH
+icmdpath=/usr/local/share/applications/irods3.3.1/iRODS/clients/icommands/bin
+
+$icmdpath/imkdir -p `dirname ${irods_fname}`
 #! chmod 0664 ${local_fname}
-iput -f -K ${local_fname} ${irods_fname}
+$icmdpath/iput -f -K ${local_fname} ${irods_fname}
 
 echo "Successfully put ${local_fname} to ${irods_fname}"
