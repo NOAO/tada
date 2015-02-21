@@ -20,6 +20,7 @@ irods_fname=$2
 
 ##############################################################################
 
+PATH=/sandbox/irods3.3.1/iRODS/clients/icommands/bin:$PATH
 imkdir -p `dirname ${irods_fname}`
 #! chmod 0664 ${local_fname}
 iput -f -K ${local_fname} ${irods_fname}
