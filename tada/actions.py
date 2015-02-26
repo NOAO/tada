@@ -61,7 +61,7 @@ def network_move(rec, qname, **kwargs):
     try:
         #!iu.irods_put(fname, ifname)
         cmdline = ['rsync',
-                   '-rptgo',    #! took out '-az',
+                   '-rpgo',    #! took out '-azt',
                    '--timeout=5',
                    '--contimeout=3',
                    '--remove-source-files',
