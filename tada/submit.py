@@ -11,7 +11,8 @@ import traceback
 import tempfile
 import pathlib
 import urllib.request
-import shutil
+#!import shutil
+import datetime
 
 from . import fits_utils as fu
 from . import file_naming as fn
@@ -119,7 +120,7 @@ def tcp_archive_ingest(fname, checksum, qname, qcfg=None):
 #!            .format(prop_fail, fname))
 #!    return True
 
-def prep_for_ingest(mirror_fname, mirror_dir, archive331, use_jobid=False):
+def prep_for_ingest(mirror_fname, mirror_dir, archive331, jid=False):
     """GIVEN: FITS absolute path
 DO: 
   Augment hdr. 
@@ -163,9 +164,16 @@ RETURN: irods location of hdr file.
         fname_fields = fu.modify_hdr(hdr, mirror_fname, options)
 
         # Generate standards conforming filename
-        
-        jobid = (pathlib.PurePath(mirror_fname).parts[-2]
-                 if use_jobid else None)
+        # EXCEPT: add field when JID given.
+        if jid == 1:
+            jobid = pathlib.PurePath(mirror_fname).parts[-2]
+        elif jid == 2:
+            # hundredths of a second sin 1/1/2015
+            jobid = str(int((datetime.datetime.now()
+                             - datetime.datetime(2015,1,1))
+                            .total_seconds()*100))
+        else:
+            jobid = None
         new_basename = fn.generate_fname(*fname_fields, jobid=jobid)
 
 
@@ -255,11 +263,12 @@ here. However the levels are stored in hdr fields SB_DIR{1,2,3}."""
     #! logging.debug('   qcfg={})'.format(qcfg))
     mirror_dir =  qcfg[qname]['mirror_dir']
     archive331 =  qcfg[qname]['archive_irods331']
-    include_jobid = qcfg[qname].get('jobid_in_fname',0) > 0
+    id_in_fname = qcfg[qname].get('id_in_fname',0)
 
+    jid = False if (id_in_fname == 0) else id_in_fname
     try:
         ihdr = prep_for_ingest(ifname, mirror_dir, archive331,
-                               use_jobid=include_jobid)
+                               jid=jid)
     except:
         #! traceback.print_exc()
         raise
