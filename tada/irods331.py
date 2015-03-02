@@ -18,6 +18,7 @@ def OLD_irods_put331(local_fname, irods_fname):
     
 def irods_put331(local_fname, irods_fname):
     logging.debug('irods_put331({}, {})'.format(local_fname, irods_fname))
+    logging.debug('   irods_put331 env:{})'.format(os.environ))
     #! os.environ.copy()
     #!env331 = dict(
     #!    irodsEnvFile = '/home/tada/.irods/.irodsEnv'        
