@@ -29,7 +29,9 @@ def irods_put331(local_fname, irods_fname):
         #!subprocess.check_output(['sudo', 'su', '-', 'tada', '-c', cmd1])
         subprocess.check_output([os.path.join(icmdpath, 'imkdir'),
                                   '-p',
-                                  os.path.dirname(irods_fname)])
+                                  os.path.dirname(irods_fname)],
+                                start_new_session=True,
+                            )
         subprocess.check_output([os.path.join(icmdpath, 'iput'),
                                  '-f', '-K', local_fname, irods_fname])
 
