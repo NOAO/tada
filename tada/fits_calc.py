@@ -40,7 +40,7 @@ def instrument_calc(orighdr):
 def calc_hdr(orighdr, fname, **kwargs):
     chg = dict() # Fields to change/add
     
-    chg['TADAVERS']    = '0.0.dev2' # NOT REQUIRED, for diagnostics
+    chg['TADAVERS']    = '0.0.dev3' # NOT REQUIRED, for diagnostics
 
     #! chg['DTTITLE']  = 'Not derivable from raw metadata!!!'
     #! chg['DTPIAFFL'] = 'Not derivable from raw metadata!!!'
