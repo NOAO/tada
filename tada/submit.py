@@ -13,6 +13,7 @@ import pathlib
 import urllib.request
 #!import shutil
 import datetime
+from copy import copy
 
 from . import fits_utils as fu
 from . import file_naming as fn
@@ -148,13 +149,15 @@ RETURN: irods location of hdr file.
         with open(optfname,encoding='utf-8') as f:
             optstr = f.readline()
     options = dict([s[1:].split('=') for s in optstr.split() if s[0]=='_'])
-    diag_dict = dict()  # for diagnostics. Passed like: lpr -P astro -o __x=3
-    for k,v in options.items():
+
+    param_dict = dict()  # for parameters. Passed like: lp -d astro -o __x=3
+    for k,v in copy(options.items()):
         if k[0] =='_':
-            diag_dict[k[1:]] = v
+            param_dict[k[1:]] = v
             options.pop(k)
 
     #!logging.debug('Options in prep_for_ingest: {}'.format(options))
+    logging.debug('Params in prep_for_ingest: {}'.format(param_dict))
 
     hdr_ifname = "None"
     try:
@@ -174,7 +177,12 @@ RETURN: irods location of hdr file.
                             .total_seconds()*100))
         else:
             jobid = None
-        new_basename = fn.generate_fname(*fname_fields, jobid=jobid)
+        if param_dict['source'] == 'pipeline':
+            new_basename = hdr['PLDSID']
+            logging.debug('Source=pipeline so using basename:{}'
+                          .format(new_basename))
+        else:
+            new_basename = fn.generate_fname(*fname_fields, jobid=jobid)
 
 
         ipath = pathlib.PurePath(mirror_fname

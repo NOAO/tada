@@ -11,7 +11,7 @@ The purpose of TADA is to provide an end-to-end flow of data from
 telescope instruments to archives at machines around the world. By its
 very nature, TADA is a multi-machine system.  The *general purpose*
 might be described as:
-   #+BEGIN_QUOTEb
+   #+BEGIN_QUOTE
    Collect data from remote instruments and save in nearby
    cache. Transfer cache data across network with dubiuos reliability
    to a local archive. Remove cache data after it has been
