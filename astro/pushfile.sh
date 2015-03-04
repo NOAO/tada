@@ -11,7 +11,8 @@ fullfname=$1
 
 if [ -f "${fullfname}" ]; then
     echo "Pushing \"${fullfname}\" to xfer Queue."
-    md5sum ${fullfname} | dqcli --queue transfer --push  - 
+    #!md5sum ${fullfname} | dqcli --queue transfer --push  - 
+    md5sum ${fullfname} | dqcli --push  - 
     echo "Pushed"
 else
     echo "ERROR: File \"${fullname}\" not found. Not pushing" 1>&2

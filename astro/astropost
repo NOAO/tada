@@ -1,7 +1,6 @@
 #!/bin/bash
 # Have debug info in /var/log/cups/error_log:
 #! set -x
-
 # This CUPS backend allows you to "print to file".
 # see also:
 #   http://www.linuxcommand.org/man_pages/backend1.html
