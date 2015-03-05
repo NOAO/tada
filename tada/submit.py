@@ -151,7 +151,7 @@ RETURN: irods location of hdr file.
     options = dict([s[1:].split('=') for s in optstr.split() if s[0]=='_'])
 
     param_dict = dict()  # for parameters. Passed like: lp -d astro -o __x=3
-    for k,v in copy(options.items()):
+    for k,v in list(options.items()):
         if k[0] =='_':
             param_dict[k[1:]] = v
             options.pop(k)
@@ -177,7 +177,7 @@ RETURN: irods location of hdr file.
                             .total_seconds()*100))
         else:
             jobid = None
-        if param_dict['source'] == 'pipeline':
+        if param_dict.get('source',None) == 'pipeline':
             new_basename = hdr['PLDSID']
             logging.debug('Source=pipeline so using basename:{}'
                           .format(new_basename))

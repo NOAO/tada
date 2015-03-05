@@ -65,11 +65,9 @@ application or domain, you can roughly think:
   - Mountain Mirror :: "off-site storage for several instruments". Not
        reliably connected to instruments. 
 
-* TODO Next up (rough prio order) [9/15]
-- [ ] different dir (irods) structure for ingest? 
-  + use subdir names from SB_* fields
-- [ ] special user or group for this to all run under?
-- [ ] avoid having to do "iinit"
+* TODO Next up (rough prio order) [12/16]
+- [X] special user or group for this to all run under?
+- [X] avoid having to do "iinit"
 - [X] rename puppet-dci2 (puppet-tada, puppet-astro, puppet-noao)
 
 
@@ -79,7 +77,7 @@ application or domain, you can roughly think:
   + see "distributing" check-list
   + AS DONE: not in PyPI
 
-- [ ] Real ingest into archive ("PAT" area)
+- [X] Real ingest into archive ("PAT" area)
 - [ ] multi: telescope, mountain, valley machine tests
   + one config to rule them all (for multi T,M,V case)
 - [ ] connect two valley machines (share archive)
@@ -904,6 +902,35 @@ that go along with it. Here are most of them:
 3. Maintainable
    - by new employees without large learning curve, under 50% FTE
 4. Operate fast enough (need quantification)
+** MVP - Minimally Viable Product
+These are the absolute minium requirements for a DCI replacement.
+When ever possible, avoid putting anything here that is not an absolutely
+essential requirement. (push "would be nice" stuff into subsequent
+release)
+
+1. Baring fatal hardware failure, every file produced by instrument
+   gets into archive
+2. [X] EXCEPT when submitted via pipeline: rename file submitted to
+  archive according to:
+  http://ast.noao.edu/sites/default/files/File_Naming_Conventions_v12.pdf
+  (October 1, 2014)
+3. [X] When submitted from pipeline, rename basename of file to value
+   of PLDTSID field from FITS file.
+4. [X] insert "archival metadata" just before final archiving
+5. [ ] filename agnostic; nothing in the TADA should depend on the
+   structure or uniqueness of a filename.  Uniqueness may matter to
+   Archive Ingest, however.
+
+*** Installation
+- [X] reproducible installs 
+  (via puppet)
+
+*** Version Control
+- [X] use version control always; with commit comments
+  + Stored in github at: 
+    - https://github.com/pothiers/tada
+    - https://github.com/pothiers/data-queue
+    - https://github.com/pothiers/puppet-tada
 
 ** Candidate requirements
 These requirements have *not been committed to*.  In many case they
@@ -912,26 +939,20 @@ need to be made more precise.
 - [ ] All database clients must be capable of reconnecting to database
   servers on connection loss (so components can be restarted)
 - [ ] Increase level of automation of regular operation functions
-- [X] use version control always; with commit comments
-  + Stored in github at: ???
 - [ ] elliminate direct changes to live production system (from tagged version)
 - [ ] (document minimumaly acceptable coding style)
 - [ ] Implement regression testing (automated where possible, documented otherwise)
-- [ ] write design documentation
-- [ ] write installation documentation
-- [ ] write usage documentation
-- [X] reproducible installs
+- [ ] provide design documentation
+- [ ] provide installation documentation
+- [ ] provide usage documentation
 - [ ] daily operations must not require manual intervention
 - [ ] daily operations must not require human monitoring (automatic alerts instead)
 - [ ] eliminate metadata remmediation in its present form (what form???)
   + get metadata from file format, or
   + get metadata from TO/observer/observatory support staff at data
     collection time
-- [X] insert "archival metadata" just before final archiving
 - [ ] insert of archival metadata should be idempotent
 - [ ] eliminate mountain copy coherency requirement (???)
-- [X] filename agnostic; nothing in the system should depend on the
-  structure or uniqueness of a filename
 - [ ] limit access to internals connection points (ports, databases)
   + perhaps by host, port, user
 - [ ] literate programming: data flow software and config files: must be
@@ -966,16 +987,11 @@ need to be made more precise.
 - [ ] Security ???
   + firewalls configured to only allow access to key ports from
     trusted hosts
-- [X] Files must be renamed according to TBD scheme before submit to
-  archive
-  + How is name derived? 
-  + Assume name is derived from header -- but this limits to
-    processing of FITS (known header info) only.
 - [ ] allow disabling of auto cache-file expiration
 - [ ] on "submit to archive" retry N times (N given by config file)
 - [ ] tests to include simulation of irods stop-delay-start
 
-** From 2010 iDCI project definition
+** From 2010 iDCI project definition				   :noexport:
 (minor editing done on language of requirements)
 
 #+BEGIN_EXAMPLE
@@ -1022,20 +1038,6 @@ The [[http://chive.tuc.noao.edu:8080/DPPDOCS/operations-documentation/software-s
    + [-sp-] Why? What is the operational requirement hidden in this?
      Speed? Bandwidth? Quantify.
 
-** TADA migration from 2010 iDCI project requriements 
-1. Retain existing physical resources
-2. ACCEPTED. Improve upon iDCI. Qualify. Quantify
-3. REJECTED. Except: will submit ingest to archive
-4. ACCEPTED. Improve upon iDCI. Qualify. Quantify
-5. REJECTED. If there is a bandwidth requirement, add as such.
-6. ACCEPTED with caveats.
-7. REJECTED. Not a requirement, but a goal I expect to happen.
-8. REJECTED. Not clear.
-9. REJECTED. No need.
-
-
-
-
 ** simulator requirements (DAFLSIM)                                :noexport:
 *** First
 - process for 
@@ -1053,41 +1055,6 @@ The [[http://chive.tuc.noao.edu:8080/DPPDOCS/operations-documentation/software-s
 - probes at any junction (How do I specify?)
 - hilite "active edge" (when data is flowing through it)
 
-
-
-** Meta data required for ingest into archive
-- [ ] PROPID
-- [ ] DATE-OBS
-- [ ] DTTITLE
-- [ ] DTACQNAM
-- [ ] DTNSANAM
-- [ ] DTINSTRU
-- [ ] DTTELESC
-- [ ] DTSITE
-- [ ] DTUTC
-- [ ] DTPI
-- [ ] DTSITE
-
-from https://support.sdm.noao.edu/browse/OPS-1991
-
-** MVP - Minimally Viable Product
-These are the absolute minium requirements for a DCI replacement.
-When ever possible, avoid putting anything here that is an absolutely
-essential requirement. (push "would be nice" stuff into subsequent
-release)
-
-1. Baring fatal hardware failure, every file produced by instrument
-   gets into archive
-2. 
-
-** Release 2
-1. Each site is "independent"
-   + What is a "site"?
-   + How independent do they have to be? (archive depends on telescope,
-     for instance)
-2. Must be able to re-route around broken machines
-3. Allow institutions direct access to iRODS data ("back-door")
-
 ** Deferred requirements
 - *Dashboard* for monitoring health of TADA system
   + web based
@@ -1095,24 +1062,13 @@ release)
   + shared results (algorithms run against data from archive)
   + loose coupling of archive data to results
   + auto expire of results (warning 1, warning 2, delete)
-* TODO Open Issues
-** Which files from input list ("printed" files) should get moved to archive?
-  - [ ] All of them?
-  - [ ] *.fits.fz?
-  - [ ] *.fits?
-  - [ ] *.hdr
-  - DEFAULT ANSWER: only *.fits.fz and *.fits
-** What if FITS files do NOT contain minimum required metadata (fields/values)?
-  - Insert dummy (not realistic) values.
-  - Calculate values. How?
-  - Reject file (report and do not archive)
-  - DEFAULT ANSWER: Reject file, move to remediation store, log error
-** What are the expected workflows?
-For instance:
-- Load Proposal ID, etc.
-- Reingest remediated files.  a) mountain, b) valley
-* TODO Closed Issues
-*/<NONE>/*
+
+- Each site is "independent"
+  + What is a "site"?
+  + How independent do they have to be? (archive depends on telescope,
+    for instance)
+- Must be able to re-route around broken machines
+- Allow institutions direct access to iRODS data ("back-door")
 
 * Assumptions
 - Number of users of an instances of this system is very small (under

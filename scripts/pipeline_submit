@@ -21,6 +21,7 @@ fi
 
 ##############################################################################
 
+opts="-o _PROPID=2014B-0461"
 for filename; do
-    lp -d astro -o __source=pipeline ${filename}    
+    lp -d astro -o __source=pipeline $opts ${filename}    
 done
