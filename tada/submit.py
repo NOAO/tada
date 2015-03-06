@@ -162,6 +162,7 @@ RETURN: irods location of hdr file.
     hdr_ifname = "None"
     try:
         # augment hdr (add fields demanded of downstream process)
+        logging.debug('Open FITS for hdr update: {}'.format(mirror_fname))
         hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
         hdr = hdulist[0].header # use only first in list.
         fname_fields = fu.modify_hdr(hdr, mirror_fname, options)
@@ -218,20 +219,17 @@ RETURN: irods location of hdr file.
             iu.irods_put331(f.name, new_ihdr)
             #! shutil.copy(f.name, '/home/vagrant/tmp/') #!!! REMOVE. diagnostic
             logging.debug('iput new_ihdr to: {}'.format(new_ihdr))
-    except:
-        raise
-    finally: 
-        hdulist.flush()
-        hdulist.close()
-        info = hdulist.fileinfo(0)
-        if info['resized']:
-            logging.debug('Changed size of file: {} '
-                          .format(info['filename']))
 
-        
-    # We might need to change subdirectory name too!!!
-    # (but there has been no stated Requirement for subdir structure)
-    #   <root>/<SB_DIR1>/<SB_DIR2>/<SB_DIR3>/<base.fits>
+            logging.debug('DBG: Close hdulist')
+            hdulist.flush()
+            hdulist.close()
+    except:
+        traceback.print_exc()
+        raise
+    finally:
+        pass
+
+    logging.debug('DBG: put331')
     iu.irods_put331(mirror_fname, new_ifname) # iput renamed FITS
 
     #

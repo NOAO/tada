@@ -29,6 +29,9 @@
 # If you print to the "astro" printer, you will find the files from
 # CUPS filtering produced in "/tmp/astro/*".
 #
+# If there is an error in the cups backend, the printer queue will be
+# automatically (and silently) disabled. To reenable, execute
+# "cupsenable astro".
 #
 # Destination Directory structure:
 #    /mtncache/
@@ -62,7 +65,7 @@ error() {
     exit "${code}"
 }
 
-export LOG=/tmp/astropost.log #!!!
+export LOG=/var/log/tada/astropost.log
 trap 'error ${LOG} ${LINENO}' ERR
 #!trap "echo \"$0 completed successfully\" >> ${LOG}" EXIT
 
@@ -143,13 +146,14 @@ destdir=${rootDir}/${USER}/${JOBID}
 
 # now do the job....
 mkdir -p $destdir
-chmod -R a+rwX ${rootDir}
 fullfname="${destdir}/${TARGETFILE}"
 echo "Copying to: "  ${fullfname}  >> ${LOG}
 cat $FILE > ${fullfname}             # Add posted file to CACHE
-chmod a+rw ${fullfname}
+#!chmod a+rw ${fullfname}
 echo "${OPTIONS}" > "${fullfname}.options"
-chmod a+rw "${fullfname}.options"
+#!chmod a+rw "${fullfname}.options"
+chmod -R a+rwX ${rootDir}
+chown -R tada ${rootDir}
 
 echo "DEBUG2: posting file: ${fullfname}" 1>&2
 echo "id: " `id` >> ${LOG}
