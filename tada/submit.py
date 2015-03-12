@@ -220,7 +220,6 @@ RETURN: irods location of hdr file.
             #! shutil.copy(f.name, '/home/vagrant/tmp/') #!!! REMOVE. diagnostic
             logging.debug('iput new_ihdr to: {}'.format(new_ihdr))
 
-            logging.debug('DBG: Close hdulist')
             hdulist.flush()
             hdulist.close()
     except:
@@ -228,8 +227,7 @@ RETURN: irods location of hdr file.
         raise
     finally:
         pass
-
-    logging.debug('DBG: put331')
+  
     iu.irods_put331(mirror_fname, new_ifname) # iput renamed FITS
 
     #
@@ -237,7 +235,7 @@ RETURN: irods location of hdr file.
     #
 
     logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
-    return new_ihdr
+    return new_ihdr, new_ifname
 
 ##########
 # (-sp-) The Archive Ingest process is ugly and the interface is not
@@ -273,8 +271,8 @@ here. However the levels are stored in hdr fields SB_DIR{1,2,3}."""
 
     jid = False if (id_in_fname == 0) else id_in_fname
     try:
-        ihdr = prep_for_ingest(ifname, mirror_dir, archive331,
-                               jid=jid)
+        ihdr,destfname = prep_for_ingest(ifname, mirror_dir, archive331,
+                                         jid=jid)
     except:
         #! traceback.print_exc()
         raise
@@ -286,5 +284,5 @@ here. However the levels are stored in hdr fields SB_DIR{1,2,3}."""
         #! traceback.print_exc()
         raise
 
-    return ihdr
+    return destfname
 

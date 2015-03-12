@@ -6,6 +6,7 @@ import subprocess
 import magic
 import shutil
 import time
+from datetime import datetime
 
 #! from . import irods_utils as iu
 from . import submit as ts
@@ -105,6 +106,17 @@ def network_move(rec, qname, **kwargs):
     return True
 
 
+def logsubmit(submitlog, src, dest, comment, fail=False):
+    with open(submitlog, mode='a') as f:
+        print('{timestamp} {status} {srcfname} {destfname} {msg}'
+              .format(timestamp=datetime.now().strftime('%m/%d/%y_%H:%M:%S'),
+                      status = 'FAILURE' if fail else 'SUCCESS',
+                      srcfname=src,
+                      destfname=dest,
+                      msg=comment),
+              file=f)
+
+    
 def submit(rec, qname, **kwargs):
     """Try to modify headers and submit FITS to archive. If anything fails 
 more than N times, move the queue entry to Inactive. (where N is the 
@@ -117,6 +129,7 @@ configuration field: maximum_errors_per_record)
 
     noarc_root =  qcfg[qname]['noarchive_dir']
     mirror_root =  qcfg[qname]['mirror_dir']
+    submitlog =  qcfg[qname]['submitlog']
 
     # eg. /tempZone/mountain_mirror/other/vagrant/16/text/plain/fubar.txt
     ifname = rec['filename']            # absolute path (mountain_mirror)
@@ -126,37 +139,43 @@ configuration field: maximum_errors_per_record)
         #! ftype = iu.irods_file_type(ifname)
         ftype = file_type(ifname)
     except Exception as ex:
+        logsubmit(submitlog, ifname, ifname, 'file_type', fail=True)
         logging.error('Execution failed: {}; ifname={}'
                       .format(ex, ifname))
         raise
         
     logging.debug('File type for "{}" is "{}".'
                   .format(ifname, ftype))
+    destfname = None
     if 'FITS' == ftype :  # is FITS
+        msg = 'FITS_file'
         try:
-            ts.submit_to_archive(ifname, checksum, qname, qcfg)
+            destfname = ts.submit_to_archive(ifname, checksum, qname, qcfg)
         except Exception as sex:
+            logsubmit(submitlog, ifname, ifname, 'submit_to_archive', fail=True)
             raise sex
         else:
-            logging.info('PASSED submit_to_archive({}).'  .format(ifname))
+            logsubmit(submitlog, ifname, destfname, msg)
+            logging.info('PASSED submit_to_archive({}).'.format(ifname))
             # successfully transfered to Archive
             os.remove(ifname)
             optfname = ifname + ".options"
-            logging.debug('Remove possible options file: {}'  .format(optfname))
+            logging.debug('Remove possible options file: {}'.format(optfname))
             if os.path.exists(optfname):
                 os.remove(optfname)
     else: # not FITS
-        fname = ifname.replace(mirror_root, noarc_root)
+        msg = 'non-fits'
+        destfname = ifname.replace(mirror_root, noarc_root)
         try:
-            os.makedirs(os.path.dirname(fname), exist_ok=True)
-            shutil.move(ifname, fname)
+            os.makedirs(os.path.dirname(destfname), exist_ok=True)
+            shutil.move(ifname, destfname)
         except:
+            logsubmit(submitlog, ifname, ifname,msg, fail=True)
             logging.warning('Failed to mv non-fits file from mirror on Valley.')
             raise
+        logsubmit(submitlog, ifname, destfname, msg)
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
-        logging.info('Non-FITS file put in: {}'.format(fname))
-
-
+        logging.info('Non-FITS file put in: {}'.format(destfname))
         
     return True
 # END submit() action
