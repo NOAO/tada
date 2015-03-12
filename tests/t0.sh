@@ -7,18 +7,36 @@
 #!    exit 1
 #!fi
 
-log=/var/log/tada/pop.log
 
-echo "BEGIN TEST: $0" > $log
+date > $HOME/TEXTFILE.txt
 
-
-date > ~/BEGIN.txt
-date > ~/END.txt
-
+strs=""
 # These may be processed asynchronously!
-lp -d astro ~/BEGIN.txt
-lp -d astro -o _DTCALDAT=2014-09-21 /data/raw/nhs_2014_n14_299403.fits
-lp -d astro /data/raw/nhs_2014_n14_299403.fits
+f=$HOME/TEXTFILE.txt
+req=`lp -d astro $f`
+id=`echo $req | awk '{ print substr($4,7) }'`
+base=`basename $f`
+echo "Submitted: $id/$base"
+strs="$strs $id/$base"
+
+f=/data/raw/nhs_2014_n14_299403.fits
+req=`lp -d astro -o _DTCALDAT=2014-09-21 $f`
+id=`echo $req | awk '{ print substr($4,7) }'`
+base=`basename $f`
+echo "Submitted: $id/$base"
+strs="$strs $id/$base"
 
 
-cat /var/log/tada/submit.log
+f=/data/bok/bokrm.20140425.0119.fits
+req=`lp -d astro $f`
+id=`echo $req | awk '{ print substr($4,7) }'`
+base=`basename $f`
+echo "Submitted: $id/$base"
+strs="$strs $id/$base"
+
+echo "strs=$strs"
+
+/sandbox/tada/scripts/finished-files.sh $strs
+
+
+
