@@ -1,8 +1,9 @@
-#!/bin/bash -e
-# PURPOSE: Waits until all strings in a list show up in a file.
-#   (or TIMEOUT exceeded)
+#!/bin/bash
+# PURPOSE: Submit files to TADA, perhaps with options 
+#   Wait for all to complete
 #
 # EXAMPLE:
+#   tada-submit -o _DTCALDAT=2014-09-21 $HOME/TEXTFILE.txt /data/raw/nhs_2014_n14_299403.fits /data/bok/bokrm.20140425.0119.fits
 #
 # AUTHORS: S.Pothier
 
@@ -13,15 +14,18 @@ dir=`dirname $0`
 SCRIPT=$(readlink -f $0)
 #Absolute path this script is in
 SCRIPTPATH=$(dirname $SCRIPT)
+PATH=$SCRIPTPATH:$PATH
 
-VERBOSE=0
-PROGRESS=0
 LOG=/var/log/tada/submit.log
+OPTIONS=""
+PROGRESS=0
 RESULTS=/tmp/$cmd.$$.results
+VERBOSE=0
 
-usage="USAGE: $cmd [options] match [match ...]
+usage="USAGE: $cmd [options] file [file ...]
 OPTIONS:
-  -l <inputLog>:: File to read for matches (default=$LOG)
+  -l <inputLog>:: Log contain success/failure of submits. (default=$LOG)
+  -o <options>::  Name=Value (multi allowed)
   -p <progress>:: Number of progress updates per second (default=0)
   -r <resultsFile>:: Extracted submit results for matching lines (default=$RESULTS)
   -v <verbosity>:: higher number for more output (default=0)
@@ -29,7 +33,7 @@ OPTIONS:
 "
 
 
-while getopts "hl:p:r:v:" opt; do
+while getopts "hl:o:p:r:v:" opt; do
     #!echo "opt=<$opt>"
     case $opt in
 	h)
@@ -41,6 +45,9 @@ while getopts "hl:p:r:v:" opt; do
             ;;
         l)
             LOG=$OPTARG
+            ;;
+        o)
+            OPTIONS="$OPTIONS -o $OPTARG"
             ;;
         p)
             PROGRESS=$OPTARG # how often to report progress
@@ -71,37 +78,33 @@ if [ $# -lt $RAC ]; then
 fi
 
 
-#! echo "PROGRESS=$PROGRESS"
-#! echo "VERBOSE=$VERBOSE"
-#! echo "Remaining arguments:"
-#! for arg do echo '--> '"\`$arg'" ; done
+#!echo "LOG=$LOG"
+#!echo "OPTIONS=$OPTIONS"
+#!echo "PROGRESS=$PROGRESS"
+#!echo "VERBOSE=$VERBOSE"
+#!echo "Remaining arguments:"
+#!for arg do echo '--> '"\`$arg'" ; done
 
 
 
 ##############################################################################
 
-date > $RESULTS    
 
-maxTries=30
-for str; do
-    #!echo "Looking in log for: $str"
-    tries=0
-    while ! fgrep "$str" $LOG >> $RESULTS; do
-	tries=$((tries+1))
-	echo "tries=$tries"
-	if [ "$tries" -gt "$maxTries" ]; then
-	    echo "Aborted after maxTries=$maxTries: $str"
-	    exit 1
-	fi
-	sleep 1
-    done
+strs=""
+for file; do
+    req=`lp -d astro $OPTIONS $file`
+    echo "Submit ($req) status: $?"
+    id=`echo $req | awk '{ print substr($4,7) }'`
+    base=`basename $file`
+    strs="$strs $USER/$id/$base"
+
+    echo "Submitted: $id/$base"
 done
 
-echo "Found them all!"
+echo "Waiting for: $strs"
+finished-files.sh -r $RESULTS $strs
 
-##############################################################################
-# Local Variables:
-# fill-column:75
-# mode:sh
-# End:
+echo "Results: "
+cat $RESULTS
+
 
