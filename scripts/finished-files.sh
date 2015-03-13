@@ -18,18 +18,20 @@ VERBOSE=0
 PROGRESS=0
 LOG=/var/log/tada/submit.log
 RESULTS=/tmp/$cmd.$$.results
+TIMEOUT=30
 
 usage="USAGE: $cmd [options] match [match ...]
 OPTIONS:
-  -l <inputLog>:: File to read for matches (default=$LOG)
+  -l <inputLog>:: Results file to read for matches (default=$LOG)
   -p <progress>:: Number of progress updates per second (default=0)
   -r <resultsFile>:: Extracted submit results for matching lines (default=$RESULTS)
+  -t <seconds>:: Seconds to wait for match to show up in results (default=$TIMEOUT)
   -v <verbosity>:: higher number for more output (default=0)
 
 "
 
 
-while getopts "hl:p:r:v:" opt; do
+while getopts "hl:p:r:t:v:" opt; do
     #!echo "opt=<$opt>"
     case $opt in
 	h)
@@ -48,6 +50,9 @@ while getopts "hl:p:r:v:" opt; do
         r)
             RESULTS=$OPTARG
             ;;
+        t)
+            TIMEOUT=$OPTARG
+            ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
             exit 1
@@ -59,7 +64,7 @@ while getopts "hl:p:r:v:" opt; do
 
     esac
 done
-#echo "OPTIND=$OPTIND"
+#! echo "OPTIND=$OPTIND"
 for (( x=1; x<$OPTIND; x++ )); do shift; done
 
 
@@ -80,28 +85,27 @@ fi
 
 ##############################################################################
 
-date > $RESULTS    
+#! echo "# Produced by: $cmd" > $RESULTS
+echo > $RESULTS # clear old content
 
-maxTries=30
+maxTries=$TIMEOUT
 for str; do
     #!echo "Looking in log for: $str"
     tries=0
+    echo -n "# "
     while ! fgrep "$str" $LOG >> $RESULTS; do
 	tries=$((tries+1))
-	echo "tries=$tries"
+	#! echo "tries=$tries"
+	echo -n "."
 	if [ "$tries" -gt "$maxTries" ]; then
 	    echo "Aborted after maxTries=$maxTries: $str"
 	    exit 1
 	fi
 	sleep 1
     done
+    echo
 done
 
-echo "Found them all!"
-
-##############################################################################
-# Local Variables:
-# fill-column:75
-# mode:sh
-# End:
+#! echo "Found them all!"
+exit 0
 
