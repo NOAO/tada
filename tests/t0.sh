@@ -11,6 +11,8 @@
 date > $HOME/TEXTFILE.txt
 
 strs=""
+
+
 # These may be processed asynchronously!
 f=$HOME/TEXTFILE.txt
 req=`lp -d astro $f`

@@ -8,12 +8,12 @@
 # AUTHORS: S.Pothier
 
 cmd=`basename $0`
-dir=`dirname $0`
 
 #Absolute path to this script
-SCRIPT=$(readlink -f $0)
+SCRIPT=$(readlink -e $0)
 #Absolute path this script is in
 SCRIPTPATH=$(dirname $SCRIPT)
+
 PATH=$SCRIPTPATH:$PATH
 
 LOG=/var/log/tada/submit.log
@@ -21,6 +21,7 @@ OPTIONS=""
 PROGRESS=0
 RESULTS=/tmp/$cmd.$$.results
 VERBOSE=0
+TIMEOUT=30
 
 usage="USAGE: $cmd [options] file [file ...]
 OPTIONS:
@@ -28,12 +29,13 @@ OPTIONS:
   -o <options>::  Name=Value (multi allowed)
   -p <progress>:: Number of progress updates per second (default=0)
   -r <resultsFile>:: Extracted submit results for matching lines (default=$RESULTS)
+  -t <seconds>:: Seconds to wait for match to show up in results (default=$TIMEOUT)
   -v <verbosity>:: higher number for more output (default=0)
 
 "
 
 
-while getopts "hl:o:p:r:v:" opt; do
+while getopts "hl:o:p:r:t:v:" opt; do
     #!echo "opt=<$opt>"
     case $opt in
 	h)
@@ -54,6 +56,9 @@ while getopts "hl:o:p:r:v:" opt; do
             ;;
         r)
             RESULTS=$OPTARG
+            ;;
+        t)
+            TIMEOUT=$OPTARG
             ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
@@ -93,18 +98,25 @@ fi
 strs=""
 for file; do
     req=`lp -d astro $OPTIONS $file`
-    echo "Submit ($req) status: $?"
+    echo "# Submit ($req) status: $?"
     id=`echo $req | awk '{ print substr($4,7) }'`
     base=`basename $file`
     strs="$strs $USER/$id/$base"
 
-    echo "Submitted: $id/$base"
+    echo "# Submitted: $id/$base"
 done
 
-echo "Waiting for: $strs"
-finished-files.sh -r $RESULTS $strs
+echo "# Waiting for: $strs"
 
-echo "Results: "
-cat $RESULTS
+if finished-files.sh -t $TIMEOUT -r $RESULTS $strs; then
+    echo "All submitted files were accounted for."
+else
+    echo "Some submitted files were NOT accounted for (in $TIMEOUT seconds)!"
+    exit 1
+fi
+
+
+#! echo "Results: "
+#! cat $RESULTS
 
 
