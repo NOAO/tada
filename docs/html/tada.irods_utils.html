@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module tada.irods_utils</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="tada.html"><font color="#ffffff">tada</font></a>.irods_utils</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/pothiers/sandbox/tada/env_tada/lib/python3.4/site-packages/tada-0.0.dev5-py3.4.egg/tada/irods_utils.py">/home/pothiers/sandbox/tada/env_tada/lib/python3.4/site-packages/tada-0.0.dev5-py3.4.egg/tada/irods_utils.py</a></font></td></tr></table>
+    <p><tt>Interface&nbsp;to&nbsp;working&nbsp;with&nbsp;irods.&nbsp;&nbsp;All&nbsp;of&nbsp;our&nbsp;calls&nbsp;to&nbsp;irods<br>
+provided&nbsp;functions&nbsp;should&nbsp;be&nbsp;in&nbsp;this&nbsp;file.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="tada.diag.html">tada.diag</a><br>
+<a href="logging.html">logging</a><br>
+</td><td width="25%" valign=top><a href="os.html">os</a><br>
+<a href="subprocess.html">subprocess</a><br>
+</td><td width="25%" valign=top><a href="tempfile.html">tempfile</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-bridge_copy"><strong>bridge_copy</strong></a>(src_ipath, dst_ipath, remove_orig=False)</dt><dd><tt>#&nbsp;This&nbsp;does&nbsp;expensive&nbsp;iget,&nbsp;iput&nbsp;combination!!!<br>
+#&nbsp;When&nbsp;Archive&nbsp;moves&nbsp;up&nbsp;to&nbsp;irods&nbsp;4,&nbsp;we&nbsp;can&nbsp;dispense&nbsp;with&nbsp;this&nbsp;nonsense!</tt></dd></dl>
+ <dl><dt><a name="-fast_bridge_copy"><strong>fast_bridge_copy</strong></a>(src_ipath, dst_ipath, remove_orig=False)</dt><dd><tt>#&nbsp;light-weight&nbsp;but&nbsp;dangerous.<br>
+#&nbsp;Register&nbsp;file&nbsp;in&nbsp;irods331&nbsp;&nbsp;to&nbsp;physical&nbsp;file&nbsp;under&nbsp;irods403.</tt></dd></dl>
+ <dl><dt><a name="-get_irods_cksum"><strong>get_irods_cksum</strong></a>(irods_path)</dt></dl>
+ <dl><dt><a name="-irods_debug"><strong>irods_debug</strong></a>()</dt><dd><tt>For&nbsp;diagnostics&nbsp;only.</tt></dd></dl>
+ <dl><dt><a name="-irods_file_type"><strong>irods_file_type</strong></a>(irods_fname)</dt><dd><tt>#&nbsp;NB:&nbsp;The&nbsp;command&nbsp;must&nbsp;be&nbsp;installed&nbsp;in&nbsp;the&nbsp;server/bin/cmd&nbsp;directory<br>
+#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;of&nbsp;the&nbsp;irods&nbsp;server<br>
+#&nbsp;e.g.<br>
+#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sudo&nbsp;cp&nbsp;/usr/bin/file_type&nbsp;/var/lib/irods/iRODS/server/bin/cmd/</tt></dd></dl>
+ <dl><dt><a name="-irods_get"><strong>irods_get</strong></a>(local_fname, irods_fname, remove_irods=False)</dt><dd><tt>Get&nbsp;file&nbsp;from&nbsp;irods,&nbsp;creating&nbsp;local&nbsp;parent&nbsp;directories&nbsp;if&nbsp;needed.</tt></dd></dl>
+ <dl><dt><a name="-irods_get_physical"><strong>irods_get_physical</strong></a>(ipath)</dt></dl>
+ <dl><dt><a name="-irods_mv"><strong>irods_mv</strong></a>(src_ipath, dst_ipath)</dt><dd><tt>Move/rename&nbsp;irods&nbsp;file</tt></dd></dl>
+ <dl><dt><a name="-irods_mv_dir"><strong>irods_mv_dir</strong></a>(src_idir, dst_idir)</dt><dd><tt>Move&nbsp;irods&nbsp;directory&nbsp;(collection)&nbsp;from&nbsp;one&nbsp;place&nbsp;to&nbsp;another,<br>
+creating&nbsp;desting&nbsp;parent&nbsp;directories&nbsp;if&nbsp;needed.</tt></dd></dl>
+ <dl><dt><a name="-irods_mv_tree"><strong>irods_mv_tree</strong></a>(src_ipath, dst_ipath)</dt><dd><tt>Move/rename&nbsp;irods&nbsp;file&nbsp;including&nbsp;parent&nbsp;directories</tt></dd></dl>
+ <dl><dt><a name="-irods_put"><strong>irods_put</strong></a>(local_fname, irods_fname)</dt><dd><tt>Put&nbsp;file&nbsp;to&nbsp;irods,&nbsp;creating&nbsp;parent&nbsp;directories&nbsp;if&nbsp;needed.</tt></dd></dl>
+ <dl><dt><a name="-irods_reg"><strong>irods_reg</strong></a>(fs_path, irods_path)</dt><dd><tt>Register&nbsp;a&nbsp;file&nbsp;or&nbsp;a&nbsp;directory&nbsp;of&nbsp;files&nbsp;and&nbsp;subdirectory&nbsp;into<br>
+iRODS.&nbsp;The&nbsp;file&nbsp;must&nbsp;already&nbsp;exist&nbsp;on&nbsp;the&nbsp;server&nbsp;where&nbsp;the&nbsp;resource&nbsp;is<br>
+located.&nbsp;The&nbsp;full&nbsp;path&nbsp;must&nbsp;be&nbsp;supplied&nbsp;for&nbsp;both&nbsp;paths.</tt></dd></dl>
+ <dl><dt><a name="-irods_set_meta"><strong>irods_set_meta</strong></a>(ifname, att_name, att_value)</dt></dl>
+ <dl><dt><a name="-irods_unreg"><strong>irods_unreg</strong></a>(irods_path)</dt><dd><tt>unregister&nbsp;the&nbsp;file&nbsp;or&nbsp;collection</tt></dd></dl>
+</td></tr></table>
+</body></html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module tada.tada</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="tada.html"><font color="#ffffff">tada</font></a>.tada</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/pothiers/sandbox/tada/env_tada/lib/python3.4/site-packages/tada-0.0.dev5-py3.4.egg/tada/tada.py">/home/pothiers/sandbox/tada/env_tada/lib/python3.4/site-packages/tada-0.0.dev5-py3.4.egg/tada/tada.py</a></font></td></tr></table>
+    <p><tt>TADA&nbsp;::&nbsp;Telescope&nbsp;Automatic&nbsp;Data&nbsp;Archiver</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="argparse.html">argparse</a><br>
+<a href="fnmatch.html">fnmatch</a><br>
+<a href="functools.html">functools</a><br>
+</td><td width="25%" valign=top><a href="logging.html">logging</a><br>
+<a href="operator.html">operator</a><br>
+<a href="os.html">os</a><br>
+</td><td width="25%" valign=top><a href="astropy.io.fits.html">astropy.io.fits</a><br>
+<a href="random.html">random</a><br>
+<a href="shutil.html">shutil</a><br>
+</td><td width="25%" valign=top><a href="sys.html">sys</a><br>
+<a href="time.html">time</a><br>
+<a href="yaml.html">yaml</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-allFileP"><strong>allFileP</strong></a>(filename)</dt></dl>
+ <dl><dt><a name="-candidateFileP"><strong>candidateFileP</strong></a>(filename)</dt></dl>
+ <dl><dt><a name="-getCandidateFiles"><strong>getCandidateFiles</strong></a>(src_dir, delay=None, filterP=<function candidateFileP at 0x7ff0744b9598>)</dt><dd><tt>Yield&nbsp;successive&nbsp;absolute&nbsp;paths&nbsp;of&nbsp;files&nbsp;matching&nbsp;filterP</tt></dd></dl>
+ <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Main&nbsp;driver&nbsp;with&nbsp;argument&nbsp;parsing</tt></dd></dl>
+ <dl><dt><a name="-thread1"><strong>thread1</strong></a>(src_dir, dst_dir, delay=(0.0, 0.02))</dt><dd><tt>This&nbsp;is&nbsp;minimal&nbsp;"thread&nbsp;through&nbsp;the&nbsp;system"&nbsp;starting&nbsp;at&nbsp;raw-data<br>
+and&nbsp;terminating&nbsp;with&nbsp;files&nbsp;in&nbsp;the&nbsp;archive.&nbsp;&nbsp;Input&nbsp;from&nbsp;src_dir,<br>
+output&nbsp;to&nbsp;dst_dir.<br>
+-&nbsp;[&nbsp;]&nbsp;mock-LPR;&nbsp;&nbsp;Feed&nbsp;each&nbsp;file&nbsp;in&nbsp;list&nbsp;to&nbsp;Ingest&nbsp;after&nbsp;specified&nbsp;delay<br>
+-&nbsp;[&nbsp;]&nbsp;Ingest;&nbsp;&nbsp;Copy&nbsp;file&nbsp;into&nbsp;mock-IRODS&nbsp;(a&nbsp;local&nbsp;filesystem)<br>
+-&nbsp;[&nbsp;]&nbsp;Test;&nbsp;&nbsp;Verify&nbsp;all&nbsp;input&nbsp;files&nbsp;are&nbsp;&nbsp;in&nbsp;mock-IRODS</tt></dd></dl>
+ <dl><dt><a name="-thread2"><strong>thread2</strong></a>(src_dir, dst_dir, delay=None)</dt><dd><tt>Touches&nbsp;FITS&nbsp;data&nbsp;(verifies&nbsp;selected&nbsp;metadata&nbsp;in&nbsp;archive)<br>
+-&nbsp;[X]&nbsp;all&nbsp;of&nbsp;Thread-1<br>
+-&nbsp;[X]&nbsp;only&nbsp;transfer&nbsp;files&nbsp;matchin:&nbsp;*.fits.fz&nbsp;<br>
+-&nbsp;[X]&nbsp;insure&nbsp;minimum&nbsp;(level&nbsp;0)&nbsp;set&nbsp;of&nbsp;required&nbsp;metadata&nbsp;fields&nbsp;in&nbsp;FITS<br>
+&nbsp;&nbsp;+&nbsp;minimum&nbsp;acceptable&nbsp;for&nbsp;archive<br>
+-&nbsp;On&nbsp;inadequate&nbsp;metadata:<br>
+&nbsp;&nbsp;-&nbsp;[X]&nbsp;reject&nbsp;(don't&nbsp;archive)&nbsp;<br>
+&nbsp;&nbsp;-&nbsp;[&nbsp;]&nbsp;move&nbsp;to&nbsp;remediation&nbsp;store<br>
+&nbsp;&nbsp;-&nbsp;[&nbsp;]&nbsp;log&nbsp;error<br>
+-&nbsp;[X]&nbsp;Test;&nbsp;&nbsp;Verify&nbsp;all&nbsp;files&nbsp;in&nbsp;mock-IRODS&nbsp;contain&nbsp;required&nbsp;metadata;</tt></dd></dl>
+ <dl><dt><a name="-thread3"><strong>thread3</strong></a>(src_dir, irods_path, mirror_dir, archive_dir, delay=None, irodsHost='172.16.1.12', irodsPort='1247', irodsUserName='rods', irodsZone='tempZone')</dt><dd><tt>#&nbsp;The&nbsp;src_dir&nbsp;serves&nbsp;as&nbsp;cache.&nbsp;Remove&nbsp;files&nbsp;from&nbsp;it&nbsp;after&nbsp;transfer&nbsp;to<br>
+#&nbsp;archive&nbsp;has&nbsp;been&nbsp;confirmed!!!<br>
+#&nbsp;TODO:&nbsp;Do&nbsp;in&nbsp;batches.&nbsp;&nbsp;Let&nbsp;delay&nbsp;and&nbsp;yield&nbsp;work&nbsp;together!!!</tt></dd></dl>
+ <dl><dt><a name="-transfer_via_iput_list"><strong>transfer_via_iput_list</strong></a>(ienv, src_path, irods_path, delay=None)</dt></dl>
+ <dl><dt><a name="-transfer_via_iput_single"><strong>transfer_via_iput_single</strong></a>(ienv, src_path, irods_path, delay=None)</dt></dl>
+ <dl><dt><a name="-transfer_via_irsync"><strong>transfer_via_irsync</strong></a>(ienv, src_path, irods_path, delay=None)</dt></dl>
+ <dl><dt><a name="-validMetadataP"><strong>validMetadataP</strong></a>(fits)</dt></dl>
+ <dl><dt><a name="-verifyArchiveFilenamesP"><strong>verifyArchiveFilenamesP</strong></a>(src_dir, dst_dir)</dt></dl>
+</td></tr></table>
+</body></html>

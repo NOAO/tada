@@ -11,6 +11,10 @@ docs/*.dot
 docs/*.pdf
 foo.*
 
+# smoke test leavings
+*.out
+*.clean
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
