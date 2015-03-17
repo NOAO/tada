@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module tada.fits_utils</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="tada.html"><font color="#ffffff">tada</font></a>.fits_utils</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/pothiers/sandbox/tada/env_tada/lib/python3.4/site-packages/tada-0.0.dev5-py3.4.egg/tada/fits_utils.py">/home/pothiers/sandbox/tada/env_tada/lib/python3.4/site-packages/tada-0.0.dev5-py3.4.egg/tada/fits_utils.py</a></font></td></tr></table>
+    <p><tt>Fiddling&nbsp;with&nbsp;Fits&nbsp;(tm)<br>
+&nbsp;<br>
+It&nbsp;would&nbsp;be&nbsp;nice&nbsp;if&nbsp;our&nbsp;FITS&nbsp;files&nbsp;always&nbsp;satisified&nbsp;the&nbsp;FITS&nbsp;Standard.<br>
+They&nbsp;do&nbsp;not&nbsp;according&nbsp;to:<br>
+<a href="http://fits.gsfc.nasa.gov/fits_verify.html">http://fits.gsfc.nasa.gov/fits_verify.html</a><br>
+(or&nbsp;the&nbsp;standalone&nbsp;version&nbsp;of&nbsp;same)</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="argparse.html">argparse</a><br>
+<a href="tada.fits_calc.html">tada.fits_calc</a><br>
+<a href="tada.file_naming.html">tada.file_naming</a><br>
+</td><td width="25%" valign=top><a href="logging.html">logging</a><br>
+<a href="os.html">os</a><br>
+<a href="astropy.io.fits.html">astropy.io.fits</a><br>
+</td><td width="25%" valign=top><a href="sys.html">sys</a><br>
+<a href="tada.exceptions.html">tada.exceptions</a><br>
+<a href="traceback.html">traceback</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-fits_compliant"><strong>fits_compliant</strong></a>(fits_file_list, show_values=False, show_header=False, required=False)</dt><dd><tt>Check&nbsp;FITS&nbsp;file&nbsp;for&nbsp;complaince&nbsp;with&nbsp;Archive&nbsp;Ingest.</tt></dd></dl>
+ <dl><dt><a name="-get_archive_header"><strong>get_archive_header</strong></a>(fits_file, checksum)</dt><dd><tt>Get&nbsp;the&nbsp;'header'&nbsp;that&nbsp;archive&nbsp;ingest&nbsp;wants&nbsp;to&nbsp;see&nbsp;sent&nbsp;to&nbsp;it&nbsp;over&nbsp;TCP</tt></dd></dl>
+ <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Parse&nbsp;command&nbsp;line&nbsp;arguments&nbsp;and&nbsp;do&nbsp;the&nbsp;work.</tt></dd></dl>
+ <dl><dt><a name="-missing_in_archive_hdr"><strong>missing_in_archive_hdr</strong></a>(hdr)</dt><dd><tt>Header&nbsp;from&nbsp;FITS&nbsp;oesn't&nbsp;contain&nbsp;minimum&nbsp;fields&nbsp;acceptable&nbsp;for<br>
+Archive&nbsp;Ingest.</tt></dd></dl>
+ <dl><dt><a name="-missing_in_hdr"><strong>missing_in_hdr</strong></a>(hdr, required_fields)</dt></dl>
+ <dl><dt><a name="-missing_in_raw_hdr"><strong>missing_in_raw_hdr</strong></a>(hdr)</dt><dd><tt>Header&nbsp;from&nbsp;original&nbsp;FITS&nbsp;input&nbsp;to&nbsp;TADA&nbsp;doesn't&nbsp;contain&nbsp;minimum<br>
+acceptable&nbsp;fields.</tt></dd></dl>
+ <dl><dt><a name="-modify_hdr"><strong>modify_hdr</strong></a>(hdr, fname, options, forceRecalc=True)</dt><dd><tt>Modify&nbsp;header&nbsp;to&nbsp;suit&nbsp;Archive&nbsp;Ingest.&nbsp;Return&nbsp;fields&nbsp;needed&nbsp;to&nbsp;construct<br>
+new&nbsp;filename&nbsp;that&nbsp;fullfills&nbsp;standards<br>
+&nbsp;&nbsp;&nbsp;options&nbsp;::&nbsp;e.g.&nbsp;{'INSTRUME':&nbsp;'KOSMOS',&nbsp;'OBSERVAT':&nbsp;'KPNO'}</tt></dd></dl>
+ <dl><dt><a name="-print_header"><strong>print_header</strong></a>(msg, hdr=None, fits_filename=None)</dt><dd><tt>Provide&nbsp;HDR&nbsp;or&nbsp;FITS_FILENAME</tt></dd></dl>
+ <dl><dt><a name="-show_hdr_values"><strong>show_hdr_values</strong></a>(msg, hdr)</dt><dd><tt>Show&nbsp;the&nbsp;values&nbsp;for&nbsp;'interesting'&nbsp;header&nbsp;fields</tt></dd></dl>
+ <dl><dt><a name="-valid_header"><strong>valid_header</strong></a>(fits_file)</dt><dd><tt>Read&nbsp;FITS&nbsp;metadata&nbsp;and&nbsp;insure&nbsp;it&nbsp;has&nbsp;what&nbsp;we&nbsp;need.&nbsp;<br>
+Raise&nbsp;exception&nbsp;if&nbsp;not.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>INGEST_REQUIRED_FIELDS</strong> = set(['DATE-OBS', 'DTACQNAM', 'DTCALDAT', 'DTCOPYRI', 'DTINSTRU', 'DTNSANAM', ...])<br>
+<strong>RAW_REQUIRED_FIELDS</strong> = set(['DATE-OBS', 'INSTRUME', 'OBSERVAT', 'OBSID', 'PROPID'])<br>
+<strong>TIER0_EHDU_RAW_FIELDS</strong> = ['NAXIS', 'NAXIS1', 'NAXIS2', 'EXTNAME', 'INHERIT']<br>
+<strong>TIER0_PHDU_RAW_FIELDS</strong> = ['OBSTYPE', 'PROCTYPE', 'PRODTYPE', 'DATE-OBS', 'PROPID', 'TELESCOP', 'OBSERVAT', 'INSTRUME', 'NAXIS', 'SB_ID', 'SB_RECNO', 'PIPELINE', 'PLVER']<br>
+<strong>TIER1_EHDU_RAW_FIELDS</strong> = ['RA1', 'DEC1']<br>
+<strong>TIER1_PHDU_PROCESSED_FIELDS</strong> = ['RA1', 'DEC1', 'DTTITLE', 'DTACQNAM', 'DTNSANAM', 'DTINSTRU', 'DTTELESC', 'DTSITE', 'DTUTC', 'DTPI', 'DTSITE']<br>
+<strong>TIER1_PHDU_RAW_FIELDS</strong> = ['OBJECT', 'FILENAME', 'RA', 'DEC', 'EQUINOX', 'RADESYS', 'EXPTIME', 'TELRA', 'TELDEC']<br>
+<strong>TIER2_EHDU_PROCESSED_FIELDS</strong> = ['AIRMASS1', 'COR1RA1', 'COR2RA1', 'COR3RA1', 'COR4RA1', 'COR1DEC1', 'COR2DEC1', 'COR3DEC1', 'COR4DEC1']<br>
+<strong>TIER2_EHDU_RAW_FIELDS</strong> = ['AIRMASS1']<br>
+<strong>TIER2_PHDU_PROCESSED_FIELDS</strong> = ['AIRMASS', 'HA', 'ZD', 'CORN1RA', 'CORN2RA', 'CORN3RA', 'CORN4RA', 'CORN1DEC', 'CORN2DEC', 'CORN3DEC', 'CORN4DEC']<br>
+<strong>TIER2_PHDU_RAW_FIELDS</strong> = ['AIRMASS', 'HA', 'ZD']<br>
+<strong>TIER3_EHDU_RAW_FIELDS</strong> = ['SEEING1']<br>
+<strong>TIER3_PHDU_RAW_FIELDS</strong> = ['FILTER', 'SEEING']<br>
+<strong>added_fields</strong> = ['CHECKSUM', 'DATASUM', 'DTACCOUN', 'DTACQNAM', 'DTACQUIS', 'DTCALDAT', 'DTCOPYRI', 'DTINSTRU', 'DTNSANAM', 'DTOBSERV', 'DTPI', 'DTPIAFFL', 'DTPROPID', 'DTPUBDAT', 'DTSITE', 'DTSTATUS', 'DTTELESC', 'DTTITLE', 'DTUTC', 'DT_RTNAM', ...]<br>
+<strong>common_fields</strong> = ['', 'AIRMASS', 'ALT', 'AZ', 'BITPIX', 'DATE-OBS', 'DEC', 'DECDIFF', 'DECINDEX', 'DECINST', 'DECOFF', 'DECZERO', 'DOMEAZ', 'DOMEERR', 'EXPCOADD', 'EXPID', 'EXPTIME', 'EXTEND', 'FILENAME', 'FILTER', ...]</td></tr></table>
+</body></html>

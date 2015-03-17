@@ -16,7 +16,7 @@ SCRIPTPATH=$(dirname $SCRIPT)
 
 PATH=$SCRIPTPATH:$PATH
 
-LOG=/var/log/tada/submit.log
+MANIFEST=/var/log/tada/submit.manifest
 OPTIONS=""
 PROGRESS=0
 RESULTS=/tmp/$cmd.$$.results
@@ -25,7 +25,7 @@ TIMEOUT=30
 
 usage="USAGE: $cmd [options] file [file ...]
 OPTIONS:
-  -l <inputLog>:: Log contain success/failure of submits. (default=$LOG)
+  -m <manifest>:: Manifest contain success/failure of submits. (default=$MANIFEST)
   -o <options>::  Name=Value (multi allowed)
   -p <progress>:: Number of progress updates per second (default=0)
   -r <resultsFile>:: Extracted submit results for matching lines (default=$RESULTS)
@@ -35,7 +35,7 @@ OPTIONS:
 "
 
 
-while getopts "hl:o:p:r:t:v:" opt; do
+while getopts "hm:o:p:r:t:v:" opt; do
     #!echo "opt=<$opt>"
     case $opt in
 	h)
@@ -45,8 +45,8 @@ while getopts "hl:o:p:r:t:v:" opt; do
         v)
             VERBOSE=$OPTARG
             ;;
-        l)
-            LOG=$OPTARG
+        m)
+            MANIFEST=$OPTARG
             ;;
         o)
             OPTIONS="$OPTIONS -o $OPTARG"
@@ -83,7 +83,7 @@ if [ $# -lt $RAC ]; then
 fi
 
 
-#!echo "LOG=$LOG"
+#!echo "MANIFEST=$MANIFEST"
 #!echo "OPTIONS=$OPTIONS"
 #!echo "PROGRESS=$PROGRESS"
 #!echo "VERBOSE=$VERBOSE"
@@ -108,7 +108,7 @@ done
 
 echo "# Waiting for: $strs"
 
-if finished-files.sh -t $TIMEOUT -r $RESULTS $strs; then
+if finished-files.sh -t $TIMEOUT -m $MANIFEST -r $RESULTS $strs; then
     echo "All submitted files were accounted for."
 else
     echo "Some submitted files were NOT accounted for (in $TIMEOUT seconds)!"

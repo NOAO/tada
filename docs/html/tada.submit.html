@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module tada.submit</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="tada.html"><font color="#ffffff">tada</font></a>.submit</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/pothiers/sandbox/tada/env_tada/lib/python3.4/site-packages/tada-0.0.dev5-py3.4.egg/tada/submit.py">/home/pothiers/sandbox/tada/env_tada/lib/python3.4/site-packages/tada-0.0.dev5-py3.4.egg/tada/submit.py</a></font></td></tr></table>
+    <p><tt>Dirt&nbsp;needed&nbsp;to&nbsp;submit&nbsp;a&nbsp;fits&nbsp;file&nbsp;to&nbsp;the&nbsp;archive&nbsp;for&nbsp;ingest</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="argparse.html">argparse</a><br>
+<a href="datetime.html">datetime</a><br>
+<a href="tada.file_naming.html">tada.file_naming</a><br>
+<a href="tada.fits_utils.html">tada.fits_utils</a><br>
+</td><td width="25%" valign=top><a href="tada.ingest_decoder.html">tada.ingest_decoder</a><br>
+<a href="tada.irods331.html">tada.irods331</a><br>
+<a href="logging.html">logging</a><br>
+<a href="os.html">os</a><br>
+</td><td width="25%" valign=top><a href="pathlib.html">pathlib</a><br>
+<a href="astropy.io.fits.html">astropy.io.fits</a><br>
+<a href="socket.html">socket</a><br>
+<a href="sys.html">sys</a><br>
+</td><td width="25%" valign=top><a href="tempfile.html">tempfile</a><br>
+<a href="tada.exceptions.html">tada.exceptions</a><br>
+<a href="traceback.html">traceback</a><br>
+<a href="urllib.html">urllib</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-http_archive_ingest"><strong>http_archive_ingest</strong></a>(hdr_ipath, checksum, qname, qcfg=None)</dt><dd><tt>Store&nbsp;ingestible&nbsp;FITS&nbsp;file&nbsp;and&nbsp;hdr&nbsp;in&nbsp;IRODS.&nbsp;&nbsp;Pass&nbsp;location&nbsp;of&nbsp;hdr&nbsp;to<br>
+Archive&nbsp;Ingest&nbsp;via&nbsp;REST-like&nbsp;interface.</tt></dd></dl>
+ <dl><dt><a name="-prep_for_ingest"><strong>prep_for_ingest</strong></a>(mirror_fname, mirror_dir, archive331, jid=False)</dt><dd><tt>GIVEN:&nbsp;FITS&nbsp;absolute&nbsp;path<br>
+DO:&nbsp;<br>
+&nbsp;&nbsp;Augment&nbsp;hdr.&nbsp;<br>
+&nbsp;&nbsp;Add&nbsp;hdr&nbsp;as&nbsp;text&nbsp;file&nbsp;to&nbsp;irods331.<br>
+&nbsp;&nbsp;Rename&nbsp;FITS&nbsp;to&nbsp;satisfy&nbsp;standards.&nbsp;<br>
+&nbsp;&nbsp;Add&nbsp;fits&nbsp;to&nbsp;irods331<br>
+&nbsp;&nbsp;remove&nbsp;from&nbsp;mirror<br>
+&nbsp;<br>
+mirror_fname&nbsp;::&nbsp;Mountain&nbsp;mirror&nbsp;on&nbsp;valley<br>
+mirror_dir&nbsp;::&nbsp;from&nbsp;"mirror_dir"&nbsp;in&nbsp;dq_config<br>
+archive331&nbsp;::&nbsp;from&nbsp;"archive_irods331"&nbsp;in&nbsp;dq_config<br>
+RETURN:&nbsp;irods&nbsp;location&nbsp;of&nbsp;hdr&nbsp;file.</tt></dd></dl>
+ <dl><dt><a name="-submit_to_archive"><strong>submit_to_archive</strong></a>(ifname, checksum, qname, qcfg=None)</dt><dd><tt>Ingest&nbsp;a&nbsp;FITS&nbsp;file&nbsp;(really&nbsp;JUST&nbsp;Header)&nbsp;into&nbsp;the&nbsp;archive&nbsp;if<br>
+possible.&nbsp;&nbsp;Ingest&nbsp;involves&nbsp;renaming&nbsp;to&nbsp;satisfy&nbsp;filename<br>
+standards.&nbsp;Although&nbsp;I've&nbsp;seen&nbsp;no&nbsp;requirements&nbsp;for&nbsp;it,&nbsp;previous&nbsp;systems<br>
+also&nbsp;used&nbsp;a&nbsp;specific&nbsp;3&nbsp;level&nbsp;directory&nbsp;structure&nbsp;that&nbsp;is&nbsp;NOT&nbsp;used<br>
+here.&nbsp;However&nbsp;the&nbsp;levels&nbsp;are&nbsp;stored&nbsp;in&nbsp;hdr&nbsp;fields&nbsp;SB_DIR{1,2,3}.</tt></dd></dl>
+ <dl><dt><a name="-tcp_archive_ingest"><strong>tcp_archive_ingest</strong></a>(fname, checksum, qname, qcfg=None)</dt></dl>
+</td></tr></table>
+</body></html>
