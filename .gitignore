@@ -11,6 +11,8 @@ docs/*.dot
 docs/*.pdf
 foo.*
 
+*.diff
+
 # smoke test leavings
 *.out
 *.clean
