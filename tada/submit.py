@@ -101,25 +101,6 @@ def tcp_archive_ingest(fname, checksum, qname, qcfg=None):
     print("Received: {}".format(received))    
 
     
-#!def STUB_archive_ingest(fname, qname, qcfg=None):
-#!    'Touch-point for archive ingest. Stub!!!'
-#!    import random #!!! only needed for mockup
-#!    import inspect
-#!
-#!    logging.debug('Executing STUB: {}:STUB_archive_ingest()'.format(__file__))
-#!    prop_fail = 0.60
-#!    if random.random() <= prop_fail:  #!!! remove
-#!        logging.debug(
-#!            'Simulated FAILURE [p(Fail)={}] on STUB_archive_ingest({})'
-#!            .format(prop_fail, fname))
-#!        raise Exception(
-#!            'Failed STUB_archive_ingest({}) due to cosmic ray (prob={}).'
-#!            .format(fname, prop_fail))
-#!    else:
-#!        logging.debug(
-#!            'Simulated SUCCESS [p(Fail)={}] on STUB_archive_ingest({})'
-#!            .format(prop_fail, fname))
-#!    return True
 
 def prep_for_ingest(mirror_fname, mirror_dir, archive331, jid=False):
     """GIVEN: FITS absolute path

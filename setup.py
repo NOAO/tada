@@ -88,7 +88,7 @@ setup(
             #! 'mockingest=tada.mock_ingest:main',
             'fits_compliant=tada.fits_utils:main',
             'extract_fits_header=tada.fits_utils:extract_header',
-            'prep_fits_for_ingest=tada.prep_fits_for_ingest:main',
+            #! 'prep_fits_for_ingest=tada.prep_fits_for_ingest:main',
         ],
     },
 )

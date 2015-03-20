@@ -4,6 +4,13 @@
 # EXAMPLE:
 #   ~/sandbox/tada/tests/smoke/smoke.sh
 #
+# TODO:
+#  - check BOTH Valley and Mountain.  All submitted files accounted for?
+#  - Logged errors sent via email?
+#  - failure modes;
+#    + no connection between mountain/valley
+#    + out of disk space (Mountain, Valley)
+#    + valley:rsyncd down
 
 cmd=`basename $0`
 
