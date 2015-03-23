@@ -85,12 +85,13 @@ def network_move(rec, qname, **kwargs):
         # Any failure means put back on queue. Keep queue handling
         # outside of actions where possible.
         raise
-    else:
-        logging.info('Successfully moved file from {} to {}'
-                     .format(fname,sync_root))
-        # successfully transfered to Valley
-        mirror_fname = os.path.join(valley_root,
-                                    os.path.relpath(fname, source_root))
+
+    # successfully transfered to Valley
+    logging.info('Successfully moved file from {} to {}'
+                 .format(fname,sync_root))
+    mirror_fname = os.path.join(valley_root,
+                                os.path.relpath(fname, source_root))
+    try:
         # What if QUEUE is down?!!!
         du.push_to_q(dq_host, dq_port, mirror_fname, rec['checksum'])
         
@@ -102,6 +103,10 @@ def network_move(rec, qname, **kwargs):
         #!if os.path.exists(optfname):
         #!    os.remove(optfname)
         #!    logging.debug('Removed options file: {}'.format(optfname))
+    except Exception as ex:
+        logging.error('Failed to push to queue on {}:{}; {}'
+                        .format(dq_host, dq_port, ex ))
+        logging.error('push_to_q stack: {}'.format(du.trace_str()))
 
     return True
 
