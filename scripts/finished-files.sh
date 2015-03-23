@@ -17,21 +17,19 @@ SCRIPTPATH=$(dirname $SCRIPT)
 VERBOSE=0
 PROGRESS=0
 MANIFEST=/var/log/tada/submit.manifest
-RESULTS=/tmp/$cmd.$$.results
 TIMEOUT=30
 
 usage="USAGE: $cmd [options] match [match ...]
 OPTIONS:
-  -m <manifest>:: Results file to read for matches (default=$MANIFEST)
+  -m <manifest>:: File to read for matches (default=$MANIFEST)
   -p <progress>:: Number of progress updates per second (default=0)
-  -r <resultsFile>:: Extracted submit results for matching lines (default=$RESULTS)
-  -t <seconds>:: Seconds to wait for match to show up in results (default=$TIMEOUT)
+  -t <seconds>:: Seconds to wait for match to show up in manifest (default=$TIMEOUT)
   -v <verbosity>:: higher number for more output (default=0)
 
 "
 
 
-while getopts "hm:p:r:t:v:" opt; do
+while getopts "hm:p:t:v:" opt; do
     #!echo "opt=<$opt>"
     case $opt in
 	h)
@@ -46,9 +44,6 @@ while getopts "hm:p:r:t:v:" opt; do
             ;;
         p)
             PROGRESS=$OPTARG # how often to report progress
-            ;;
-        r)
-            RESULTS=$OPTARG
             ;;
         t)
             TIMEOUT=$OPTARG
@@ -85,15 +80,13 @@ fi
 
 ##############################################################################
 
-#! echo "# Produced by: $cmd" > $RESULTS
-echo > $RESULTS # clear old content
 
 maxTries=$TIMEOUT
 for str; do
     #!echo "Looking in manifest for: $str"
     tries=0
     echo -n "# "
-    while ! fgrep "$str" $MANIFEST >> $RESULTS; do
+    while ! grep -l -F "$str" $MANIFEST > /dev/null; do
 	tries=$((tries+1))
 	#! echo "tries=$tries"
 	echo -n "."

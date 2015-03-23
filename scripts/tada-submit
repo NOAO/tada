@@ -1,6 +1,5 @@
 #!/bin/bash
-# PURPOSE: Submit files to TADA, perhaps with options 
-#   Wait for all to complete
+# PURPOSE: Submit files to TADA, perhaps with options. Wait for all to complete.
 #
 # EXAMPLE:
 #   tada-submit -o _DTCALDAT=2014-09-21 $HOME/TEXTFILE.txt /data/raw/nhs_2014_n14_299403.fits /data/bok/bokrm.20140425.0119.fits
@@ -16,31 +15,34 @@ SCRIPTPATH=$(dirname $SCRIPT)
 
 PATH=$SCRIPTPATH:$PATH
 
+CLEAR=0
 MANIFEST=/var/log/tada/submit.manifest
 OPTIONS=""
 PROGRESS=0
-RESULTS=/tmp/$cmd.$$.results
 VERBOSE=0
 TIMEOUT=30
 
 usage="USAGE: $cmd [options] file [file ...]
 OPTIONS:
+  -c :: CLEAR the manifest before submit.  Are you sure?
   -m <manifest>:: Manifest contain success/failure of submits. (default=$MANIFEST)
   -o <options>::  Name=Value (multi allowed)
   -p <progress>:: Number of progress updates per second (default=0)
-  -r <resultsFile>:: Extracted submit results for matching lines (default=$RESULTS)
-  -t <seconds>:: Seconds to wait for match to show up in results (default=$TIMEOUT)
+  -t <seconds>:: Seconds to wait for match to show up in manifest (default=$TIMEOUT)
   -v <verbosity>:: higher number for more output (default=0)
 
 "
 
 
-while getopts "hm:o:p:r:t:v:" opt; do
+while getopts "hcm:o:p:t:v:" opt; do
     #!echo "opt=<$opt>"
     case $opt in
-	h)
+	    h)
             echo "$usage"
             exit 1
+            ;;
+	    c)
+            CLEAR=1
             ;;
         v)
             VERBOSE=$OPTARG
@@ -53,9 +55,6 @@ while getopts "hm:o:p:r:t:v:" opt; do
             ;;
         p)
             PROGRESS=$OPTARG # how often to report progress
-            ;;
-        r)
-            RESULTS=$OPTARG
             ;;
         t)
             TIMEOUT=$OPTARG
@@ -94,6 +93,9 @@ fi
 
 ##############################################################################
 
+if [ "$CLEAR" -eq 1 ]; then
+    echo "" > $MANIFEST
+fi
 
 strs=""
 for file; do
@@ -106,9 +108,9 @@ for file; do
     echo "# Submitted: $id/$base"
 done
 
-echo "# Waiting for: $strs"
+echo "# Waiting for: $strs in "$MANIFEST""
 
-if finished-files.sh -t $TIMEOUT -m $MANIFEST -r $RESULTS $strs; then
+if finished-files.sh -t $TIMEOUT -m $MANIFEST  $strs; then
     echo "All submitted files were accounted for."
 else
     echo "Some submitted files were NOT accounted for (in $TIMEOUT seconds)!"
@@ -116,7 +118,5 @@ else
 fi
 
 
-#! echo "Results: "
-#! cat $RESULTS
 
 
