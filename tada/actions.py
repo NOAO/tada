@@ -107,7 +107,7 @@ def network_move(rec, qname, **kwargs):
         logging.error('Failed to push to queue on {}:{}; {}'
                         .format(dq_host, dq_port, ex ))
         logging.error('push_to_q stack: {}'.format(du.trace_str()))
-
+        raise
     return True
 
 
