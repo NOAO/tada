@@ -31,6 +31,7 @@ def file_type(filename):
 
 def network_move(rec, qname, **kwargs):
     "Transfer from Mountain to Valley"
+    logging.error('dbg-0: EXECUTING network_move()')
     logging.debug('ACTION: network_move()')
     for p in ['qcfg', 'dirs']:
         if p not in kwargs:
@@ -42,13 +43,14 @@ def network_move(rec, qname, **kwargs):
     dirs=kwargs['dirs']
     logging.debug('dirs={}'.format(dirs))
 
-    nextq = qcfg['transfer']['next_queue']
+    nextq = qcfg[qname]['next_queue']
     dq_host = qcfg[nextq]['dq_host']
     dq_port = qcfg[nextq]['dq_port']
+    redis_port = qcfg[nextq]['redis_port']
 
-    source_root = qcfg['transfer']['cache_dir']
-    sync_root = qcfg['transfer']['mirror_dir']
-    valley_root = qcfg['submit']['mirror_dir']
+    source_root = qcfg[qname]['cache_dir']
+    sync_root = qcfg[qname]['mirror_dir']
+    valley_root = qcfg[nextq]['mirror_dir']
     fname = rec['filename']            # absolute path
 
     logging.debug('source_root={}, fname={}'.format(source_root, fname))
@@ -93,7 +95,10 @@ def network_move(rec, qname, **kwargs):
                                 os.path.relpath(fname, source_root))
     try:
         # What if QUEUE is down?!!!
-        du.push_to_q(dq_host, dq_port, mirror_fname, rec['checksum'])
+        #!du.push_to_q(dq_host, dq_port, mirror_fname, rec['checksum'])
+        du.push_direct(dq_host, redis_port,
+                       mirror_fname, rec['checksum'],
+                       qcfg[nextq])
         
         # Files removed by rsync through option '--remove-source-files' above
         #
@@ -160,7 +165,6 @@ configuration field: maximum_errors_per_record)
             logsubmit(submitlog, ifname, ifname, 'submit_to_archive', fail=True)
             raise sex
         else:
-            logsubmit(submitlog, ifname, destfname, msg)
             logging.info('PASSED submit_to_archive({}).'.format(ifname))
             # successfully transfered to Archive
             os.remove(ifname)
@@ -168,6 +172,7 @@ configuration field: maximum_errors_per_record)
             logging.debug('Remove possible options file: {}'.format(optfname))
             if os.path.exists(optfname):
                 os.remove(optfname)
+            logsubmit(submitlog, ifname, destfname, msg)
     else: # not FITS
         msg = 'non-fits'
         destfname = ifname.replace(mirror_root, noarc_root)

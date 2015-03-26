@@ -101,17 +101,19 @@ strs=""
 for file; do
     req=`lp -d astro $OPTIONS $file`
     echo "# Submit ($req) status: $?"
+
     id=`echo $req | awk '{ print substr($4,7) }'`
     base=`basename $file`
-    strs="$strs $USER/$id/$base"
+    ufile=$USER/$id/$base
+    strs="$strs $ufile"
 
-    echo "# Submitted: $id/$base"
+    echo "# Submitted: $ufile"
 done
 
-echo "# Waiting for: $strs in "$MANIFEST""
 
 if finished-files.sh -t $TIMEOUT -m $MANIFEST  $strs; then
     echo "All submitted files were accounted for."
+    exit 0
 else
     echo "Some submitted files were NOT accounted for (in $TIMEOUT seconds)!"
     exit 1

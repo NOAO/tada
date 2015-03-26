@@ -71,24 +71,18 @@ if [ $# -lt $RAC ]; then
 fi
 
 
-#! echo "PROGRESS=$PROGRESS"
-#! echo "VERBOSE=$VERBOSE"
-#! echo "Remaining arguments:"
-#! for arg do echo '--> '"\`$arg'" ; done
-
-
-
 ##############################################################################
+
 
 
 maxTries=$TIMEOUT
 for str; do
     #!echo "Looking in manifest for: $str"
     tries=0
-    echo -n "# "
+    echo "# Waiting $maxTries seconds for $str in '$MANIFEST'"
+    echo -n "# wait"
     while ! grep -l -F "$str" $MANIFEST > /dev/null; do
 	tries=$((tries+1))
-	#! echo "tries=$tries"
 	echo -n "."
 	if [ "$tries" -gt "$maxTries" ]; then
 	    echo "Aborted after maxTries=$maxTries: $str"
@@ -96,9 +90,8 @@ for str; do
 	fi
 	sleep 1
     done
-    echo
+    echo " Done in $tries seconds"
 done
 
-#! echo "Found them all!"
 exit 0
 
