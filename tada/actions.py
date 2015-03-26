@@ -31,8 +31,7 @@ def file_type(filename):
 
 def network_move(rec, qname, **kwargs):
     "Transfer from Mountain to Valley"
-    logging.error('dbg-0: EXECUTING network_move()')
-    logging.debug('ACTION: network_move()')
+    logging.debug('EXECUTING network_move()')
     for p in ['qcfg', 'dirs']:
         if p not in kwargs:
             raise Exception(
