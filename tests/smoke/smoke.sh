@@ -54,7 +54,7 @@ MANIFEST=/var/log/tada/submit.manifest
 
 ##########################
 # 1_1: pass; non-FITS
-file=/data/other/uofa-mandle.jpg
+file=$tdata/uofa-mandle.jpg
 status=`basename $file`.status
 findout=find-`basename $file`.out
 cleanStart  > /dev/null
@@ -67,10 +67,9 @@ find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada1_4 $findout '^\#' n
 
 ##########################
-# 2_1: pass ingest using options
-# lp -d astro -o _DTCALDAT=2014-09-21 /data/raw/nhs_2014_n14_299403.fitse
-file=/data/raw/nhs_2014_n14_299403.fits
-opt="-o _DTCALDAT=2014-09-21"
+# 2_1: pass ingest without options
+file=$tdata/k4k_140922_234607_zri.fits.fz
+opt=""
 status=`basename $file`.status
 findout=find-`basename $file`.out
 cleanStart  > /dev/null
@@ -79,12 +78,12 @@ awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada2_2 $status.clean '^\#' n
 testCommand tada2_3 "dqcli -s 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
-testOutput tada2_4 $findout '^\#' n
+testOutput tada2_4 $findout '^\#' y
 
 
 ##########################
 # 3_1: fail ingest
-file=/data/bok/bokrm.20140425.0119.fits
+file=$tdata/kp109391.fits.fz
 status=`basename $file`.status
 findout=find-`basename $file`.out
 cleanStart  > /dev/null
@@ -95,6 +94,19 @@ testCommand tada3_3 "dqcli -s 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada3_4 $findout '^\#' n
 
+##########################
+# 4_1: pass ingest using options
+file=$tdata/ct582021.fits.fz 
+opt="-o _INSTRUME=90Prime -o _PROPID=2014B-0461"
+status=`basename $file`.status
+findout=find-`basename $file`.out
+cleanStart  > /dev/null
+testCommand tada4_1 "tada-submit $opt $prms $file 2>&1" "^\#" y
+awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
+testOutput tada4_2 $status.clean '^\#' n
+testCommand tada4_3 "dqcli -s 2>&1" "^\#" n
+find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
+testOutput tada4_4 $findout '^\#' n
 
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"
