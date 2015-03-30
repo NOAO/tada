@@ -64,10 +64,10 @@ def network_move(rec, qname, **kwargs):
         #!iu.irods_put(fname, ifname)
         cmdline = ['rsync',
                    '-rpo',    #! took out '-aztg',
-                   '--timeout=5',
-                   '--contimeout=3',
+                   '--timeout=20',
+                   '--contimeout=5',
                    '--remove-source-files',
-                   '--stats',
+                   #!'--stats',
                    '--password-file', '/etc/tada/rsync.pwd',
                    source_root, sync_root]
         diag.dbgcmd(cmdline)

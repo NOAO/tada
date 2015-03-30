@@ -14,13 +14,67 @@ SCRIPT=$(readlink -f $0)
 #Absolute path this script is in
 SCRIPTPATH=$(dirname $SCRIPT)
 
+PATH=$SCRIPTPATH:$PATH
 
-usage="USAGE: $cmd [options] fitsFile ...
+OPTIONS=""
+TADAOPTS=""
+VERBOSE=0
+TIMEOUT=30
+SUBMITTED=/tmp/submitted.$$.out
+
+usage="USAGE: $cmd [options] file [file ...]
+OPTIONS:
+  -o <specific option>:: Add option to submit. Can use multiple times.(default=NONE)
+  -p <personality>:: Add set of options to submit. Can use multiple times.(default=NONE)
+  -s <filename>:: Write info about what was submitted to this file (default=$SUBMITTED)
+  -t <seconds>:: Seconds to wait for match to show up in manifest (default=$TIMEOUT)
+  -v <verbosity>:: higher number for more output (default=0)
 "
 
-MINARGS=1
-if [ $# -lt $MINARGS ]; then
-    echo >&2 "ERROR: Wrong number of arguments.  Got $#, expected $MINARGS"
+while getopts "ho:p:s:t:v:" opt; do
+    #!echo "opt=<$opt>"
+    case $opt in
+	h)
+            echo "$usage"
+            exit 1
+            ;;
+	c)
+            CLEAR=1
+            ;;
+        v)
+            VERBOSE=$OPTARG
+            ;;
+        o)
+	    OPTIONS="$OPTIONS -o ${OPTARG}"
+            ;;
+        p)
+	    # appends to $TADAOPTS
+	    source ${SCRIPTPATH}/${OPTARG}.personality
+            ;;
+        s)
+            SUBMITTED=$OPTARG
+            ;;
+        t)
+            TIMEOUT=$OPTARG
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            exit 1
+            ;;
+        :)
+            echo "Option -$OPTARG requires an argument." >&2
+            exit 1
+            ;;
+
+    esac
+done
+#echo "OPTIND=$OPTIND"
+for (( x=1; x<$OPTIND; x++ )); do shift; done
+
+
+RAC=1 # Required Argument Count
+if [ $# -lt $RAC ]; then
+    echo "Not enough non-option arguments. Expect at least $RAC."
     echo >&2 "$usage"
     exit 2
 fi
@@ -28,30 +82,21 @@ fi
 
 ##############################################################################
 
-# Mix personalities of observatory, instrument
-source ${SCRIPTPATH}/KPNO.personality
-source ${SCRIPTPATH}/BOK.personality
 
-opts=""
-today=`date '+%Y-%m-%d'`
-
-#!read -p "What is your Proposal ID? (File will not be archived without valid ID) " PROPID
-opts="$opts -o _OBSERVAT=${OBSERVAT} -o _DTTELESC=${DTTELESC}"
-opts="$opts -o _PROPID=${PROPID} -o _INSTRUME=${INSTRUME} -o _DTTITLE=${DTTITLE}"
-opts="$opts -o _DTCALDAT=$today"
 
 strs=""
 for filename; do
-    #! echo "EXECUTE: lp -d astro $opts ${filename}"
-    req=`lp -d astro $opts ${filename}`
+    lpcmd="lp -d astro ${OPTIONS} ${TADAOPTS} ${filename}"
+    req=`$lpcmd`
+    echo "# Exeucted: $lpcmd"
     echo "# Submit ($req) status: $?"
 
     id=`echo $req | awk '{ print substr($4,7) }'`
-    base=`basename $file`
+    base=`basename $filename`
     ufile=$USER/$id/$base
     strs="$strs $ufile"
-    echo "# Submitted: $ufile"
-    strs="$strs $USER/$id/$base"
+    #!echo "# Submitted: $ufile"
 done
 
-echo $strs
+echo $strs > $SUBMITTED
+echo "# Wrote status to $SUBMITTED"

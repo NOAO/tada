@@ -235,6 +235,13 @@ function testOutput () {
   displayOutputP=${4:-"y"}      # or "n" to save stdout to file only
   diff="${output}.diff"
 
+  if [ ! -f $GOLD ]; then
+      pwd=`pwd`
+      echo "Could not find: $GOLD"
+      echo "To accept current output: cp $output $GOLD"
+      return_code=2
+  fi
+
   # filter out diagnostic output (if any)
   egrep -v "${VARIANT}" $output > $output.clean
   egrep -v "${VARIANT}" $GOLD > $GOLD.clean
