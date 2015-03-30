@@ -1,0 +1,5 @@
+TADAOPTS=${TADAOPTS:-""}
+TADAOPTS="${TADAOPTS} -o _DTTELESC=WIYN -o _DTTITLE=fake_title"
+
+
+

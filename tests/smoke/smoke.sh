@@ -65,6 +65,7 @@ testOutput tada1_2 $status.clean '^\#' n
 testCommand tada1_3 "dqcli -s 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada1_4 $findout '^\#' n
+dqcli --list inactive
 
 ##########################
 # 2_1: pass ingest without options
@@ -79,7 +80,7 @@ testOutput tada2_2 $status.clean '^\#' n
 testCommand tada2_3 "dqcli -s 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada2_4 $findout '^\#' y
-
+dqcli --list inactive
 
 ##########################
 # 3_1: fail ingest
@@ -93,6 +94,7 @@ testOutput tada3_2 $status.clean '^\#' n
 testCommand tada3_3 "dqcli -s 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada3_4 $findout '^\#' n
+dqcli --list inactive
 
 ##########################
 # 4_1: pass ingest using options
@@ -107,6 +109,7 @@ testOutput tada4_2 $status.clean '^\#' n
 testCommand tada4_3 "dqcli -s 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada4_4 $findout '^\#' n
+dqcli --list inactive
 
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"
