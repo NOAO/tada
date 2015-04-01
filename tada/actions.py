@@ -13,6 +13,7 @@ from . import submit as ts
 from . import diag
 
 import dataq.dqutils as du
+import dataq.red_utils as ru
 
 # +++ Add code here if TADA needs to handle additional types of files!!!
 def file_type(filename):
@@ -95,7 +96,7 @@ def network_move(rec, qname, **kwargs):
     try:
         # What if QUEUE is down?!!!
         #!du.push_to_q(dq_host, dq_port, mirror_fname, rec['checksum'])
-        du.push_direct(dq_host, redis_port,
+        ru.push_direct(dq_host, redis_port,
                        mirror_fname, rec['checksum'],
                        qcfg[nextq])
         
@@ -148,7 +149,6 @@ configuration field: maximum_errors_per_record)
         #! ftype = iu.irods_file_type(ifname)
         ftype = file_type(ifname)
     except Exception as ex:
-        logsubmit(submitlog, ifname, ifname, 'file_type', fail=True)
         logging.error('Execution failed: {}; ifname={}'
                       .format(ex, ifname))
         raise

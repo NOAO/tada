@@ -3,6 +3,11 @@
 # PURPOSE:    Wrapper for smoke test
 # EXAMPLE:
 #   ~/sandbox/tada/tests/smoke/smoke.sh
+# This file tests submit of:
+#   1. non-FITS
+#   2. compliant FITS with no options (no need for them, so ingest success)
+#   3. non-compliant FITS (ingest failure)
+#   4. FITS made compliant via passed options (ingest success)
 #
 # TODO:
 #  - check BOTH Valley and Mountain.  All submitted files accounted for?
@@ -59,13 +64,14 @@ status=`basename $file`.status
 findout=find-`basename $file`.out
 cleanStart  > /dev/null
 testCommand tada1_1 "tada-submit $prms $file 2>&1" "^\#" y
-#! echo "MANIFEST:"; cat /var/log/tada/submit.manifest
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada1_2 $status.clean '^\#' n
 testCommand tada1_3 "dqcli -s 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada1_4 $findout '^\#' n
-dqcli --list inactive
+testCommand tada1_5 "dqcli --list inactive  2>&1" "^\#" n
+testCommand tada1_6 "dqcli --list active    2>&1" "^\#" n
+
 
 ##########################
 # 2_1: pass ingest without options
@@ -80,7 +86,9 @@ testOutput tada2_2 $status.clean '^\#' n
 testCommand tada2_3 "dqcli -s 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada2_4 $findout '^\#' y
-dqcli --list inactive
+testCommand tada2_5 "dqcli --list inactive  2>&1" "^\#" n
+testCommand tada2_6 "dqcli --list active    2>&1" "^\#" n
+
 
 ##########################
 # 3_1: fail ingest
@@ -91,10 +99,12 @@ cleanStart  > /dev/null
 testCommand tada3_1 "tada-submit $prms $file 2>&1" "^\#" y
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada3_2 $status.clean '^\#' n
-testCommand tada3_3 "dqcli -s 2>&1" "^\#" n
+#!testCommand tada3_3 "dqcli -s 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada3_4 $findout '^\#' n
-dqcli --list inactive
+#!testCommand tada3_5 "dqcli --list inactive  2>&1" "^\#" n
+testCommand tada3_6 "dqcli --list active    2>&1" "^\#" n
+
 
 ##########################
 # 4_1: pass ingest using options
@@ -106,12 +116,11 @@ cleanStart  > /dev/null
 testCommand tada4_1 "tada-submit $opt $prms $file 2>&1" "^\#" y
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada4_2 $status.clean '^\#' n
-testCommand tada4_3 "dqcli -s 2>&1" "^\#" n
+#!testCommand tada4_3 "dqcli -s 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada4_4 $findout '^\#' n
-
-testCommand tada5_1 "dqcli --list inactive  2>&1" "^\#" n
-testCommand tada5_2 "dqcli --list active    2>&1" "^\#" n
+#!testCommand tada4_5 "dqcli --list inactive  2>&1" "^\#" n
+testCommand tada4_6 "dqcli --list active    2>&1" "^\#" n
 
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"
