@@ -109,7 +109,9 @@ testOutput tada4_2 $status.clean '^\#' n
 testCommand tada4_3 "dqcli -s 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada4_4 $findout '^\#' n
-dqcli --list inactive
+
+testCommand tada5_1 "dqcli --list inactive  2>&1" "^\#" n
+testCommand tada5_2 "dqcli --list active    2>&1" "^\#" n
 
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"
