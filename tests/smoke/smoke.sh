@@ -47,6 +47,15 @@ function cleanStart () {
     echo "yes" | sudo $deletenoarch > /dev/null
 }
 
+function dqout () {
+    (
+	dqcli --list active
+	dqcli --list inactive
+	dqcli --list records
+	dqcli -s
+	) | sed 's|/[0-9]\+/|/|g'
+}
+
 echo ""
 echo "Starting tests in \"$dir\" ..."
 echo ""
@@ -66,11 +75,9 @@ cleanStart  > /dev/null
 testCommand tada1_1 "tada-submit $prms $file 2>&1" "^\#" y
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada1_2 $status.clean '^\#' n
-testCommand tada1_3 "dqcli -s 2>&1" "^\#" n
+testCommand tada1_3 "dqout 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada1_4 $findout '^\#' n
-testCommand tada1_5 "dqcli --list inactive  2>&1" "^\#" n
-testCommand tada1_6 "dqcli --list active    2>&1" "^\#" n
 
 
 ##########################
@@ -83,11 +90,9 @@ cleanStart  > /dev/null
 testCommand tada2_1 "tada-submit $opt $prms $file 2>&1" "^\#" y
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada2_2 $status.clean '^\#' n
-testCommand tada2_3 "dqcli -s 2>&1" "^\#" n
+testCommand tada2_3 "dqout 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada2_4 $findout '^\#' y
-testCommand tada2_5 "dqcli --list inactive  2>&1" "^\#" n
-testCommand tada2_6 "dqcli --list active    2>&1" "^\#" n
 
 
 ##########################
@@ -99,11 +104,9 @@ cleanStart  > /dev/null
 testCommand tada3_1 "tada-submit $prms $file 2>&1" "^\#" y
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada3_2 $status.clean '^\#' n
-#!testCommand tada3_3 "dqcli -s 2>&1" "^\#" n
+#! testCommand tada3_3 "dqout 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada3_4 $findout '^\#' n
-#!testCommand tada3_5 "dqcli --list inactive  2>&1" "^\#" n
-testCommand tada3_6 "dqcli --list active    2>&1" "^\#" n
 
 
 ##########################
@@ -116,11 +119,9 @@ cleanStart  > /dev/null
 testCommand tada4_1 "tada-submit $opt $prms $file 2>&1" "^\#" y
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada4_2 $status.clean '^\#' n
-#!testCommand tada4_3 "dqcli -s 2>&1" "^\#" n
+#! testCommand tada4_3 "dqout 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada4_4 $findout '^\#' n
-#!testCommand tada4_5 "dqcli --list inactive  2>&1" "^\#" n
-testCommand tada4_6 "dqcli --list active    2>&1" "^\#" n
 
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"
