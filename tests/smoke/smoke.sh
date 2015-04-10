@@ -104,7 +104,7 @@ cleanStart  > /dev/null
 testCommand tada3_1 "tada-submit $prms $file 2>&1" "^\#" y
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada3_2 $status.clean '^\#' n
-#! testCommand tada3_3 "dqout 2>&1" "^\#" n
+#!testCommand tada3_3 "dqout 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada3_4 $findout '^\#' n
 
@@ -119,7 +119,7 @@ cleanStart  > /dev/null
 testCommand tada4_1 "tada-submit $opt $prms $file 2>&1" "^\#" y
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada4_2 $status.clean '^\#' n
-#! testCommand tada4_3 "dqout 2>&1" "^\#" n
+#!testCommand tada4_3 "dqout 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada4_4 $findout '^\#' n
 
