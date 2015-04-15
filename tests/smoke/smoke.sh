@@ -49,6 +49,7 @@ function cleanStart () {
 
 function dqout () {
     (
+	sleep 4 # account for REDIS latency
 	dqcli --list active
 	dqcli --list inactive
 	dqcli --list records
@@ -104,7 +105,7 @@ cleanStart  > /dev/null
 testCommand tada3_1 "tada-submit $prms $file 2>&1" "^\#" y
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada3_2 $status.clean '^\#' n
-#!testCommand tada3_3 "dqout 2>&1" "^\#" n
+testCommand tada3_3 "dqout 2>&1" "^\#" y
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada3_4 $findout '^\#' n
 
@@ -119,7 +120,7 @@ cleanStart  > /dev/null
 testCommand tada4_1 "tada-submit $opt $prms $file 2>&1" "^\#" y
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada4_2 $status.clean '^\#' n
-#!testCommand tada4_3 "dqout 2>&1" "^\#" n
+testCommand tada4_3 "dqout 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada4_4 $findout '^\#' n
 
@@ -134,10 +135,10 @@ testOutput tada4_4 $findout '^\#' n
 rm $SMOKEOUT 2>/dev/null
 if [ $return_code -eq 0 ]; then
   echo ""
-  echo "ALL smoke tests PASSED ($SMOKEOUT created)"
-  echo "All tests passed on " `date` > $SMOKEOUT
+  echo "ALL $totalcnt smoke tests PASSED ($SMOKEOUT created)"
+  echo "All $totalcnt tests passed on " `date` > $SMOKEOUT
 else
-  echo "Smoke FAILED (no $SMOKEOUT produced)"
+  echo "Smoke FAILED $failcnt/$totalcnt (no $SMOKEOUT produced)"
 fi
 
 
