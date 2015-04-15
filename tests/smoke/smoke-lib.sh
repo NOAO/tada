@@ -16,6 +16,9 @@
 # AUTHORS:    S. Pothier
 ##############################################################################
 
+failcnt=0
+totalcnt=0
+
 ##
 ## Test a module that modifies a database.
 ## 
@@ -25,6 +28,8 @@ function dBtestBlock () {
   actual_db_out=$2
   testName=$3
   progName=$4
+
+  totalcnt=$((totalcnt + 1))
   
   # Initialize the DB to a known state. (at least for portions we care about)
   reset-db.sh
@@ -46,6 +51,7 @@ function dBtestBlock () {
     pwd=`pwd`
     echo "To accept current results: cp $pwd/${actual_prog_out} $pwd/$GOLD"
     echo "*** $proc FAILED [$testName] (1/2; test output missmatch) ***"
+    failcnt=$((failcnt + 1))
     return_code=1
   else
     echo "*** $proc PASSED [$testName] (1/2) ***"
@@ -71,6 +77,7 @@ function dBtestBlock () {
     pwd=`pwd`
     echo "To accept current results: cp $pwd/${actual_db_out} $pwd/$GOLD"
     echo "*** $proc FAILED [$testName] (2/2; DB content mismatch) ***"
+    failcnt=$((failcnt + 1))
     return_code=1
   else
     echo "*** $proc PASSED [$testName] (2/2) ***"
@@ -87,6 +94,7 @@ function testScm () {
   scm=$1           # Scheme file without .scm suffix
   COMMENT=${2:-";"}
  
+  totalcnt=$((totalcnt + 1))
   actual="$scm.out"
   err="$scm.err"
   GOLD="${actual}.GOLD"
@@ -110,6 +118,7 @@ function testScm () {
           echo ""
           echo "To accept current results: cp $pwd/$err $pwd/$ERRGOLD"
           echo "*** $proc FAILED [$testName] ($tn; got UNEXPECTED STDERR) ***"
+	  failcnt=$((failcnt + 1))
           return_code=1
       else
           echo "*** $proc PASSED [$testName] ($tn; got expected STDERR) ***"
@@ -122,6 +131,7 @@ function testScm () {
         echo ""
         echo "To accept current STDERR results: cp $pwd/$err $pwd/$ERRGOLD"
         echo "*** $proc FAILED [$testName] ($tn; got UNEXPECTED STDERR) ***"
+	failcnt=$((failcnt + 1))
         return_code=1
       else
         echo "*** $proc PASSED [$testName] ($tn; no STDERR output) ***"
@@ -139,6 +149,7 @@ function testScm () {
       echo ""
       echo "To accept current results: cp $pwd/$actual $pwd/$GOLD"
       echo "*** $proc FAILED [$testName] (2/2; got UNEXPECTED STDOUT) ***"
+      failcnt=$((failcnt + 1))
       return_code=1
   else
       echo "*** $proc PASSED [$testName] (2/2; got expected STDOUT) ***"
@@ -158,6 +169,7 @@ function testCommand () {
   displayOutputP=${4:-"y"}      # or "n" to save stdout to file only
   expectedStatus=${5:-0}
 
+  totalcnt=$((totalcnt + 1))
   actual="${testName}.out"
   err="${testName}.err"
   GOLD="${actual}.GOLD"
@@ -184,6 +196,7 @@ function testCommand () {
   if [ $actualStatus -ne $expectedStatus ]; then
     echo "Failed command: ${CMD}"
     echo "*** $proc FAILED [$testName] ($tn; Command returned unexpected status; got $actualStatus <> $expectedStatus) ***"
+    failcnt=$((failcnt + 1))
     return_code=1
   else
     echo "*** $proc PASSED [$testName] ($tn; Command correctly returned zero status ***"
@@ -214,6 +227,7 @@ function testCommand () {
       echo ""
       echo "To accept current results: cp $pwd/$actual $pwd/$GOLD"
       echo "*** $proc FAILED [$testName] ($tn; got UNEXPECTED STDOUT) ***"
+      failcnt=$((failcnt + 1))
       return_code=1
   else
       echo "*** $proc PASSED [$testName] ($tn; got expected STDOUT) ***"
@@ -234,11 +248,13 @@ function testOutput () {
   VARIANT=${3:-"^;"}
   displayOutputP=${4:-"y"}      # or "n" to save stdout to file only
   diff="${output}.diff"
-
+  totalcnt=$((totalcnt + 1))
+  
   if [ ! -f $GOLD ]; then
       pwd=`pwd`
       echo "Could not find: $GOLD"
       echo "To accept current output: cp $output $GOLD"
+      failcnt=$((failcnt + 1))
       return_code=2
   fi
 
@@ -259,6 +275,7 @@ function testOutput () {
       echo ""
       echo "To accept current results: cp $pwd/$output $pwd/$GOLD"
       echo "*** $proc  FAILED  [$testName] (got UNEXPECTED output in: $output) ***"
+      failcnt=$((failcnt + 1))
       return_code=1
   else
       echo "*** $proc  PASSED [$testName] (got expected output in: $output) ***"
