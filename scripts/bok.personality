@@ -1,0 +1,14 @@
+# Files from dome are missing required FITS fields: OBSERVAT, OBSID, PROPID
+
+today=`date '+%Y-%m-%d'`
+now=`date '+%Y%m%d%H%M%S%N'`
+
+TADAOPTS=${TADAOPTS:-""}
+TADAOPTS="${TADAOPTS} -o _DTCALDAT=$today"
+TADAOPTS="${TADAOPTS} -o _DTTITLE=wubba"
+#!TADAOPTS="${TADAOPTS} -o _INSTRUME=90Prime"
+
+TADAOPTS="${TADAOPTS} -o _PROPID=2014B-0461"
+TADAOPTS="${TADAOPTS} -o _OBSID=${now}"
+TADAOPTS="${TADAOPTS} -o _OBSERVAT=Steward"
+

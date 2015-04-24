@@ -27,8 +27,11 @@ def instrument_calc(orighdr):
         calc['DTTELESC'] = tele
     elif '90prime' == instrument: # BOK
         # FILENAME= 'bokrm.20140425.0119.fits' / base filename at acquisition
-        tele, datestr, *rest = orighdr['FILENAME'].split('.')
+        tele = orighdr.get('TELESCOP', None)
+        if tele == None:
+            tele, datestr, *rest = orighdr['FILENAME'].split('.')
         calc['DTTELESC'] = tele
+        calc['OBSTYPE'] = orighdr.get('IMAGETYP','object')
     else:
         pass
 

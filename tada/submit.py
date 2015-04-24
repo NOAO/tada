@@ -134,7 +134,7 @@ RETURN: irods location of hdr file.
     param_dict = dict()  # for parameters. Passed like: lp -d astro -o __x=3
     for k,v in list(options.items()):
         if k[0] =='_':
-            param_dict[k[1:]] = v
+            param_dict[k[1:]] = va
             options.pop(k)
 
     #!logging.debug('Options in prep_for_ingest: {}'.format(options))
@@ -175,7 +175,7 @@ RETURN: irods location of hdr file.
 
         # Create hdr as temp file, i-put, delete tmp file (auto on close)
         # Archive requires extra fields prepended to hdr txt! :-<
-        with tempfile.NamedTemporaryFile(mode='w') as f:
+        with tempfile.NamedTemporaryFile(mode='w', dir='/tmp') as f:
             ingesthdr = ('#filename = {filename}\n'
                          '#reference = {filename}\n'
                          '#filetype = UNKNOWN\n'
@@ -201,8 +201,9 @@ RETURN: irods location of hdr file.
             #! shutil.copy(f.name, '/home/vagrant/tmp/') #!!! REMOVE. diagnostic
             logging.debug('iput new_ihdr to: {}'.format(new_ihdr))
 
-            hdulist.flush()
-            hdulist.close()
+        # END with tempfile
+        #! hdulist.flush()
+        hdulist.close()
     except:
         traceback.print_exc()
         raise

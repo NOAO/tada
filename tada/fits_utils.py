@@ -528,7 +528,6 @@ def modify_hdr(hdr, fname, options, forceRecalc=True):
                 .format(', '.join(sorted(missing)))
                 )
 
-
     chg, dateobs = fc.calc_hdr(hdr, fname, **options)
 
     if forceRecalc:
@@ -543,45 +542,18 @@ def modify_hdr(hdr, fname, options, forceRecalc=True):
     # This check is therefore here only to catch programming errors.
     missing = missing_in_archive_hdr(hdr)
     if len(missing) > 0:
-        raise tex.InsufficientRawHeader(
+        raise tex.InsufficientArxchiveHeader(
             'Modified FITS header is missing required metadata fields: {}'
             .format(', '.join(sorted(missing)))
             )
     #!return hdr
     _, ext = os.path.splitext(fname)
     return (hdr.get('INSTRUME'),
-            dateobs,
+            dateobs, 
             hdr.get('OBSTYPE'),
             hdr.get('PROCTYPE'),
             hdr.get('PRODTYPE'),
             ext[1:])
-
-
-
-#!def add_hdr_fields(fits_file):
-#!    """Add fields to hdr (modify in place) and create filename
-#! that satisfies http://ast.noao.edu/data/docs.  This new filename is
-#! just a name.  The corresponding file does not exist.  Its up the the
-#! caller to rename from old to new if desired.
-#!    """
-#!
-#!    hdulist = pyfits.open(fits_file, mode='update') # modify IN PLACE
-#!    hdr = hdulist[0].header # use only first in list. 
-#!
-#!    modify_hdr(hdr, fits_file, dict()) # Validates raw fits hdr used as input
-#!    
-#!    new_fname = fn.generate_fname(
-#!        instrument=hdr.get('DTINSTRU', 'NOTA'),
-#!        datetime=hdr['OBSID'],
-#!        obstype=hdr.get('OBSTYPE','NOTA'),
-#!        proctype=hdr.get('PROCTYPE','NOTA'),
-#!        prodtype=hdr.get('PRODTYPE','NOTA'),
-#!    )
-#!
-#!    hdulist.flush()
-#!    hdulist.close()
-#!    # e.g. "k4k_140923_024819_uri.fits.fz"
-#!    return new_fname, dir1, dir2, dir3
 
 def show_hdr_values(msg, hdr):
     """Show the values for 'interesting' header fields"""
@@ -599,13 +571,13 @@ def fits_compliant(fits_file_list, show_values=False, show_header=False,
     if required:
         print('These fields must be in raw fits header (or provided by '
               'options at submit time). If not, field calculation will not '
-              'be attempted, and ingest will be aborted: {}'
+              'be attempted, and ingest will be aborted: \n{}'
               .format( '\n\t'.join(RAW_REQUIRED_FIELDS)))
 
         print('These fields must be in hdr given to Ingest. They may '
               'be calculated from raw fits fields and options provided '
               'at submit time. If any of these fields are not in hdr after '
-              'calculation ingest will be aborted: {}'
+              'calculation ingest will be aborted: \n{}'
               .format( '\n\t'.join(INGEST_REQUIRED_FIELDS)))
 
     for ffile in fits_file_list:

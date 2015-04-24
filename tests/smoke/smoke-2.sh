@@ -34,16 +34,27 @@ function cleanStart () {
     echo "yes" | sudo $deletenoarch > /dev/null
 }
 
+function dqout () {
+    (
+	sleep 5 # account for REDIS latency
+	dqcli --list active
+	dqcli --list inactive
+	dqcli --list records
+	dqcli -s
+	) | sed 's|/[0-9]\+/|/|g'
+}
 
 ##############################################################################
 
 echo ""
 echo "Starting tests in \"$dir\" ..."
+echo "  (this test runs longer than most)"
 echo ""
 echo ""
 
-wait=50  # seconds to wait for file to make it thru ingest
-prms="-c -t $wait"
+#!wait=50  # seconds to wait for file to make it thru ingest
+#!prms="-c -t $wait"
+
 MANIFEST=/var/log/tada/submit.manifest
 DATA=/data
 SOUT=/tmp/submitted.$$.out
@@ -56,7 +67,8 @@ fake4="-o _DATE-OBS=2014-09-22T01:35:48.0"
 fake5="-o _INSTRUME=KOSMOS"
 
 
-echo "" > $SALL
+rm -f $SALL > /dev/null
+touch $SALL
 cleanStart  > /dev/null
 
 postproc -s $SOUT -p fake1 -p fake2 -p fake6 \
@@ -112,14 +124,16 @@ testCommand tada1_4 "dqcli --list inactive 2>&1" "^\#" n
 
 ##############################################################################
 
+
 rm $SMOKEOUT 2>/dev/null
 if [ $return_code -eq 0 ]; then
   echo ""
-  echo "ALL smoke tests PASSED ($SMOKEOUT created)"
-  echo "All tests passed on " `date` > $SMOKEOUT
+  echo "ALL $totalcnt smoke tests PASSED ($SMOKEOUT created)"
+  echo "All $totalcnt tests passed on " `date` > $SMOKEOUT
 else
-  echo "Smoke FAILED (no $SMOKEOUT produced)"
+  echo "Smoke FAILED $failcnt/$totalcnt (no $SMOKEOUT produced)"
 fi
+
 
 
 # Don't move or remove! 

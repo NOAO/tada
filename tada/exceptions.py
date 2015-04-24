@@ -14,3 +14,7 @@ class HeaderMissingKeys(SubmitException):
 class InsufficientRawHeader(Exception):
     "FITS header does not contain minimal fields required to make additions."
     pass
+
+class InsufficientArchiveHeader(Exception):
+    "FITS header does not contain minimal fields required to put in archive."
+    pass
