@@ -85,6 +85,7 @@ for str; do
 	tries=$((tries+1))
 	echo -n "."
 	if [ "$tries" -gt "$maxTries" ]; then
+	    echo
 	    echo "Aborted after maxTries=$maxTries: $str"
 	    exit 1
 	fi

@@ -83,6 +83,8 @@ instrumentLUT = {
     'mosaic':    'k09m',  
     'ice':       'k09i',
     #
+    '90prime':   'kb23',  # BOK
+    #
     'NOTA':      'uuuu',  
 }
 
@@ -134,7 +136,7 @@ e.g. k4k_140923_024819_uri.fits.fz"""
 
     #!(date,time) = datetime.split('.')[-1].split('T')
     # e.g. "20141220T015929"
-    date = obsdt.date().strftime('%Y%m%d')
+    date = obsdt.date().strftime('%y%m%d')
     time = obsdt.time().strftime('%H%M%S')
 
     fields = dict(
