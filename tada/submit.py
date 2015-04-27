@@ -202,7 +202,7 @@ RETURN: irods location of hdr file.
             logging.debug('iput new_ihdr to: {}'.format(new_ihdr))
 
         # END with tempfile
-        #! hdulist.flush()
+        hdulist.flush()
         hdulist.close()
     except:
         traceback.print_exc()

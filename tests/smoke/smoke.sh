@@ -38,6 +38,8 @@ deletenoarch=`type -path delete-noarchive.sh`
 source smoke-lib.sh
 return_code=0
 SMOKEOUT="README-smoke-results.txt"
+#!delay=7 # seconds
+delay=5 # seconds
 
 function cleanStart () {
     # Clear old transfer queue
@@ -49,7 +51,7 @@ function cleanStart () {
 
 function dqout () {
     (
-	sleep 5 # account for REDIS latency
+	sleep $delay # account for possible REDIS latency
 	dqcli --list active
 	dqcli --list inactive
 	dqcli --list records
@@ -134,11 +136,11 @@ testOutput tada4_4 $findout '^\#' n
 
 rm $SMOKEOUT 2>/dev/null
 if [ $return_code -eq 0 ]; then
-  echo ""
-  echo "ALL $totalcnt smoke tests PASSED ($SMOKEOUT created)"
-  echo "All $totalcnt tests passed on " `date` > $SMOKEOUT
+    echo ""
+    echo "ALL $totalcnt smoke tests PASSED ($SMOKEOUT created)"
+    echo "All $totalcnt tests passed on " `date` > $SMOKEOUT
 else
-  echo "Smoke FAILED $failcnt/$totalcnt (no $SMOKEOUT produced)"
+    echo "Smoke FAILED $failcnt/$totalcnt (no $SMOKEOUT produced)"
 fi
 
 
