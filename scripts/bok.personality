@@ -4,6 +4,8 @@ today=`date '+%Y-%m-%d'`
 now=`date '+%Y%m%d%H%M%S%N'`
 
 TADAOPTS=${TADAOPTS:-""}
+TADAOPTS="${TADAOPTS} -o __warn_unknown=1"
+
 TADAOPTS="${TADAOPTS} -o _DTCALDAT=$today"
 TADAOPTS="${TADAOPTS} -o _DTTITLE=wubba"
 #!TADAOPTS="${TADAOPTS} -o _INSTRUME=90Prime"

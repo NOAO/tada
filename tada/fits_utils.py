@@ -542,7 +542,7 @@ def modify_hdr(hdr, fname, options, forceRecalc=True):
     # This check is therefore here only to catch programming errors.
     missing = missing_in_archive_hdr(hdr)
     if len(missing) > 0:
-        raise tex.InsufficientArxchiveHeader(
+        raise tex.InsufficientArchiveHeader(
             'Modified FITS header is missing required metadata fields: {}'
             .format(', '.join(sorted(missing)))
             )

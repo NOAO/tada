@@ -128,12 +128,27 @@ prodLUT = {
 
 
 def generate_fname(instrument, obsdt, obstype, proctype, prodtype, ext,
-                   jobid=None):
+                   orig=None,
+                   jobid=False,
+                   wunk=False):
     """Generate standard filename from metadata values.
 e.g. k4k_140923_024819_uri.fits.fz"""
     logging.debug('generate_fname({},{},{},{},{},{})'
                   .format(instrument, obsdt, obstype, proctype, prodtype, ext))
+    logging.debug('generate_fname(jobid={}, wunk={})'
+                  .format(jobid, wunk))
+    if wunk != False:
+        if 'u' == obsLUT.get(obstype, 'u'):
+            logging.warning('Unknown OBSTYPE {} in: {}'
+                            .format(obstype, orig))
+        if 'u' == procLUT.get(proctype, 'u'):
+            logging.warning('Unknown PROCTYPE {} in: {}'
+                            .format(proctype, orig))
+        if 'u' == prodLUT.get(prodtype, 'u'):
+            logging.warning('Unknown PRODTYPE {} in: {}'
+                            .format(prodtype, orig))
 
+ 
     #!(date,time) = datetime.split('.')[-1].split('T')
     # e.g. "20141220T015929"
     date = obsdt.date().strftime('%y%m%d')

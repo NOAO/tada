@@ -39,7 +39,7 @@ source smoke-lib.sh
 return_code=0
 SMOKEOUT="README-smoke-results.txt"
 #!delay=7 # seconds
-delay=5 # seconds
+delay=6 # seconds
 
 function cleanStart () {
     # Clear old transfer queue
@@ -66,16 +66,18 @@ echo ""
 
 wait=50  # seconds to wait for file to make it thru ingest
 prms="-c -t $wait"
+optprms="-o __jobid_type=seconds "
 MANIFEST=/var/log/tada/submit.manifest
 
 
 ##########################
 # 1_1: pass; non-FITS
 file=$tdata/uofa-mandle.jpg
+opt="$optprms "
 status=`basename $file`.status
 findout=find-`basename $file`.out
 cleanStart  > /dev/null
-testCommand tada1_1 "tada-submit $prms $file 2>&1" "^\#" y
+testCommand tada1_1 "tada-submit $opt $prms $file 2>&1" "^\#" y
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada1_2 $status.clean '^\#' n
 testCommand tada1_3 "dqout 2>&1" "^\#" n
@@ -86,7 +88,7 @@ testOutput tada1_4 $findout '^\#' n
 ##########################
 # 2_1: pass ingest without options
 file=$tdata/k4k_140922_234607_zri.fits.fz
-opt=""
+opt="$optprms "
 status=`basename $file`.status
 findout=find-`basename $file`.out
 cleanStart  > /dev/null
@@ -101,10 +103,11 @@ testOutput tada2_4 $findout '^\#' y
 ##########################
 # 3_1: fail ingest
 file=$tdata/kp109391.fits.fz
+opt="$optprms "
 status=`basename $file`.status
 findout=find-`basename $file`.out
 cleanStart  > /dev/null
-testCommand tada3_1 "tada-submit $prms $file 2>&1" "^\#" y
+testCommand tada3_1 "tada-submit $opt $prms $file 2>&1" "^\#" y
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada3_2 $status.clean '^\#' n
 testCommand tada3_3 "dqout 2>&1" "^\#" n
@@ -115,7 +118,7 @@ testOutput tada3_4 $findout '^\#' n
 ##########################
 # 4_1: pass ingest using options
 file=$tdata/ct582021.fits.fz 
-opt="-o _INSTRUME=90Prime -o _PROPID=2014B-0461"
+opt="$optprms -o _INSTRUME=90Prime -o _PROPID=2014B-0461"
 status=`basename $file`.status
 findout=find-`basename $file`.out
 cleanStart  > /dev/null
