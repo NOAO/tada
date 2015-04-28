@@ -102,7 +102,7 @@ def tcp_archive_ingest(fname, checksum, qname, qcfg=None):
 
     
 
-def prep_for_ingest(mirror_fname, mirror_dir, archive331, jid=False):
+def prep_for_ingest(mirror_fname, mirror_dir, archive331):
     """GIVEN: FITS absolute path
 DO: 
   Augment hdr. 
@@ -131,14 +131,18 @@ RETURN: irods location of hdr file.
             optstr = f.readline()
     options = dict([s[1:].split('=') for s in optstr.split() if s[0]=='_'])
 
-    param_dict = dict()  # for parameters. Passed like: lp -d astro -o __x=3
+    opt_params = dict()  # under-under params. Passed like: lp -d astro -o __x=3
     for k,v in list(options.items()):
         if k[0] =='_':
-            param_dict[k[1:]] = va
+            opt_params[k[1:]] = v
             options.pop(k)
+    # +++ API: under-under parameters via lp options
+    warn_unknown = opt_params.get('warn_unknown', False)
+    jidt = opt_params.get('jobid_type',None)  
+    source = opt_params.get('source',None)
 
     #!logging.debug('Options in prep_for_ingest: {}'.format(options))
-    logging.debug('Params in prep_for_ingest: {}'.format(param_dict))
+    logging.debug('Params in prep_for_ingest: {}'.format(opt_params))
 
     hdr_ifname = "None"
     try:
@@ -147,24 +151,26 @@ RETURN: irods location of hdr file.
         hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
         hdr = hdulist[0].header # use only first in list.
         fname_fields = fu.modify_hdr(hdr, mirror_fname, options)
-
         # Generate standards conforming filename
-        # EXCEPT: add field when JID given.
-        if jid == 1:
+        # EXCEPT: add field when JIDT given.
+        if jidt == 'plain':
             jobid = pathlib.PurePath(mirror_fname).parts[-2]
-        elif jid == 2:
+        elif jidt == 'seconds':
             # hundredths of a second sin 1/1/2015
             jobid = str(int((datetime.datetime.now()
                              - datetime.datetime(2015,1,1))
                             .total_seconds()*100))
         else:
             jobid = None
-        if param_dict.get('source',None) == 'pipeline':
+        if source == 'pipeline':
             new_basename = hdr['PLDSID']
             logging.debug('Source=pipeline so using basename:{}'
                           .format(new_basename))
         else:
-            new_basename = fn.generate_fname(*fname_fields, jobid=jobid)
+            new_basename = fn.generate_fname(*fname_fields,
+                                             jobid=jobid,
+                                             wunk=warn_unknown,
+                                             orig=mirror_fname)
 
 
         ipath = pathlib.PurePath(mirror_fname
@@ -249,12 +255,11 @@ here. However the levels are stored in hdr fields SB_DIR{1,2,3}."""
     #! logging.debug('   qcfg={})'.format(qcfg))
     mirror_dir =  qcfg[qname]['mirror_dir']
     archive331 =  qcfg[qname]['archive_irods331']
-    id_in_fname = qcfg[qname].get('id_in_fname',0)
+    #!id_in_fname = qcfg[qname].get('id_in_fname',0)
 
-    jid = False if (id_in_fname == 0) else id_in_fname
+    #!jidt = False if (id_in_fname == 0) else id_in_fname
     try:
-        ihdr,destfname = prep_for_ingest(ifname, mirror_dir, archive331,
-                                         jid=jid)
+        ihdr,destfname = prep_for_ingest(ifname, mirror_dir, archive331)
     except:
         #! traceback.print_exc()
         raise
