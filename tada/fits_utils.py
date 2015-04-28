@@ -12,7 +12,6 @@ import logging
 import traceback
 
 
-#!import pyfits
 import astropy.io.fits as pyfits
 import os.path
  
@@ -283,17 +282,6 @@ def print_header(msg, hdr=None, fits_filename=None):
           sep='\n')
 
     
-#!def OLDextract_header(fits_filename=None, hdr_filename=None):
-#!    "Get the 'header' from FITS file. Write it to text file."
-#!    if fits_filename == None:
-#!        fits_filename = sys.argv[1]
-#!    if hdr_filename == None:
-#!        hdr_filename = sys.argv[2]
-#!
-#!    hdulist = pyfits.open(fits_filename) # ok if is compressed ('fz')
-#!    hdr = hdulist[0].header
-#!    with open(hdr_filename, 'w') as f:
-#!        hdr.totextfile(f)
     
 # It seems unconscionably complex for Ingest to require extra lines be
 # prepended to the text of the fits header.  The only reason those

@@ -2,6 +2,7 @@
 
 today=`date '+%Y-%m-%d'`
 now=`date '+%Y%m%d%H%M%S%N'`
+modstamp=`stat --format="%y" $filename`
 
 TADAOPTS=${TADAOPTS:-""}
 TADAOPTS="${TADAOPTS} -o __warn_unknown=1"
