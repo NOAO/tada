@@ -2,6 +2,7 @@
 
 import datetime
 import os.path
+from . import dateobs as obs
 
 def instrument_calc(orighdr):
     "Instrument specific calculations"
@@ -65,15 +66,15 @@ def calc_hdr(orighdr, fname, **kwargs):
 
     chg.update(instrument_calc(orighdr))
     
-
-    # "UTC epoch"
-    if 'T' in orighdr['DATE-OBS']: 
-        fmt = '%Y-%m-%dT%H:%M:%S.%f' 
-        dateobs = datetime.datetime.strptime(orighdr['DATE-OBS'],fmt)
-    else:
-        fmt = '%Y-%m-%d'
-        dateobs = datetime.datetime.strptime(orighdr['DATE-OBS'][:10],fmt)
-
+    
+    #!# "UTC epoch"
+    #!if 'T' in orighdr['DATE-OBS']: 
+    #!    fmt = '%Y-%m-%dT%H:%M:%S.%f' 
+    #!    dateobs = datetime.datetime.strptime(orighdr['DATE-OBS'],fmt)
+    #!else:
+    #!    fmt = '%Y-%m-%d'
+    #!    dateobs = datetime.datetime.strptime(orighdr['DATE-OBS'][:10],fmt)
+    dateobs = obs.parse_dateobs(orighdr['DATE-OBS'])
     
     chg['DTCOPYRI'] = 'AURA'                   # move to POSTPROC!!!
     chg['DTACQNAM'] = os.path.basename(fname)  # move to POSTPROC!!!
@@ -88,7 +89,8 @@ def calc_hdr(orighdr, fname, **kwargs):
 
     # DTUTC cannot be derived exactly from any RAW fields
     # Should be: "post exposure UTC epoch from DTS"
-    chg['DTUTC']    = dateobs.strftime('%Y-%m-%dT%H:%M:%S') #slightly wrong!!!
+    #!chg['DTUTC']    = dateobs.strftime('%Y-%m-%dT%H:%M:%S') #slightly wrong!!!
+    chg['DTUTC']    = dateobs.isoformat()
 
     #! dir1 = datestr
     #! dir2 = tele

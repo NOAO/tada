@@ -60,6 +60,7 @@ DATA=/data
 SOUT=/tmp/submitted.$$.out
 SALL=/tmp/submitted-all.$$.out
 
+optprms="-o __jobid_type=seconds "
 fake1="-o _DTCALDAT=2014-09-21"
 fake2="-o _PROPID=2014B-0461"
 fake3="-o _OBSERVAT=KPNO -o _OBSID=kp4m.20140922T013548 -o _PROPID=2014B-0461"
@@ -71,14 +72,14 @@ rm -f $SALL > /dev/null
 touch $SALL
 cleanStart  > /dev/null
 
-postproc -s $SOUT -p fake1 -p fake2 -p fake6 \
-  $DATA/scraped/mtn_raw/wiyn-bench/24dec_2014.061.fits   \
-  $DATA/scraped/mtn_raw/wiyn-bench/dark_1800s_091.fits   \
+postproc -s $SOUT -p fake1 -p fake2 -p fake6 $optprms  \
+  $DATA/scraped/mtn_raw/wiyn-bench/24dec_2014.061.fits \
+  $DATA/scraped/mtn_raw/wiyn-bench/dark_1800s_091.fits \
   $DATA/scraped/mtn_raw/ct4m-cosmos/Night1.21953.fits    
 cat $SOUT >> $SALL
 
 # These are missing DTTELESC, DTTITLE (could provide with "-p fake6")
-postproc -s $SOUT -p fake1 -p fake2 \
+postproc -s $SOUT -p fake1 -p fake2  $optprms            \
   $DATA/scraped/mtn_raw/wiyn-whirc/obj_355.fits          \
   $DATA/scraped/mtn_raw/soar-soi/LTT1020_6693.072.fits   \
   $DATA/scraped/mtn_raw/ct13m-andicam/ir141225.0179.fits \
@@ -86,21 +87,21 @@ postproc -s $SOUT -p fake1 -p fake2 \
 cat $SOUT >> $SALL
 
 
-postproc -s $SOUT -p fake1  -o _DTTITLE=wubba \
+postproc -s $SOUT -p fake1  -o _DTTITLE=wubba  $optprms \
   $DATA/scraped/mtn_raw/kp4m-mosaic_1_1/spw54553.fits \
   $DATA/scraped/mtn_raw/kp4m-mosaic_1_1/n2.54779.fits
 cat $SOUT >> $SALL
 
-postproc -s $SOUT -p fake1 -p fake2 -p fake5 \
+postproc -s $SOUT -p fake1 -p fake2 -p fake5  $optprms \
   $DATA/scraped/mtn_raw/ct15m-echelle/chi141225.1302.fits
 cat $SOUT >> $SALL
 
-postproc -s $SOUT -p fake1 -p fake3 -p fake4 \
+postproc -s $SOUT -p fake1 -p fake3 -p fake4  $optprms \
   $DATA/scraped/mtn_raw/kp09m-hdi/c7015t0267b00.fits
 cat $SOUT >> $SALL
 
 strs=`cat $SALL`
-if finished-files.sh -t 120 $strs; then
+if finished-files.sh -v 1 -t 120 $strs; then
     echo "All submitted files were accounted for."
 else
     echo "Some submitted files were NOT accounted for (in $TIMEOUT seconds)!"

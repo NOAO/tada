@@ -77,9 +77,11 @@ fi
 
 maxTries=$TIMEOUT
 for str; do
-    #!echo "Looking in manifest for: $str"
+    if [ "$VERBOSE" -gt 0 ]; then
+       echo "Looking in manifest for: $str"
+       echo "# Waiting $maxTries seconds for $str in '$MANIFEST'"
+    fi
     tries=0
-    echo "# Waiting $maxTries seconds for $str in '$MANIFEST'"
     echo -n "# wait"
     while ! grep -l -F "$str" $MANIFEST > /dev/null; do
 	tries=$((tries+1))

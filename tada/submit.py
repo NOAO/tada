@@ -11,7 +11,6 @@ import traceback
 import tempfile
 import pathlib
 import urllib.request
-#!import shutil
 import datetime
 from copy import copy
 
@@ -20,7 +19,7 @@ from . import file_naming as fn
 from . import exceptions as tex
 from . import irods331 as iu
 from . import ingest_decoder as idec
-
+ 
 
 def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
@@ -134,7 +133,7 @@ RETURN: irods location of hdr file.
     opt_params = dict()  # under-under params. Passed like: lp -d astro -o __x=3
     for k,v in list(options.items()):
         if k[0] =='_':
-            opt_params[k[1:]] = v
+            opt_params[k[1:]] = v.replace('_', ' ')
             options.pop(k)
     # +++ API: under-under parameters via lp options
     warn_unknown = opt_params.get('warn_unknown', False)
