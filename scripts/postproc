@@ -4,6 +4,12 @@
 #
 # EXAMPLE: 
 #
+# CONSIDERATIONS:
+#   It might be better to source the personality file once for each
+#   file processed. But that would eliminate time savings from calling
+#   postproc with a list of files.
+
+#
 # AUTHORS: S. Pothier
 
 #!cmd=`basename $0`
@@ -21,14 +27,24 @@ TADAOPTS=""
 VERBOSE=0
 TIMEOUT=30
 SUBMITTED=/tmp/submitted.$$.out
+filename=$1
 
 usage="USAGE: $cmd [options] file [file ...]
 OPTIONS:
-  -o <specific option>:: Add option to submit. Can use multiple times.(default=NONE)
-  -p <personality>:: Add set of options to submit. Can use multiple times.(default=NONE)
-  -s <filename>:: Write info about what was submitted to this file (default=$SUBMITTED)
-  -t <seconds>:: Seconds to wait for match to show up in manifest (default=$TIMEOUT)
-  -v <verbosity>:: higher number for more output (default=0)
+  -o <specific option>:: Add option to submit.  Can use multiple times.
+     (default=NONE)
+
+  -p <personality>:: Add set of options to submit.  Can use multiple times.
+     (default=NONE)
+
+  -s <filename>:: Write info about what was submitted to this file.
+     (default=$SUBMITTED)
+
+  -t <seconds>:: Seconds to wait for match to show up in manifest 
+     (default=$TIMEOUT)
+
+  -v <verbosity>:: higher number for more output 
+     (default=0)
 "
 
 while getopts "ho:p:s:t:v:" opt; do

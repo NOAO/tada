@@ -1,6 +1,14 @@
+
+use: postproc-bok.sh instead
+
+
 #!/bin/bash
 # PURPOSE: Stuff BOK fits files and generated options directly into 
 #   valley queue.
+#
+# Examples:
+#   stuff-bok.sh  #all files
+#   stuff-bok.sh  /data/bok-real/20150411   # just one day
 #
 # ASSUMPTIONS:
 #  - Submit all decendents of $bokdir that match "*.fits.fz"

@@ -21,6 +21,7 @@ from . import irods331 as iu
 from . import ingest_decoder as idec
  
 
+
 def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
  Archive Ingest via REST-like interface."""
@@ -39,19 +40,16 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
                      .format(arch_host, arch_port, hdr_ipath))
     logging.debug('archserver_url = {}'.format(archserver_url))
 
-
-    
+    result = True
     if qcfg[qname].get('disable_archive_svc',0) > 0:
         logging.warning('Ingest DISABLED. '
                         'http_archive_ingest() using prob_fail= {}'
                         .format(prob_fail))
-        result = True
         if random.random() <= prob_fail:
             raise tex.SubmitException(
                 'Killed by cosmic ray with probability {}'
                 .format(prob_fail))
     else:
-        result = True
         response = ''
         try:
             with urllib.request.urlopen(archserver_url) as f:
@@ -66,7 +64,7 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
             operator_msg = idec.decodeIngest(response)
             raise tex.SubmitException(
                 'HTTP response from Archive Ingest: "{}"; {}'
-                .format(response, operator_msg))
+            .format(response, operator_msg))
 
     return result
     
@@ -139,6 +137,7 @@ RETURN: irods location of hdr file.
     warn_unknown = opt_params.get('warn_unknown', False)
     jidt = opt_params.get('jobid_type',None)  
     source = opt_params.get('source',None)
+    noIngest = opt_params.get('noIngest',False)
 
     #!logging.debug('Options in prep_for_ingest: {}'.format(options))
     logging.debug('Params in prep_for_ingest: {}'.format(opt_params))
@@ -154,7 +153,7 @@ RETURN: irods location of hdr file.
         # EXCEPT: add field when JIDT given.
         if jidt == 'plain':
             jobid = pathlib.PurePath(mirror_fname).parts[-2]
-        elif jidt == 'seconds':
+        elif jidt == 'seconds': 
             # hundredths of a second sin 1/1/2015
             jobid = str(int((datetime.datetime.now()
                              - datetime.datetime(2015,1,1))
@@ -264,7 +263,6 @@ here. However the levels are stored in hdr fields SB_DIR{1,2,3}."""
         raise
     
     try:
-        #!STUB_archive_ingest(new_fname, qname, qcfg=qcfg)
         http_archive_ingest(ihdr, checksum, qname, qcfg=qcfg)
     except:
         #! traceback.print_exc()

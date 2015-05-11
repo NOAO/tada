@@ -7,7 +7,7 @@ outfile=/var/tada/mountain-mirror/tada/$base
 today=`date '+%Y-%m-%d'`
 now=`date '+%Y%m%d%H%M%S%N'`
 optfile=$outfile.options
-echo "_OBSERVAT=Steward _OBSID=${now} _PROPID=2014B-0461 _DTCALDAT=$today _DTTITLE=wubba _OBSTYPE=object _PROCTYPE=Raw _PRODTYPE=Image" > $optfile
+echo "__jobid_type=seconds _OBSERVAT=Steward _OBSID=${now} _PROPID=2014B-0461 _DTCALDAT=$today _DTTITLE=wubba _OBSTYPE=object _PROCTYPE=Raw _PRODTYPE=Image" > $optfile
 
 
 cp $infile $outfile
