@@ -93,6 +93,7 @@ obsLUT = {
     'object':                    'o',  
     'Photometric standard':      'p',
     'Bias':                      'z',
+    'zero':                      'z',  # added 5/8/15 for bok
     'Dome or projector flat':    'f',
     'sky':                       's',
     'Dark':                      'd',
@@ -139,14 +140,11 @@ e.g. k4k_140923_024819_uri.fits.fz"""
                   .format(jobid, wunk))
     if wunk != False:
         if 'u' == obsLUT.get(obstype, 'u'):
-            logging.warning('Unknown OBSTYPE {} in: {}'
-                            .format(obstype, orig))
+            logging.warning('Unknown OBSTYPE {} in {}'.format(obstype, orig))
         if 'u' == procLUT.get(proctype, 'u'):
-            logging.warning('Unknown PROCTYPE {} in: {}'
-                            .format(proctype, orig))
+            logging.warning('Unknown PROCTYPE {} in {}'.format(proctype, orig))
         if 'u' == prodLUT.get(prodtype, 'u'):
-            logging.warning('Unknown PRODTYPE {} in: {}'
-                            .format(prodtype, orig))
+            logging.warning('Unknown PRODTYPE {} in {}'.format(prodtype, orig))
 
  
     #!(date,time) = datetime.split('.')[-1].split('T')

@@ -2,6 +2,7 @@
 
 import re
 import datetime as dt
+import logging
 
 example_values = [
     '2014-04-25',
@@ -50,9 +51,14 @@ def parse_dateobs(dtstr):
     #!    dateobs = datetime.datetime.strptime(hdr['DATE-OBS'][:10],fmt)
     
     date = dt.date(int(md['year']), int(md['month']), int(md['day']))
-    nano = float(md['nano']) if md['nano'] else 0
-    time = dt.time(int(md['hour']), int(md['min']), int(md['sec']), 0)
-    
+    if md['hour']:
+        nano = float(md['nano']) if md['nano'] else 0
+        time = dt.time(int(md['hour']), int(md['min']), int(md['sec']), 0)
+
+    else:
+        logging.warning('No TIME found in DATE-OBS ({}), using zeros.'
+                        .format(dtstr))
+        time = dt.time()
     return dt.datetime.combine(date,time)
 
 def normalize_dateobs(hdr):
@@ -61,6 +67,15 @@ yyyy-mm-ddThh:mm:ss.nnnnnnnnn'''
 
     if 'DATE-OBS' not in hdr:
         return None
+    hdr['ODATEOBS'] = hdr['DATE-OBS'] # save original
 
-    dateobs = parse_dateobs(hdr['DATE-OBS'])
-    return dateobs.isoformat()
+    if hdr['INSTRUME'] == '90prime':
+        logging.warning('INSTRUME=90prime contains DATE-OBS without TIME '
+                        'so using TIME from TIME-OBS.')
+        dateobs = parse_dateobs('{}T{}'.format(hdr['DATE-OBS'], hdr['TIME-OBS']))
+    else:
+        dateobs = parse_dateobs(hdr['DATE-OBS'])
+
+    dtstr = dateobs.isoformat()
+    hdr['DATE-OBS'] = dtstr   # save normalized version
+    return dateobs

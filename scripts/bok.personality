@@ -21,15 +21,7 @@ now=`date '+%Y%m%d%H%M%S%N'`
 stamp=`date '+%Y-%m-%dT%H:%M:%S.%N'`
 
 
-
-# Might be better to use following for DTCALDAT. But maybe not.
-# Good chance that NTP not used on dome so times could be off
-#! modstamp=`stat --format="%y" $filename`
-
-# 'DATE-OBS'='2014-11-14T12:26:26.2'
-
 TADAOPTS=${TADAOPTS:-""}
-TADAOPTS="${TADAOPTS} -o __warn_unknown=1"
 
 #!PROPID="2014B-0461"    # temporary fake!!! (until real gets installed)
 PROPID="2015A-0801" # real
@@ -37,6 +29,11 @@ PROPID="2015A-0801" # real
 # A limitation of CUPS means NO SPACES are allowed in option values.
 # So TADA will change underscore ("_") to space before using values.
 TADAOPTS="${TADAOPTS} \
+ -o __warn_unknown=1 \
+ -o __maphdr=addTimeToDATEOBS \
+ -o __noIngest=1S \
+ -o _PROCTYPE=Raw \
+ -o _PRODTYPE=Image \
  -o _DTOBSERV=University_of_Arizona_Observatories \
  -o _DTPROPID=$PROPID \
  -o _DTPI=Xiaohui_Fan \
@@ -44,12 +41,8 @@ TADAOPTS="${TADAOPTS} \
  -o _DTTITLE=Beijing-Arizona_Sky_Survey_(BASS):_A_New_Legacy_Survey_of_the_Northern_Galactic_Cap \
 "
 
-
-TADAOPTS="${TADAOPTS} -o _DATE-OBS=$stamp"
 TADAOPTS="${TADAOPTS} -o _DTCALDAT=$today"
-
 TADAOPTS="${TADAOPTS} -o _PROPID=$PROPID"
 TADAOPTS="${TADAOPTS} -o _OBSID=${now}"
 TADAOPTS="${TADAOPTS} -o _OBSERVAT=Steward"
-
 #!TADAOPTS="${TADAOPTS} -o _INSTRUME=90Prime"

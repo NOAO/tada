@@ -74,7 +74,9 @@ def calc_hdr(orighdr, fname, **kwargs):
     #!else:
     #!    fmt = '%Y-%m-%d'
     #!    dateobs = datetime.datetime.strptime(orighdr['DATE-OBS'][:10],fmt)
-    dateobs = obs.parse_dateobs(orighdr['DATE-OBS'])
+
+    #!dateobs = obs.parse_dateobs(orighdr['DATE-OBS'])
+    dateobs = obs.normalize_dateobs(orighdr)
     
     chg['DTCOPYRI'] = 'AURA'                   # move to POSTPROC!!!
     chg['DTACQNAM'] = os.path.basename(fname)  # move to POSTPROC!!!

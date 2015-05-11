@@ -39,7 +39,7 @@
             "dq_port": 9999,                     "_COMMENT": "Change this!!!",
             
             "_COMMENT": "type specific fields follow",
-            
+            "disable_archive_svc": 0,            
             "arch_host": "arch.tada.org",        "_COMMENT": "Change this!!!",
             "arch_port": 9999,                   "_COMMENT": "Change this!!!",
             "arch_irods_host": "irods.tada.org", "_COMMENT": "Change this!!!",
