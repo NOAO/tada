@@ -200,10 +200,9 @@ RETURN: irods location of hdr file.
             
             # The only reason we do this is to satisfy Archive Ingest!!!
             # Since it has to have a reference to the FITS file anyhow,
-            # Archive Ingest SHOULD deal with the hdr.
+            # Archive Ingest SHOULD deal with the hdr.  Then again, maybe
+            # ingest does NOT care about the FITS file at all!
             iu.irods_put331(f.name, new_ihdr)
-            #! shutil.copy(f.name, '/home/vagrant/tmp/') #!!! REMOVE. diagnostic
-            logging.debug('iput new_ihdr to: {}'.format(new_ihdr))
 
         # END with tempfile
         hdulist.flush()
@@ -214,14 +213,14 @@ RETURN: irods location of hdr file.
     finally:
         pass
   
-    iu.irods_put331(mirror_fname, new_ifname) # iput renamed FITS
-
+    #! iu.irods_put331(mirror_fname, new_ifname) # iput renamed FITS
     #
     # At this point both FITS and HDR are in archive331
     #
 
     logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
     return new_ihdr, new_ifname
+
 
 ##########
 # (-sp-) The Archive Ingest process is ugly and the interface is not
@@ -241,6 +240,16 @@ RETURN: irods location of hdr file.
 # sent to Ingest, the actual fits file has to be accessed when
 # otherwise we could have just dealt with irods paths. Fortunately,
 # the irods icommand "iexecmd" lets us push such dirt to the server.
+# 
+# After a successful ingest, its possible that someone will try to
+# ingest the same file again. Archive does not allow this so will fail
+# on ingest.  Under such a circumstance the PREVIOUS hdr info would be
+# in the database, but the NEW hdr (and FITS) would be in irods. Under
+# such cirumstances, a user might retrieve a FITS file and find that
+# is doesn't not match their query. To avoid such a inconsistency, we
+# iput FITS only on success and restore the previous HDR on ingest
+# failure.
+# 
 ##########
 #
 def submit_to_archive(ifname, checksum, qname, qcfg=None):
@@ -248,7 +257,8 @@ def submit_to_archive(ifname, checksum, qname, qcfg=None):
 possible.  Ingest involves renaming to satisfy filename
 standards. Although I've seen no requirements for it, previous systems
 also used a specific 3 level directory structure that is NOT used
-here. However the levels are stored in hdr fields SB_DIR{1,2,3}."""
+here. However the levels are stored in hdr fields SB_DIR{1,2,3}.
+"""
     logging.debug('submit_to_archive({},{})'.format(ifname, qname))
     #! logging.debug('   qcfg={})'.format(qcfg))
     mirror_dir =  qcfg[qname]['mirror_dir']
@@ -256,17 +266,23 @@ here. However the levels are stored in hdr fields SB_DIR{1,2,3}."""
     #!id_in_fname = qcfg[qname].get('id_in_fname',0)
 
     #!jidt = False if (id_in_fname == 0) else id_in_fname
+    saved_hdr = None
     try:
-        ihdr,destfname = prep_for_ingest(ifname, mirror_dir, archive331)
+        new_ihdr,destfname = prep_for_ingest(ifname, mirror_dir, archive331)
+        saved_hdr = os.path.join('/var/tada', new_ihdr)
+        foundHdr = iu.irods_get331(new_ihdr, saved_hdr)
     except:
-        #! traceback.print_exc()
+        #! traceback.print_exc()1
         raise
     
     try:
-        http_archive_ingest(ihdr, checksum, qname, qcfg=qcfg)
+        http_archive_ingest(new_ihdr, checksum, qname, qcfg=qcfg)
     except:
         #! traceback.print_exc()
+        if foundHdr:
+            iu.irods_put331(saved_hdr, new_ihdr) # restore saved hdr
         raise
 
+    iu.irods_put331(ifname, destfname) # iput renamed FITS
     return destfname
 

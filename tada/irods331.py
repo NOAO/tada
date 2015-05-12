@@ -35,3 +35,19 @@ def irods_put331(local_fname, irods_fname):
         logging.error('Execution failed: {}; {}'
                       .format(ex, ex.output.decode('utf-8')))
         raise
+
+def irods_get331( irods_fname, local_fname):
+    "Copy irods_fname to local_fname."
+    logging.debug('irods_get331({}, {})'.format(irods_fname, local_fname))
+    icmdpath = ('/usr/local/share/applications/irods3.3.1/iRODS/clients'
+                '/icommands/bin')
+    try:
+        subprocess.check_output([os.path.join(icmdpath, 'iget'),
+                                 '-f', '-K', local_fname, irods_fname])
+    except subprocess.CalledProcessError as ex:
+        logging.error('Execution failed: {}; {}'
+                      .format(ex, ex.output.decode('utf-8')))
+        #!raise
+        return False
+    
+    return True
