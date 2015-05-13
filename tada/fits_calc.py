@@ -4,47 +4,47 @@ import datetime
 import os.path
 from . import dateobs as obs
 
-def instrument_calc(orighdr):
-    "Instrument specific calculations"
-    calc = dict() # Fields to calculate
-    instrument = orighdr['INSTRUME'].lower()
-
-    # e.g. OBSID = 'kp4m.20141114T122626'
-    # e.g. OBSID = 'soar.sam.20141220T015929.7Z'
-    #!tele, dt_str = orighdr['OBSID'].split('.')
-    
-    if 'cosmos' == instrument:
-        tele, dt_str = orighdr['OBSID'].split('.')
-        #!datestr, _ = dt_str.split('T')
-        calc['DTTELESC'] = tele
-    elif 'mosaic1.1' == instrument:
-        tele, dt_str = orighdr['OBSID'].split('.')
-        #!datestr, _ = dt_str.split('T')
-        calc['DTTELESC'] = tele
-    elif 'soi' == instrument:
-        tele, inst, dt_str1, dt_str2 = orighdr['OBSID'].split('.')
-        #!dt_str = dt_str1 + dt_str2
-        #!datestr, _ = dt_str.split('T')
-        calc['DTTELESC'] = tele
-    elif '90prime' == instrument: # BOK
-        # FILENAME= 'bokrm.20140425.0119.fits' / base filename at acquisition
-        tele = orighdr.get('TELESCOP', None)
-        if tele == None:
-            tele, datestr, *rest = orighdr['FILENAME'].split('.')
-        calc['DTTELESC'] = tele
-        calc['OBSTYPE'] = orighdr.get('IMAGETYP','object')
-    else:
-        pass
-
-    calc['DTINSTRU'] = instrument # eg. 'NEWFIRM'
-    return calc
+#!def instrument_calc(orighdr):
+#!    "Instrument specific calculations"
+#!    calc = dict() # Fields to calculate
+#!    instrument = orighdr['INSTRUME'].lower()
+#!
+#!    # e.g. OBSID = 'kp4m.20141114T122626'
+#!    # e.g. OBSID = 'soar.sam.20141220T015929.7Z'
+#!    #!tele, dt_str = orighdr['OBSID'].split('.')
+#!    
+#!    if 'cosmos' == instrument:
+#!        tele, dt_str = orighdr['OBSID'].split('.')
+#!        #!datestr, _ = dt_str.split('T')
+#!        calc['DTTELESC'] = tele
+#!    elif 'mosaic1.1' == instrument:
+#!        tele, dt_str = orighdr['OBSID'].split('.')
+#!        #!datestr, _ = dt_str.split('T')
+#!        calc['DTTELESC'] = tele
+#!    elif 'soi' == instrument:
+#!        tele, inst, dt_str1, dt_str2 = orighdr['OBSID'].split('.')
+#!        #!dt_str = dt_str1 + dt_str2
+#!        #!datestr, _ = dt_str.split('T')
+#!        calc['DTTELESC'] = tele
+#!    elif '90prime' == instrument: # BOK
+#!        # FILENAME= 'bokrm.20140425.0119.fits' / base filename at acquisition
+#!        tele = orighdr.get('TELESCOP', None)
+#!        if tele == None:
+#!            tele, datestr, *rest = orighdr['FILENAME'].split('.')
+#!        calc['DTTELESC'] = tele
+#!        calc['OBSTYPE'] = orighdr.get('IMAGETYP','object')
+#!    else:
+#!        pass
+#!
+#!    calc['DTINSTRU'] = instrument # eg. 'NEWFIRM'
+#!    return calc
 
     
 
 def calc_hdr(orighdr, fname, **kwargs):
     chg = dict() # Fields to change/add
     
-    chg['TADAVERS']    = '0.0.dev3' # NOT REQUIRED, for diagnostics
+    chg['TADAVERS']    = '0.0.dev5' # NOT REQUIRED, for diagnostics
 
     #! chg['DTTITLE']  = 'Not derivable from raw metadata!!!'
     #! chg['DTPIAFFL'] = 'Not derivable from raw metadata!!!'
@@ -78,15 +78,15 @@ def calc_hdr(orighdr, fname, **kwargs):
     #!dateobs = obs.parse_dateobs(orighdr['DATE-OBS'])
     dateobs = obs.normalize_dateobs(orighdr)
     
-    chg['DTCOPYRI'] = 'AURA'                   # move to POSTPROC!!!
-    chg['DTACQNAM'] = os.path.basename(fname)  # move to POSTPROC!!!
-    chg['DTNSANAM'] = os.path.basename(fname)  # move to POSTPROC!!!
+    #!chg['DTCOPYRI'] = 'AURA'                   # move to POSTPROC!!!
+    #!chg['DTACQNAM'] = os.path.basename(fname)  # move to POSTPROC!!!
+    #!chg['DTNSANAM'] = os.path.basename(fname)  # move to POSTPROC!!!
 
-    chg['PROPOSER'] = orighdr['PROPID'] #!!!
+    #!chg['PROPOSER'] = orighdr['PROPID'] #!!!
     chg['DTPROPID'] = orighdr['PROPID'] 
 
-    chg['DTPI']     = orighdr.get('PROPOSER', orighdr['PROPID'])
-    chg['DTSITE']   = orighdr['OBSERVAT'].lower()
+    #! chg['DTPI']     = orighdr.get('PROPOSER', orighdr['PROPID'])
+    #! chg['DTSITE']   = orighdr['OBSERVAT'].lower()
     #! chg['DTPUBDAT'] = 'NA' # doc says its required, cooked file lacks it
 
     # DTUTC cannot be derived exactly from any RAW fields
