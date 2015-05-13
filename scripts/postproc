@@ -12,6 +12,17 @@
 #
 # AUTHORS: S. Pothier
 
+function finish {
+    echo "EXIT of postproc"
+    logger -p notice "Normal exit of: $(basename $0) $*"
+}
+trap finish EXIT
+
+function abort {
+    echo "ABORT of postproc"
+}
+trap abort ERR SIGINT SIGTERM
+
 #!cmd=`basename $0`
 #!dir=`dirname $0`
 
@@ -104,8 +115,10 @@ strs=""
 for filename; do
     lpcmd="lp -d astro ${OPTIONS} ${TADAOPTS} ${filename}"
     req=`$lpcmd`
-    echo "# Exeucted: $lpcmd"
-    echo "# Submit ($req) status: $?"
+    if [ $VERBOSE -gt 0 ]; then
+	echo "# Exeucted: $lpcmd"
+	echo "# Submit ($req) status: $?"
+    fi
 
     id=`echo $req | awk '{ print substr($4,7) }'`
     base=`basename $filename`

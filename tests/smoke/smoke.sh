@@ -1,6 +1,6 @@
 #!/bin/bash
 # AUTHORS:    S. Pothier
-# PURPOSE:    Wrapper for smoke test
+# PURPOSE:    Wrapper for smoke test; 
 # EXAMPLE:
 #   ~/sandbox/tada/tests/smoke/smoke.sh
 # This file tests submit of:
@@ -66,7 +66,7 @@ echo ""
 
 wait=50  # seconds to wait for file to make it thru ingest
 prms="-c -t $wait"
-optprms="-o __jobid_type=seconds "
+optprms="-o __jobid_type=seconds -o __calchdr=DTCALDATfromDATEOBS,PROPIDtoDT"
 MANIFEST=/var/log/tada/submit.manifest
 
 
