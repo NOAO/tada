@@ -126,18 +126,22 @@ RETURN: irods location of hdr file.
     if os.path.exists(optfname):
         with open(optfname,encoding='utf-8') as f:
             optstr = f.readline()
-    options = dict([s[1:].split('=') for s in optstr.split() if s[0]=='_'])
+    options = dict()
+    for s in optstr.split():
+        if s[0] != '_':
+            continue
+        k,v = s[1:].split('=')
+        options[k] = v.replace('_', ' ')
 
     opt_params = dict()  # under-under params. Passed like: lp -d astro -o __x=3
     for k,v in list(options.items()):
         if k[0] =='_':
-            opt_params[k[1:]] = v.replace('_', ' ')
+            opt_params[k[1:]] = v
             options.pop(k)
     # +++ API: under-under parameters via lp options
-    warn_unknown = opt_params.get('warn_unknown', False)
-    jidt = opt_params.get('jobid_type',None)  
-    source = opt_params.get('source',None)
-    noIngest = opt_params.get('noIngest',False)
+    jidt = opt_params.get('jobid_type',None)  # plain | seconds | (False)
+    source = opt_params.get('source',None)    # pipeline | (dome)
+    warn_unknown = opt_params.get('warn_unknown', False) # 1 | (False)
 
     #!logging.debug('Options in prep_for_ingest: {}'.format(options))
     logging.debug('Params in prep_for_ingest: {}'.format(opt_params))
@@ -148,7 +152,8 @@ RETURN: irods location of hdr file.
         logging.debug('Open FITS for hdr update: {}'.format(mirror_fname))
         hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
         hdr = hdulist[0].header # use only first in list.
-        fname_fields = fu.modify_hdr(hdr, mirror_fname, options)
+        hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname
+        fname_fields = fu.modify_hdr(hdr, mirror_fname, options, opt_params)
         # Generate standards conforming filename
         # EXCEPT: add field when JIDT given.
         if jidt == 'plain':
@@ -171,6 +176,7 @@ RETURN: irods location of hdr file.
                                              orig=mirror_fname)
 
 
+        hdr['DTNSANAM'] = new_basename
         ipath = pathlib.PurePath(mirror_fname
                                  .replace(mirror_dir, archive331))
         new_ipath = ipath.with_name(new_basename)
@@ -205,6 +211,7 @@ RETURN: irods location of hdr file.
             iu.irods_put331(f.name, new_ihdr)
 
         # END with tempfile
+        #!logging.debug('updated HDR={}'.format(hdr))
         hdulist.flush()
         hdulist.close()
     except:

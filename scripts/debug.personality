@@ -1,0 +1,9 @@
+# ONLY USE FOR DEBUGGING!!!
+
+TADAOPTS=${TADAOPTS:-""}
+TADAOPTS="${TADAOPTS} \
+ -o __jobid_type=seconds \
+ -o __warn_unknown=1 \
+ -o __source=dome \
+ -o _TADAVERS=0.0.dbg1 \
+"

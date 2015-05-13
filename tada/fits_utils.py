@@ -14,10 +14,12 @@ import traceback
 
 import astropy.io.fits as pyfits
 import os.path
+import datetime as dt
  
 from . import fits_calc as fc
 from . import file_naming as fn
 from . import exceptions as tex
+from . import hdr_calc_funcs as hf
 
 ##############################################################################
 # "Required" fields per tier per Email from Brian Thomas on 1/7/15
@@ -87,12 +89,12 @@ INGEST_REQUIRED_FIELDS = set([
 #   'DTOBSERV', # scheduling institution
     'DTPI',
 #   'DTPIAFFL', # PI affiliation (ADDED!!!)
-#   'DTPROPID', # observing proposal ID
+   'DTPROPID', # observing proposal ID
 #   'DTPUBDAT', # calendar date of public release 
     'DTSITE',
     'DTTELESC',
     'DTTITLE',
-    'DTUTC',
+#    'DTUTC',
     'PROPID',
 ])
 
@@ -495,7 +497,7 @@ DATASUM = '0         '          /  checksum of data records
 # SIDE-EFFECTS: fields added to FITS header
 # Used istb/src/header.{h,c} for hints.
 # raw: nhs_2014_n14_299403.fits
-def modify_hdr(hdr, fname, options, forceRecalc=True):
+def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True):
     '''Modify header to suit Archive Ingest. Return fields needed to construct
  new filename that fullfills standards
     options :: e.g. {'INSTRUME': 'KOSMOS', 'OBSERVAT': 'KPNO'}
@@ -504,6 +506,17 @@ def modify_hdr(hdr, fname, options, forceRecalc=True):
         if forceRecalc or (k not in hdr):
             hdr[k] = v
 
+    calc_param = opt_params.get('calchdr',None)
+    calc_funcs = [eval('hf.'+s) for s in calc_param.split(',')] \
+                 if calc_param != None else []
+    logging.debug('calc_funcs={}'.format(calc_funcs))
+    chg = dict(hdr.items()) # plain dictionary of hdr; no FITS specific access
+    for calcfunc in calc_funcs:
+        new = calcfunc(chg)
+        chg.update(new)
+        logging.debug('new field values={}'.format(new))    
+    #! logging.debug('updated field values={}'.format(chg))    
+    
 
     if len(options) == 0:
         # only validate raw hdr fields if no extra were passed from dome.
@@ -516,7 +529,8 @@ def modify_hdr(hdr, fname, options, forceRecalc=True):
                 .format(', '.join(sorted(missing)))
                 )
 
-    chg, dateobs = fc.calc_hdr(hdr, fname, **options)
+    #! chg, dateobs = fc.calc_hdr(hdr, fname, **options)
+    dateobs = dt.datetime.strptime(chg['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
 
     if forceRecalc:
         for k,v in chg.items():
@@ -574,7 +588,7 @@ def fits_compliant(fits_file_list, show_values=False, show_header=False,
         try:
             #!valid_header(ffile)
             hdr = pyfits.open(ffile)[0].header # use only first in list.
-            modify_hdr(hdr, ffile, dict())
+            modify_hdr(hdr, ffile, dict(), dict())
             missing = missing_in_archive_hdr(hdr)
 
         except Exception as err:

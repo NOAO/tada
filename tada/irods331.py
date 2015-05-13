@@ -45,9 +45,6 @@ def irods_get331( irods_fname, local_fname):
         subprocess.check_output([os.path.join(icmdpath, 'iget'),
                                  '-f', '-K', local_fname, irods_fname])
     except subprocess.CalledProcessError as ex:
-        logging.error('Execution failed: {}; {}'
-                      .format(ex, ex.output.decode('utf-8')))
-        #!raise
         return False
     
     return True

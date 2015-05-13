@@ -16,9 +16,7 @@
 # Northern Galactic Cap'
 
 
-today=`date '+%Y-%m-%d'`
-now=`date '+%Y%m%d%H%M%S%N'`
-stamp=`date '+%Y-%m-%dT%H:%M:%S.%N'`
+#!now=`date '+%Y%m%d%H%M%S%N'`
 
 
 TADAOPTS=${TADAOPTS:-""}
@@ -30,19 +28,22 @@ PROPID="2015A-0801" # real
 # So TADA will change underscore ("_") to space before using values.
 TADAOPTS="${TADAOPTS} \
  -o __warn_unknown=1 \
- -o __maphdr=addTimeToDATEOBS \
- -o __noIngest=1S \
- -o _PROCTYPE=Raw \
- -o _PRODTYPE=Image \
+ -o __calchdr=addTimeToDATEOBS,DTCALDATfromDATEOBS \
+ -o __noIngest=1 \
+ -o _DTCOPYRI=University_of_Arizona \
  -o _DTOBSERV=University_of_Arizona_Observatories \
- -o _DTPROPID=$PROPID \
  -o _DTPI=Xiaohui_Fan \
  -o _DTPIAFFL=University_of_Arizona \
- -o _DTTITLE=Beijing-Arizona_Sky_Survey_(BASS):_A_New_Legacy_Survey_of_the_Northern_Galactic_Cap \
+ -o _DTPROPID=$PROPID \
+ -o _DTSITE=kp \
+ -o _DTTELESC=bok23m \
+ -o _DTTITLE=Beijing-Arizona_Sky_Survey_(BASS) \
+ -o _OBSERVAT=Steward \
+ -o _PROCTYPE=Raw \
+ -o _PRODTYPE=Image \
+ -o _PROPID=$PROPID \
 "
 
-TADAOPTS="${TADAOPTS} -o _DTCALDAT=$today"
-TADAOPTS="${TADAOPTS} -o _PROPID=$PROPID"
-TADAOPTS="${TADAOPTS} -o _OBSID=${now}"
-TADAOPTS="${TADAOPTS} -o _OBSERVAT=Steward"
+#! -o _OBSID=${now} \
+
 #!TADAOPTS="${TADAOPTS} -o _INSTRUME=90Prime"
