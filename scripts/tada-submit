@@ -99,7 +99,11 @@ fi
 
 strs=""
 for file; do
-    req=`lp -d astro $OPTIONS $file`
+    cmd="lp -d astro $OPTIONS $file"
+    if [ $VERBOSE -gt 0 ]; then
+	echo "# Excecuting: $cmd"
+    fi
+    req=`$cmd`
     echo "# Submit ($req) status: $?"
 
     id=`echo $req | awk '{ print substr($4,7) }'`

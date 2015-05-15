@@ -26,6 +26,7 @@ trap abort ERR SIGINT SIGTERM
 #!cmd=`basename $0`
 #!dir=`dirname $0`
 
+return_code=0
 #Absolute path to this script
 SCRIPT=$(readlink -f $0)
 #Absolute path this script is in
@@ -34,6 +35,7 @@ SCRIPTPATH=$(dirname $SCRIPT)
 PATH=$SCRIPTPATH:$PATH
 
 OPTIONS=""
+LPOPTIONS=""
 TADAOPTS=""
 VERBOSE=0
 TIMEOUT=30
@@ -54,11 +56,11 @@ OPTIONS:
   -t <seconds>:: Seconds to wait for match to show up in manifest 
      (default=$TIMEOUT)
 
-  -v <verbosity>:: higher number for more output 
-     (default=0)
+  -v :: Verbose output
+     (default=not verbose)
 "
 
-while getopts "ho:p:s:t:v:" opt; do
+while getopts "ho:p:s:t:v" opt; do
     #!echo "opt=<$opt>"
     case $opt in
 	h)
@@ -69,10 +71,10 @@ while getopts "ho:p:s:t:v:" opt; do
             CLEAR=1
             ;;
         v)
-            VERBOSE=$OPTARG
+            VERBOSE=1
             ;;
         o)
-	    OPTIONS="$OPTIONS -o ${OPTARG}"
+	    LPOPTIONS="$LPOPTIONS -o ${OPTARG}"
             ;;
         p)
 	    # appends to $TADAOPTS
@@ -109,23 +111,23 @@ fi
 
 ##############################################################################
 
-
-
 strs=""
 for filename; do
-    lpcmd="lp -d astro ${OPTIONS} ${TADAOPTS} ${filename}"
-    req=`$lpcmd`
-    if [ $VERBOSE -gt 0 ]; then
-	echo "# Exeucted: $lpcmd"
-	echo "# Submit ($req) status: $?"
-    fi
-
-    id=`echo $req | awk '{ print substr($4,7) }'`
     base=`basename $filename`
+    lpcmd="lp -d astro ${LPOPTIONS}  -o _DTACQNAM=$base ${TADAOPTS} ${filename}"
+    req=`$lpcmd`
+    lpstat=$?
+    id=`echo $req | awk '{ print substr($4,7) }'`
     ufile=$USER/$id/$base
     strs="$strs $ufile"
-    #!echo "# Submitted: $ufile"
+    if [ $VERBOSE -gt 0 ]; then
+	echo "# Exeucted: $lpcmd"
+	echo "# Submit ($req) status: $lpstat"
+	echo "# Submitted: $ufile"
+    fi
 done
 
 echo $strs > $SUBMITTED
 echo "# Wrote status to $SUBMITTED"
+
+exit $return_code

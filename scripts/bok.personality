@@ -1,35 +1,20 @@
 # Files from dome are missing required FITS fields: OBSERVAT, OBSID, PROPID
 
-# Your prop-id for BOK is 2015A-0801
-# 
-# Also, the following FITS keywords should be hardwired with this 
-# proposal. Normally, these values are obtained from the NOAO observing 
-# schedule.
-# These fields are not required for ingest but should be included if 
-# available.
-# 
-# DTOBSERV= 'University of Arizona Observatories'  /  scheduling institution
-# DTPROPID= '2015A-0601        '  /  observing proposal ID
-# DTPI    = 'Xiaohui Fan'  /  Principal Investigator
-# DTPIAFFL= 'University of Arizona'  /  PI affiliation
-# DTTITLE = 'Beijing-Arizona Sky Survey (BASS): A New Legacy Survey of the 
-# Northern Galactic Cap'
-
-
-#!now=`date '+%Y%m%d%H%M%S%N'`
-
-
-TADAOPTS=${TADAOPTS:-""}
-
-#!PROPID="2014B-0461"    # temporary fake!!! (until real gets installed)
 PROPID="2015A-0801" # real
 
 # A limitation of CUPS means NO SPACES are allowed in option values.
 # So TADA will change underscore ("_") to space before using values.
+
+# The real OBSID is calcualted by "bocOBSID".  But it is a required
+# field in raw meta-data (before calculations happen) so is ALSO given
+# explicitly with a value of "NA". The "NA" value will be overwritten.
+
+TADAOPTS=${TADAOPTS:-""}
 TADAOPTS="${TADAOPTS} \
  -o __warn_unknown=1 \
- -o __calchdr=addTimeToDATEOBS,DTCALDATfromDATEOBS \
+ -o __calchdr=IMAGTYPEtoOBSTYPE,DTTELESCfromINSTRUME,addTimeToDATEOBS,DTCALDATfromDATEOBStus,bokOBSID \
  -o __noIngest=1 \
+ -o _OBSID=NA \
  -o _DTCOPYRI=University_of_Arizona \
  -o _DTOBSERV=University_of_Arizona_Observatories \
  -o _DTPI=Xiaohui_Fan \
@@ -44,6 +29,3 @@ TADAOPTS="${TADAOPTS} \
  -o _PROPID=$PROPID \
 "
 
-#! -o _OBSID=${now} \
-
-#!TADAOPTS="${TADAOPTS} -o _INSTRUME=90Prime"
