@@ -102,7 +102,9 @@ def tcp_archive_ingest(fname, checksum, qname, qcfg=None):
 def prep_for_ingest(mirror_fname, mirror_dir, archive331):
     """GIVEN: FITS absolute path
 DO: 
+  validate RAW fields
   Augment hdr. 
+  validate AUGMENTED fields
   Add hdr as text file to irods331.
   Rename FITS to satisfy standards. 
   Add fits to irods331
@@ -152,8 +154,12 @@ RETURN: irods location of hdr file.
         logging.debug('Open FITS for hdr update: {}'.format(mirror_fname))
         hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
         hdr = hdulist[0].header # use only first in list.
-        hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname
+        fu.apply_options(options, hdr)
+        #!hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname
+        fu.validate_raw_hdr(hdr)
         fname_fields = fu.modify_hdr(hdr, mirror_fname, options, opt_params)
+        fu.validate_cooked_hdr(hdr)
+        fu.validate_recommended_hdr(hdr)
         # Generate standards conforming filename
         # EXCEPT: add field when JIDT given.
         if jidt == 'plain':

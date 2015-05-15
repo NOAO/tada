@@ -13,7 +13,6 @@ TADAOPTS=${TADAOPTS:-""}
 TADAOPTS="${TADAOPTS} \
  -o __warn_unknown=1 \
  -o __calchdr=IMAGTYPEtoOBSTYPE,DTTELESCfromINSTRUME,addTimeToDATEOBS,DTCALDATfromDATEOBStus,bokOBSID \
- -o __noIngest=1 \
  -o _OBSID=NA \
  -o _DTCOPYRI=University_of_Arizona \
  -o _DTOBSERV=University_of_Arizona_Observatories \

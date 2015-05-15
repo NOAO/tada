@@ -30,9 +30,9 @@ delay=6 # seconds
 ##############################################################################
 
 echo "smokedata=[$smokedata]"
-postproc -v -p debug $smokedata/uofa-mandle.jpg
-postproc -v -p debug $smokedata/raw/LTT1020_6606.052.fits
-postproc -v -p debug -o _INSTRUME=chiron $smokedata/raw/chi141225.1238.fits
+postproc -v $smokedata/uofa-mandle.jpg
+postproc -v -p smoke $smokedata/raw/LTT1020_6606.052.fits
+postproc -v -p smoke -o _INSTRUME=chiron $smokedata/raw/chi141225.1238.fits
 
 ##########################
 # 1_1: pass; non-FITS

@@ -91,41 +91,41 @@ instrumentLUT = {
 obsLUT = {
     #Observation-type:           code  
     'object':                    'o',  
-    'Photometric standard':      'p',
-    'Bias':                      'z',
+    'photometric standard':      'p',
+    'bias':                      'z',
     'zero':                      'z',  # added 5/8/15 for bok
-    'Dome or projector flat':    'f',
+    'dome or projector flat':    'f',
     'flat':                      'f',
     'sky':                       's',
-    'Dark':                      'd',
-    'Calibration or comparison': 'c',
-    'Illumination calibration':  'i',
-    'Focus':                     'g',
-    'Fringe':                    'h',
-    'Pupil':                     'r',
-    'NOTA':                      'u',
+    'dark':                      'd',
+    'calibration or comparison': 'c',
+    'illumination calibration':  'i',
+    'focus':                     'g',
+    'fringe':                    'h',
+    'pupil':                     'r',
+    'nota':                      'u',
 }
 
 procLUT = {
     #Processing-type: code   
-    'Raw': 'r',
-    'InstCal': 'o',
-    'MasterCal': 'c',
-    'Projected': 'p',
-    'Stacked': 's',
-    'SkySub': 'k',
-    'NOTA': 'u',
+    'raw': 'r',
+    'instcal': 'o',
+    'mastercal': 'c',
+    'projected': 'p',
+    'stacked': 's',
+    'skysub': 'k',
+    'nota': 'u',
 }
 
 prodLUT = {
     #Product-type:         code    
-    'Image': 'i',   
-    'Image 2nd version 1': 'j',   
-    'Dqmask': 'd',   
-    'Expmap': 'e',   
-    'Graphics (size)': 'gN',   
-    'Weight': 'w',   
-    'NOTA':                 'u',   
+    'image': 'i',   
+    'image 2nd version 1': 'j',   
+    'dqmask': 'd',   
+    'expmap': 'e',   
+    'graphics (size)': 'gn',   
+    'weight': 'w',   
+    'nota':                 'u',   
     }
 
 
@@ -141,11 +141,14 @@ e.g. k4k_140923_024819_uri.fits.fz"""
                   .format(jobid, wunk))
     if wunk != False:
         if 'u' == obsLUT.get(obstype, 'u'):
-            logging.warning('Unknown OBSTYPE {} in {}'.format(obstype, orig))
+            logging.warning('Unknown OBSTYPE "{}" in {}'
+                            .format(obstype, orig))
         if 'u' == procLUT.get(proctype, 'u'):
-            logging.warning('Unknown PROCTYPE {} in {}'.format(proctype, orig))
+            logging.warning('Unknown PROCTYPE "{}" in {}'
+                            .format(proctype, orig))
         if 'u' == prodLUT.get(prodtype, 'u'):
-            logging.warning('Unknown PRODTYPE {} in {}'.format(prodtype, orig))
+            logging.warning('Unknown PRODTYPE "{}" in {}'
+                            .format(prodtype, orig))
 
  
     #!(date,time) = datetime.split('.')[-1].split('T')
