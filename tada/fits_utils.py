@@ -73,31 +73,56 @@ TIER3_EHDU_RAW_FIELDS = 'SEEING1'.split()
 #    DTTITLE title of obser
 ##############################################################################
 
+#DOC: vvv
+# All bets are off in the original FITS file does not contain all of these.
+RAW_REQUIRED_FIELDS = set([
+    'DATE-OBS',
+    'INSTRUME',
+    'OBSERVAT',
+    'OBSID',
+    'PROPID',
+    # 'PROPOSER', #!!! will use PROPID when PROPOSER doesn't exist in raw hdr
+])
+
 # To be able to ingest a fits file into the archive, all of these must
 # be present in the header.
 # The commented out lines are Requirements per document, but did not seem to
 # be required in Legacy code.
 INGEST_REQUIRED_FIELDS = set([
-    'DATE-OBS',
-#    'DTACCOUN', # observing account name
+    'SIMPLE',
+    'DTPROPID', # observing proposal ID
+    'DTCALDAT', # calendar date from observing schedule
+])
+
+# We should try to fill these fields were practical. They are used in
+# the archive. Under the portal they may affect ability to query or
+# show as the results of queries.  If any of these are missing just
+# before ingest, a warning will be logged indicating the missing
+# fields.
+INGEST_RECOMMENDED_FIELDS = set([
     'DTACQNAM',
-#   'DTACQUIS', # host name of data acquisition computer
     'DTCALDAT', # calendar date from observing schedule
     'DTCOPYRI', # copyright holder of data (ADDED!!!)
     'DTINSTRU',
     'DTNSANAM',
-#   'DTOBSERV', # scheduling institution
+    'DTOBSERV',
     'DTPI',
-#   'DTPIAFFL', # PI affiliation (ADDED!!!)
-   'DTPROPID', # observing proposal ID
-#   'DTPUBDAT', # calendar date of public release 
+    'DTPIAFFL',
+    'DTPROPID', # observing proposal ID
     'DTSITE',
     'DTTELESC',
     'DTTITLE',
-#    'DTUTC',
-    'PROPID',
-])
-
+    'OBSERVAT',
+    'PROCTYPE',
+    'PRODTYPE',
+#   'DTACCOUN', # observing account name
+#   'DTACQUIS', # host name of data acquisition computer
+#   'DTOBSERV', # scheduling institution
+#   'DTPIAFFL', # PI affiliation 
+#   'DTPUBDAT', # calendar date of public release 
+#   'DTUTC',
+])    
+#DOC: ^^^
 
 
 # common between a SINGLE Raw and Cooked pair
@@ -260,15 +285,6 @@ added_fields = [
     'SB_SITE',
     ]
 
-# All bets are off in the original FITS file does not contain all of these.
-RAW_REQUIRED_FIELDS = set([
-    'DATE-OBS',
-    'INSTRUME',
-    'OBSERVAT',
-    'OBSID',
-    'PROPID',
-    # 'PROPOSER', #!!! will use PROPID when PROPOSER doesn't exist in raw hdr
-])
 
 
 def print_header(msg, hdr=None, fits_filename=None):
@@ -324,9 +340,13 @@ def missing_in_raw_hdr(hdr):
     return missing_in_hdr(hdr, RAW_REQUIRED_FIELDS)
 
 def missing_in_archive_hdr(hdr):
-    """Header from FITS oesn't contain minimum fields acceptable for
+    """Header from FITS doesn't contain minimum fields acceptable for
  Archive Ingest."""
     return missing_in_hdr(hdr, INGEST_REQUIRED_FIELDS)
+
+def missing_in_recommended_hdr(hdr):
+    "Header from FITS doesn't contain all fields recommended for ingest."
+    return missing_in_hdr(hdr, INGEST_RECOMMENDED_FIELDS)
 
 def valid_header(fits_file):
     """Read FITS metadata and insure it has what we need. 
@@ -494,6 +514,14 @@ CHECKSUM= 'mhElmh9lmhClmh9l'    /  ASCII 1's complement checksum
 DATASUM = '0         '          /  checksum of data records                 
 """    
 
+def validate_raw_hdr(hdr):
+    missing = missing_in_raw_hdr(hdr)
+    if len(missing) > 0:
+        raise tex.InsufficientRawHeader(
+            'Raw fits file is missing required metadata fields: {}'
+            .format(', '.join(sorted(missing)))
+        )
+
 # SIDE-EFFECTS: fields added to FITS header
 # Used istb/src/header.{h,c} for hints.
 # raw: nhs_2014_n14_299403.fits
@@ -505,10 +533,23 @@ def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True):
     for k,v in options.items():
         if forceRecalc or (k not in hdr):
             hdr[k] = v
+    
+    # Validate after explicit overrides, before calculated fields.
+    # This is because calc-funcs may depend on required fields.
+    validate_raw_hdr(hdr)
 
     calc_param = opt_params.get('calchdr',None)
-    calc_funcs = [eval('hf.'+s) for s in calc_param.split(',')] \
-                 if calc_param != None else []
+    calc_funcs = []
+    if calc_param != None:
+        for funcname in calc_param.split(','):
+            try:
+                func = eval('hf.'+funcname)
+                calc_funcs.append(func)
+            except:
+                traceback.print_exc()
+                raise Exception('Function name "{}" given in option "calchdr"'
+                                ' does not exist in tada/hdr_calc_funcs.py'
+                                .format(funcname))
     logging.debug('calc_funcs={}'.format(calc_funcs))
     chg = dict(hdr.items()) # plain dictionary of hdr; no FITS specific access
     for calcfunc in calc_funcs:
@@ -516,18 +557,6 @@ def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True):
         chg.update(new)
         logging.debug('new field values={}'.format(new))    
     #! logging.debug('updated field values={}'.format(chg))    
-    
-
-    if len(options) == 0:
-        # only validate raw hdr fields if no extra were passed from dome.
-        # This is because extras may be used to CALCULATE field values that
-        # are usually considered required in the raw hdr.
-        missing = missing_in_raw_hdr(hdr)
-        if len(missing) > 0:
-            raise tex.InsufficientRawHeader(
-                'Raw fits file is missing required metadata fields: {}'
-                .format(', '.join(sorted(missing)))
-                )
 
     #! chg, dateobs = fc.calc_hdr(hdr, fname, **options)
     dateobs = dt.datetime.strptime(chg['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
@@ -548,7 +577,13 @@ def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True):
             'Modified FITS header is missing required metadata fields: {}'
             .format(', '.join(sorted(missing)))
             )
-    #!return hdr
+
+    missing = missing_in_recommended_hdr(hdr)
+    if len(missing) > 0:
+        logging.warning(
+            'Modified FITS header is missing recommended metadata fields: {}'
+            .format(', '.join(sorted(missing))))
+
     _, ext = os.path.splitext(fname)
     return (hdr.get('INSTRUME'),
             dateobs, 
@@ -590,7 +625,6 @@ def fits_compliant(fits_file_list, show_values=False, show_header=False,
             hdr = pyfits.open(ffile)[0].header # use only first in list.
             modify_hdr(hdr, ffile, dict(), dict())
             missing = missing_in_archive_hdr(hdr)
-
         except Exception as err:
             bad_files.append(ffile)
             bad += 1

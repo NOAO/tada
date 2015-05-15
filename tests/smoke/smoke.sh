@@ -65,8 +65,9 @@ echo ""
 echo ""
 
 wait=50  # seconds to wait for file to make it thru ingest
-prms="-c -t $wait"
-optprms="-o __jobid_type=seconds -o __calchdr=DTCALDATfromDATEOBS,PROPIDtoDT"
+prms="-v 1 -c -t $wait"
+optprms="-o __jobid_type=seconds"
+# -o __calchdr=PROPIDtoDT
 MANIFEST=/var/log/tada/submit.manifest
 
 

@@ -279,7 +279,7 @@ here. However the levels are stored in hdr fields SB_DIR{1,2,3}.
         saved_hdr = os.path.join('/var/tada', new_ihdr)
         foundHdr = iu.irods_get331(new_ihdr, saved_hdr)
     except:
-        #! traceback.print_exc()1
+        #! traceback.print_exc()
         raise
     
     try:

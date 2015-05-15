@@ -95,6 +95,7 @@ obsLUT = {
     'Bias':                      'z',
     'zero':                      'z',  # added 5/8/15 for bok
     'Dome or projector flat':    'f',
+    'flat':                      'f',
     'sky':                       's',
     'Dark':                      'd',
     'Calibration or comparison': 'c',

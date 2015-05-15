@@ -1,0 +1,15 @@
+PROPID="2014B-0461"  
+
+source debug.personality
+
+TADAOPTS=${TADAOPTS:-""}
+TADAOPTS="${TADAOPTS} \
+ -o __calchdr=addTimeToDATEOBS,DTCALDATfromDATEOBStus,PROPIDtoDT,INSTRUMEtoDT \
+ \
+ -o _DTCOPYRI=AURA \
+ -o _DTPI=NA_DEBUG \
+ -o _DTSITE=NA_DEBUG \
+ -o _DTTELESC=NA_DEBUG \
+ -o _DTTITLE=NA_DEBUG \
+ -o _PROPID=$PROPID \
+"

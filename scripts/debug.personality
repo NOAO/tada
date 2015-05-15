@@ -1,9 +1,12 @@
 # ONLY USE FOR DEBUGGING!!!
 
+PROPID="2014B-0461"  
+
 TADAOPTS=${TADAOPTS:-""}
 TADAOPTS="${TADAOPTS} \
+ -o _TADAVERS=0.0.debug1 \
+\
  -o __jobid_type=seconds \
  -o __warn_unknown=1 \
  -o __source=dome \
- -o _TADAVERS=0.0.dbg1 \
 "
