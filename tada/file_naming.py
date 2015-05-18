@@ -83,7 +83,7 @@ instrumentLUT = {
     'mosaic':    'k09m',  
     'ice':       'k09i',
     #
-    '90prime':   'kb23',  # BOK
+    '90prime':   'ksb',  # BOK
     #
     'NOTA':      'uuuu',  
 }

@@ -39,7 +39,7 @@ LPOPTIONS=""
 TADAOPTS=""
 VERBOSE=0
 TIMEOUT=30
-SUBMITTED=/tmp/submitted.$$.out
+SUBMITTED=/var/log/tada/postproc.rcvd
 filename=$1
 
 usage="USAGE: $cmd [options] file [file ...]
@@ -50,15 +50,16 @@ OPTIONS:
   -p <personality>:: Add set of options to submit.  Can use multiple times.
      (default=NONE)
 
-  -s <filename>:: Write info about what was submitted to this file.
-     (default=$SUBMITTED)
-
   -t <seconds>:: Seconds to wait for match to show up in manifest 
      (default=$TIMEOUT)
 
   -v :: Verbose output
      (default=not verbose)
 "
+#!  -s <filename>:: Write info about what was submitted to this file.
+#!     (default=$SUBMITTED)
+
+
 
 while getopts "ho:p:s:t:v" opt; do
     #!echo "opt=<$opt>"
@@ -80,9 +81,9 @@ while getopts "ho:p:s:t:v" opt; do
 	    # appends to $TADAOPTS
 	    source ${SCRIPTPATH}/${OPTARG}.personality
             ;;
-        s)
-            SUBMITTED=$OPTARG
-            ;;
+        #!s)
+        #!    SUBMITTED=$OPTARG
+        #!    ;;
         t)
             TIMEOUT=$OPTARG
             ;;
@@ -117,17 +118,20 @@ for filename; do
     lpcmd="lp -d astro ${LPOPTIONS}  -o _DTACQNAM=$base ${TADAOPTS} ${filename}"
     req=`$lpcmd`
     lpstat=$?
+    return_code=$lpstat
     id=`echo $req | awk '{ print substr($4,7) }'`
     ufile=$USER/$id/$base
     strs="$strs $ufile"
+    stamp=`date '+%Y.%m.%d_%H.%M'`;
+    echo "$stamp $filename $return_code USER=$USER id=$id" >> $SUBMITTED
+
     if [ $VERBOSE -gt 0 ]; then
-	echo "# Exeucted: $lpcmd"
-	echo "# Submit ($req) status: $lpstat"
-	echo "# Submitted: $ufile"
+	    echo "# Exeucted: $lpcmd"
+	    echo "# Submit ($req) status: $lpstat"
+	    echo "# Submitted: $ufile"
     fi
 done
 
-echo $strs > $SUBMITTED
 echo "# Wrote status to $SUBMITTED"
 
 exit $return_code
