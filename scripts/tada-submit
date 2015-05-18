@@ -101,7 +101,7 @@ strs=""
 for file; do
     cmd="lp -d astro $OPTIONS $file"
     if [ $VERBOSE -gt 0 ]; then
-	echo "# Excecuting: $cmd"
+	    echo "# Excecuting: $cmd"
     fi
     req=`$cmd`
     echo "# Submit ($req) status: $?"
