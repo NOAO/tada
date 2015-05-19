@@ -7,8 +7,19 @@
 # CONSIDERATIONS:
 #   It might be better to source the personality file once for each
 #   file processed. But that would eliminate time savings from calling
-#   postproc with a list of files.
-
+#   postproc with a list of files.  Besides, if you want the same
+#   personality used with multiple files, you can always invoke this
+#   script on one file at a time.
+#
+# PERSONALTIES:
+#   A "personality" file is a way of providing instrument or dome
+#   specific options without cluttering up the core of tada.  All is
+#   done by using the "options" ("-o") of the CUPS "lp" command.  Two
+#   kinds of things can be passed to tada through lp options: 1. FITS
+#   field value overrides, 2. ordered list of header calculation
+#   functions (HCF, mapping functions).  The HCFs are all defined in:
+#   tada/hdr_calc_funcs.py If you need new HCFs, you'll have to define
+#   them there and reinstall tada.
 #
 # AUTHORS: S. Pothier
 

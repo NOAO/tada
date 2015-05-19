@@ -123,7 +123,7 @@ testOutput tada3_4 $findout '^\#' n
 ##########################
 # 4_1: pass ingest using options
 file=$tdata/ct582021.fits.fz 
-opt="$optprms -o _INSTRUME=90Prime -o _DTPROPID=2014B-0461"
+opt="$optprms -o _INSTRUME=mosaic -o _DTPROPID=2014B-0461"
 status=`basename $file`.status
 findout=find-`basename $file`.out
 cleanStart  > /dev/null
