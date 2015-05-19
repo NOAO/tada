@@ -1,4 +1,6 @@
 "Dirt needed to submit a fits file to the archive for ingest"
+
+# There is a 
     
 import sys
 import argparse
@@ -142,7 +144,7 @@ RETURN: irods location of hdr file.
             options.pop(k)
     # +++ API: under-under parameters via lp options
     jidt = opt_params.get('jobid_type',None)  # plain | seconds | (False)
-    source = opt_params.get('source',None)    # pipeline | (dome)
+    source = opt_params.get('source','raw')   # pipeline | (dome)
     warn_unknown = opt_params.get('warn_unknown', False) # 1 | (False)
 
     #!logging.debug('Options in prep_for_ingest: {}'.format(options))
@@ -167,25 +169,25 @@ RETURN: irods location of hdr file.
         elif jidt == 'seconds': 
             # hundredths of a second sin 1/1/2015
             jobid = str(int((datetime.datetime.now()
-                             - datetime.datetime(2015,1,1))
+                             - datetime.datetime(2015,1,1)) 
                             .total_seconds()*100))
         else:
             jobid = None
         if source == 'pipeline':
             new_basename = hdr['PLDSID']
+
             logging.debug('Source=pipeline so using basename:{}'
                           .format(new_basename))
         else:
-            new_basename = fn.generate_fname(*fname_fields,
-                                             jobid=jobid,
-                                             wunk=warn_unknown,
-                                             orig=mirror_fname)
-
-
+            new_basename = fn.generate_fname(*fname_fields, jobid=jobid, wunk=warn_unknown, orig=mirror_fname)
+            #!new_basename = fn.generate_archive_basename(hdr, mirror_fname, jobid=jobid, wunk=warn_unknown)
         hdr['DTNSANAM'] = new_basename
-        ipath = pathlib.PurePath(mirror_fname
-                                 .replace(mirror_dir, archive331))
-        new_ipath = ipath.with_name(new_basename)
+        new_ipath = fn.generate_archive_path(hdr, source=source)
+        #!ipath = pathlib.PurePath(mirror_fname.replace(mirror_dir, archive331))
+        #!new_ipath = ipath.with_name(new_basename)
+        logging.debug('new_ipath={}, new_basename={}'
+                      .format(new_ipath, new_basename))
+        new_ipath = new_ipath.with_name(new_basename)
         new_ifname = str(new_ipath)
         new_ihdr = str(new_ipath.with_suffix('.hdr'))
 

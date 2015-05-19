@@ -25,6 +25,7 @@ TADAOPTS="${TADAOPTS} \
  -o _OBSERVAT=Steward \
  -o _PROCTYPE=Raw \
  -o _PRODTYPE=Image \
- -o _PROPID=$PROPID \
 "
+
+#! -o _PROPID=$PROPID \
 
