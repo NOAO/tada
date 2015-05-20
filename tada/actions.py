@@ -164,7 +164,7 @@ configuration field: maximum_errors_per_record)
             logsubmit(submitlog, ifname, ifname, 'submit_to_archive', fail=True)
             raise sex
         else:
-            logging.info('PASSED submit_to_archive; {} as {}.'
+            logging.info('PASSED submit_to_archive; {} as {}'
                          .format(ifname, destfname))
             # successfully transfered to Archive
             os.remove(ifname)

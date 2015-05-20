@@ -541,6 +541,15 @@ def validate_recommended_hdr(hdr):
             .format(', '.join(sorted(missing))))
     return True
 
+def fits_extension(fname):
+    '''Return extension of any file matching <basename>.fits.*, basename.fits
+Extension may be: "fits.fz", "fits", "fits.gz", etc'''
+    _, ext = os.path.splitext(fname)
+    if ext != '.fits':
+        _, e2  = os.path.splitext(_)
+        ext = e2 + ext
+    return ext
+
 
 # SIDE-EFFECTS: fields added to FITS header
 # Used istb/src/header.{h,c} for hints.
@@ -594,7 +603,7 @@ def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True):
     #!validate_cooked_hdr(hdr)
     #!validate_recommended_hdr(hdr)
     
-    _, ext = os.path.splitext(fname)
+    ext = fits_extension(fname)
     return (hdr.get('INSTRUME', 'nota').lower(),
             dateobs, 
             hdr.get('OBSTYPE', 'nota').lower(),
