@@ -595,11 +595,11 @@ def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True):
     #!validate_recommended_hdr(hdr)
     
     _, ext = os.path.splitext(fname)
-    return (hdr.get('INSTRUME'),
+    return (hdr.get('INSTRUME', 'nota').lower(),
             dateobs, 
-            hdr.get('OBSTYPE'),
-            hdr.get('PROCTYPE'),
-            hdr.get('PRODTYPE'),
+            hdr.get('OBSTYPE', 'nota').lower(),
+            hdr.get('PROCTYPE', 'nota').lower(),
+            hdr.get('PRODTYPE', 'nota').lower(),
             ext[1:])
 
 def show_hdr_values(msg, hdr):

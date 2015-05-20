@@ -19,6 +19,7 @@ TADAOPTS="${TADAOPTS} \
  -o _DTPI=Xiaohui_Fan \
  -o _DTPIAFFL=University_of_Arizona \
  -o _DTPROPID=$PROPID \
+ -o _PROPID=$PROPID \
  -o _DTSITE=kp \
  -o _DTTELESC=bok23m \
  -o _DTTITLE=Beijing-Arizona_Sky_Survey_(BASS) \
@@ -27,5 +28,4 @@ TADAOPTS="${TADAOPTS} \
  -o _PRODTYPE=Image \
 "
 
-#! -o _PROPID=$PROPID \
 
