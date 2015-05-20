@@ -14,6 +14,7 @@ import tempfile
 import pathlib
 import urllib.request
 import datetime
+import subprocess
 from copy import copy
 
 from . import fits_utils as fu
@@ -200,9 +201,10 @@ RETURN: irods location of hdr file.
                          '#filesize = {filesize} bytes\n'
                          '#file_md5 = {checksum}\n\n'
                      )
+            md5 = subprocess.check_output("md5sum -b /data/raw/nhs_2014_n14_299403.fits | cut -f1 -d' '", shell=True)
             print(ingesthdr.format(filename=new_basename,
                                    filesize=os.path.getsize(mirror_fname),
-                                   checksum='CHECKSUM'
+                                   checksum=md5.decode().strip()
                                ),
                   file=f)
             # Print without blank cards or trailing whitespace

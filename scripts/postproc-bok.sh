@@ -2,7 +2,9 @@
 # PURPOSE: Use postproc to ingest all BOK fits files.
 #
 
-bokdir=${1:-/data/bok-real}
+bokdir=${1:-/data/bok-real} # 828 files
+#!bokdir=${1:-/data/bok2}  # 3786 files
+
 date
 
 #! optprms="-o __jobid_type=seconds "  # don't fail ingest on dupes
