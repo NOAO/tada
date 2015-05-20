@@ -177,6 +177,7 @@ e.g. k4k_140923_024819_uri.fits.fz"""
         new_fname = (std+".{ext}").format(**fields)
     return new_fname
 
+# UNDER CONSTRUCTION
 def generate_archive_basename(hdr, origfname, jobid=False, wunk=False):
     '''Generate standard filename from metadata values. All modifications
 to hdr should be done before calling this function.  Returns something

@@ -25,3 +25,15 @@ dqcli -s
 ils -r -l /noao-tuc-z1/tada/
 
 echo "Remember to check results through portal: http://portal-pat-sdm.noao.edu/"
+
+SUMMARY=/tmp/postproc-bok.summary
+cat <<EOF > $SUMMARY
+When: `date`
+
+Queue: 
+`dqcli -s`
+
+IRODS:
+`ils -r -l /noao-tuc-z1/tada/`
+EOF
+cat $SUMMARY | mail -s "postproc-bok.sh completed!" ${USER}@email.noao.edu
