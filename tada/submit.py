@@ -188,10 +188,21 @@ RETURN: irods location of hdr file.
         #!new_ipath = ipath.with_name(new_basename)
         logging.debug('new_ipath={}, new_basename={}'
                       .format(new_ipath, new_basename))
+        ext = fu.fits_extension(new_basename)
         new_ipath = new_ipath.with_name(new_basename)
         new_ifname = str(new_ipath)
-        new_ihdr = str(new_ipath.with_suffix('.hdr'))
+        new_ihdr = new_ifname.replace(ext,'.hdr')
 
+        # Print without blank cards or trailing whitespace
+        hdrstr = hdr.tostring(sep='\n',padding=False)
+        hdulist.flush()
+        hdulist.close()         # now FITS header is MODIFIED
+        md5 = subprocess.check_output("md5sum -b {} | cut -f1 -d' '"
+                                      .format(mirror_fname),
+                                      shell=True)
+        md5sum=md5.decode().strip()
+        filesize=os.path.getsize(mirror_fname)
+        
         # Create hdr as temp file, i-put, delete tmp file (auto on close)
         # Archive requires extra fields prepended to hdr txt! :-<
         with tempfile.NamedTemporaryFile(mode='w', dir='/tmp') as f:
@@ -201,14 +212,9 @@ RETURN: irods location of hdr file.
                          '#filesize = {filesize} bytes\n'
                          '#file_md5 = {checksum}\n\n'
                      )
-            md5 = subprocess.check_output("md5sum -b /data/raw/nhs_2014_n14_299403.fits | cut -f1 -d' '", shell=True)
             print(ingesthdr.format(filename=new_basename,
-                                   filesize=os.path.getsize(mirror_fname),
-                                   checksum=md5.decode().strip()
-                               ),
+                                   filesize=filesize, checksum=md5sum),
                   file=f)
-            # Print without blank cards or trailing whitespace
-            hdrstr = hdr.tostring(sep='\n',padding=False)
             print(*[s.rstrip() for s in hdrstr.splitlines()
                     if s.strip() != ''],
                   sep='\n',
@@ -221,9 +227,6 @@ RETURN: irods location of hdr file.
             iu.irods_put331(f.name, new_ihdr)
 
         # END with tempfile
-        #!logging.debug('updated HDR={}'.format(hdr))
-        hdulist.flush()
-        hdulist.close()
     except:
         traceback.print_exc()
         raise

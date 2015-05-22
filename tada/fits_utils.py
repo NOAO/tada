@@ -543,7 +543,7 @@ def validate_recommended_hdr(hdr):
 
 def fits_extension(fname):
     '''Return extension of any file matching <basename>.fits.*, basename.fits
-Extension may be: "fits.fz", "fits", "fits.gz", etc'''
+Extension may be: ".fits.fz", ".fits", ".fits.gz", etc'''
     _, ext = os.path.splitext(fname)
     if ext != '.fits':
         _, e2  = os.path.splitext(_)
