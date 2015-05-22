@@ -2,7 +2,8 @@
 # PURPOSE: Use postproc to ingest all BOK fits files.
 #
 
-bokdir=${1:-/data/bok-real} # 828 files
+#!bokdir=${1:-/data/bok-real} # 828 files
+bokdir=${1:-/data/bok2/20150415} # 30 files
 #!bokdir=${1:-/data/bok2}  # 3786 files
 
 date
@@ -14,7 +15,7 @@ date
 for fits in `find $bokdir -name "*.fits.fz" -print`; do
     postproc -v -p bok $fits
 
-    sleep 7  # Just so my little VM doesn't run out disk space!
+    #! sleep 7  # Just so my little VM doesn't run out disk space!
 
     # stop ingest errors from causing disk to fill up!!!
     #!dqcli --clear 
@@ -38,4 +39,4 @@ Queue:
 IRODS:
 `ils -r -l /noao-tuc-z1/tada/`
 EOF
-cat $SUMMARY | mail -s "postproc-bok.sh completed!" ${USER}@email.noao.edu
+
