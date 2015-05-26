@@ -21,6 +21,7 @@ from . import fits_calc as fc
 from . import file_naming as fn
 from . import exceptions as tex
 from . import hdr_calc_funcs as hf
+from . import exceptions as tex
 
 ##############################################################################
 # "Required" fields per tier per Email from Brian Thomas on 1/7/15
@@ -78,6 +79,9 @@ TIER3_EHDU_RAW_FIELDS = 'SEEING1'.split()
 # All bets are off in the original FITS file does not contain all of these.
 RAW_REQUIRED_FIELDS = set([
     'DATE-OBS',
+    'DTSITE',   # Required for standard file name (pg 9, "File Naming Conv...")
+    'DTTELESC', # Required for standard file name (pg 9, "File Naming Conv...")
+    'DTINSTRU', # Required for standard file name (pg 9, "File Naming Conv...")
     'INSTRUME',
     'OBSERVAT',
     'OBSID',
@@ -561,6 +565,7 @@ def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True):
  new filename that fullfills standards
     options :: e.g. {'INSTRUME': 'KOSMOS', 'OBSERVAT': 'KPNO'}
 '''
+    orig_fullname = opt_params.get('filename','<unknown>')
     for k,v in options.items():
         if forceRecalc or (k not in hdr):
             hdr[k] = v
@@ -588,9 +593,13 @@ def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True):
         chg.update(new)
         logging.debug('new field values={}'.format(new))    
     #! logging.debug('updated field values={}'.format(chg))    
-
     #! chg, dateobs = fc.calc_hdr(hdr, fname, **options)
-    dateobs = dt.datetime.strptime(chg['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
+    try:
+        dateobs = dt.datetime.strptime(chg['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
+    except:
+        raise tex.SubmitException(
+            'Could parse DATE-OBS field ({}) in header of: {}'
+            .format(chg['DATE-OBS'], orig_fullname))
 
     if forceRecalc:
         for k,v in chg.items():
@@ -606,7 +615,9 @@ def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True):
     #!validate_recommended_hdr(hdr)
     
     ext = fits_extension(fname)
-    return (hdr.get('INSTRUME', 'nota').lower(),
+    return (hdr.get('DTSITE', 'na'),
+            hdr.get('DTTELESC', 'na'),
+            hdr.get('DTINSTRU', 'na'),
             dateobs, 
             hdr.get('OBSTYPE', 'nota').lower(),
             hdr.get('PROCTYPE', 'nota').lower(),

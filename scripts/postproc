@@ -1,6 +1,7 @@
 #!/bin/bash
 # PURPOSE: Initiate submit of fits file to archive
 #   Sets options for use by tada at valley to add to fits header.
+#   Logs to syslog (/var/log/messages)
 #
 # EXAMPLE: 
 #
@@ -24,14 +25,14 @@
 # AUTHORS: S. Pothier
 
 function finish {
-    echo "EXIT of postproc"
-    logger -p info "postproc: Normal exit of: $(basename $0) $*"
+    #!echo "EXIT of postproc with status: $?"
+    logger -p info "postproc: Exit($?) of: $(basename $0) $*"
 }
 trap finish EXIT
 
 function abort {
     echo "ABORT of postproc"
-    logger -p err "postproc: Aborted run of: $(basename $0) $*"
+    logger -p err "postproc: Aborted($?) run of: $(basename $0) $*"
 }
 trap abort ERR SIGINT SIGTERM
 
@@ -53,6 +54,13 @@ VERBOSE=0
 TIMEOUT=30
 SUBMITTED=/var/log/tada/postproc.rcvd
 filename=$1
+
+# Error codes
+NEED_HELP=1
+BAD_ARGUMENT=2
+MISSING_ARGUMENT=3
+BAD_OPTION=4
+BAD_PERSONALITY=5
 
 usage="USAGE: $cmd [options] file [file ...]
 OPTIONS:
@@ -78,7 +86,7 @@ while getopts "ho:p:s:t:v" opt; do
     case $opt in
 	h)
             echo "$usage"
-            exit 1
+            exit $NEED_HELP
             ;;
 	c)
             CLEAR=1
@@ -91,7 +99,13 @@ while getopts "ho:p:s:t:v" opt; do
             ;;
         p)
 	    # appends to $TADAOPTS
-	    source ${SCRIPTPATH}/${OPTARG}.personality
+	    pfile=${SCRIPTPATH}/${OPTARG}.personality
+	    if [ -f $pfile ]; then
+		source $pfile
+	    else
+		echo "ERROR: File given as -p option ($pfile) was not found or not a regular file. Aborting!"  1>&2
+		exit $BAD_PERSONALITY
+	    fi
             ;;
         #!s)
         #!    SUBMITTED=$OPTARG
@@ -101,11 +115,11 @@ while getopts "ho:p:s:t:v" opt; do
             ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
-            exit 1
+            exit $BAD_OPTION
             ;;
         :)
             echo "Option -$OPTARG requires an argument." >&2
-            exit 1
+            exit $BAD_ARGUMENT
             ;;
 
     esac
@@ -118,7 +132,7 @@ RAC=1 # Required Argument Count
 if [ $# -lt $RAC ]; then
     echo "Not enough non-option arguments. Expect at least $RAC."
     echo >&2 "$usage"
-    exit 2
+    exit $MISSING_ARGUMENT
 fi
 
 
