@@ -25,12 +25,13 @@
 
 function finish {
     echo "EXIT of postproc"
-    logger -p notice "Normal exit of: $(basename $0) $*"
+    logger -p info "postproc: Normal exit of: $(basename $0) $*"
 }
 trap finish EXIT
 
 function abort {
     echo "ABORT of postproc"
+    logger -p err "postproc: Aborted run of: $(basename $0) $*"
 }
 trap abort ERR SIGINT SIGTERM
 
@@ -126,7 +127,7 @@ fi
 strs=""
 for filename; do
     base=`basename $filename`
-    lpcmd="lp -d astro ${LPOPTIONS}  -o _DTACQNAM=$base ${TADAOPTS} ${filename}"
+    lpcmd="lp -d astro ${LPOPTIONS} -o __filename=$filename ${TADAOPTS} ${filename}"
     req=`$lpcmd`
     lpstat=$?
     return_code=$lpstat

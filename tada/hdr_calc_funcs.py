@@ -91,8 +91,9 @@ def DTTELESCfromINSTRUME(orig):
 #!            tele, datestr, *rest = orig['FILENAME'].split('.')
 #!        new['DTTELESC'] = tele
 #!        new['OBSTYPE'] = orig.get('IMAGETYP','object')
-    else:
-        pass
+#!    else:
+#!        tele, dt_str = orig['OBSID'].split('.')
+#!        new['DTTELESC'] = tele
 
     new['DTINSTRU'] = instrument # eg. 'NEWFIRM'
     return new

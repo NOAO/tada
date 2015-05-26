@@ -219,6 +219,11 @@ this function.'''
                          hdr['DTCALDAT'].replace('-',''),
                          hdr['DTTELESC'],
                          hdr['DTPROPID'])
+    elif source == 'dome':
+        return PurePath('/noao-tuc-z1/mtn',
+                         hdr['DTCALDAT'].replace('-',''),
+                         hdr['DTTELESC'],
+                         hdr['DTPROPID'])
     elif source == 'pipeline':
         return PurePath('/noao-tuc-z1/pipeline',
                         'Q_unknownday',

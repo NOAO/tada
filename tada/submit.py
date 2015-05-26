@@ -25,13 +25,13 @@ from . import ingest_decoder as idec
  
 
 
-def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
+def http_archive_ingest(hdr_ipath, qname, qcfg=None):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
  Archive Ingest via REST-like interface."""
     import random # for stubbing random failures (not for production)
 
-    logging.debug('EXECUTING: http_archive_ingest({}, {}, {})'
-                  .format(hdr_ipath, checksum, qname))
+    logging.debug('EXECUTING: http_archive_ingest({}, {})'
+                  .format(hdr_ipath, qname))
 
     arch_host = qcfg[qname]['arch_host']
     arch_port = qcfg[qname]['arch_port']
@@ -66,40 +66,10 @@ def http_archive_ingest(hdr_ipath, checksum, qname, qcfg=None):
         if not result:
             operator_msg = idec.decodeIngest(response)
             raise tex.SubmitException(
-                'HTTP response from Archive Ingest: "{}"; {}'
+                'HTTP response from NSA server: "{}"; {}'
             .format(response, operator_msg))
 
     return result
-    
-def tcp_archive_ingest(fname, checksum, qname, qcfg=None):
-    logging.debug('EXECUTING: tcp_archive_ingest({}, {}, {})'
-                  .format(fname, qname, qcfg))
-    arch_host = qcfg[qname]['arch_host']
-    arch_port = qcfg[qname]['arch_port']
-    # register in irods
-    # post metadata to archive port
-
-    data = fu.get_archive_header(fname, checksum)
-    logging.debug('Prepare to send data over TCP: {}'.format(data))
-    
-    # Create a socket (SOCK_STREAM means a TCP socket)
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
- 
-    try:
-        logging.debug('Connect to ingest server on {}:{}'
-                      .format(arch_host, arch_port))
-        # Connect to server and send data
-        sock.connect((arch_host, arch_port))
-        sock.sendall(bytes(data + "\n", "utf-8"))
-
-        # Receive data from the server and shut down
-        received = str(sock.recv(1024), "utf-8")
-    finally:
-        sock.close()
-
-    print("Sent:     {}".format(data))
-    print("Received: {}".format(received))    
-
     
 
 def prep_for_ingest(mirror_fname, mirror_dir, archive331):
@@ -131,22 +101,33 @@ RETURN: irods location of hdr file.
     if os.path.exists(optfname):
         with open(optfname,encoding='utf-8') as f:
             optstr = f.readline()
+    #!options = dict()
+    #!for s in optstr.split():
+    #!    if s[0] != '_':
+    #!        continue
+    #!    k,v = s[1:].split('=')
+    #!    options[k] = v.replace('_', ' ')
+    #!opt_params = dict()  # under-under params. Passed like: lp -d astro -o __x=3
+    #!for k,v in list(options.items()):
+    #!    if k[0] =='_':
+    #!        opt_params[k[1:]] = v
+    #!        options.pop(k)
     options = dict()
-    for s in optstr.split():
-        if s[0] != '_':
+    opt_params = dict()
+    for opt in optstr.split():
+        k, v = opt.split('=')
+        if k[0] != '_':
             continue
-        k,v = s[1:].split('=')
-        options[k] = v.replace('_', ' ')
-
-    opt_params = dict()  # under-under params. Passed like: lp -d astro -o __x=3
-    for k,v in list(options.items()):
-        if k[0] =='_':
-            opt_params[k[1:]] = v
-            options.pop(k)
+        if k[1] == '_':
+            opt_params[k[2:]] = v
+        else:
+            options[k[1:]] = v.replace('_', ' ')                
+        
     # +++ API: under-under parameters via lp options
     jidt = opt_params.get('jobid_type',None)  # plain | seconds | (False)
     source = opt_params.get('source','raw')   # pipeline | (dome)
     warn_unknown = opt_params.get('warn_unknown', False) # 1 | (False)
+    orig_fullname = opt_params.get('filename','<unknown>')
 
     #!logging.debug('Options in prep_for_ingest: {}'.format(options))
     logging.debug('Params in prep_for_ingest: {}'.format(opt_params))
@@ -159,10 +140,10 @@ RETURN: irods location of hdr file.
         hdr = hdulist[0].header # use only first in list.
         fu.apply_options(options, hdr)
         #!hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname
-        fu.validate_raw_hdr(hdr)
+        fu.validate_raw_hdr(hdr, orig_fullname)
         fname_fields = fu.modify_hdr(hdr, mirror_fname, options, opt_params)
-        fu.validate_cooked_hdr(hdr)
-        fu.validate_recommended_hdr(hdr)
+        fu.validate_cooked_hdr(hdr, orig_fullname)
+        fu.validate_recommended_hdr(hdr, orig_fullname)
         # Generate standards conforming filename
         # EXCEPT: add field when JIDT given.
         if jidt == 'plain':
@@ -208,7 +189,7 @@ RETURN: irods location of hdr file.
         with tempfile.NamedTemporaryFile(mode='w', dir='/tmp') as f:
             ingesthdr = ('#filename = {filename}\n'
                          '#reference = {filename}\n'
-                         '#filetype = UNKNOWN\n'
+                         '#filetype = TILED_FITS\n'
                          '#filesize = {filesize} bytes\n'
                          '#file_md5 = {checksum}\n\n'
                      )
@@ -296,7 +277,7 @@ here. However the levels are stored in hdr fields SB_DIR{1,2,3}.
         raise
     
     try:
-        http_archive_ingest(new_ihdr, checksum, qname, qcfg=qcfg)
+        http_archive_ingest(new_ihdr, qname, qcfg=qcfg)
     except:
         #! traceback.print_exc()
         if foundHdr:
