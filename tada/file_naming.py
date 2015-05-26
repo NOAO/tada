@@ -48,47 +48,45 @@ table1_str = '''
 
 
 # CONTAINS DUPLICATES!!! (e.g. "Arcon") needs Telescope for disambiguation.
-instrumentLUT = {
-    # Instrument, Prefix 
-    'goodman':   'psg',  
-    'osiris':    'pso',  
-    'soi':       'psi',  
-    'spartan':   'pss',  
-    'sam':       'psa',  
-    'decam':     'c4d',  
-    'cosmos':    'c4c',  
-    'ispi':      'c4i',  
-    'arcon':     'c4a',  
-    'mosaic':    'c4m',  
-    'newfirm':   'c4n',  
-    'chiron':    'c15e',  
-    'arcon':     'c15s',  
-    'andicam':   'c13a',  
-    'y4kcam':    'c1i',  
-    'arcon':     'c09i',  
-    'cosmos':    'clc',  
-    'mosaic':    'k4m',  
-    'newfirm':   'k4n',  
-    'kosmos':    'k4k',  
-    'ice':       'k4i',  
-    'wildfire':  'k4w',  
-    'flamingos': 'k4f',  
-    'whirc':     'kww',  
-    'bench':     'kwb',  
-    'minimo/ice':'kwi',  
-    '(p)odi':    'kwo',  
-    'mop/ice':   'k21i',  
-    'wildfire':  'k21w',  
-    'falmingos': 'k21f',  
-    'gtcam':     'k21g',  
-    'mop/ice':   'kcfs',  
-    'hdi':       'k09h',  
-    'mosaic':    'k09m',  
-    'ice':       'k09i',
-    #
-    '90prime':   'ksb',  # BOK
-    #
-    'NOTA':      'uuuu',  
+stiLUT = {
+    # (site, telescope,instrument): Prefix 
+    ('cp', 'soar', 'goodman'):   'psg',  
+    ('cp', 'soar', 'osiris'):    'pso',  
+    ('cp', 'soar', 'soi'):       'psi',  
+    ('cp', 'soar', 'spartan'):   'pss',  
+    ('cp', 'soar', 'sam'):       'psa',  
+    ('ct', 'ct4m', 'decam'):     'c4d',  
+    ('ct', 'ct4m', 'cosmos'):    'c4c',  
+    ('ct', 'ct4m', 'ispi'):      'c4i',  
+    ('ct', 'ct4m', 'arcon'):     'c4a',  
+    ('ct', 'ct4m', 'mosaic'):    'c4m',  
+    ('ct', 'ct4m', 'newfirm'):   'c4n',  
+    ('ct', 'ct15m', 'chiron'):   'c15e',  
+    ('ct', 'ct15m', 'arcon'):    'c15s',  
+    ('ct', 'ct13m', 'andicam'):  'c13a',  
+    ('ct', 'ct1m', 'y4kcam'):    'c1i',  
+    ('ct', 'ct09m', 'arcon'):    'c09i',  
+    ('ct', 'ctlab', 'cosmos'):   'clc',  
+    ('kp', 'kp4m', 'mosaic'):    'k4m',  
+    ('kp', 'kp4m', 'newfirm'):   'k4n',  
+    ('kp', 'kp4m', 'kosmos'):    'k4k',  
+    ('kp', 'kp4m', 'ice'):       'k4i',  
+    ('kp', 'kp4m', 'wildfire'):  'k4w',  
+    ('kp', 'kp4m', 'flamingos'): 'k4f',  
+    ('kp', 'kp35m', 'whirc'):     'kww',  
+    ('kp', 'kp35m', 'bench'):     'kwb',  
+    ('kp', 'kp35m', 'minimo/ice'):'kwi',  
+    ('kp', 'kp35m', '(p)odi'):    'kwo',  
+    ('kp', 'kp21m', 'mop/ice'):   'k21i',  
+    ('kp', 'kp21m', 'wildfire'):  'k21w',  
+    ('kp', 'kp21m', 'falmingos'): 'k21f',  
+    ('kp', 'kp21m', 'gtcam'):     'k21g',  
+    ('kp', 'kpcf', 'mop/ice'):   'kcfs',  
+    ('kp', 'kp09m', 'hdi'):       'k09h',  
+    ('kp', 'kp09m', 'mosaic'):    'k09m',  
+    ('kp', 'kp09m', 'ice'):       'k09i',
+    ('kp', 'bok23m','90prime'):   'ksb',  # BOK
+    #'NOTA':      'uuuu',  
 }
 
 obsLUT = {
@@ -132,16 +130,13 @@ prodLUT = {
     }
 
 
-def generate_fname(instrument, obsdt, obstype, proctype, prodtype, ext,
+def generate_fname(site, telescope, instrument,
+                   obsdt, obstype, proctype, prodtype, ext,
                    orig=None,
                    jobid=False,
                    wunk=False):
     """Generate standard filename from metadata values.
 e.g. k4k_140923_024819_uri.fits.fz"""
-    logging.debug('generate_fname({},{},{},{},{},{})'
-                  .format(instrument, obsdt, obstype, proctype, prodtype, ext))
-    logging.debug('generate_fname(jobid={}, wunk={})'
-                  .format(jobid, wunk))
     if wunk != False:
         if 'u' == obsLUT.get(obstype, 'u'):
             logging.warning('Unknown OBSTYPE "{}" in {}'
@@ -160,7 +155,10 @@ e.g. k4k_140923_024819_uri.fits.fz"""
     time = obsdt.time().strftime('%H%M%S')
 
     fields = dict(
-        instrument=instrumentLUT.get(instrument.lower(),'uuuu'),
+        instrument=stiLUT.get((site.lower(),
+                               telescope.lower(),
+                               instrument.lower()),
+                              'uuuu'),
         date=date,
         time=time,
         obstype=obsLUT.get(obstype, 'u'),    # if not in LUT, use "u"!!!

@@ -211,8 +211,8 @@ RETURN: irods location of hdr file.
     except:
         traceback.print_exc()
         raise
-    finally:
-        pass
+        #! raise tex.SubmitException('Bad header content in file {}'
+        #!                           .format(orig_fullname))
   
     #! iu.irods_put331(mirror_fname, new_ifname) # iput renamed FITS
     #

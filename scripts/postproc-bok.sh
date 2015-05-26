@@ -30,8 +30,9 @@ sleep 5
 dqcli -s
 ils -r -l /noao-tuc-z1/tada/
 
-echo "Remember to check results through portal: http://portal-pat-sdm.noao.edu/"
-
+echo "Remember to check results through portal:"
+echo "   http://portal-pat-sdm.noao.edu/  -OR-"
+echo "   http://portal-nvo.noao.edu/"
 SUMMARY=/tmp/postproc-bok.summary
 cat <<EOF > $SUMMARY
 When: `date`

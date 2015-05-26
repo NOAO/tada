@@ -1,0 +1,5 @@
+# For instrument=sami
+TADAOPTS=${TADAOPTS:-""}
+TADAOPTS="${TADAOPTS} \
+ -o __calchdr=addTimeToDATEOBS,DTCALDATfromDATEOBStus,PROPIDtoDT,INSTRUMEtoDT \
+"
