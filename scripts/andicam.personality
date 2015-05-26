@@ -1,0 +1,5 @@
+TADAOPTS=${TADAOPTS:-""}
+TADAOPTS="${TADAOPTS} \
+ -o __calchdr=PROPIDtoDT \
+ -o _OBSERVAT=KPNO \
+"

@@ -93,6 +93,7 @@ INGEST_REQUIRED_FIELDS = set([
     'SIMPLE',
     'DTPROPID', # observing proposal ID
     'DTCALDAT', # calendar date from observing schedule
+    'DTTELESC', # needed to construct full file path in archive
 ])
 
 # We should try to fill these fields were practical. They are used in
@@ -515,30 +516,31 @@ CHECKSUM= 'mhElmh9lmhClmh9l'    /  ASCII 1's complement checksum
 DATASUM = '0         '          /  checksum of data records                 
 """    
 
-def validate_raw_hdr(hdr):
+def validate_raw_hdr(hdr, orig_fullname):
     missing = missing_in_raw_hdr(hdr)
     if len(missing) > 0:
         raise tex.InsufficientRawHeader(
-            'Raw fits file is missing required metadata fields: {}'
-            .format(', '.join(sorted(missing)))
-        )
+            'Raw FITS header is missing required metadata fields ({}) '
+            'in file {}'
+            .format(', '.join(sorted(missing)), orig_fullname))
     return True    
 
-def validate_cooked_hdr(hdr):
+def validate_cooked_hdr(hdr, orig_fullname):
     missing = missing_in_archive_hdr(hdr)
     if len(missing) > 0:
         raise tex.InsufficientArchiveHeader(
-            'Modified FITS header is missing required metadata fields: {}'
-            .format(', '.join(sorted(missing)))
-            )
+            'Modified FITS header is missing required metadata fields ({}) '
+            'in file {}'
+            .format(', '.join(sorted(missing)), orig_fullname))
     return True
 
-def validate_recommended_hdr(hdr):
+def validate_recommended_hdr(hdr, orig_fullname):
     missing = missing_in_recommended_hdr(hdr)
     if len(missing) > 0:
         logging.warning(
-            'Modified FITS header is missing recommended metadata fields: {}'
-            .format(', '.join(sorted(missing))))
+            'Modified FITS header is missing recommended metadata fields ({}) '
+            'in file {}'
+            .format(', '.join(sorted(missing)), orig_fullname))
     return True
 
 def fits_extension(fname):

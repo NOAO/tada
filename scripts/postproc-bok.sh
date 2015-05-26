@@ -4,6 +4,9 @@
 
 #!bokdir=${1:-/data/bok-real} # 828 files
 bokdir=${1:-/data/bok2/20150415} # 30 files
+
+#bdir="/data/bok2/20150415 /data/bok2/20150416"
+
 #!bokdir=${1:-/data/bok2}  # 3786 files
 
 date
