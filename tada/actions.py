@@ -63,13 +63,24 @@ def network_move(rec, qname, **kwargs):
     out = None
     try:
         #!iu.irods_put(fname, ifname)
-        cmdline = ['rsync',
-                   '-rpo',    #! took out '-aztg',
-                   '--timeout=20',
+        cmdline = ['rsync', 
+                   #! '--acls',
+                   '--super',
+                   #! '--archive',
+                   #! '--group',    # preserve group
+                   #! '--owner',    # preserve owner (if run as super-user)
+                   '--perms',    # preserve permissions
+                   #! '--stats',    # give some file-transfer stats
+                   #! '--times',    # preserve modification times
+                   ###
+                   '--chmod=ugo=rwX',
+                   '--compress', # compress file data during the transfer
                    '--contimeout=5',
-                   '--remove-source-files',
-                   #!'--stats',
                    '--password-file', '/etc/tada/rsync.pwd',
+                   '--recursive',
+                   '--remove-source-files',
+                   #sender removes synchronized files (non-dir)
+                   '--timeout=20',
                    source_root, sync_root]
         diag.dbgcmd(cmdline)
         tic = time.time()
@@ -78,10 +89,10 @@ def network_move(rec, qname, **kwargs):
         logging.info('rsync completed in {:.2f} seconds'.format(time.time() - tic))
     except Exception as ex:
         logging.warning('Failed to transfer from Mountain ({}) to Valley. '
-                        '{} => {}; {}'
+                        '{}; {}'
                         .format(os.getuid(),
                                 ex,
-                                ex.output.decode('utf-8'),
+                                #!ex.output.decode('utf-8'),
                                 out
                             ))
         # Any failure means put back on queue. Keep queue handling
@@ -161,7 +172,8 @@ configuration field: maximum_errors_per_record)
         try:
             destfname = ts.submit_to_archive(ifname, checksum, qname, qcfg)
         except Exception as sex:
-            logsubmit(submitlog, ifname, ifname, 'submit_to_archive', fail=True)
+            logsubmit(submitlog, ifname, ifname, 'submit_to_archive',
+                      fail=True)
             raise sex
         else:
             logging.info('PASSED submit_to_archive; {} as {}'

@@ -3,11 +3,19 @@
 #
 
 #!bokdir=${1:-/data/bok-real} # 828 files
-bokdir=${1:-/data/bok2/20150415} # 30 files
+#!bokdir=${1:-/data/bok2/20150415} # 30 files
 
 #bdir="/data/bok2/20150415 /data/bok2/20150416"
 
-#!bokdir=${1:-/data/bok2}  # 3786 files
+bokdir=${1:-/data/bok2}  # 3786 files
+#!boklist=/sandbox/tada/scripts/bok2.list
+boklist=/sandbox/tada/scripts/bok/bok2.do
+
+function abort {
+    echo "ABORT of postproc-bok.sh"
+    exit 1
+}
+trap abort ERR SIGINT SIGTERM
 
 date
 
@@ -15,10 +23,16 @@ date
 #! find $bokdir -name "*.fits.fz" -print0 \
 #!     | xargs -0 -L 1 postproc -p bok $optprms
 
-for fits in `find $bokdir -name "*.fits.fz" -print`; do
-    postproc -v -p bok $fits
 
-    #! sleep 7  # Just so my little VM doesn't run out disk space!
+#for fits in `find $bokdir -name "*.fits.fz" -print`; do
+for fits in `grep  -v \# $boklist`; do
+    echo "submit: $fits"
+    postproc -v -p bok $fits
+    if [ -f /etc/tada/pause ]; then
+	# sleep 12
+	# sleep 8
+	source /etc/tada/pause  # trick to pause more or abort (exit)
+    fi
 
     # stop ingest errors from causing disk to fill up!!!
     #!dqcli --clear 

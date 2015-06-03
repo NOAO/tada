@@ -94,6 +94,8 @@ INGEST_REQUIRED_FIELDS = set([
     'DTPROPID', # observing proposal ID
     'DTCALDAT', # calendar date from observing schedule
     'DTTELESC', # needed to construct full file path in archive
+    'DTACQNAM', # file name supplied at telescope; User knows only THIS name
+    'DTNSANAM', # file name in archive (renamed from user supplied)
 ])
 
 # We should try to fill these fields were practical. They are used in
@@ -645,7 +647,7 @@ def apply_options(options, hdr):
 def fits_compliant(fits_file_list,
                    personalities=[],
                    quiet=False,
-                   show_values=False, show_header=False,
+                   show_values=False, show_header=False, show_stdfname=True,
                    required=False, verbose=False):
     """Check FITS file for complaince with Archive Ingest."""
     if personalities == None:
@@ -691,7 +693,7 @@ def fits_compliant(fits_file_list,
             hdr = pyfits.open(ffile)[0].header # use only first in list.
             apply_options(options, hdr)
             missing_raw = missing_in_raw_hdr(hdr)
-            modify_hdr(hdr, ffile, options, opt_params)
+            fname_fields = modify_hdr(hdr, ffile, options, opt_params)
             missing_cooked = missing_in_archive_hdr(hdr)
             missing_recommended = missing_in_recommended_hdr(hdr)
         except Exception as err:
@@ -705,6 +707,9 @@ def fits_compliant(fits_file_list,
         if (len(missing_raw) + len(missing_cooked)) > 0:
             valid = False
 
+        if show_stdfname:
+            new_basename = fn.generate_fname(*fname_fields)
+            print('{} produced from {}'.format(new_basename, ffile))
         if show_values:
             show_hdr_values('Post modify', hdr) # only "interesting" ones
         if show_header:

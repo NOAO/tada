@@ -1,5 +1,10 @@
 # Files from dome are missing required FITS fields: OBSERVAT, OBSID, PROPID
 
+
+# WARNING: Modified FITS header is missing
+#   recommended metadata fields (DTACQNAM, DTNSANAM)
+# Handle these in submit.py (postproc adds "__filename" option for DTACQNAM)
+
 PROPID="2015A-0801" # real
 
 # A limitation of CUPS means NO SPACES are allowed in option values.
