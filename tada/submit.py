@@ -259,6 +259,11 @@ possible.  Ingest involves renaming to satisfy filename
 standards. Although I've seen no requirements for it, previous systems
 also used a specific 3 level directory structure that is NOT used
 here. However the levels are stored in hdr fields SB_DIR{1,2,3}.
+
+ifname:: full path of fits file (in mirror-archive)
+checksum:: NOT USED
+qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
+
 """
     logging.debug('submit_to_archive({},{})'.format(ifname, qname))
     #! logging.debug('   qcfg={})'.format(qcfg))

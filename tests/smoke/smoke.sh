@@ -31,7 +31,7 @@ dir=$SCRIPTDIR
 origdir=`pwd`
 cd $dir
 
-PATH=$tadadir/scripts:$SCRIPTDIR:$PATH
+PATH=$tadadir/scripts:$tadadir/dev-scripts:$SCRIPTDIR:$PATH
 deletemirror=`type -path delete-mirror.sh`
 deletenoarch=`type -path delete-noarchive.sh`
 

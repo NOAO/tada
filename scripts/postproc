@@ -24,7 +24,6 @@
 # AUTHORS: S. Pothier
 
 function finish {
-    echo "EXIT of postproc"
     logger -p info "postproc: Normal exit of: $(basename $0) $*"
 }
 trap finish EXIT
