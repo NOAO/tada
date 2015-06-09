@@ -17,7 +17,7 @@ import os.path
 import datetime as dt
 import subprocess
  
-from . import fits_calc as fc
+#!from . import fits_calc as fc
 from . import file_naming as fn
 from . import exceptions as tex
 from . import hdr_calc_funcs as hf
