@@ -31,7 +31,7 @@ dir=$SCRIPTDIR
 origdir=`pwd`
 cd $dir
 
-PATH=$tadadir/scripts:$SCRIPTDIR:$PATH
+PATH=$tadadir/scripts:$tadadir/dev-scripts:$SCRIPTDIR:$PATH
 deletemirror=`type -path delete-mirror.sh`
 deletenoarch=`type -path delete-noarchive.sh`
 
@@ -85,10 +85,6 @@ testCommand tada1_3 "dqout 2>&1" "^\#" n
 find /var/tada -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
 testOutput tada1_4 $findout '^\#' n
 
-
-## k4k NOW GETS THIS ERROR:
-# tada.exceptions.SubmitException: HTTP response from Archive Ingest: "Failure reason:Failed to ingest file:/noao-tuc-z1/tada/vagrant/2/k4k_140922_234549_zuu_1186823651.hdr error msg:Got more than one observation matching calibration date for proposal. Query: select distinct o from ObservationEntity o join fetch o.proposalSet p where p.proposalId = ?1 and o.calibrationDate between ?2 and ?3 and o.publicDataReleaseDate < ?4"; Operator:: <none>
-##
 
 ##########################
 # 2_1: pass ingest without options
