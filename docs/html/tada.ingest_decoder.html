@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="tada.html"><font color="#ffffff">tada</font></a>.ingest_decoder</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/pothiers/sandbox/tada/env_tada/lib/python3.4/site-packages/tada-0.0.dev5-py3.4.egg/tada/ingest_decoder.py">/home/pothiers/sandbox/tada/env_tada/lib/python3.4/site-packages/tada-0.0.dev5-py3.4.egg/tada/ingest_decoder.py</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/pothiers/sandbox/tada/env_tada/lib/python3.4/site-packages/tada-0.1.rc1-py3.4.egg/tada/ingest_decoder.py">/home/pothiers/sandbox/tada/env_tada/lib/python3.4/site-packages/tada-0.1.rc1-py3.4.egg/tada/ingest_decoder.py</a></font></td></tr></table>
     <p><tt>Make&nbsp;sense&nbsp;of&nbsp;HTTP&nbsp;responses&nbsp;from&nbsp;Archive&nbsp;Ingest.<br>
 +++&nbsp;Add&nbsp;to&nbsp;this&nbsp;to&nbsp;get&nbsp;better&nbsp;messages&nbsp;in&nbsp;TADA&nbsp;log&nbsp;when&nbsp;Archive&nbsp;Ingest&nbsp;fails.</tt></p>
 <p>
@@ -34,5 +34,7 @@
 <font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
     
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><strong>exists_re</strong> = re.compile('has already been stored in the database')</td></tr></table>
+<td width="100%"><strong>dup_obs_prop_re</strong> = re.compile('Got more than one observation matching calibration date for proposal')<br>
+<strong>exists_re</strong> = re.compile('has already been stored in the database')<br>
+<strong>nonunique_propid_re</strong> = re.compile('Could not find unique proposal')</td></tr></table>
 </body></html>

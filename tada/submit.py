@@ -140,6 +140,7 @@ RETURN: irods location of hdr file.
         hdr = hdulist[0].header # use only first in list.
         fu.apply_options(options, hdr)
         #!hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname
+        hdr['DTACQNAM'] = orig_fullname
         fu.validate_raw_hdr(hdr, orig_fullname)
         fname_fields = fu.modify_hdr(hdr, mirror_fname, options, opt_params)
         fu.validate_cooked_hdr(hdr, orig_fullname)
@@ -164,6 +165,7 @@ RETURN: irods location of hdr file.
             new_basename = fn.generate_fname(*fname_fields, jobid=jobid, wunk=warn_unknown, orig=mirror_fname)
             #!new_basename = fn.generate_archive_basename(hdr, mirror_fname, jobid=jobid, wunk=warn_unknown)
         hdr['DTNSANAM'] = new_basename
+
         new_ipath = fn.generate_archive_path(hdr, source=source)
         #!ipath = pathlib.PurePath(mirror_fname.replace(mirror_dir, archive331))
         #!new_ipath = ipath.with_name(new_basename)
@@ -259,6 +261,11 @@ possible.  Ingest involves renaming to satisfy filename
 standards. Although I've seen no requirements for it, previous systems
 also used a specific 3 level directory structure that is NOT used
 here. However the levels are stored in hdr fields SB_DIR{1,2,3}.
+
+ifname:: full path of fits file (in mirror-archive)
+checksum:: NOT USED
+qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
+
 """
     logging.debug('submit_to_archive({},{})'.format(ifname, qname))
     #! logging.debug('   qcfg={})'.format(qcfg))

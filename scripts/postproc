@@ -25,8 +25,12 @@
 # AUTHORS: S. Pothier
 
 function finish {
+<<<<<<< HEAD
     #!echo "EXIT of postproc with status: $?"
     logger -p info "postproc: Exit($?) of: $(basename $0) $*"
+=======
+    logger -p info "postproc: Normal exit of: $(basename $0) $*"
+>>>>>>> master
 }
 trap finish EXIT
 
