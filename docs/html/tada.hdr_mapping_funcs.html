@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module tada.hdr_mapping_funcs</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="tada.html"><font color="#ffffff">tada</font></a>.hdr_mapping_funcs</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/pothiers/sandbox/tada/env_tada/lib/python3.4/site-packages/tada-0.1.rc1-py3.4.egg/tada/hdr_mapping_funcs.py">/home/pothiers/sandbox/tada/env_tada/lib/python3.4/site-packages/tada-0.1.rc1-py3.4.egg/tada/hdr_mapping_funcs.py</a></font></td></tr></table>
+    <p><tt>Functions&nbsp;intended&nbsp;to&nbsp;be&nbsp;referenced&nbsp;in&nbsp;Personality&nbsp;files.&nbsp;<br>
+&nbsp;<br>
+Each&nbsp;function&nbsp;accepts&nbsp;a&nbsp;dictionary&nbsp;of&nbsp;name/values&nbsp;(from&nbsp;a&nbsp;FITS&nbsp;header)<br>
+and&nbsp;returns&nbsp;a&nbsp;dictionary&nbsp;of&nbsp;new&nbsp;name/values.&nbsp;&nbsp;Fields&nbsp;(names)&nbsp;may&nbsp;be<br>
+added&nbsp;but&nbsp;not&nbsp;removed&nbsp;in&nbsp;the&nbsp;new&nbsp;dictionary&nbsp;with&nbsp;respect&nbsp;to&nbsp;the<br>
+original.<br>
+&nbsp;<br>
+In&nbsp;each&nbsp;function&nbsp;of&nbsp;this&nbsp;file:<br>
+&nbsp;&nbsp;orig::&nbsp;&nbsp;&nbsp;&nbsp;orginal&nbsp;header&nbsp;as&nbsp;a&nbsp;dictionary<br>
+&nbsp;&nbsp;RETURNS::&nbsp;dictionary&nbsp;that&nbsp;should&nbsp;be&nbsp;used&nbsp;to&nbsp;update&nbsp;the&nbsp;header</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="logging.html">logging</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-DTCALDATfromDATEOBS"><strong>DTCALDATfromDATEOBS</strong></a>(orig)</dt><dd><tt>#DATEOBS&nbsp;is&nbsp;UTC,&nbsp;so&nbsp;convert&nbsp;DATEOBS&nbsp;to&nbsp;localdate&nbsp;and&nbsp;localtime,&nbsp;then:<br>
+#if&nbsp;[&nbsp;$localtime&nbsp;&gt;&nbsp;12:00];&nbsp;then&nbsp;DTCALDAT=localdate;&nbsp;else&nbsp;DTCALDAT=localdate-1</tt></dd></dl>
+ <dl><dt><a name="-addTimeToDATEOBS"><strong>addTimeToDATEOBS</strong></a>(orig)</dt><dd><tt>Use&nbsp;TIME-OBS&nbsp;for&nbsp;time&nbsp;portion&nbsp;of&nbsp;DATEOBS.</tt></dd></dl>
+</td></tr></table>
+</body></html>
