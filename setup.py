@@ -2,6 +2,10 @@
 from setuptools import setup, find_packages 
 from codecs import open  # To use a consistent encoding
 from os import path
+from glob import glob
+
+personalities = glob(path.join('tada_support','personalities','*'))
+
 
 here = path.abspath(path.dirname(__file__))
 
@@ -15,7 +19,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.0.2rc2',
+    version='0.0.2rc3',
 
     description='Collect telescope data from mountain tops, deliver to far-away archives',
     long_description=long_description,
@@ -44,8 +48,8 @@ setup(
         'Intended Audience :: System Administrators',
         'Intended Audience :: Telecommunications Industry',
         'Topic :: Scientific/Engineering :: Astronomy',
-
-        # Pick your license as you wish (should match "license" above)
+ 
+       # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: MIT License',
 
         # Specify the Python versions you support here. In particular, ensure
@@ -71,7 +75,7 @@ setup(
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     package_data={
-        'sample': ['package_data.dat'],
+        'tada_support': ['personalities/*', 'scripts/*', 'dev-scripts/*',],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
@@ -79,6 +83,10 @@ setup(
     # see http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
     # In this case, 'data_file' will be installed into '<sys.prefix>/my_data'
     #! data_files=[('my_data', ['data/data_file'])],
+    data_files=[('/usr/local/bin', ['tada_support/scripts/postproc',]),
+                ('/var/tada/personalities', personalities),
+                ],
+                    
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
