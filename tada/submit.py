@@ -58,13 +58,18 @@ def http_archive_ingest(hdr_ipath, qname, qcfg=None):
             with urllib.request.urlopen(archserver_url) as f:
                 # As of 1/15/2015 the only two possible responses are:
                 #   "Success" or "Failure"
-                response = f.readline().decode('utf-8')
-            logging.debug('ARCH server response: = {}'.format(response))
-            result = True if response == "Success" else False
+                #!response = f.readline().decode('utf-8')
+                response = f.read().decode('utf-8')
+            logging.debug('ARCH server response: {}'.format(response))
         except:
             raise
-        if not result:
-            operator_msg = idec.decodeIngest(response)
+        success, operator_msg = idec.decodeIngest(response)
+        logging.debug('ARCH server: success={}, msg={}'
+                      .format(success, operator_msg))
+        #!result = True if response == "Success" else False
+        #!if not result:
+        if not success:
+            #! operator_msg = idec.decodeIngest(response)
             raise tex.SubmitException(
                 'HTTP response from NSA server: "{}"; {}'
             .format(response, operator_msg))
