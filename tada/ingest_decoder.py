@@ -6,7 +6,9 @@ import re
 import xml.etree.ElementTree as ET
 
 '''
-see Jira, DEVEL-597:
+see:
+- Jira, DEVEL-597
+- http://nsabuild.tuc.noao.edu/projectdocs/services/dataproductload/report.html
 
 <ingest type="FAILURE" dataProductUri="irods:///noao-tuc-z1/ingest-data/kp173541.hdr.gz">
   <message type="DP_ALREADY_IN_DB">
