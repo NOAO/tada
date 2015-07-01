@@ -49,7 +49,7 @@ def network_move(rec, qname, **kwargs):
     redis_port = qcfg[nextq]['redis_port']
 
     source_root = qcfg[qname]['cache_dir']
-    stash_root = qcfg[qname]['stash_dir']
+    stash_root = '/var/tada/mountain_stash'
     sync_root = qcfg[qname]['mirror_dir']
     valley_root = qcfg[nextq]['mirror_dir']
     fname = rec['filename']            # absolute path
