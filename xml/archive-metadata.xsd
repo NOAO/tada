@@ -1,0 +1,1459 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:element name="fitsHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="SIMPLE"/>
+        <xs:element ref="BITPIX"/>
+        <xs:element ref="NAXIS"/>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="NAXIS1"/>
+          <xs:element ref="NAXIS2"/>
+        </xs:sequence>
+        <xs:choice>
+          <xs:element ref="EXTEND"/>
+          <xs:sequence>
+            <xs:element ref="FORMAT"/>
+            <xs:element ref="DATATYPE"/>
+          </xs:sequence>
+        </xs:choice>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="ACQCNTRL"/>
+          <xs:element ref="ACQDIGAV"/>
+          <xs:element ref="ACQMODE"/>
+          <xs:element ref="ACQPRIOR"/>
+          <xs:element ref="ACQSEL0"/>
+          <xs:element ref="ACQSEL1"/>
+          <xs:element ref="ACQSEL10"/>
+          <xs:element ref="ACQSEL11"/>
+          <xs:element ref="ACQSEL12"/>
+          <xs:element ref="ACQSEL13"/>
+          <xs:element ref="ACQSEL14"/>
+          <xs:element ref="ACQSEL15"/>
+          <xs:element ref="ACQSEL2"/>
+          <xs:element ref="ACQSEL3"/>
+          <xs:element ref="ACQSEL4"/>
+          <xs:element ref="ACQSEL5"/>
+          <xs:element ref="ACQSEL6"/>
+          <xs:element ref="ACQSEL7"/>
+          <xs:element ref="ACQSEL8"/>
+          <xs:element ref="ACQSEL9"/>
+          <xs:element ref="ACQSTAT"/>
+          <xs:element ref="ADC"/>
+          <xs:element ref="ADCPAN1"/>
+          <xs:element ref="ADCPAN2"/>
+          <xs:element ref="ADCSTAT"/>
+          <xs:element ref="ADC_CONF"/>
+          <xs:element ref="ADC_MUX"/>
+          <xs:element ref="ADC_OFSB"/>
+          <xs:element ref="ADC_OFSG"/>
+          <xs:element ref="ADC_OFSR"/>
+          <xs:element ref="ADC_PGAB"/>
+          <xs:element ref="ADC_PGAG"/>
+          <xs:element ref="ADC_PGAR"/>
+          <xs:element ref="ADC_ZERO"/>
+          <xs:element ref="AIRMASS"/>
+          <xs:element ref="ALT"/>
+          <xs:element ref="ALTITUDE"/>
+          <xs:element ref="AMBTEMP"/>
+          <xs:element ref="AMPINTEG"/>
+          <xs:element ref="APER0001"/>
+          <xs:element ref="ARRDIR"/>
+          <xs:element ref="ARRFILE"/>
+          <xs:element ref="ARRID"/>
+          <xs:element ref="ARRTYPE"/>
+          <xs:element ref="AZ"/>
+          <xs:element ref="AZMAP"/>
+          <xs:element ref="BIASTALG"/>
+          <xs:element ref="BIASTOOL"/>
+          <xs:element ref="BIASTSWV"/>
+          <xs:element ref="BSCALE"/>
+          <xs:element ref="BTOOLAPP"/>
+          <xs:element ref="BTOOLAR"/>
+          <xs:element ref="BTOOLFIT"/>
+          <xs:element ref="BTOOLSWV"/>
+          <xs:element ref="BZERO"/>
+          <xs:element ref="CAMANGLE"/>
+          <xs:element ref="CAMFOCUS"/>
+          <xs:element ref="CAMNAME"/>
+          <xs:element ref="CAMTEMP"/>
+          <xs:element ref="CAPTMOD"/>
+          <xs:element ref="CCDBIN1"/>
+          <xs:element ref="CCDBIN2"/>
+          <xs:element ref="CCDFILT"/>
+          <xs:element ref="CCDFLTID"/>
+          <xs:element ref="CCDSUM"/>
+          <xs:element ref="CCDTEM"/>
+          <xs:element ref="CCDTEM2"/>
+          <xs:element ref="CCDTEMP"/>
+          <xs:element ref="CCDXBIN"/>
+          <xs:element ref="CCDYBIN"/>
+          <xs:element ref="CD1_1"/>
+          <xs:element ref="CD1_2"/>
+          <xs:element ref="CD2_1"/>
+          <xs:element ref="CD2_2"/>
+          <xs:element ref="CDETTEM"/>
+          <xs:element ref="CELLGAP1"/>
+          <xs:element ref="CELLGAP2"/>
+          <xs:element ref="CLV1ADC"/>
+          <xs:element ref="CLV1MATH"/>
+          <xs:element ref="CLV1MCAL"/>
+          <xs:element ref="CLV1PG3"/>
+          <xs:element ref="CLV1PG4"/>
+          <xs:element ref="CLV1PPG4"/>
+          <xs:element ref="CLV1TRIG"/>
+          <xs:element ref="CLV2ADC"/>
+          <xs:element ref="CLV2MATH"/>
+          <xs:element ref="CLV2MCAL"/>
+          <xs:element ref="CLV2PG3"/>
+          <xs:element ref="CLV2PG4"/>
+          <xs:element ref="CLV2PPG4"/>
+          <xs:element ref="CLV2TRIG"/>
+          <xs:element ref="CLV_ADC"/>
+          <xs:element ref="CLV_MATH"/>
+          <xs:element ref="CLV_MCAL"/>
+          <xs:element ref="CLV_PG3"/>
+          <xs:element ref="CLV_PG4"/>
+          <xs:element ref="CLV_PPG4"/>
+          <xs:element ref="CLV_PRES"/>
+          <xs:element ref="CLV_TRIG"/>
+          <xs:element ref="CMMTOBS"/>
+          <xs:element ref="CNAXIS1"/>
+          <xs:element ref="CNAXIS2"/>
+          <xs:element ref="CNPIX1"/>
+          <xs:element ref="CNPIX2"/>
+          <xs:element ref="COADDS"/>
+          <xs:element ref="COMMENT"/>
+          <xs:element ref="CONHWURL"/>
+          <xs:element ref="CONHWV"/>
+          <xs:element ref="CONSWURL"/>
+          <xs:element ref="CONSWV"/>
+          <xs:element ref="CONTROLR"/>
+          <xs:element ref="CON_DEV"/>
+          <xs:element ref="CON_IP"/>
+          <xs:element ref="CON_MAC"/>
+          <xs:element ref="CON_NAME"/>
+          <xs:element ref="CON_UP"/>
+          <xs:element ref="COORDS"/>
+          <xs:element ref="CORRCTOR"/>
+          <xs:element ref="CREATOR"/>
+          <xs:element ref="CRPIX1"/>
+          <xs:element ref="CRPIX2"/>
+          <xs:element ref="CRVAL1"/>
+          <xs:element ref="CRVAL2"/>
+          <xs:element ref="CTCPERD"/>
+          <xs:element ref="CTYPE1"/>
+          <xs:element ref="CTYPE2"/>
+          <xs:element ref="DAC_CAL"/>
+          <xs:element ref="DAC_DR"/>
+          <xs:element ref="DAC_INIT"/>
+          <xs:element ref="DAC_LREF"/>
+          <xs:element ref="DAC_OG1"/>
+          <xs:element ref="DAC_P1_H"/>
+          <xs:element ref="DAC_P1_L"/>
+          <xs:element ref="DAC_P2_H"/>
+          <xs:element ref="DAC_P2_L"/>
+          <xs:element ref="DAC_P3_H"/>
+          <xs:element ref="DAC_P3_L"/>
+          <xs:element ref="DAC_P4_H"/>
+          <xs:element ref="DAC_P4_L"/>
+          <xs:element ref="DAC_PSH"/>
+          <xs:element ref="DAC_PSL"/>
+          <xs:element ref="DAC_RD"/>
+          <xs:element ref="DAC_RG_H"/>
+          <xs:element ref="DAC_RG_L"/>
+          <xs:element ref="DAC_S1_H"/>
+          <xs:element ref="DAC_S1_L"/>
+          <xs:element ref="DAC_S2_H"/>
+          <xs:element ref="DAC_S2_L"/>
+          <xs:element ref="DAC_S3_H"/>
+          <xs:element ref="DAC_S3_L"/>
+          <xs:element ref="DAC_SCP"/>
+          <xs:element ref="DAC_SO"/>
+          <xs:element ref="DAC_SUB"/>
+          <xs:element ref="DAC_SW_H"/>
+          <xs:element ref="DAC_SW_L"/>
+          <xs:element ref="DAC_VDDH"/>
+          <xs:element ref="DAC_VDDL"/>
+          <xs:element ref="DAC_VSS"/>
+          <xs:element ref="DAQ3USER"/>
+          <xs:element ref="DAQ3UTAR"/>
+          <xs:element ref="DAQ3UVER"/>
+          <xs:element ref="DARKTIME"/>
+          <xs:element ref="DATATYP"/>
+          <xs:element ref="DATE"/>
+          <xs:element ref="DATE-OBS"/>
+          <xs:element ref="DEC"/>
+          <xs:element ref="DECDIFF"/>
+          <xs:element ref="DECINDEX"/>
+          <xs:element ref="DECINST"/>
+          <xs:element ref="DECOFF"/>
+          <xs:element ref="DECOFFST"/>
+          <xs:element ref="DECPANGL"/>
+          <xs:element ref="DECSTRNG"/>
+          <xs:element ref="DECZERO"/>
+          <xs:element ref="DETECTOR"/>
+          <xs:element ref="DETPKGID"/>
+          <xs:element ref="DETSIZE"/>
+          <xs:element ref="DETTCOFA"/>
+          <xs:element ref="DETTCOFB"/>
+          <xs:element ref="DETTEADU"/>
+          <xs:element ref="DETTEM"/>
+          <xs:element ref="DETTEMOV"/>
+          <xs:element ref="DEWAR"/>
+          <xs:element ref="DEWARANG"/>
+          <xs:element ref="DEWTEM"/>
+          <xs:element ref="DEWTEM1"/>
+          <xs:element ref="DEWTEM2"/>
+          <xs:element ref="DEWTEM3"/>
+          <xs:element ref="DEWTEM4"/>
+          <xs:element ref="DEWTEM5"/>
+          <xs:element ref="DEWTEM6"/>
+          <xs:element ref="DEWTEMP"/>
+          <xs:element ref="DHEFILE"/>
+          <xs:element ref="DIGAVGS"/>
+          <xs:element ref="DIMMSEE"/>
+          <xs:element ref="DISPERSR"/>
+          <xs:element ref="ELMAP"/>
+          <xs:element ref="ENDTIME"/>
+          <xs:element ref="ENVTEM"/>
+          <xs:element ref="EPOCH"/>
+          <xs:element ref="EQUINOX"/>
+          <xs:element ref="EXPFDIR"/>
+          <xs:element ref="EXPFNAME"/>
+          <xs:element ref="EXPID"/>
+          <xs:element ref="EXPMODE"/>
+          <xs:element ref="EXPREQ"/>
+          <xs:element ref="EXPTIME"/>
+          <xs:element ref="EXPVECT"/>
+          <xs:element ref="F1ANGLE"/>
+          <xs:element ref="F1DETENT"/>
+          <xs:element ref="F1DLL"/>
+          <xs:element ref="F1FWHM"/>
+          <xs:element ref="F1GAUSS"/>
+          <xs:element ref="F1LAMBDA"/>
+          <xs:element ref="F1STAT"/>
+          <xs:element ref="F1STEPS"/>
+          <xs:element ref="F1SWERR"/>
+          <xs:element ref="F2ANGLE"/>
+          <xs:element ref="F2DETENT"/>
+          <xs:element ref="F2DLL"/>
+          <xs:element ref="F2FWHM"/>
+          <xs:element ref="F2GAUSS"/>
+          <xs:element ref="F2LAMBDA"/>
+          <xs:element ref="F2STAT"/>
+          <xs:element ref="F2STEPS"/>
+          <xs:element ref="F2SWERR"/>
+          <xs:element ref="FFINTEN1"/>
+          <xs:element ref="FFINTEN2"/>
+          <xs:element ref="FFPOWER1"/>
+          <xs:element ref="FFPOWER2"/>
+          <xs:element ref="FIBCABLE"/>
+          <xs:element ref="FIBFOCUS"/>
+          <xs:element ref="FIBRNAME"/>
+          <xs:element ref="FILENAME"/>
+          <xs:element ref="FILPOS"/>
+          <xs:element ref="FILTER"/>
+          <xs:element ref="FILTER1"/>
+          <xs:element ref="FILTER2"/>
+          <xs:element ref="FILTERS"/>
+          <xs:element ref="FILTERSN"/>
+          <xs:element ref="FILTNAMA"/>
+          <xs:element ref="FILTNAMB"/>
+          <xs:element ref="FILTNAMC"/>
+          <xs:element ref="FILTNAMD"/>
+          <xs:element ref="FILTPOS"/>
+          <xs:element ref="FILTPOSA"/>
+          <xs:element ref="FILTPOSB"/>
+          <xs:element ref="FILTPOSC"/>
+          <xs:element ref="FILTPOSD"/>
+          <xs:element ref="FINPXL"/>
+          <xs:element ref="FOCUS"/>
+          <xs:element ref="FOLDPOS"/>
+          <xs:element ref="FOWLER"/>
+          <xs:element ref="FPGASER"/>
+          <xs:element ref="FPGATAR"/>
+          <xs:element ref="FPGAVER"/>
+          <xs:element ref="FRAMES"/>
+          <xs:element ref="FRMSPRD"/>
+          <xs:element ref="GAINDL"/>
+          <xs:element ref="GRATANGL"/>
+          <xs:element ref="GRATNAME"/>
+          <xs:element ref="GRATORD"/>
+          <xs:element ref="GUIDR"/>
+          <xs:element ref="GUIERR"/>
+          <xs:element ref="GUIFW90"/>
+          <xs:element ref="GUIFWMED"/>
+          <xs:element ref="GUIKERN"/>
+          <xs:element ref="GUIKLEN"/>
+          <xs:element ref="GUIKSUM"/>
+          <xs:element ref="GUIM190"/>
+          <xs:element ref="GUIM1MED"/>
+          <xs:element ref="GUINOK"/>
+          <xs:element ref="GUINSTAR"/>
+          <xs:element ref="GUIRATE"/>
+          <xs:element ref="GUIROT"/>
+          <xs:element ref="GUIROT90"/>
+          <xs:element ref="GUIROTEN"/>
+          <xs:element ref="GUISTAR"/>
+          <xs:element ref="GUIX50"/>
+          <xs:element ref="GUIX90"/>
+          <xs:element ref="GUIXMED"/>
+          <xs:element ref="GUIXTNCT"/>
+          <xs:element ref="GUIY50"/>
+          <xs:element ref="GUIY90"/>
+          <xs:element ref="GUIYMED"/>
+          <xs:element ref="GUIZPRMS"/>
+          <xs:element ref="HA"/>
+          <xs:element ref="HASTRNG"/>
+          <xs:element ref="HDR_REV"/>
+          <xs:element ref="HISTORY"/>
+          <xs:element ref="HUMIDITY"/>
+          <xs:element ref="IDPFDIR"/>
+          <xs:element ref="IDPFNAME"/>
+          <xs:element ref="IIDLE"/>
+          <xs:element ref="IIDLEI"/>
+          <xs:element ref="IIDLETV"/>
+          <xs:element ref="IMAGESWV"/>
+          <xs:element ref="IMAGETYP"/>
+          <xs:element ref="IMGCOLS"/>
+          <xs:element ref="IMGDIR"/>
+          <xs:element ref="IMGFILE"/>
+          <xs:element ref="IMGROWS"/>
+          <xs:element ref="IMGSWPRG"/>
+          <xs:element ref="IMGTYPE"/>
+          <xs:element ref="IMNAXIS1"/>
+          <xs:element ref="IMNAXIS2"/>
+          <xs:element ref="INSTID"/>
+          <xs:element ref="INSTRUME"/>
+          <xs:element ref="IRFILT"/>
+          <xs:element ref="IRFLTID"/>
+          <xs:element ref="ISLEW"/>
+          <xs:element ref="ISLEWI"/>
+          <xs:element ref="ISLEWTV"/>
+          <xs:element ref="JD"/>
+          <xs:element ref="LABSYS"/>
+          <xs:element ref="LATITUDE"/>
+          <xs:element ref="LATPOLE"/>
+          <xs:element ref="LONGITUD"/>
+          <xs:element ref="LONPOLE"/>
+          <xs:element ref="LSTHDR"/>
+          <xs:element ref="MCBCLOCK"/>
+          <xs:element ref="MCBCNTRL"/>
+          <xs:element ref="MCBMSG"/>
+          <xs:element ref="MCBPIX"/>
+          <xs:element ref="MCBSTAT"/>
+          <xs:element ref="MJD-OBS"/>
+          <xs:element ref="MJDEND"/>
+          <xs:element ref="MJDHDR"/>
+          <xs:element ref="MJDSTART"/>
+          <xs:element ref="MODEDIR"/>
+          <xs:element ref="MODEFILE"/>
+          <xs:element ref="MOPDATE"/>
+          <xs:element ref="MOPSEQ"/>
+          <xs:element ref="MSEPEDF"/>
+          <xs:element ref="NAMPS"/>
+          <xs:element ref="NCCDS"/>
+          <xs:element ref="NCOADDS"/>
+          <xs:element ref="NDETS"/>
+          <xs:element ref="NEXTEND"/>
+          <xs:element ref="NIMGS"/>
+          <xs:element ref="NOCCAL"/>
+          <xs:element ref="NOCCBIN"/>
+          <xs:element ref="NOCCSN"/>
+          <xs:element ref="NOCDDOF"/>
+          <xs:element ref="NOCDEVIC"/>
+          <xs:element ref="NOCDFIL"/>
+          <xs:element ref="NOCDHS"/>
+          <xs:element ref="NOCDITER"/>
+          <xs:element ref="NOCDPAT"/>
+          <xs:element ref="NOCDPOS"/>
+          <xs:element ref="NOCDREP"/>
+          <xs:element ref="NOCDROF"/>
+          <xs:element ref="NOCFITER"/>
+          <xs:element ref="NOCFOCUS"/>
+          <xs:element ref="NOCFSTEP"/>
+          <xs:element ref="NOCGAIN"/>
+          <xs:element ref="NOCGPXPS"/>
+          <xs:element ref="NOCID"/>
+          <xs:element ref="NOCLAMP"/>
+          <xs:element ref="NOCMDOF"/>
+          <xs:element ref="NOCMITER"/>
+          <xs:element ref="NOCMPAT"/>
+          <xs:element ref="NOCMPOS"/>
+          <xs:element ref="NOCMREP"/>
+          <xs:element ref="NOCMROF"/>
+          <xs:element ref="NOCNO"/>
+          <xs:element ref="NOCNPOS"/>
+          <xs:element ref="NOCNUM"/>
+          <xs:element ref="NOCODEC"/>
+          <xs:element ref="NOCOFFG"/>
+          <xs:element ref="NOCOFFT"/>
+          <xs:element ref="NOCORA"/>
+          <xs:element ref="NOCPOST"/>
+          <xs:element ref="NOCRBIN"/>
+          <xs:element ref="NOCROI"/>
+          <xs:element ref="NOCROICS"/>
+          <xs:element ref="NOCROICZ"/>
+          <xs:element ref="NOCROIPT"/>
+          <xs:element ref="NOCROIRS"/>
+          <xs:element ref="NOCROIRZ"/>
+          <xs:element ref="NOCSCR"/>
+          <xs:element ref="NOCSKY"/>
+          <xs:element ref="NOCSLEW"/>
+          <xs:element ref="NOCSYS"/>
+          <xs:element ref="NOCTIM"/>
+          <xs:element ref="NOCTOT"/>
+          <xs:element ref="NOCTYP"/>
+          <xs:element ref="NOHS"/>
+          <xs:element ref="NSAMPLES"/>
+          <xs:element ref="OBJDEC"/>
+          <xs:element ref="OBJECT"/>
+          <xs:element ref="OBJEPOCH"/>
+          <xs:element ref="OBJRA"/>
+          <xs:element ref="OBSDEC"/>
+          <xs:element ref="OBSERVAT"/>
+          <xs:element ref="OBSERVER"/>
+          <xs:element ref="OBSID"/>
+          <xs:element ref="OBSMODE"/>
+          <xs:element ref="OBSRA"/>
+          <xs:element ref="OBSTIME"/>
+          <xs:element ref="OBSTYPE"/>
+          <xs:element ref="ORIGIN"/>
+          <xs:element ref="OTENABLE"/>
+          <xs:element ref="OTEXTENT"/>
+          <xs:element ref="OTSTRTGY"/>
+          <xs:element ref="OUTPUTS"/>
+          <xs:element ref="OVRSCAN1"/>
+          <xs:element ref="OVRSCAN2"/>
+          <xs:element ref="OWNER"/>
+          <xs:element ref="PARALL"/>
+          <xs:element ref="PIXITIME"/>
+          <xs:element ref="PIXSCAL1"/>
+          <xs:element ref="PIXSCAL2"/>
+          <xs:element ref="PIXSIZE1"/>
+          <xs:element ref="PIXSIZE2"/>
+          <xs:element ref="PONTIME"/>
+          <xs:element ref="PREFLASH"/>
+          <xs:element ref="PRESCAN1"/>
+          <xs:element ref="PRESCAN2"/>
+          <xs:element ref="PRESSURE"/>
+          <xs:element ref="PROCMOD"/>
+          <xs:element ref="PROPID"/>
+          <xs:element ref="PROPOSAL"/>
+          <xs:element ref="PROPOSER"/>
+          <xs:element ref="PSFFW50"/>
+          <xs:element ref="PSFFWMED"/>
+          <xs:element ref="PSFM250"/>
+          <xs:element ref="PSFM2MED"/>
+          <xs:element ref="PSFQ250"/>
+          <xs:element ref="PSFQ2MED"/>
+          <xs:element ref="PSFT250"/>
+          <xs:element ref="PSFT2MED"/>
+          <xs:element ref="PV2_1"/>
+          <xs:element ref="PXLCOLS"/>
+          <xs:element ref="PXLROWS"/>
+          <xs:element ref="RA"/>
+          <xs:element ref="RADECEQ"/>
+          <xs:element ref="RADECSYS"/>
+          <xs:element ref="RADIFF"/>
+          <xs:element ref="RAINDEX"/>
+          <xs:element ref="RAINST"/>
+          <xs:element ref="RAOFF"/>
+          <xs:element ref="RAOFFST"/>
+          <xs:element ref="RAPANGL"/>
+          <xs:element ref="RASTRNG"/>
+          <xs:element ref="RAWPXL"/>
+          <xs:element ref="RAZERO"/>
+          <xs:element ref="READMODE"/>
+          <xs:element ref="READTIME"/>
+          <xs:element ref="RECID"/>
+          <xs:element ref="REFCOLS"/>
+          <xs:element ref="RESETDL"/>
+          <xs:element ref="ROTANGLE"/>
+          <xs:element ref="ROTATOR"/>
+          <xs:element ref="ROTOFF"/>
+          <xs:element ref="ROTOFFS"/>
+          <xs:element ref="ROTPORT"/>
+          <xs:element ref="SAMPLED"/>
+          <xs:element ref="SECZ"/>
+          <xs:element ref="SHUTCUTC"/>
+          <xs:element ref="SHUTOUTC"/>
+          <xs:element ref="SHUTSTAT"/>
+          <xs:element ref="SH_ACCEL"/>
+          <xs:element ref="SH_ARMPN"/>
+          <xs:element ref="SH_DIODE"/>
+          <xs:element ref="SH_MNDLY"/>
+          <xs:element ref="SH_POS"/>
+          <xs:element ref="SH_STDLY"/>
+          <xs:element ref="SH_TEM"/>
+          <xs:element ref="SLFIB1"/>
+          <xs:element ref="SLFIB10"/>
+          <xs:element ref="SLFIB100"/>
+          <xs:element ref="SLFIB101"/>
+          <xs:element ref="SLFIB11"/>
+          <xs:element ref="SLFIB12"/>
+          <xs:element ref="SLFIB13"/>
+          <xs:element ref="SLFIB14"/>
+          <xs:element ref="SLFIB15"/>
+          <xs:element ref="SLFIB16"/>
+          <xs:element ref="SLFIB17"/>
+          <xs:element ref="SLFIB18"/>
+          <xs:element ref="SLFIB19"/>
+          <xs:element ref="SLFIB2"/>
+          <xs:element ref="SLFIB20"/>
+          <xs:element ref="SLFIB21"/>
+          <xs:element ref="SLFIB22"/>
+          <xs:element ref="SLFIB23"/>
+          <xs:element ref="SLFIB24"/>
+          <xs:element ref="SLFIB25"/>
+          <xs:element ref="SLFIB26"/>
+          <xs:element ref="SLFIB27"/>
+          <xs:element ref="SLFIB28"/>
+          <xs:element ref="SLFIB29"/>
+          <xs:element ref="SLFIB3"/>
+          <xs:element ref="SLFIB30"/>
+          <xs:element ref="SLFIB31"/>
+          <xs:element ref="SLFIB32"/>
+          <xs:element ref="SLFIB33"/>
+          <xs:element ref="SLFIB34"/>
+          <xs:element ref="SLFIB35"/>
+          <xs:element ref="SLFIB36"/>
+          <xs:element ref="SLFIB37"/>
+          <xs:element ref="SLFIB38"/>
+          <xs:element ref="SLFIB39"/>
+          <xs:element ref="SLFIB4"/>
+          <xs:element ref="SLFIB40"/>
+          <xs:element ref="SLFIB41"/>
+          <xs:element ref="SLFIB42"/>
+          <xs:element ref="SLFIB43"/>
+          <xs:element ref="SLFIB44"/>
+          <xs:element ref="SLFIB45"/>
+          <xs:element ref="SLFIB46"/>
+          <xs:element ref="SLFIB47"/>
+          <xs:element ref="SLFIB48"/>
+          <xs:element ref="SLFIB49"/>
+          <xs:element ref="SLFIB5"/>
+          <xs:element ref="SLFIB50"/>
+          <xs:element ref="SLFIB51"/>
+          <xs:element ref="SLFIB52"/>
+          <xs:element ref="SLFIB53"/>
+          <xs:element ref="SLFIB54"/>
+          <xs:element ref="SLFIB55"/>
+          <xs:element ref="SLFIB56"/>
+          <xs:element ref="SLFIB57"/>
+          <xs:element ref="SLFIB58"/>
+          <xs:element ref="SLFIB59"/>
+          <xs:element ref="SLFIB6"/>
+          <xs:element ref="SLFIB60"/>
+          <xs:element ref="SLFIB61"/>
+          <xs:element ref="SLFIB62"/>
+          <xs:element ref="SLFIB63"/>
+          <xs:element ref="SLFIB64"/>
+          <xs:element ref="SLFIB65"/>
+          <xs:element ref="SLFIB66"/>
+          <xs:element ref="SLFIB67"/>
+          <xs:element ref="SLFIB68"/>
+          <xs:element ref="SLFIB69"/>
+          <xs:element ref="SLFIB7"/>
+          <xs:element ref="SLFIB70"/>
+          <xs:element ref="SLFIB71"/>
+          <xs:element ref="SLFIB72"/>
+          <xs:element ref="SLFIB73"/>
+          <xs:element ref="SLFIB74"/>
+          <xs:element ref="SLFIB75"/>
+          <xs:element ref="SLFIB76"/>
+          <xs:element ref="SLFIB77"/>
+          <xs:element ref="SLFIB78"/>
+          <xs:element ref="SLFIB79"/>
+          <xs:element ref="SLFIB8"/>
+          <xs:element ref="SLFIB80"/>
+          <xs:element ref="SLFIB81"/>
+          <xs:element ref="SLFIB82"/>
+          <xs:element ref="SLFIB83"/>
+          <xs:element ref="SLFIB84"/>
+          <xs:element ref="SLFIB85"/>
+          <xs:element ref="SLFIB86"/>
+          <xs:element ref="SLFIB87"/>
+          <xs:element ref="SLFIB88"/>
+          <xs:element ref="SLFIB89"/>
+          <xs:element ref="SLFIB9"/>
+          <xs:element ref="SLFIB90"/>
+          <xs:element ref="SLFIB91"/>
+          <xs:element ref="SLFIB92"/>
+          <xs:element ref="SLFIB93"/>
+          <xs:element ref="SLFIB94"/>
+          <xs:element ref="SLFIB95"/>
+          <xs:element ref="SLFIB96"/>
+          <xs:element ref="SLFIB97"/>
+          <xs:element ref="SLFIB98"/>
+          <xs:element ref="SLFIB99"/>
+          <xs:element ref="SLITWHL"/>
+          <xs:element ref="ST"/>
+          <xs:element ref="STSTRNG"/>
+          <xs:element ref="TARGDEC"/>
+          <xs:element ref="TARGRA"/>
+          <xs:element ref="TCAMERA"/>
+          <xs:element ref="TCLDPLT"/>
+          <xs:element ref="TCLLMAT"/>
+          <xs:element ref="TCSLINK"/>
+          <xs:element ref="TDETECT"/>
+          <xs:element ref="TELALT"/>
+          <xs:element ref="TELAZ"/>
+          <xs:element ref="TELDEC"/>
+          <xs:element ref="TELEQUIN"/>
+          <xs:element ref="TELESCOP"/>
+          <xs:element ref="TELFOCUS"/>
+          <xs:element ref="TELMOVE"/>
+          <xs:element ref="TELRA"/>
+          <xs:element ref="TELRADEC"/>
+          <xs:element ref="TELTEMP"/>
+          <xs:element ref="TEMPF1"/>
+          <xs:element ref="TEMPF2"/>
+          <xs:element ref="TILT1"/>
+          <xs:element ref="TILT2"/>
+          <xs:element ref="TILT3"/>
+          <xs:element ref="TIME-OBS"/>
+          <xs:element ref="TIMESYS"/>
+          <xs:element ref="TITLE"/>
+          <xs:element ref="TMCRATE"/>
+          <xs:element ref="TMHTRPOW"/>
+          <xs:element ref="TMHTRRNG"/>
+          <xs:element ref="TMMAXAMP"/>
+          <xs:element ref="TMMAXPOW"/>
+          <xs:element ref="TMOTRPLT"/>
+          <xs:element ref="TMPERROR"/>
+          <xs:element ref="TMPID_D"/>
+          <xs:element ref="TMPID_I"/>
+          <xs:element ref="TMPID_P"/>
+          <xs:element ref="TMSETPT"/>
+          <xs:element ref="TMSTATE"/>
+          <xs:element ref="TMSWERR"/>
+          <xs:element ref="TMTOLER"/>
+          <xs:element ref="TOBENCH"/>
+          <xs:element ref="TRACK"/>
+          <xs:element ref="TRDSHLD"/>
+          <xs:element ref="TSP_NOW"/>
+          <xs:element ref="TSP_RD00"/>
+          <xs:element ref="TSP_SHCL"/>
+          <xs:element ref="TSP_SHOP"/>
+          <xs:element ref="TURTANGL"/>
+          <xs:element ref="TV1FOC"/>
+          <xs:element ref="TV2FOC"/>
+          <xs:element ref="TVIRGO"/>
+          <xs:element ref="UNIQNAME"/>
+          <xs:element ref="UT"/>
+          <xs:element ref="UTSHUT"/>
+          <xs:element ref="VCAS"/>
+          <xs:element ref="VCASI"/>
+          <xs:element ref="VCASTV"/>
+          <xs:element ref="VDETCMTV"/>
+          <xs:element ref="VDETCOM"/>
+          <xs:element ref="VDETCOMI"/>
+          <xs:element ref="VHIROWEN"/>
+          <xs:element ref="VHIROWI"/>
+          <xs:element ref="VHIROWV"/>
+          <xs:element ref="VHIRSTI"/>
+          <xs:element ref="VHIRSTV"/>
+          <xs:element ref="VIDMODE"/>
+          <xs:element ref="VLORESET"/>
+          <xs:element ref="VLOROWEN"/>
+          <xs:element ref="VLOROWI"/>
+          <xs:element ref="VLOROWTV"/>
+          <xs:element ref="VLORSTI"/>
+          <xs:element ref="VLORSTTV"/>
+          <xs:element ref="VNOUT"/>
+          <xs:element ref="VNOUTI"/>
+          <xs:element ref="VNOUTTV"/>
+          <xs:element ref="VNUC"/>
+          <xs:element ref="VNUCI"/>
+          <xs:element ref="VNUCTV"/>
+          <xs:element ref="VPD"/>
+          <xs:element ref="VPDI"/>
+          <xs:element ref="VPDTV"/>
+          <xs:element ref="VPUC"/>
+          <xs:element ref="VPUCI"/>
+          <xs:element ref="VPUCTV"/>
+          <xs:element ref="VRSTUC"/>
+          <xs:element ref="VRSTUCI"/>
+          <xs:element ref="VRSTUCTV"/>
+          <xs:element ref="VUNKNWNV"/>
+          <xs:element ref="VUNKWNI"/>
+          <xs:element ref="WAVELEN"/>
+          <xs:element ref="WEATDATE"/>
+          <xs:element ref="WINDDIR"/>
+          <xs:element ref="WINDSPD"/>
+          <xs:element ref="ZD"/>
+        </xs:choice>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="KWDICT"/>
+          <xs:element ref="OTFDIR"/>
+          <xs:element ref="XTALKFIL"/>
+          <xs:element ref="CHECKSUM"/>
+          <xs:element ref="DATASUM"/>
+          <xs:element ref="CHECKVER"/>
+          <xs:element ref="RECNO"/>
+        </xs:sequence>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="GCCROTAT"/>
+          <xs:element ref="KSDPOS"/>
+          <xs:element ref="KSDWPOS"/>
+          <xs:element ref="KSFILCMD"/>
+          <xs:element ref="KSFW1POS"/>
+          <xs:element ref="KSFW2POS"/>
+          <xs:element ref="KSSWPOS"/>
+          <xs:element ref="KSSPOS"/>
+          <xs:element ref="KSCAMFOC"/>
+          <xs:element ref="KSCAMZRO"/>
+        </xs:sequence>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="DOMEERR"/>
+          <xs:element ref="DOMEAZ"/>
+        </xs:sequence>
+        <xs:choice minOccurs="0">
+          <xs:sequence>
+            <xs:element ref="GAIN"/>
+            <xs:element ref="DWELL"/>
+            <xs:element ref="RDNOISE"/>
+            <xs:element ref="INITTIME"/>
+            <xs:element ref="PREPTIME"/>
+            <xs:element ref="TOTTIME"/>
+            <xs:element ref="DATASEC"/>
+            <xs:element ref="ORIGSEC"/>
+            <xs:element ref="CCDSEC"/>
+            <xs:element ref="BIASSEC"/>
+            <xs:element ref="TRIMSEC"/>
+          </xs:sequence>
+          <xs:sequence>
+            <xs:element ref="MSEREADY"/>
+            <xs:element ref="TCPGDR"/>
+          </xs:sequence>
+          <xs:sequence>
+            <xs:element ref="KSTEMP1"/>
+            <xs:element ref="KSTEMP2"/>
+            <xs:element ref="KSTEMP3"/>
+            <xs:element ref="KSTEMP4"/>
+            <xs:element ref="KSCOLFOC"/>
+            <xs:element ref="KSCOLZRO"/>
+          </xs:sequence>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SIMPLE" type="xs:NCName"/>
+  <xs:element name="BITPIX" type="xs:integer"/>
+  <xs:element name="NAXIS" type="xs:integer"/>
+  <xs:element name="NAXIS1" type="xs:integer"/>
+  <xs:element name="NAXIS2" type="xs:integer"/>
+  <xs:element name="EXTEND" type="xs:NCName"/>
+  <xs:element name="FORMAT" type="xs:NCName"/>
+  <xs:element name="DATATYPE" type="xs:NCName"/>
+  <xs:element name="ACQCNTRL" type="xs:decimal"/>
+  <xs:element name="ACQDIGAV" type="xs:decimal"/>
+  <xs:element name="ACQMODE" type="xs:decimal"/>
+  <xs:element name="ACQPRIOR" type="xs:decimal"/>
+  <xs:element name="ACQSEL0" type="xs:decimal"/>
+  <xs:element name="ACQSEL1" type="xs:decimal"/>
+  <xs:element name="ACQSEL10" type="xs:decimal"/>
+  <xs:element name="ACQSEL11" type="xs:decimal"/>
+  <xs:element name="ACQSEL12" type="xs:decimal"/>
+  <xs:element name="ACQSEL13" type="xs:decimal"/>
+  <xs:element name="ACQSEL14" type="xs:decimal"/>
+  <xs:element name="ACQSEL15" type="xs:decimal"/>
+  <xs:element name="ACQSEL2" type="xs:decimal"/>
+  <xs:element name="ACQSEL3" type="xs:decimal"/>
+  <xs:element name="ACQSEL4" type="xs:decimal"/>
+  <xs:element name="ACQSEL5" type="xs:decimal"/>
+  <xs:element name="ACQSEL6" type="xs:decimal"/>
+  <xs:element name="ACQSEL7" type="xs:decimal"/>
+  <xs:element name="ACQSEL8" type="xs:decimal"/>
+  <xs:element name="ACQSEL9" type="xs:decimal"/>
+  <xs:element name="ACQSTAT" type="xs:decimal"/>
+  <xs:element name="ADC" type="xs:string"/>
+  <xs:element name="ADCPAN1" type="xs:decimal"/>
+  <xs:element name="ADCPAN2" type="xs:decimal"/>
+  <xs:element name="ADCSTAT" type="xs:string"/>
+  <xs:element name="ADC_CONF" type="xs:NMTOKEN"/>
+  <xs:element name="ADC_MUX" type="xs:NMTOKEN"/>
+  <xs:element name="ADC_OFSB" type="xs:NMTOKEN"/>
+  <xs:element name="ADC_OFSG" type="xs:NMTOKEN"/>
+  <xs:element name="ADC_OFSR" type="xs:NMTOKEN"/>
+  <xs:element name="ADC_PGAB" type="xs:NMTOKEN"/>
+  <xs:element name="ADC_PGAG" type="xs:NMTOKEN"/>
+  <xs:element name="ADC_PGAR" type="xs:NMTOKEN"/>
+  <xs:element name="ADC_ZERO" type="xs:integer"/>
+  <xs:element name="AIRMASS" type="xs:decimal"/>
+  <xs:element name="ALT" type="xs:NMTOKEN"/>
+  <xs:element name="ALTITUDE" type="xs:integer"/>
+  <xs:element name="AMBTEMP" type="xs:decimal"/>
+  <xs:element name="AMPINTEG" type="xs:NCName"/>
+  <xs:element name="APER0001" type="xs:string"/>
+  <xs:element name="ARRDIR" type="xs:string"/>
+  <xs:element name="ARRFILE" type="xs:NMTOKEN"/>
+  <xs:element name="ARRID">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="ARRTYPE">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="AZ" type="xs:NMTOKEN"/>
+  <xs:element name="AZMAP" type="xs:NMTOKEN"/>
+  <xs:element name="BIASTALG" type="xs:string"/>
+  <xs:element name="BIASTOOL" type="xs:NCName"/>
+  <xs:element name="BIASTSWV" type="xs:string"/>
+  <xs:element name="BSCALE" type="xs:integer"/>
+  <xs:element name="BTOOLAPP" type="xs:NCName"/>
+  <xs:element name="BTOOLAR" type="xs:string"/>
+  <xs:element name="BTOOLFIT" type="xs:string"/>
+  <xs:element name="BTOOLSWV" type="xs:string"/>
+  <xs:element name="BZERO" type="xs:integer"/>
+  <xs:element name="CAMANGLE" type="xs:decimal"/>
+  <xs:element name="CAMFOCUS" type="xs:decimal"/>
+  <xs:element name="CAMNAME" type="xs:string"/>
+  <xs:element name="CAMTEMP" type="xs:decimal"/>
+  <xs:element name="CAPTMOD" type="xs:decimal"/>
+  <xs:element name="CCDBIN1" type="xs:integer"/>
+  <xs:element name="CCDBIN2" type="xs:integer"/>
+  <xs:element name="CCDFILT" type="xs:integer"/>
+  <xs:element name="CCDFLTID" type="xs:NCName"/>
+  <xs:element name="CCDSUM" type="xs:string"/>
+  <xs:element name="CCDTEM" type="xs:decimal"/>
+  <xs:element name="CCDTEM2" type="xs:decimal"/>
+  <xs:element name="CCDTEMP" type="xs:decimal"/>
+  <xs:element name="CCDXBIN" type="xs:integer"/>
+  <xs:element name="CCDYBIN" type="xs:integer"/>
+  <xs:element name="CD1_1" type="xs:double"/>
+  <xs:element name="CD1_2" type="xs:double"/>
+  <xs:element name="CD2_1" type="xs:double"/>
+  <xs:element name="CD2_2" type="xs:double"/>
+  <xs:element name="CDETTEM" type="xs:decimal"/>
+  <xs:element name="CELLGAP1" type="xs:integer"/>
+  <xs:element name="CELLGAP2" type="xs:integer"/>
+  <xs:element name="CLV1ADC" type="xs:NMTOKEN"/>
+  <xs:element name="CLV1MATH" type="xs:NMTOKEN"/>
+  <xs:element name="CLV1MCAL" type="xs:NMTOKEN"/>
+  <xs:element name="CLV1PG3" type="xs:string"/>
+  <xs:element name="CLV1PG4" type="xs:string"/>
+  <xs:element name="CLV1PPG4" type="xs:anyURI"/>
+  <xs:element name="CLV1TRIG" type="xs:integer"/>
+  <xs:element name="CLV2ADC" type="xs:NMTOKEN"/>
+  <xs:element name="CLV2MATH" type="xs:NMTOKEN"/>
+  <xs:element name="CLV2MCAL" type="xs:NMTOKEN"/>
+  <xs:element name="CLV2PG3" type="xs:string"/>
+  <xs:element name="CLV2PG4" type="xs:string"/>
+  <xs:element name="CLV2PPG4" type="xs:anyURI"/>
+  <xs:element name="CLV2TRIG" type="xs:integer"/>
+  <xs:element name="CLV_ADC" type="xs:NMTOKEN"/>
+  <xs:element name="CLV_MATH" type="xs:NMTOKEN"/>
+  <xs:element name="CLV_MCAL" type="xs:NMTOKEN"/>
+  <xs:element name="CLV_PG3" type="xs:string"/>
+  <xs:element name="CLV_PG4" type="xs:string"/>
+  <xs:element name="CLV_PPG4" type="xs:anyURI"/>
+  <xs:element name="CLV_PRES" type="xs:integer"/>
+  <xs:element name="CLV_TRIG" type="xs:integer"/>
+  <xs:element name="CMMTOBS" type="xs:NCName"/>
+  <xs:element name="CNAXIS1" type="xs:integer"/>
+  <xs:element name="CNAXIS2" type="xs:integer"/>
+  <xs:element name="CNPIX1" type="xs:integer"/>
+  <xs:element name="CNPIX2" type="xs:integer"/>
+  <xs:element name="COADDS" type="xs:decimal"/>
+  <xs:element name="COMMENT" type="xs:string"/>
+  <xs:element name="CONHWURL" type="xs:anyURI"/>
+  <xs:element name="CONHWV" type="xs:integer"/>
+  <xs:element name="CONSWURL" type="xs:anyURI"/>
+  <xs:element name="CONSWV" type="xs:NMTOKEN"/>
+  <xs:element name="CONTROLR" type="xs:string"/>
+  <xs:element name="CON_DEV" type="xs:integer"/>
+  <xs:element name="CON_IP" type="xs:NMTOKEN"/>
+  <xs:element name="CON_MAC" type="xs:NMTOKEN"/>
+  <xs:element name="CON_NAME" type="xs:NCName"/>
+  <xs:element name="CON_UP" type="xs:integer"/>
+  <xs:element name="COORDS" type="xs:string"/>
+  <xs:element name="CORRCTOR" type="xs:string"/>
+  <xs:element name="CREATOR" type="xs:string"/>
+  <xs:element name="CRPIX1" type="xs:decimal"/>
+  <xs:element name="CRPIX2" type="xs:decimal"/>
+  <xs:element name="CRVAL1" type="xs:decimal"/>
+  <xs:element name="CRVAL2" type="xs:decimal"/>
+  <xs:element name="CTCPERD" type="xs:decimal"/>
+  <xs:element name="CTYPE1" type="xs:NCName"/>
+  <xs:element name="CTYPE2" type="xs:NCName"/>
+  <xs:element name="DAC_CAL" type="xs:string"/>
+  <xs:element name="DAC_DR" type="xs:decimal"/>
+  <xs:element name="DAC_INIT" type="xs:integer"/>
+  <xs:element name="DAC_LREF" type="xs:decimal"/>
+  <xs:element name="DAC_OG1" type="xs:decimal"/>
+  <xs:element name="DAC_P1_H" type="xs:decimal"/>
+  <xs:element name="DAC_P1_L" type="xs:decimal"/>
+  <xs:element name="DAC_P2_H" type="xs:decimal"/>
+  <xs:element name="DAC_P2_L" type="xs:decimal"/>
+  <xs:element name="DAC_P3_H" type="xs:decimal"/>
+  <xs:element name="DAC_P3_L" type="xs:decimal"/>
+  <xs:element name="DAC_P4_H" type="xs:decimal"/>
+  <xs:element name="DAC_P4_L" type="xs:decimal"/>
+  <xs:element name="DAC_PSH" type="xs:decimal"/>
+  <xs:element name="DAC_PSL" type="xs:decimal"/>
+  <xs:element name="DAC_RD" type="xs:decimal"/>
+  <xs:element name="DAC_RG_H" type="xs:decimal"/>
+  <xs:element name="DAC_RG_L" type="xs:decimal"/>
+  <xs:element name="DAC_S1_H" type="xs:decimal"/>
+  <xs:element name="DAC_S1_L" type="xs:decimal"/>
+  <xs:element name="DAC_S2_H" type="xs:decimal"/>
+  <xs:element name="DAC_S2_L" type="xs:decimal"/>
+  <xs:element name="DAC_S3_H" type="xs:decimal"/>
+  <xs:element name="DAC_S3_L" type="xs:decimal"/>
+  <xs:element name="DAC_SCP" type="xs:decimal"/>
+  <xs:element name="DAC_SO" type="xs:decimal"/>
+  <xs:element name="DAC_SUB" type="xs:decimal"/>
+  <xs:element name="DAC_SW_H" type="xs:decimal"/>
+  <xs:element name="DAC_SW_L" type="xs:decimal"/>
+  <xs:element name="DAC_VDDH" type="xs:decimal"/>
+  <xs:element name="DAC_VDDL" type="xs:decimal"/>
+  <xs:element name="DAC_VSS" type="xs:decimal"/>
+  <xs:element name="DAQ3USER" type="xs:integer"/>
+  <xs:element name="DAQ3UTAR" type="xs:NCName"/>
+  <xs:element name="DAQ3UVER" type="xs:decimal"/>
+  <xs:element name="DARKTIME" type="xs:decimal"/>
+  <xs:element name="DATATYP" type="xs:decimal"/>
+  <xs:element name="DATE" type="xs:NMTOKEN"/>
+  <xs:element name="DATE-OBS" type="xs:string"/>
+  <xs:element name="DEC" type="xs:string"/>
+  <xs:element name="DECDIFF" type="xs:integer"/>
+  <xs:element name="DECINDEX" type="xs:decimal"/>
+  <xs:element name="DECINST" type="xs:integer"/>
+  <xs:element name="DECOFF" type="xs:decimal"/>
+  <xs:element name="DECOFFST" type="xs:string"/>
+  <xs:element name="DECPANGL" type="xs:decimal"/>
+  <xs:element name="DECSTRNG" type="xs:string"/>
+  <xs:element name="DECZERO" type="xs:decimal"/>
+  <xs:element name="DETECTOR" type="xs:string"/>
+  <xs:element name="DETPKGID" type="xs:integer"/>
+  <xs:element name="DETSIZE" type="xs:string"/>
+  <xs:element name="DETTCOFA" type="xs:decimal"/>
+  <xs:element name="DETTCOFB" type="xs:integer"/>
+  <xs:element name="DETTEADU" type="xs:integer"/>
+  <xs:element name="DETTEM" type="xs:decimal"/>
+  <xs:element name="DETTEMOV" type="xs:NCName"/>
+  <xs:element name="DEWAR" type="xs:string"/>
+  <xs:element name="DEWARANG" type="xs:decimal"/>
+  <xs:element name="DEWTEM" type="xs:decimal"/>
+  <xs:element name="DEWTEM1" type="xs:decimal"/>
+  <xs:element name="DEWTEM2" type="xs:decimal"/>
+  <xs:element name="DEWTEM3" type="xs:decimal"/>
+  <xs:element name="DEWTEM4" type="xs:decimal"/>
+  <xs:element name="DEWTEM5" type="xs:decimal"/>
+  <xs:element name="DEWTEM6" type="xs:decimal"/>
+  <xs:element name="DEWTEMP" type="xs:decimal"/>
+  <xs:element name="DHEFILE" type="xs:NCName"/>
+  <xs:element name="DIGAVGS" type="xs:decimal"/>
+  <xs:element name="DIMMSEE" type="xs:decimal"/>
+  <xs:element name="DISPERSR" type="xs:string"/>
+  <xs:element name="ELMAP" type="xs:NMTOKEN"/>
+  <xs:element name="ENDTIME" type="xs:decimal"/>
+  <xs:element name="ENVTEM" type="xs:decimal"/>
+  <xs:element name="EPOCH" type="xs:decimal"/>
+  <xs:element name="EQUINOX" type="xs:decimal"/>
+  <xs:element name="EXPFDIR" type="xs:string"/>
+  <xs:element name="EXPFNAME" type="xs:NCName"/>
+  <xs:element name="EXPID" type="xs:decimal"/>
+  <xs:element name="EXPMODE" type="xs:decimal"/>
+  <xs:element name="EXPREQ" type="xs:decimal"/>
+  <xs:element name="EXPTIME" type="xs:decimal"/>
+  <xs:element name="EXPVECT" type="xs:decimal"/>
+  <xs:element name="F1ANGLE" type="xs:integer"/>
+  <xs:element name="F1DETENT" type="xs:NCName"/>
+  <xs:element name="F1DLL" type="xs:decimal"/>
+  <xs:element name="F1FWHM" type="xs:decimal"/>
+  <xs:element name="F1GAUSS" type="xs:decimal"/>
+  <xs:element name="F1LAMBDA" type="xs:decimal"/>
+  <xs:element name="F1STAT" type="xs:NCName"/>
+  <xs:element name="F1STEPS" type="xs:integer"/>
+  <xs:element name="F1SWERR" type="xs:NCName"/>
+  <xs:element name="F2ANGLE" type="xs:integer"/>
+  <xs:element name="F2DETENT" type="xs:NCName"/>
+  <xs:element name="F2DLL" type="xs:decimal"/>
+  <xs:element name="F2FWHM" type="xs:decimal"/>
+  <xs:element name="F2GAUSS" type="xs:decimal"/>
+  <xs:element name="F2LAMBDA" type="xs:decimal"/>
+  <xs:element name="F2STAT" type="xs:NCName"/>
+  <xs:element name="F2STEPS" type="xs:integer"/>
+  <xs:element name="F2SWERR" type="xs:NCName"/>
+  <xs:element name="FFINTEN1" type="xs:integer"/>
+  <xs:element name="FFINTEN2" type="xs:integer"/>
+  <xs:element name="FFPOWER1" type="xs:integer"/>
+  <xs:element name="FFPOWER2" type="xs:integer"/>
+  <xs:element name="FIBCABLE" type="xs:string"/>
+  <xs:element name="FIBFOCUS" type="xs:decimal"/>
+  <xs:element name="FIBRNAME" type="xs:NCName"/>
+  <xs:element name="FILENAME" type="xs:string"/>
+  <xs:element name="FILPOS" type="xs:string"/>
+  <xs:element name="FILTER" type="xs:string"/>
+  <xs:element name="FILTER1" type="xs:string"/>
+  <xs:element name="FILTER2" type="xs:string"/>
+  <xs:element name="FILTERS" type="xs:NCName"/>
+  <xs:element name="FILTERSN" type="xs:NCName"/>
+  <xs:element name="FILTNAMA" type="xs:NCName"/>
+  <xs:element name="FILTNAMB" type="xs:NCName"/>
+  <xs:element name="FILTNAMC" type="xs:NCName"/>
+  <xs:element name="FILTNAMD" type="xs:NCName"/>
+  <xs:element name="FILTPOS" type="xs:integer"/>
+  <xs:element name="FILTPOSA" type="xs:integer"/>
+  <xs:element name="FILTPOSB" type="xs:integer"/>
+  <xs:element name="FILTPOSC" type="xs:integer"/>
+  <xs:element name="FILTPOSD" type="xs:integer"/>
+  <xs:element name="FINPXL" type="xs:decimal"/>
+  <xs:element name="FOCUS" type="xs:decimal"/>
+  <xs:element name="FOLDPOS" type="xs:NCName"/>
+  <xs:element name="FOWLER" type="xs:decimal"/>
+  <xs:element name="FPGASER" type="xs:integer"/>
+  <xs:element name="FPGATAR" type="xs:NCName"/>
+  <xs:element name="FPGAVER" type="xs:decimal"/>
+  <xs:element name="FRAMES" type="xs:decimal"/>
+  <xs:element name="FRMSPRD" type="xs:decimal"/>
+  <xs:element name="GAINDL" type="xs:integer"/>
+  <xs:element name="GRATANGL" type="xs:decimal"/>
+  <xs:element name="GRATNAME" type="xs:string"/>
+  <xs:element name="GRATORD" type="xs:integer"/>
+  <xs:element name="GUIDR" type="xs:decimal"/>
+  <xs:element name="GUIERR" type="xs:integer"/>
+  <xs:element name="GUIFW90" type="xs:decimal"/>
+  <xs:element name="GUIFWMED" type="xs:decimal"/>
+  <xs:element name="GUIKERN" type="xs:string"/>
+  <xs:element name="GUIKLEN" type="xs:integer"/>
+  <xs:element name="GUIKSUM" type="xs:integer"/>
+  <xs:element name="GUIM190" type="xs:decimal"/>
+  <xs:element name="GUIM1MED" type="xs:decimal"/>
+  <xs:element name="GUINOK" type="xs:integer"/>
+  <xs:element name="GUINSTAR" type="xs:integer"/>
+  <xs:element name="GUIRATE" type="xs:decimal"/>
+  <xs:element name="GUIROT" type="xs:decimal"/>
+  <xs:element name="GUIROT90" type="xs:decimal"/>
+  <xs:element name="GUIROTEN" type="xs:NCName"/>
+  <xs:element name="GUISTAR" type="xs:string"/>
+  <xs:element name="GUIX50" type="xs:decimal"/>
+  <xs:element name="GUIX90" type="xs:decimal"/>
+  <xs:element name="GUIXMED" type="xs:decimal"/>
+  <xs:element name="GUIXTNCT" type="xs:decimal"/>
+  <xs:element name="GUIY50" type="xs:decimal"/>
+  <xs:element name="GUIY90" type="xs:decimal"/>
+  <xs:element name="GUIYMED" type="xs:decimal"/>
+  <xs:element name="GUIZPRMS" type="xs:decimal"/>
+  <xs:element name="HA" type="xs:string"/>
+  <xs:element name="HASTRNG" type="xs:string"/>
+  <xs:element name="HDR_REV" type="xs:string"/>
+  <xs:element name="HISTORY" type="xs:string"/>
+  <xs:element name="HUMIDITY" type="xs:decimal"/>
+  <xs:element name="IDPFDIR" type="xs:string"/>
+  <xs:element name="IDPFNAME" type="xs:NCName"/>
+  <xs:element name="IIDLE" type="xs:decimal"/>
+  <xs:element name="IIDLEI" type="xs:decimal"/>
+  <xs:element name="IIDLETV" type="xs:decimal"/>
+  <xs:element name="IMAGESWV" type="xs:NMTOKEN"/>
+  <xs:element name="IMAGETYP" type="xs:NCName"/>
+  <xs:element name="IMGCOLS" type="xs:decimal"/>
+  <xs:element name="IMGDIR" type="xs:string"/>
+  <xs:element name="IMGFILE" type="xs:NCName"/>
+  <xs:element name="IMGROWS" type="xs:decimal"/>
+  <xs:element name="IMGSWPRG" type="xs:string"/>
+  <xs:element name="IMGTYPE" type="xs:NCName"/>
+  <xs:element name="IMNAXIS1" type="xs:integer"/>
+  <xs:element name="IMNAXIS2" type="xs:integer"/>
+  <xs:element name="INSTID" type="xs:NCName"/>
+  <xs:element name="INSTRUME" type="xs:string"/>
+  <xs:element name="IRFILT" type="xs:integer"/>
+  <xs:element name="IRFLTID" type="xs:NCName"/>
+  <xs:element name="ISLEW" type="xs:decimal"/>
+  <xs:element name="ISLEWI" type="xs:decimal"/>
+  <xs:element name="ISLEWTV" type="xs:decimal"/>
+  <xs:element name="JD" type="xs:decimal"/>
+  <xs:element name="LABSYS" type="xs:decimal"/>
+  <xs:element name="LATITUDE" type="xs:NMTOKEN"/>
+  <xs:element name="LATPOLE" type="xs:decimal"/>
+  <xs:element name="LONGITUD" type="xs:string"/>
+  <xs:element name="LONPOLE" type="xs:decimal"/>
+  <xs:element name="LSTHDR" type="xs:NMTOKEN"/>
+  <xs:element name="MCBCLOCK" type="xs:decimal"/>
+  <xs:element name="MCBCNTRL" type="xs:decimal"/>
+  <xs:element name="MCBMSG" type="xs:decimal"/>
+  <xs:element name="MCBPIX" type="xs:decimal"/>
+  <xs:element name="MCBSTAT" type="xs:decimal"/>
+  <xs:element name="MJD-OBS" type="xs:decimal"/>
+  <xs:element name="MJDEND" type="xs:decimal"/>
+  <xs:element name="MJDHDR" type="xs:decimal"/>
+  <xs:element name="MJDSTART" type="xs:decimal"/>
+  <xs:element name="MODEDIR" type="xs:string"/>
+  <xs:element name="MODEFILE" type="xs:NCName"/>
+  <xs:element name="MOPDATE" type="xs:string"/>
+  <xs:element name="MOPSEQ" type="xs:integer"/>
+  <xs:element name="MSEPEDF" type="xs:integer"/>
+  <xs:element name="NAMPS" type="xs:integer"/>
+  <xs:element name="NCCDS" type="xs:integer"/>
+  <xs:element name="NCOADDS" type="xs:integer"/>
+  <xs:element name="NDETS" type="xs:integer"/>
+  <xs:element name="NEXTEND" type="xs:integer"/>
+  <xs:element name="NIMGS" type="xs:decimal"/>
+  <xs:element name="NOCCAL" type="xs:NCName"/>
+  <xs:element name="NOCCBIN" type="xs:integer"/>
+  <xs:element name="NOCCSN" type="xs:NCName"/>
+  <xs:element name="NOCDDOF" type="xs:integer"/>
+  <xs:element name="NOCDEVIC" type="xs:NCName"/>
+  <xs:element name="NOCDFIL" type="xs:integer"/>
+  <xs:element name="NOCDHS" type="xs:NCName"/>
+  <xs:element name="NOCDITER" type="xs:integer"/>
+  <xs:element name="NOCDPAT" type="xs:NCName"/>
+  <xs:element name="NOCDPOS" type="xs:integer"/>
+  <xs:element name="NOCDREP" type="xs:integer"/>
+  <xs:element name="NOCDROF" type="xs:integer"/>
+  <xs:element name="NOCFITER" type="xs:integer"/>
+  <xs:element name="NOCFOCUS" type="xs:integer"/>
+  <xs:element name="NOCFSTEP" type="xs:integer"/>
+  <xs:element name="NOCGAIN" type="xs:NCName"/>
+  <xs:element name="NOCGPXPS" type="xs:integer"/>
+  <xs:element name="NOCID" type="xs:decimal"/>
+  <xs:element name="NOCLAMP" type="xs:NCName"/>
+  <xs:element name="NOCMDOF" type="xs:integer"/>
+  <xs:element name="NOCMITER" type="xs:integer"/>
+  <xs:element name="NOCMPAT" type="xs:NCName"/>
+  <xs:element name="NOCMPOS" type="xs:integer"/>
+  <xs:element name="NOCMREP" type="xs:integer"/>
+  <xs:element name="NOCMROF" type="xs:integer"/>
+  <xs:element name="NOCNO" type="xs:integer"/>
+  <xs:element name="NOCNPOS" type="xs:integer"/>
+  <xs:element name="NOCNUM" type="xs:integer"/>
+  <xs:element name="NOCODEC" type="xs:integer"/>
+  <xs:element name="NOCOFFG" type="xs:string"/>
+  <xs:element name="NOCOFFT" type="xs:string"/>
+  <xs:element name="NOCORA" type="xs:integer"/>
+  <xs:element name="NOCPOST" type="xs:string"/>
+  <xs:element name="NOCRBIN" type="xs:integer"/>
+  <xs:element name="NOCROI" type="xs:NCName"/>
+  <xs:element name="NOCROICS" type="xs:integer"/>
+  <xs:element name="NOCROICZ" type="xs:integer"/>
+  <xs:element name="NOCROIPT" type="xs:NMTOKEN"/>
+  <xs:element name="NOCROIRS" type="xs:integer"/>
+  <xs:element name="NOCROIRZ" type="xs:integer"/>
+  <xs:element name="NOCSCR" type="xs:NMTOKEN"/>
+  <xs:element name="NOCSKY" type="xs:integer"/>
+  <xs:element name="NOCSLEW" type="xs:string"/>
+  <xs:element name="NOCSYS" type="xs:string"/>
+  <xs:element name="NOCTIM" type="xs:integer"/>
+  <xs:element name="NOCTOT" type="xs:integer"/>
+  <xs:element name="NOCTYP" type="xs:NCName"/>
+  <xs:element name="NOHS" type="xs:NCName"/>
+  <xs:element name="NSAMPLES" type="xs:integer"/>
+  <xs:element name="OBJDEC" type="xs:NMTOKEN"/>
+  <xs:element name="OBJECT" type="xs:string"/>
+  <xs:element name="OBJEPOCH" type="xs:integer"/>
+  <xs:element name="OBJRA" type="xs:NMTOKEN"/>
+  <xs:element name="OBSDEC" type="xs:NMTOKEN"/>
+  <xs:element name="OBSERVAT" type="xs:NCName"/>
+  <xs:element name="OBSERVER" type="xs:string"/>
+  <xs:element name="OBSID" type="xs:NCName"/>
+  <xs:element name="OBSMODE" type="xs:NCName"/>
+  <xs:element name="OBSRA" type="xs:NMTOKEN"/>
+  <xs:element name="OBSTIME" type="xs:decimal"/>
+  <xs:element name="OBSTYPE" type="xs:NCName"/>
+  <xs:element name="ORIGIN" type="xs:string"/>
+  <xs:element name="OTENABLE" type="xs:NCName"/>
+  <xs:element name="OTEXTENT" type="xs:string"/>
+  <xs:element name="OTSTRTGY" type="xs:string"/>
+  <xs:element name="OUTPUTS" type="xs:decimal"/>
+  <xs:element name="OVRSCAN1" type="xs:integer"/>
+  <xs:element name="OVRSCAN2" type="xs:integer"/>
+  <xs:element name="OWNER" type="xs:NCName"/>
+  <xs:element name="PARALL" type="xs:decimal"/>
+  <xs:element name="PIXITIME" type="xs:double"/>
+  <xs:element name="PIXSCAL1" type="xs:decimal"/>
+  <xs:element name="PIXSCAL2" type="xs:decimal"/>
+  <xs:element name="PIXSIZE1" type="xs:decimal"/>
+  <xs:element name="PIXSIZE2" type="xs:decimal"/>
+  <xs:element name="PONTIME" type="xs:integer"/>
+  <xs:element name="PREFLASH" type="xs:NMTOKEN"/>
+  <xs:element name="PRESCAN1" type="xs:integer"/>
+  <xs:element name="PRESCAN2" type="xs:integer"/>
+  <xs:element name="PRESSURE" type="xs:decimal"/>
+  <xs:element name="PROCMOD" type="xs:decimal"/>
+  <xs:element name="PROPID" type="xs:string"/>
+  <xs:element name="PROPOSAL" type="xs:string"/>
+  <xs:element name="PROPOSER" type="xs:string"/>
+  <xs:element name="PSFFW50" type="xs:decimal"/>
+  <xs:element name="PSFFWMED" type="xs:decimal"/>
+  <xs:element name="PSFM250" type="xs:decimal"/>
+  <xs:element name="PSFM2MED" type="xs:decimal"/>
+  <xs:element name="PSFQ250" type="xs:decimal"/>
+  <xs:element name="PSFQ2MED" type="xs:decimal"/>
+  <xs:element name="PSFT250" type="xs:decimal"/>
+  <xs:element name="PSFT2MED" type="xs:decimal"/>
+  <xs:element name="PV2_1" type="xs:decimal"/>
+  <xs:element name="PXLCOLS" type="xs:decimal"/>
+  <xs:element name="PXLROWS" type="xs:decimal"/>
+  <xs:element name="RA" type="xs:string"/>
+  <xs:element name="RADECEQ" type="xs:decimal"/>
+  <xs:element name="RADECSYS" type="xs:NCName"/>
+  <xs:element name="RADIFF" type="xs:decimal"/>
+  <xs:element name="RAINDEX" type="xs:decimal"/>
+  <xs:element name="RAINST" type="xs:integer"/>
+  <xs:element name="RAOFF" type="xs:decimal"/>
+  <xs:element name="RAOFFST" type="xs:string"/>
+  <xs:element name="RAPANGL" type="xs:decimal"/>
+  <xs:element name="RASTRNG" type="xs:string"/>
+  <xs:element name="RAWPXL" type="xs:decimal"/>
+  <xs:element name="RAZERO" type="xs:decimal"/>
+  <xs:element name="READMODE" type="xs:NCName"/>
+  <xs:element name="READTIME" type="xs:decimal"/>
+  <xs:element name="RECID" type="xs:NCName"/>
+  <xs:element name="REFCOLS" type="xs:decimal"/>
+  <xs:element name="RESETDL" type="xs:integer"/>
+  <xs:element name="ROTANGLE" type="xs:NMTOKEN"/>
+  <xs:element name="ROTATOR" type="xs:decimal"/>
+  <xs:element name="ROTOFF" type="xs:NMTOKEN"/>
+  <xs:element name="ROTOFFS" type="xs:decimal"/>
+  <xs:element name="ROTPORT" type="xs:NCName"/>
+  <xs:element name="SAMPLED" type="xs:NCName"/>
+  <xs:element name="SECZ" type="xs:decimal"/>
+  <xs:element name="SHUTCUTC" type="xs:string"/>
+  <xs:element name="SHUTOUTC" type="xs:string"/>
+  <xs:element name="SHUTSTAT" type="xs:NCName"/>
+  <xs:element name="SH_ACCEL" type="xs:integer"/>
+  <xs:element name="SH_ARMPN" type="xs:integer"/>
+  <xs:element name="SH_DIODE" type="xs:decimal"/>
+  <xs:element name="SH_MNDLY" type="xs:integer"/>
+  <xs:element name="SH_POS" type="xs:integer"/>
+  <xs:element name="SH_STDLY" type="xs:integer"/>
+  <xs:element name="SH_TEM" type="xs:decimal"/>
+  <xs:element name="SLFIB1" type="xs:string"/>
+  <xs:element name="SLFIB10" type="xs:string"/>
+  <xs:element name="SLFIB100" type="xs:string"/>
+  <xs:element name="SLFIB101" type="xs:string"/>
+  <xs:element name="SLFIB11" type="xs:string"/>
+  <xs:element name="SLFIB12" type="xs:string"/>
+  <xs:element name="SLFIB13" type="xs:string"/>
+  <xs:element name="SLFIB14" type="xs:string"/>
+  <xs:element name="SLFIB15" type="xs:string"/>
+  <xs:element name="SLFIB16" type="xs:string"/>
+  <xs:element name="SLFIB17" type="xs:string"/>
+  <xs:element name="SLFIB18" type="xs:string"/>
+  <xs:element name="SLFIB19" type="xs:string"/>
+  <xs:element name="SLFIB2" type="xs:string"/>
+  <xs:element name="SLFIB20" type="xs:string"/>
+  <xs:element name="SLFIB21" type="xs:string"/>
+  <xs:element name="SLFIB22" type="xs:string"/>
+  <xs:element name="SLFIB23" type="xs:string"/>
+  <xs:element name="SLFIB24" type="xs:string"/>
+  <xs:element name="SLFIB25" type="xs:string"/>
+  <xs:element name="SLFIB26" type="xs:string"/>
+  <xs:element name="SLFIB27" type="xs:string"/>
+  <xs:element name="SLFIB28" type="xs:string"/>
+  <xs:element name="SLFIB29" type="xs:string"/>
+  <xs:element name="SLFIB3" type="xs:string"/>
+  <xs:element name="SLFIB30" type="xs:string"/>
+  <xs:element name="SLFIB31" type="xs:string"/>
+  <xs:element name="SLFIB32" type="xs:string"/>
+  <xs:element name="SLFIB33" type="xs:string"/>
+  <xs:element name="SLFIB34" type="xs:string"/>
+  <xs:element name="SLFIB35" type="xs:string"/>
+  <xs:element name="SLFIB36" type="xs:string"/>
+  <xs:element name="SLFIB37" type="xs:string"/>
+  <xs:element name="SLFIB38" type="xs:string"/>
+  <xs:element name="SLFIB39" type="xs:string"/>
+  <xs:element name="SLFIB4" type="xs:string"/>
+  <xs:element name="SLFIB40" type="xs:string"/>
+  <xs:element name="SLFIB41" type="xs:string"/>
+  <xs:element name="SLFIB42" type="xs:string"/>
+  <xs:element name="SLFIB43" type="xs:string"/>
+  <xs:element name="SLFIB44" type="xs:string"/>
+  <xs:element name="SLFIB45" type="xs:string"/>
+  <xs:element name="SLFIB46" type="xs:string"/>
+  <xs:element name="SLFIB47" type="xs:string"/>
+  <xs:element name="SLFIB48" type="xs:string"/>
+  <xs:element name="SLFIB49" type="xs:string"/>
+  <xs:element name="SLFIB5" type="xs:string"/>
+  <xs:element name="SLFIB50" type="xs:string"/>
+  <xs:element name="SLFIB51" type="xs:string"/>
+  <xs:element name="SLFIB52" type="xs:string"/>
+  <xs:element name="SLFIB53" type="xs:string"/>
+  <xs:element name="SLFIB54" type="xs:string"/>
+  <xs:element name="SLFIB55" type="xs:string"/>
+  <xs:element name="SLFIB56" type="xs:string"/>
+  <xs:element name="SLFIB57" type="xs:string"/>
+  <xs:element name="SLFIB58" type="xs:string"/>
+  <xs:element name="SLFIB59" type="xs:string"/>
+  <xs:element name="SLFIB6" type="xs:string"/>
+  <xs:element name="SLFIB60" type="xs:string"/>
+  <xs:element name="SLFIB61" type="xs:string"/>
+  <xs:element name="SLFIB62" type="xs:string"/>
+  <xs:element name="SLFIB63" type="xs:string"/>
+  <xs:element name="SLFIB64" type="xs:string"/>
+  <xs:element name="SLFIB65" type="xs:string"/>
+  <xs:element name="SLFIB66" type="xs:string"/>
+  <xs:element name="SLFIB67" type="xs:string"/>
+  <xs:element name="SLFIB68" type="xs:string"/>
+  <xs:element name="SLFIB69" type="xs:string"/>
+  <xs:element name="SLFIB7" type="xs:string"/>
+  <xs:element name="SLFIB70" type="xs:string"/>
+  <xs:element name="SLFIB71" type="xs:string"/>
+  <xs:element name="SLFIB72" type="xs:string"/>
+  <xs:element name="SLFIB73" type="xs:string"/>
+  <xs:element name="SLFIB74" type="xs:string"/>
+  <xs:element name="SLFIB75" type="xs:string"/>
+  <xs:element name="SLFIB76" type="xs:string"/>
+  <xs:element name="SLFIB77" type="xs:string"/>
+  <xs:element name="SLFIB78" type="xs:string"/>
+  <xs:element name="SLFIB79" type="xs:string"/>
+  <xs:element name="SLFIB8" type="xs:string"/>
+  <xs:element name="SLFIB80" type="xs:string"/>
+  <xs:element name="SLFIB81" type="xs:string"/>
+  <xs:element name="SLFIB82" type="xs:string"/>
+  <xs:element name="SLFIB83" type="xs:string"/>
+  <xs:element name="SLFIB84" type="xs:string"/>
+  <xs:element name="SLFIB85" type="xs:string"/>
+  <xs:element name="SLFIB86" type="xs:string"/>
+  <xs:element name="SLFIB87" type="xs:string"/>
+  <xs:element name="SLFIB88" type="xs:string"/>
+  <xs:element name="SLFIB89" type="xs:string"/>
+  <xs:element name="SLFIB9" type="xs:string"/>
+  <xs:element name="SLFIB90" type="xs:string"/>
+  <xs:element name="SLFIB91" type="xs:string"/>
+  <xs:element name="SLFIB92" type="xs:string"/>
+  <xs:element name="SLFIB93" type="xs:string"/>
+  <xs:element name="SLFIB94" type="xs:string"/>
+  <xs:element name="SLFIB95" type="xs:string"/>
+  <xs:element name="SLFIB96" type="xs:string"/>
+  <xs:element name="SLFIB97" type="xs:string"/>
+  <xs:element name="SLFIB98" type="xs:string"/>
+  <xs:element name="SLFIB99" type="xs:string"/>
+  <xs:element name="SLITWHL" type="xs:string"/>
+  <xs:element name="ST" type="xs:NMTOKEN"/>
+  <xs:element name="STSTRNG" type="xs:string"/>
+  <xs:element name="TARGDEC" type="xs:NMTOKEN"/>
+  <xs:element name="TARGRA" type="xs:NMTOKEN"/>
+  <xs:element name="TCAMERA" type="xs:decimal"/>
+  <xs:element name="TCLDPLT" type="xs:decimal"/>
+  <xs:element name="TCLLMAT" type="xs:decimal"/>
+  <xs:element name="TCSLINK" type="xs:NCName"/>
+  <xs:element name="TDETECT" type="xs:decimal"/>
+  <xs:element name="TELALT" type="xs:decimal"/>
+  <xs:element name="TELAZ" type="xs:decimal"/>
+  <xs:element name="TELDEC" type="xs:NMTOKEN"/>
+  <xs:element name="TELEQUIN" type="xs:NMTOKEN"/>
+  <xs:element name="TELESCOP" type="xs:string"/>
+  <xs:element name="TELFOCUS" type="xs:decimal"/>
+  <xs:element name="TELMOVE" type="xs:NCName"/>
+  <xs:element name="TELRA" type="xs:NMTOKEN"/>
+  <xs:element name="TELRADEC" type="xs:NCName"/>
+  <xs:element name="TELTEMP" type="xs:integer"/>
+  <xs:element name="TEMPF1" type="xs:decimal"/>
+  <xs:element name="TEMPF2" type="xs:decimal"/>
+  <xs:element name="TILT1" type="xs:integer"/>
+  <xs:element name="TILT2" type="xs:integer"/>
+  <xs:element name="TILT3" type="xs:integer"/>
+  <xs:element name="TIME-OBS" type="xs:NMTOKEN"/>
+  <xs:element name="TIMESYS" type="xs:string"/>
+  <xs:element name="TITLE" type="xs:string"/>
+  <xs:element name="TMCRATE" type="xs:decimal"/>
+  <xs:element name="TMHTRPOW" type="xs:decimal"/>
+  <xs:element name="TMHTRRNG" type="xs:NCName"/>
+  <xs:element name="TMMAXAMP" type="xs:NMTOKEN"/>
+  <xs:element name="TMMAXPOW" type="xs:decimal"/>
+  <xs:element name="TMOTRPLT" type="xs:decimal"/>
+  <xs:element name="TMPERROR" type="xs:decimal"/>
+  <xs:element name="TMPID_D" type="xs:decimal"/>
+  <xs:element name="TMPID_I" type="xs:decimal"/>
+  <xs:element name="TMPID_P" type="xs:decimal"/>
+  <xs:element name="TMSETPT" type="xs:decimal"/>
+  <xs:element name="TMSTATE" type="xs:NCName"/>
+  <xs:element name="TMSWERR" type="xs:NCName"/>
+  <xs:element name="TMTOLER" type="xs:decimal"/>
+  <xs:element name="TOBENCH" type="xs:decimal"/>
+  <xs:element name="TRACK" type="xs:string"/>
+  <xs:element name="TRDSHLD" type="xs:decimal"/>
+  <xs:element name="TSP_NOW" type="xs:integer"/>
+  <xs:element name="TSP_RD00" type="xs:integer"/>
+  <xs:element name="TSP_SHCL" type="xs:integer"/>
+  <xs:element name="TSP_SHOP" type="xs:integer"/>
+  <xs:element name="TURTANGL" type="xs:decimal"/>
+  <xs:element name="TV1FOC" type="xs:NMTOKEN"/>
+  <xs:element name="TV2FOC" type="xs:decimal"/>
+  <xs:element name="TVIRGO" type="xs:decimal"/>
+  <xs:element name="UNIQNAME" type="xs:NMTOKEN"/>
+  <xs:element name="UT" type="xs:NMTOKEN"/>
+  <xs:element name="UTSHUT" type="xs:NMTOKEN"/>
+  <xs:element name="VCAS" type="xs:decimal"/>
+  <xs:element name="VCASI" type="xs:decimal"/>
+  <xs:element name="VCASTV" type="xs:decimal"/>
+  <xs:element name="VDETCMTV" type="xs:decimal"/>
+  <xs:element name="VDETCOM" type="xs:decimal"/>
+  <xs:element name="VDETCOMI" type="xs:decimal"/>
+  <xs:element name="VHIROWEN" type="xs:decimal"/>
+  <xs:element name="VHIROWI" type="xs:decimal"/>
+  <xs:element name="VHIROWV" type="xs:decimal"/>
+  <xs:element name="VHIRSTI" type="xs:decimal"/>
+  <xs:element name="VHIRSTV" type="xs:decimal"/>
+  <xs:element name="VIDMODE" type="xs:string"/>
+  <xs:element name="VLORESET" type="xs:decimal"/>
+  <xs:element name="VLOROWEN" type="xs:decimal"/>
+  <xs:element name="VLOROWI" type="xs:decimal"/>
+  <xs:element name="VLOROWTV" type="xs:decimal"/>
+  <xs:element name="VLORSTI" type="xs:decimal"/>
+  <xs:element name="VLORSTTV" type="xs:decimal"/>
+  <xs:element name="VNOUT" type="xs:decimal"/>
+  <xs:element name="VNOUTI" type="xs:decimal"/>
+  <xs:element name="VNOUTTV" type="xs:decimal"/>
+  <xs:element name="VNUC" type="xs:decimal"/>
+  <xs:element name="VNUCI" type="xs:decimal"/>
+  <xs:element name="VNUCTV" type="xs:decimal"/>
+  <xs:element name="VPD" type="xs:decimal"/>
+  <xs:element name="VPDI" type="xs:decimal"/>
+  <xs:element name="VPDTV" type="xs:decimal"/>
+  <xs:element name="VPUC" type="xs:decimal"/>
+  <xs:element name="VPUCI" type="xs:decimal"/>
+  <xs:element name="VPUCTV" type="xs:decimal"/>
+  <xs:element name="VRSTUC" type="xs:decimal"/>
+  <xs:element name="VRSTUCI" type="xs:decimal"/>
+  <xs:element name="VRSTUCTV" type="xs:decimal"/>
+  <xs:element name="VUNKNWNV" type="xs:decimal"/>
+  <xs:element name="VUNKWNI" type="xs:decimal"/>
+  <xs:element name="WAVELEN" type="xs:decimal"/>
+  <xs:element name="WEATDATE" type="xs:NMTOKEN"/>
+  <xs:element name="WINDDIR" type="xs:decimal"/>
+  <xs:element name="WINDSPD" type="xs:decimal"/>
+  <xs:element name="ZD" type="xs:NMTOKEN"/>
+  <xs:element name="KWDICT" type="xs:string"/>
+  <xs:element name="OTFDIR" type="xs:NCName"/>
+  <xs:element name="XTALKFIL" type="xs:NCName"/>
+  <xs:element name="CHECKSUM" type="xs:NCName"/>
+  <xs:element name="DATASUM" type="xs:NCName"/>
+  <xs:element name="CHECKVER" type="xs:NCName"/>
+  <xs:element name="RECNO" type="xs:NCName"/>
+  <xs:element name="GCCROTAT" type="xs:decimal"/>
+  <xs:element name="KSDPOS" type="xs:NCName"/>
+  <xs:element name="KSDWPOS" type="xs:integer"/>
+  <xs:element name="KSFILCMD" type="xs:NCName"/>
+  <xs:element name="KSFW1POS" type="xs:integer"/>
+  <xs:element name="KSFW2POS" type="xs:integer"/>
+  <xs:element name="KSSWPOS" type="xs:integer"/>
+  <xs:element name="KSSPOS" type="xs:NMTOKEN"/>
+  <xs:element name="KSCAMFOC" type="xs:integer"/>
+  <xs:element name="KSCAMZRO" type="xs:integer"/>
+  <xs:element name="DOMEERR" type="xs:decimal"/>
+  <xs:element name="DOMEAZ" type="xs:decimal"/>
+  <xs:element name="GAIN" type="xs:decimal"/>
+  <xs:element name="DWELL" type="xs:integer"/>
+  <xs:element name="RDNOISE" type="xs:decimal"/>
+  <xs:element name="INITTIME" type="xs:decimal"/>
+  <xs:element name="PREPTIME" type="xs:decimal"/>
+  <xs:element name="TOTTIME" type="xs:decimal"/>
+  <xs:element name="DATASEC" type="xs:string"/>
+  <xs:element name="ORIGSEC" type="xs:string"/>
+  <xs:element name="CCDSEC" type="xs:string"/>
+  <xs:element name="BIASSEC" type="xs:string"/>
+  <xs:element name="TRIMSEC" type="xs:string"/>
+  <xs:element name="MSEREADY" type="xs:NCName"/>
+  <xs:element name="TCPGDR" type="xs:NCName"/>
+  <xs:element name="KSTEMP1" type="xs:decimal"/>
+  <xs:element name="KSTEMP2" type="xs:decimal"/>
+  <xs:element name="KSTEMP3" type="xs:decimal"/>
+  <xs:element name="KSTEMP4" type="xs:decimal"/>
+  <xs:element name="KSCOLFOC" type="xs:decimal"/>
+  <xs:element name="KSCOLZRO" type="xs:integer"/>
+</xs:schema>
