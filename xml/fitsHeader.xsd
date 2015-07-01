@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+   <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+         <!-- XML Schema Generated from XML Document on Fri Jun 19 2015 11:20:49 GMT-0700 (MST) -->
+         <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->
+         <xs:element name="fitsHeader">
+               <xs:complexType>
+                     <xs:sequence>
+                           <xs:element name="SIMPLE" type="xs:string"></xs:element>
+                           <xs:element name="BITPIX" type="xs:int"></xs:element>
+                           <xs:element name="NAXIS" type="xs:int"></xs:element>
+                           <xs:element name="EXTEND" type="xs:string"></xs:element>
+                           <xs:element name="NEXTEND" type="xs:int"></xs:element>
+                           <xs:element name="FILENAME" type="xs:string"></xs:element>
+                           <xs:element name="OBJECT" type="xs:string"></xs:element>
+                           <xs:element name="OBSTYPE" type="xs:string"></xs:element>
+                           <xs:element name="EXPTIME" type="xs:int"></xs:element>
+                           <xs:element name="EXPCOADD" type="xs:int"></xs:element>
+                           <xs:element name="NCOADD" type="xs:int"></xs:element>
+                           <xs:element name="RADECSYS" type="xs:string"></xs:element>
+                           <xs:element name="RADECEQ" type="xs:int"></xs:element>
+                           <xs:element name="RA" type="xs:string"></xs:element>
+                           <xs:element name="DEC" type="xs:string"></xs:element>
+                           <xs:element name="OBJRA" type="xs:string"></xs:element>
+                           <xs:element name="OBJDEC" type="xs:string"></xs:element>
+                           <xs:element name="OBJEPOCH" type="xs:int"></xs:element>
+                           <xs:element name="TIMESYS" type="xs:string"></xs:element>
+                           <xs:element name="DATE-OBS" type="xs:string"></xs:element>
+                           <xs:element name="TIME-OBS" type="xs:string"></xs:element>
+                           <xs:element name="MJD-OBS" type="xs:double"></xs:element>
+                           <xs:element name="ST" type="xs:string"></xs:element>
+                           <xs:element name="OBSERVAT" type="xs:string"></xs:element>
+                           <xs:element name="TELESCOP" type="xs:string"></xs:element>
+                           <xs:element name="TELRADEC" type="xs:string"></xs:element>
+                           <xs:element name="TELEQUIN" type="xs:int"></xs:element>
+                           <xs:element name="TELRA" type="xs:string"></xs:element>
+                           <xs:element name="TELDEC" type="xs:string"></xs:element>
+                           <xs:element name="HA" type="xs:string"></xs:element>
+                           <xs:element name="ZD" type="xs:double"></xs:element>
+                           <xs:element name="AIRMASS" type="xs:double"></xs:element>
+                           <xs:element name="TELFOCUS" type="xs:int"></xs:element>
+                           <xs:element name="INSTRUME" type="xs:string"></xs:element>
+                           <xs:element name="MOSSIZE" type="xs:string"></xs:element>
+                           <xs:element name="NDETS" type="xs:int"></xs:element>
+                           <xs:element name="FILTER" type="xs:string"></xs:element>
+                           <xs:element name="OBSERVER" type="xs:string"></xs:element>
+                           <xs:element name="TELOP" type="xs:string"></xs:element>
+                           <xs:element name="PROPOSER" type="xs:string"></xs:element>
+                           <xs:element name="PROPID" type="xs:string"></xs:element>
+                           <xs:element name="OBSID" type="xs:string"></xs:element>
+                           <xs:element name="SEQID" type="xs:string"></xs:element>
+                           <xs:element name="SEQNUM" type="xs:int"></xs:element>
+                           <xs:element name="EXPID" type="xs:int"></xs:element>
+                           <xs:element name="NOCID" type="xs:double"></xs:element>
+                           <xs:element name="PROCTYPE" type="xs:string"></xs:element>
+                           <xs:element name="NOCPIE" type="xs:string"></xs:element>
+                           <xs:element name="NOCAOE" type="xs:string"></xs:element>
+                           <xs:element name="NOCOAE"></xs:element>
+                           <xs:element name="NOHS" type="xs:string"></xs:element>
+                           <xs:element name="NOCNO" type="xs:int"></xs:element>
+                           <xs:element name="NOCORA" type="xs:int"></xs:element>
+                           <xs:element name="NOCDITER" type="xs:int"></xs:element>
+                           <xs:element name="NOCSKY" type="xs:int"></xs:element>
+                           <xs:element name="NOCNPOS" type="xs:int"></xs:element>
+                           <xs:element name="NOCDPAT" type="xs:string"></xs:element>
+                           <xs:element name="NOCDROF" type="xs:int"></xs:element>
+                           <xs:element name="NOCBIAS" type="xs:int"></xs:element>
+                           <xs:element name="NOCFSN" type="xs:string"></xs:element>
+                           <xs:element name="NOCDHS" type="xs:string"></xs:element>
+                           <xs:element name="NOCMPOS" type="xs:int"></xs:element>
+                           <xs:element name="NOCTIM" type="xs:int"></xs:element>
+                           <xs:element name="NOCCOADD" type="xs:int"></xs:element>
+                           <xs:element name="NOCMDOF" type="xs:int"></xs:element>
+                           <xs:element name="NOCMREP" type="xs:int"></xs:element>
+                           <xs:element name="NOCTOT" type="xs:int"></xs:element>
+                           <xs:element name="NOCFOCUS" type="xs:int"></xs:element>
+                           <xs:element name="NOHS" type="xs:string"></xs:element>
+                           <xs:element name="NOCSYS" type="xs:string"></xs:element>
+                           <xs:element name="NOCLAMP" type="xs:string"></xs:element>
+                           <xs:element name="NOCDPOS" type="xs:int"></xs:element>
+                           <xs:element name="NOCMITER" type="xs:int"></xs:element>
+                           <xs:element name="NOCPOST" type="xs:string"></xs:element>
+                           <xs:element name="NOCODEC" type="xs:int"></xs:element>
+                           <xs:element name="NOCMPAT" type="xs:string"></xs:element>
+                           <xs:element name="NOCDDOF" type="xs:int"></xs:element>
+                           <xs:element name="NOCSCR" type="xs:string"></xs:element>
+                           <xs:element name="NOCNUM" type="xs:int"></xs:element>
+                           <xs:element name="NOCMROF" type="xs:int"></xs:element>
+                           <xs:element name="NOCDGAVG" type="xs:int"></xs:element>
+                           <xs:element name="NOCTYP" type="xs:string"></xs:element>
+                           <xs:element name="NOCFSMPL" type="xs:int"></xs:element>
+                           <xs:element name="NOCDREP" type="xs:int"></xs:element>
+                           <xs:element name="NFOSSTMP" type="xs:int"></xs:element>
+                           <xs:element name="NFDETTMP" type="xs:double"></xs:element>
+                           <xs:element name="NFFILPOS" type="xs:string"></xs:element>
+                           <xs:element name="NFFW2POS" type="xs:int"></xs:element>
+                           <xs:element name="NFFW1POS" type="xs:int"></xs:element>
+                           <xs:element name="DECDIFF" type="xs:double"></xs:element>
+                           <xs:element name="AZ" type="xs:string"></xs:element>
+                           <xs:element name="TCPTRACK" type="xs:string"></xs:element>
+                           <xs:element name="RAINST" type="xs:int"></xs:element>
+                           <xs:element name="DECOFF" type="xs:int"></xs:element>
+                           <xs:element name="RAOFF" type="xs:int"></xs:element>
+                           <xs:element name="RAINDEX" type="xs:double"></xs:element>
+                           <xs:element name="ALT" type="xs:string"></xs:element>
+                           <xs:element name="RAZERO" type="xs:int"></xs:element>
+                           <xs:element name="DECINST" type="xs:int"></xs:element>
+                           <xs:element name="RADIFF" type="xs:double"></xs:element>
+                           <xs:element name="DECZERO" type="xs:double"></xs:element>
+                           <xs:element name="DECINDEX" type="xs:double"></xs:element>
+                           <xs:element name="NFC1POS" type="xs:string"></xs:element>
+                           <xs:element name="NFC1GDR" type="xs:string"></xs:element>
+                           <xs:element name="NFC1FILT" type="xs:string"></xs:element>
+                           <xs:element name="DOMEERR" type="xs:double"></xs:element>
+                           <xs:element name="DOMEAZ" type="xs:int"></xs:element>
+                           <xs:element name="TCPGDR" type="xs:string"></xs:element>
+                           <xs:element name="NFC2FILT" type="xs:string"></xs:element>
+                           <xs:element name="NFC2POS" type="xs:string"></xs:element>
+                           <xs:element name="NFC2GDR" type="xs:string"></xs:element>
+                           <xs:element name="NFECPOS" type="xs:string"></xs:element>
+                           <xs:element name="LAMPSTAT" type="xs:string"></xs:element>
+                           <xs:element name="DTACQNAM"></xs:element>
+                           <xs:element name="DTINSTRU" type="xs:string"></xs:element>
+                           <xs:element name="DTPI" type="xs:string"></xs:element>
+                           <xs:element name="DTSITE" type="xs:string"></xs:element>
+                           <xs:element name="DTTELESC" type="xs:string"></xs:element>
+                           <xs:element name="DTTITLE" type="xs:string"></xs:element>
+                           <xs:element name="DTUTC" type="xs:dateTime"></xs:element>
+                           <xs:element name="SB_DIR1" type="xs:int"></xs:element>
+                           <xs:element name="SB_DIR2" type="xs:string"></xs:element>
+                           <xs:element name="SB_DIR3" type="xs:string"></xs:element>
+                     </xs:sequence>
+               </xs:complexType>
+         </xs:element>
+   </xs:schema>
+ 

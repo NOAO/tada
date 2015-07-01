@@ -49,6 +49,7 @@ def network_move(rec, qname, **kwargs):
     redis_port = qcfg[nextq]['redis_port']
 
     source_root = qcfg[qname]['cache_dir']
+    stash_root = qcfg[qname]['stash_dir']
     sync_root = qcfg[qname]['mirror_dir']
     valley_root = qcfg[nextq]['mirror_dir']
     fname = rec['filename']            # absolute path
@@ -60,6 +61,25 @@ def network_move(rec, qname, **kwargs):
 
     ifname = os.path.join(sync_root, os.path.relpath(fname, source_root))
     #!ifname = sync_root
+    try:
+        cmdline = ['rsync', source_root, stash_root]
+        diag.dbgcmd(cmdline)
+        tic = time.time()
+        out = subprocess.check_output(cmdline,
+                                      stderr=subprocess.STDOUT)
+        logging.info('rsync completed in {:.2f} seconds'
+                     .format(time.time() - tic))
+    except Exception as ex:
+        logging.warning('Failed to stash Mountain files ({}) to {} '
+                        '{}; {}'
+                        .format(source_root, stash_root,
+                                ex,
+                                out
+                            ))
+        # Any failure means put back on queue. Keep queue handling
+        # outside of actions where possible.
+        raise
+
     out = None
     try:
         #!iu.irods_put(fname, ifname)
@@ -86,7 +106,8 @@ def network_move(rec, qname, **kwargs):
         tic = time.time()
         out = subprocess.check_output(cmdline,
                                       stderr=subprocess.STDOUT)
-        logging.info('rsync completed in {:.2f} seconds'.format(time.time() - tic))
+        logging.info('rsync completed in {:.2f} seconds'
+                     .format(time.time() - tic))
     except Exception as ex:
         logging.warning('Failed to transfer from Mountain ({}) to Valley. '
                         '{}; {}'

@@ -1,4 +1,8 @@
 #!/usr/bin/perl
+
+# See cache@dsan3:/noaosw/bin/getSemesterXml.py
+
+#
 #
 # GETSEMESTERXML - Dumps a semester of proposals to XML
 #
