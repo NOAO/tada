@@ -1,7 +1,5 @@
 "Dirt needed to submit a fits file to the archive for ingest"
 
-# There is a 
-    
 import sys
 import argparse
 import logging
@@ -23,7 +21,7 @@ from . import exceptions as tex
 from . import irods331 as iu
 from . import ingest_decoder as idec
  
-
+    
 
 def http_archive_ingest(hdr_ipath, qname, qcfg=None):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
@@ -144,7 +142,7 @@ RETURN: irods location of hdr file.
         hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
         hdr = hdulist[0].header # use only first in list.
         fu.apply_options(options, hdr)
-        #!hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname
+        hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname, here to pass validate
         hdr['DTACQNAM'] = orig_fullname
         fu.validate_raw_hdr(hdr, orig_fullname)
         fname_fields = fu.modify_hdr(hdr, mirror_fname, options, opt_params)
@@ -155,7 +153,7 @@ RETURN: irods location of hdr file.
         if jidt == 'plain':
             jobid = pathlib.PurePath(mirror_fname).parts[-2]
         elif jidt == 'seconds': 
-            # hundredths of a second sin 1/1/2015
+            # hundredths of a second since 1/1/2015
             jobid = str(int((datetime.datetime.now()
                              - datetime.datetime(2015,1,1)) 
                             .total_seconds()*100))

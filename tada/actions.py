@@ -49,7 +49,7 @@ def network_move(rec, qname, **kwargs):
     redis_port = qcfg[nextq]['redis_port']
 
     source_root = qcfg[qname]['cache_dir']
-    stash_root = '/var/tada/mountain_stash'
+    pre_action = qcfg[qname].get('pre_action',None)
     sync_root = qcfg[qname]['mirror_dir']
     valley_root = qcfg[nextq]['mirror_dir']
     fname = rec['filename']            # absolute path
@@ -60,26 +60,26 @@ def network_move(rec, qname, **kwargs):
                         .format(fname, source_root))
 
     ifname = os.path.join(sync_root, os.path.relpath(fname, source_root))
-    #!ifname = sync_root
-    try:
-        cmdline = ['rsync', source_root, stash_root]
-        diag.dbgcmd(cmdline)
-        tic = time.time()
-        out = subprocess.check_output(cmdline,
-                                      stderr=subprocess.STDOUT)
-        logging.info('rsync completed in {:.2f} seconds'
-                     .format(time.time() - tic))
-    except Exception as ex:
-        logging.warning('Failed to stash Mountain files ({}) to {} '
-                        '{}; {}'
-                        .format(source_root, stash_root,
-                                ex,
-                                out
-                            ))
-        # Any failure means put back on queue. Keep queue handling
-        # outside of actions where possible.
-        raise
-
+    
+    logging.debug('pre_action={}'.format(pre_action))
+    if pre_action:
+        # pre_action is full path to shell script to run.
+        # Must accept two params:
+        #   1. absolute path of file from queue
+        #   2. absolute path mountain_cache
+        # Stdout and stderr from pre_action will be logged to INFO.
+        # Error (non-zero return code) will be logged to ERROR but normal
+        # TADA processing will continue.
+        try:
+            cmdline = [pre_action, fname, source_root]
+            diag.dbgcmd(cmdline)
+            out = subprocess.check_output(cmdline, stderr=subprocess.STDOUT)
+            logging.info(out)
+        except CalledProcessError as cpe:
+            logging.warning('Failed Transfer pre_action ({} {} {}) {}; {}'
+                            .format(pre_action, fname, source_root,
+                                    cpe, cpe.output ))
+            
     out = None
     try:
         #!iu.irods_put(fname, ifname)
