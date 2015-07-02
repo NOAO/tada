@@ -31,7 +31,7 @@ def decodeIngest(response):
     root = ET.fromstring(response)
     itype = root.get('type')
     dpuri = root.get('dataProductUri')
-    success = (itype == 'SUCCESS')
+    success = ((itype == 'SUCCESS') or (itype == 'SUCCESS_WITH_WARNING'))
     msg = '' if success else root.find('./message/user').text 
     return success,'Operator:: ' + msg
 
