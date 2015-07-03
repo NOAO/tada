@@ -64,6 +64,7 @@ def network_move(rec, qname, **kwargs):
     logging.debug('pre_action={}'.format(pre_action))
     if pre_action:
         # pre_action is full path to shell script to run.
+        # WARNING: a bad script could do bad things to the mountain_cache files!!!
         # Must accept two params:
         #   1. absolute path of file from queue
         #   2. absolute path mountain_cache
