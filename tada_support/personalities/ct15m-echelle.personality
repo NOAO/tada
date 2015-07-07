@@ -1,9 +1,0 @@
-
-TADAOPTS=${TADAOPTS:-""}
-TADAOPTS="${TADAOPTS} \
- -o __calchdr=PROPIDtoDT,DTCALDATfromDATEOBStus,DTTELESCfromINSTRUME \
- -o _DTTELESC=ct15m \
- -o _INSTRUME=echelle \
-"
-
-
