@@ -4,7 +4,7 @@ from codecs import open  # To use a consistent encoding
 from os import path
 from glob import glob
 
-personalities = glob(path.join('tada_support','personalities','*'))
+#!personalities = glob(path.join('tada_support','personalities','*'))
 
 
 here = path.abspath(path.dirname(__file__))
@@ -74,18 +74,18 @@ setup(
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
-    package_data={
-        'tada_support': ['personalities/*', 'scripts/*', 'dev-scripts/*',],
-    },
+    #!package_data={
+    #!    'tada_support': ['personalities/*', 'scripts/*', 'dev-scripts/*',],
+    #!},
 
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages.
     # see http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
     # In this case, 'data_file' will be installed into '<sys.prefix>/my_data'
-    #! data_files=[('my_data', ['data/data_file'])],
-    data_files=[('/usr/local/bin', ['tada_support/scripts/postproc',]),
-                ('/var/tada/personalities', personalities),
-                ],
+    #!data_files=[('my_data', ['data/data_file'])],
+    #!data_files=[('/usr/local/bin', ['tada_support/scripts/postproc',]),
+    #!            ('/var/tada/personalities', personalities),
+    #!            ],
                     
 
     # To provide executable scripts, use entry points in preference to the
