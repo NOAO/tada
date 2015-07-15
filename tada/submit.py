@@ -170,14 +170,15 @@ RETURN: irods location of hdr file.
         hdr['DTNSANAM'] = new_basename
 
         new_ipath = fn.generate_archive_path(hdr, source=source)
-        #!ipath = pathlib.PurePath(mirror_fname.replace(mirror_dir, archive331))
-        #!new_ipath = ipath.with_name(new_basename)
-        logging.debug('new_ipath={}, new_basename={}'
-                      .format(new_ipath, new_basename))
+        logging.debug('DBG-1:{}'.format(new_ipath))
         ext = fu.fits_extension(new_basename)
-        new_ipath = new_ipath.with_name(new_basename)
+        new_ipath = new_ipath / new_basename
+        logging.debug('DBG-2:{}'.format(new_ipath))
         new_ifname = str(new_ipath)
+        logging.debug('DBG-3:{}'.format(new_ifname))
         new_ihdr = new_ifname.replace(ext,'.hdr')
+        logging.debug('new_ipath={}, new_basename={}, new_ifname={}'
+                      .format(new_ipath, new_basename, new_ifname))
 
         # Print without blank cards or trailing whitespace
         hdrstr = hdr.tostring(sep='\n',padding=False)
