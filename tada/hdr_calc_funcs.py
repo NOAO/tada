@@ -53,6 +53,10 @@ def PROPIDtoDT(orig):
     'Depends on: PROPID'
     return {'DTPROPID': orig['PROPID'] }
 
+def PROPIDplusCentury(orig):
+    'Depends on: PROPID. Add missing century'
+    return {'DTPROPID': '20' + orig['PROPID'].strip('"') }
+
 def INSTRUMEtoDT(orig):
     'Depends on: INSTRUME'
     return {'DTINSTRU': orig['INSTRUME'] }
