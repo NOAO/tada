@@ -75,8 +75,9 @@ def network_move(rec, qname, **kwargs):
             cmdline = [pre_action, fname, source_root]
             diag.dbgcmd(cmdline)
             out = subprocess.check_output(cmdline, stderr=subprocess.STDOUT)
-            logging.info(out)
-        except CalledProcessError as cpe:
+            if len(out) > 0:
+                logging.info(out)
+        except subprocess.CalledProcessError as cpe:
             logging.warning('Failed Transfer pre_action ({} {} {}) {}; {}'
                             .format(pre_action, fname, source_root,
                                     cpe, cpe.output ))
@@ -165,7 +166,7 @@ def submit(rec, qname, **kwargs):
 more than N times, move the queue entry to Inactive. (where N is the 
 configuration field: maximum_errors_per_record)
 """
-    logging.debug('submit({},{})'.format(rec, qname))
+    #!logging.debug('submit({},{})'.format(rec, qname))
     qcfg = du.get_keyword('qcfg', kwargs)
     dq_host = qcfg[qname]['dq_host']
     dq_port = qcfg[qname]['dq_port']

@@ -699,6 +699,7 @@ def fits_compliant(fits_file_list,
         missing_raw = []
         missing_cooked = []
         missing_recommended = []
+        fname_fields = None
         try:
             #!valid_header(ffile)
             hdr = pyfits.open(ffile)[0].header # use only first in list.
@@ -718,7 +719,7 @@ def fits_compliant(fits_file_list,
         if (len(missing_raw) + len(missing_cooked)) > 0:
             valid = False
 
-        if show_stdfname:
+        if show_stdfname and fname_fields != None:
             new_basename = fn.generate_fname(*fname_fields)
             print('{} produced from {}'.format(new_basename, ffile))
         if show_values:

@@ -92,8 +92,8 @@ archive331 :: from "archive_irods331" in dq_config
 RETURN: irods location of hdr file.
     """
 
-    logging.debug('prep_for_ingest: fname={}, m_dir={}, a_dir={}'
-                  .format(mirror_fname, mirror_dir, archive331))
+    #!logging.debug('prep_for_ingest: fname={}, m_dir={}, a_dir={}'
+    #!              .format(mirror_fname, mirror_dir, archive331))
 
     # Name/values passed on LPR command line.
     #   e.g. lpr -P astro -o _INSTRUME=KOSMOS  -o _OBSERVAT=KPNO  foo.fits
@@ -104,17 +104,6 @@ RETURN: irods location of hdr file.
     if os.path.exists(optfname):
         with open(optfname,encoding='utf-8') as f:
             optstr = f.readline()
-    #!options = dict()
-    #!for s in optstr.split():
-    #!    if s[0] != '_':
-    #!        continue
-    #!    k,v = s[1:].split('=')
-    #!    options[k] = v.replace('_', ' ')
-    #!opt_params = dict()  # under-under params. Passed like: lp -d astro -o __x=3
-    #!for k,v in list(options.items()):
-    #!    if k[0] =='_':
-    #!        opt_params[k[1:]] = v
-    #!        options.pop(k)
     options = dict()
     opt_params = dict()
     for opt in optstr.split():
@@ -133,12 +122,11 @@ RETURN: irods location of hdr file.
     orig_fullname = opt_params.get('filename','<unknown>')
 
     #!logging.debug('Options in prep_for_ingest: {}'.format(options))
-    logging.debug('Params in prep_for_ingest: {}'.format(opt_params))
+    #!logging.debug('Params  in prep_for_ingest: {}'.format(opt_params))
 
     hdr_ifname = "None"
     try:
         # augment hdr (add fields demanded of downstream process)
-        logging.debug('Open FITS for hdr update: {}'.format(mirror_fname))
         hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
         hdr = hdulist[0].header # use only first in list.
         fu.apply_options(options, hdr)
@@ -165,17 +153,16 @@ RETURN: irods location of hdr file.
             logging.debug('Source=pipeline so using basename:{}'
                           .format(new_basename))
         else:
-            new_basename = fn.generate_fname(*fname_fields, jobid=jobid, wunk=warn_unknown, orig=mirror_fname)
-            #!new_basename = fn.generate_archive_basename(hdr, mirror_fname, jobid=jobid, wunk=warn_unknown)
+            new_basename = fn.generate_fname(*fname_fields,
+                                             jobid=jobid,
+                                             wunk=warn_unknown,
+                                             orig=mirror_fname)
         hdr['DTNSANAM'] = new_basename
 
         new_ipath = fn.generate_archive_path(hdr, source=source)
-        logging.debug('DBG-1:{}'.format(new_ipath))
         ext = fu.fits_extension(new_basename)
         new_ipath = new_ipath / new_basename
-        logging.debug('DBG-2:{}'.format(new_ipath))
         new_ifname = str(new_ipath)
-        logging.debug('DBG-3:{}'.format(new_ifname))
         new_ihdr = new_ifname.replace(ext,'.hdr')
         logging.debug('new_ipath={}, new_basename={}, new_ifname={}'
                       .format(new_ipath, new_basename, new_ifname))
@@ -271,8 +258,7 @@ checksum:: NOT USED
 qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 
 """
-    logging.debug('submit_to_archive({},{})'.format(ifname, qname))
-    #! logging.debug('   qcfg={})'.format(qcfg))
+    #!logging.debug('submit_to_archive({},{})'.format(ifname, qname))
     mirror_dir =  qcfg[qname]['mirror_dir']
     archive331 =  qcfg[qname]['archive_irods331']
     #!id_in_fname = qcfg[qname].get('id_in_fname',0)
