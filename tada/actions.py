@@ -76,7 +76,7 @@ def network_move(rec, qname, **kwargs):
             diag.dbgcmd(cmdline)
             out = subprocess.check_output(cmdline, stderr=subprocess.STDOUT)
             if len(out) > 0:
-                logging.info(out)
+                logging.info('pre_action "{}" output: {}'.format(preaction,out))
         except subprocess.CalledProcessError as cpe:
             logging.warning('Failed Transfer pre_action ({} {} {}) {}; {}'
                             .format(pre_action, fname, source_root,

@@ -10,8 +10,9 @@ from glob import glob
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the relevant file
-with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
-    long_description = f.read()
+#!with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
+#!    long_description = f.read()
+long_description="Collect telescope data from mountain tops, deliver to far-away archives."
 
 setup(
     name='tada', #!!! change to "stari" or something else if using on PyPI
@@ -19,7 +20,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.0.2rc3',
+    version='0.0.4rc1',
 
     description='Collect telescope data from mountain tops, deliver to far-away archives',
     long_description=long_description,
@@ -69,7 +70,7 @@ setup(
     # project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/technical.html#install-requires-vs-requirements-files
-    install_requires=['dataq',],
+    #!install_requires=['dataq',],
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
