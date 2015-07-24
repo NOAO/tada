@@ -11,7 +11,7 @@ In each function of this file:
   RETURNS:: dictionary that should be used to update the header
 
 These function names MUST NOT CONTAIN UNDERSCORE ("_").  They are
-listed by name in option values passed to "lp". Underscores are
+listed by name in option values passed to "lp". Then underscores are
 expanded to spaces to handle the command line argument limitation.
 
 '''
@@ -19,9 +19,25 @@ expanded to spaces to handle the command line argument limitation.
 import logging
 from dateutil import tz
 import datetime as dt
+from . import hdr_calc_utils as ut
 
+def lookupPROPID(orig, **kwargs):
+    '''Only lookup if DTPROPID not present. 
+Depends on: DTCALDAT, DTTELESC, (DTPROPID)'''
 
-def addTimeToDATEOBS(orig):
+    if 'DTPROPID' in orig:
+        return dict()
+    
+    host=kwargs.get('mars_host')
+    port=kwargs.get('mars_port')
+    #!tele, date = ('ct13m', '2014-12-25')
+    date = orig.get('DTCALDAT')
+    tele = orig.get('DTTELESC')
+    propid = ut.http_get_propid_from_schedule(tele, date, host=host, port=port)
+    new = {'DTPROPID': propid }
+    return new
+
+def addTimeToDATEOBS(orig, **kwargs):
     'Use TIME-OBS for time portion of DATEOBS. Depends on: DATE-OBS, TIME-OBS'
     if ('T' in orig['DATE-OBS']):
         new = dict()
@@ -34,7 +50,7 @@ def addTimeToDATEOBS(orig):
 
 #DATEOBS is UTC, so convert DATEOBS to localdate and localtime, then:
 #if [ $localtime > 12:00]; then DTCALDAT=localdate; else DTCALDAT=localdate-1 
-def DTCALDATfromDATEOBStus(orig):
+def DTCALDATfromDATEOBStus(orig, **kwargs):
     'Depends on: DATE-OBS'
     local_zone = tz.gettz('America/Phoenix')
     utc = dt.datetime.strptime(orig['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
@@ -49,29 +65,45 @@ def DTCALDATfromDATEOBStus(orig):
     new = {'DTCALDAT': caldate.isoformat()}
     return new
 
-def PROPIDtoDT(orig):
+
+def DTCALDATfromDATEOBSchile(orig, **kwargs):
+    'Depends on: DATE-OBS'
+    local_zone = tz.gettz('Chile/Continental')
+    utc = dt.datetime.strptime(orig['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
+    utc = utc.replace(tzinfo=tz.tzutc()) # set UTC zone
+    localdt = utc.astimezone(local_zone)
+    if localdt.time().hour > 12:
+        caldate = localdt.date()
+    else:
+        caldate = localdt.date() - dt.timedelta(days=1)
+    #!logging.debug('localdt={}, DATE-OBS={}, caldate={}'
+    #!              .format(localdt, orig['DATE-OBS'], caldate))
+    new = {'DTCALDAT': caldate.isoformat()}
+    return new
+
+def PROPIDtoDT(orig, **kwargs):
     'Depends on: PROPID'
     return {'DTPROPID': orig['PROPID'] }
 
-def PROPIDplusCentury(orig):
+def PROPIDplusCentury(orig, **kwargs):
     'Depends on: PROPID. Add missing century'
     return {'DTPROPID': '20' + orig['PROPID'].strip('"') }
 
-def INSTRUMEtoDT(orig):
+def INSTRUMEtoDT(orig, **kwargs):
     'Depends on: INSTRUME'
     return {'DTINSTRU': orig['INSTRUME'] }
 
 
-def IMAGTYPEtoOBSTYPE(orig):
+def IMAGTYPEtoOBSTYPE(orig, **kwargs):
     'Depends on: IMAGETYP'
     return {'OBSTYPE': orig['IMAGETYP']  }
 
 
-def bokOBSID(orig):
+def bokOBSID(orig, **kwargs):
     "Depends on DATE-OBS"
     return {'OBSID': 'bok23m.'+orig['DATE-OBS'] }
 
-def DTTELESCfromINSTRUME(orig):
+def DTTELESCfromINSTRUME(orig, **kwargs):
     "Instrument specific calculations. Depends on: INSTRUME, OBSID"
     new = dict() # Fields to calculate
     instrument = orig['INSTRUME'].lower()

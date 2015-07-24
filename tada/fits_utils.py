@@ -17,7 +17,6 @@ import os.path
 import datetime as dt
 import subprocess
  
-#!from . import fits_calc as fc
 from . import file_naming as fn
 from . import exceptions as tex
 from . import hdr_calc_funcs as hf
@@ -85,7 +84,8 @@ RAW_REQUIRED_FIELDS = set([
     'INSTRUME',
     'OBSERVAT',
     'OBSID',
-    'PROPID',
+    # 'PROPID', # Presumably archive uses DTPROPID id instead
+    # 'DTPROPID',# could be looked up in schedule so moved to COOKED
     # 'PROPOSER', #!!! will use PROPID when PROPOSER doesn't exist in raw hdr
 ])
 
@@ -369,8 +369,8 @@ Raise exception if not."""
     missing = missing_in_raw_hdr(hdr)
     if len(missing) > 0:
         raise tex.HeaderMissingKeys(
-            'Missing required metadata keys: {}'
-            .format(missing))
+            'Missing required metadata keys: {} in file {}'
+            .format(missing, hdr.get(DTACQNAM,'NA')))
     return True
 
 
@@ -559,10 +559,11 @@ Extension may be: ".fits.fz", ".fits", ".fits.gz", etc'''
     return ext
 
 
+
 # SIDE-EFFECTS: fields added to FITS header
 # Used istb/src/header.{h,c} for hints.
 # raw: nhs_2014_n14_299403.fits
-def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True):
+def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True, **kwargs):
     '''Modify header to suit Archive Ingest. Return fields needed to construct
  new filename that fullfills standards
     options :: e.g. {'INSTRUME': 'KOSMOS', 'OBSERVAT': 'KPNO'}
@@ -591,7 +592,7 @@ def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True):
     logging.debug('calc_funcs={}'.format(calc_funcs))
     chg = dict(hdr.items()) # plain dictionary of hdr; no FITS specific access
     for calcfunc in calc_funcs:
-        new = calcfunc(chg)
+        new = calcfunc(chg, **kwargs)
         chg.update(new)
         logging.debug('new field values={}'.format(new))    
     #! logging.debug('updated field values={}'.format(chg))    

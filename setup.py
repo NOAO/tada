@@ -20,7 +20,8 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.0.4rc1',
+    # EXAMPLE: '0.0.4rc2',
+    version='0.0.4rc2',
 
     description='Collect telescope data from mountain tops, deliver to far-away archives',
     long_description=long_description,

@@ -21,9 +21,8 @@ from . import exceptions as tex
 from . import irods331 as iu
 from . import ingest_decoder as idec
  
-    
 
-def http_archive_ingest(hdr_ipath, qname, qcfg=None):
+def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
  Archive Ingest via REST-like interface."""
     import random # for stubbing random failures (not for production)
@@ -31,6 +30,7 @@ def http_archive_ingest(hdr_ipath, qname, qcfg=None):
     logging.debug('EXECUTING: http_archive_ingest({}, {})'
                   .format(hdr_ipath, qname))
 
+    # extract from qcfg ealier and pass dict (see prep_for_ingest)!!!
     arch_host = qcfg[qname]['arch_host']
     arch_port = qcfg[qname]['arch_port']
     irods_host = qcfg[qname]['arch_irods_host']
@@ -68,14 +68,13 @@ def http_archive_ingest(hdr_ipath, qname, qcfg=None):
         #!if not result:
         if not success:
             #! operator_msg = idec.decodeIngest(response)
-            raise tex.SubmitException(
-                'HTTP response from NSA server: "{}"; {}'
-            .format(response, operator_msg))
+            raise tex.SubmitException('HTTP response from NSA server for file {}: "{}"; {}'
+            .format(origfname, response, operator_msg))
 
     return result
     
 
-def prep_for_ingest(mirror_fname, mirror_dir, archive331):
+def prep_for_ingest(mirror_fname, **kwargs):
     """GIVEN: FITS absolute path
 DO: 
   validate RAW fields
@@ -87,8 +86,6 @@ DO:
   remove from mirror
 
 mirror_fname :: Mountain mirror on valley
-mirror_dir :: from "mirror_dir" in dq_config
-archive331 :: from "archive_irods331" in dq_config
 RETURN: irods location of hdr file.
     """
 
@@ -133,7 +130,8 @@ RETURN: irods location of hdr file.
         hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname, here to pass validate
         hdr['DTACQNAM'] = orig_fullname
         fu.validate_raw_hdr(hdr, orig_fullname)
-        fname_fields = fu.modify_hdr(hdr, mirror_fname, options, opt_params)
+        fname_fields = fu.modify_hdr(hdr, mirror_fname, options, opt_params,
+                                     **kwargs)
         fu.validate_cooked_hdr(hdr, orig_fullname)
         fu.validate_recommended_hdr(hdr, orig_fullname)
         # Generate standards conforming filename
@@ -213,7 +211,7 @@ RETURN: irods location of hdr file.
     #
 
     logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
-    return new_ihdr, new_ifname
+    return new_ihdr, new_ifname, orig_fullname
 
 
 ##########
@@ -259,14 +257,19 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 
 """
     #!logging.debug('submit_to_archive({},{})'.format(ifname, qname))
-    mirror_dir =  qcfg[qname]['mirror_dir']
-    archive331 =  qcfg[qname]['archive_irods331']
+    
+    cfgprms = dict(mirror_dir =  qcfg[qname]['mirror_dir'],
+                   archive331 =  qcfg[qname]['archive_irods331'],
+                   mars_host  =  qcfg[qname]['mars_host'],
+                   mars_port  =  qcfg[qname]['mars_port'],
+                   )
     #!id_in_fname = qcfg[qname].get('id_in_fname',0)
 
     #!jidt = False if (id_in_fname == 0) else id_in_fname
     saved_hdr = None
+
     try:
-        new_ihdr,destfname = prep_for_ingest(ifname, mirror_dir, archive331)
+        new_ihdr,destfname,origfname = prep_for_ingest(ifname, **cfgprms)
         saved_hdr = os.path.join('/var/tada', new_ihdr)
         foundHdr = iu.irods_get331(new_ihdr, saved_hdr)
     except:
@@ -274,7 +277,7 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
         raise
     
     try:
-        http_archive_ingest(new_ihdr, qname, qcfg=qcfg)
+        http_archive_ingest(new_ihdr, qname, qcfg=qcfg, origfname=origfname)
     except:
         #! traceback.print_exc()
         if foundHdr:
