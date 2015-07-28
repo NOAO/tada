@@ -260,8 +260,8 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     
     cfgprms = dict(mirror_dir =  qcfg[qname]['mirror_dir'],
                    archive331 =  qcfg[qname]['archive_irods331'],
-                   mars_host  =  qcfg[qname]['mars_host'],
-                   mars_port  =  qcfg[qname]['mars_port'],
+                   mars_host  =  qcfg[qname].get('mars_host'),
+                   mars_port  =  qcfg[qname].get('mars_port'),
                    )
     #!id_in_fname = qcfg[qname].get('id_in_fname',0)
 

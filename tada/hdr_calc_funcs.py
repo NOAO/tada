@@ -27,9 +27,11 @@ Depends on: DTCALDAT, DTTELESC, (DTPROPID)'''
 
     if 'DTPROPID' in orig:
         return dict()
-    
     host=kwargs.get('mars_host')
     port=kwargs.get('mars_port')
+    if host == None:
+        return dict()
+    
     #!tele, date = ('ct13m', '2014-12-25')
     date = orig.get('DTCALDAT')
     tele = orig.get('DTTELESC')
