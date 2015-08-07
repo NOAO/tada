@@ -212,26 +212,27 @@ RETURN: irods location of hdr file.
 
     logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
     return new_ihdr, new_ifname, orig_fullname
-
+    # END prep_for_ingest()
 
 ##########
-# (-sp-) The Archive Ingest process is ugly and the interface is not
-# documented (AT ALL, as far as I can tell). It accepts a URI for an
-# irods path of a "hdr" for a FITS file. The "hdr" has to be the hdr
-# portion of a FITS with 5 lines prepended to it. Its more ugly
-# because the submit (HTTP request) may fail but both the hdr and the
-# fits irods file location cannot be changed if the submit succeeds.
-# But we want them to be a different place if the submit fails. So we
-# have to move before the submit, then undo the move if it fails. The
-# HTTP response may indicate failure, but I think it could indicate
-# success even when there is a failure.  It would make perfect sense
-# for the Archive Ingest to read what it needs directly from the FITS
-# file (header). It can be done quickly even if the data portion of
-# the FITS is large. Not doing so means extra complication and
-# additional failure modes.  Worse, because a modified hdr has to be
-# sent to Ingest, the actual fits file has to be accessed when
-# otherwise we could have just dealt with irods paths. Fortunately,
-# the irods icommand "iexecmd" lets us push such dirt to the server.
+# (-sp-) GRIM DETAILS: The Archive Ingest process is ugly and the
+# interface is not documented (AT ALL, as far as I can tell). It
+# accepts a URI for an irods path of a "hdr" for a FITS file. The
+# "hdr" has to be the hdr portion of a FITS with 5 lines prepended to
+# it. Its more ugly because the submit (HTTP request) may fail but
+# both the hdr and the fits irods file location cannot be changed if
+# the submit succeeds.  But we want them to be a different place if
+# the submit fails. So we have to move before the submit, then undo
+# the move if it fails. The HTTP response may indicate failure, but I
+# think it could indicate success even when there is a failure.  It
+# would make perfect sense for the Archive Ingest to read what it
+# needs directly from the FITS file (header). It can be done quickly
+# even if the data portion of the FITS is large. Not doing so means
+# extra complication and additional failure modes.  Worse, because a
+# modified hdr has to be sent to Ingest, the actual fits file has to
+# be accessed when otherwise we could have just dealt with irods
+# paths. Fortunately, the irods icommand "iexecmd" lets us push such
+# dirt to the server.
 # 
 # After a successful ingest, its possible that someone will try to
 # ingest the same file again. Archive does not allow this so will fail
@@ -240,22 +241,23 @@ RETURN: irods location of hdr file.
 # such cirumstances, a user might retrieve a FITS file and find that
 # is doesn't not match their query. To avoid such a inconsistency, we
 # iput FITS only on success and restore the previous HDR on ingest
-# failure.
+# failure.  Ingest will also fail with duplicate error if the file
+# exists at a DIFFERENT irods path than the one we gave in hdrUri and
+# it doesn't tell us what file it considered to be a duplicate!!!
 # 
 ##########
 #
 def submit_to_archive(ifname, checksum, qname, qcfg=None):
     """Ingest a FITS file (really JUST Header) into the archive if
 possible.  Ingest involves renaming to satisfy filename
-standards. Although I've seen no requirements for it, previous systems
-also used a specific 3 level directory structure that is NOT used
-here. However the levels are stored in hdr fields SB_DIR{1,2,3}.
+standards. There are numerous under-the-hood requirements imposed by
+how Archive works. See comments above for the grim details.
 
 ifname:: full path of fits file (in mirror-archive)
 checksum:: NOT USED
 qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 
-"""
+    """
     #!logging.debug('submit_to_archive({},{})'.format(ifname, qname))
     
     cfgprms = dict(mirror_dir =  qcfg[qname]['mirror_dir'],
@@ -263,9 +265,6 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
                    mars_host  =  qcfg[qname].get('mars_host'),
                    mars_port  =  qcfg[qname].get('mars_port'),
                    )
-    #!id_in_fname = qcfg[qname].get('id_in_fname',0)
-
-    #!jidt = False if (id_in_fname == 0) else id_in_fname
     saved_hdr = None
 
     try:
@@ -279,9 +278,11 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     try:
         http_archive_ingest(new_ihdr, qname, qcfg=qcfg, origfname=origfname)
     except:
-        #! traceback.print_exc()
         if foundHdr:
             iu.irods_put331(saved_hdr, new_ihdr) # restore saved hdr
+        else:
+            # hard to test this; may it hasn't been tested at all!
+            iu.irods_remove331(new_ihdr) # remove our new hdr
         raise
 
     iu.irods_put331(ifname, destfname) # iput renamed FITS

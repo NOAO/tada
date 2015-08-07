@@ -34,3 +34,18 @@ def irods_get331( irods_fname, local_fname):
         return False
     
     return True
+
+
+def irods_remove331(irods_fname):
+    "Remove irods_fname from irods"
+    logging.debug('irods_remove331({})'.format(irods_fname))
+    icmdpath = ('/usr/local/share/applications/irods3.3.1/iRODS/clients'
+                '/icommands/bin')
+    try:
+        subprocess.check_output([os.path.join(icmdpath, 'irm'),
+                                 '-f', irods_fname])
+    except subprocess.CalledProcessError as ex:
+        logging.error('Execution failed: {}; {}'
+                      .format(ex, ex.output.decode('utf-8')))
+        raise
+

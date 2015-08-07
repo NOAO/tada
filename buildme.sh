@@ -26,14 +26,18 @@ report=${1:-$HOME/logs/$cmd.report}
 pushd $SCRIPTPATH
 
 # Change version to new user supplied string
-vers=`grep version= setup.py | awk '{ print  substr(substr($1,1,length($1)-2),10) }'`
+#! vers=`grep version= setup.py | awk '{ print  substr(substr($1,1,length($1)-2),10) }'`
+vers=`cat tada/VERSION`
 echo "Current version is: $vers"
-read -e  -i "$vers" -p "What is the new version? " newvers rem
-perl -pi.bak -e "s/$vers/$newvers/" setup.py
+read -i "$vers" -p "What is the new version? " newvers rem
+#! perl -pi.bak -e "s/$vers/$newvers/" setup.py
+#! echo "NEW version is: $newvers"
+echo $newvers > tada/VERSION
 
 # do NOT run under venv!
 python3 setup.py build bdist --format rpm,gztar
 
-
-
 popd
+
+echo "Binary distributions (including rpm) written to 'dist'."
+echo "Now would be a good time to run rpms-to-repo.sh"

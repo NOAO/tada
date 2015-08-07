@@ -14,6 +14,9 @@ here = path.abspath(path.dirname(__file__))
 #!    long_description = f.read()
 long_description="Collect telescope data from mountain tops, deliver to far-away archives."
 
+with open(path.join(here,'tada','VERSION')) as version_file:
+    version = version_file.read().strip()
+
 setup(
     name='tada', #!!! change to "stari" or something else if using on PyPI
 
@@ -21,7 +24,8 @@ setup(
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
     # EXAMPLE: '0.0.4rc2',
-    version='0.1.1',
+    #!version='0.1.1',
+    version=version,
 
     description='Collect telescope data from mountain tops, deliver to far-away archives',
     long_description=long_description,
@@ -79,6 +83,7 @@ setup(
     #!package_data={
     #!    'tada_support': ['personalities/*', 'scripts/*', 'dev-scripts/*',],
     #!},
+    package_data={'tada': ['VERSION',]},
 
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages.
