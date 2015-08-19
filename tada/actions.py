@@ -60,28 +60,34 @@ def network_move(rec, qname, **kwargs):
                         .format(fname, source_root))
 
     ifname = os.path.join(sync_root, os.path.relpath(fname, source_root))
-    
+    optfname = ifname + ".options"    
+    newfname = fname
     logging.debug('pre_action={}'.format(pre_action))
     if pre_action:
         # pre_action is full path to shell script to run.
-        # WARNING: a bad script could do bad things to the mountain_cache files!!!
-        # Must accept two params:
+        # WARNING: a bad script could do bad things to the
+        #    mountain_cache files!!!
+        # Must accept three params:
         #   1. absolute path of file from queue
         #   2. absolute path mountain_cache
+        #   3. absolute path of file containing options 
         # Stdout and stderr from pre_action will be logged to INFO.
         # Error (non-zero return code) will be logged to ERROR but normal
         # TADA processing will continue.
         try:
-            cmdline = [pre_action, fname, source_root]
+            cmdline = [pre_action, fname, source_root, fname+'.options']
             diag.dbgcmd(cmdline)
-            out = subprocess.check_output(cmdline, stderr=subprocess.STDOUT)
-            if len(out) > 0:
-                logging.info('pre_action "{}" output: {}'.format(preaction,out))
+            bout = subprocess.check_output(cmdline, stderr=subprocess.STDOUT)
+            if len(bout) > 0:
+                out = bout.decode('utf-8')
+                newfname = out.split()[0]
+                logging.info('pre_action "{}", newfname={}, output: {}'
+                             .format(pre_action, newfname, out))
         except subprocess.CalledProcessError as cpe:
             logging.warning('Failed Transfer pre_action ({} {} {}) {}; {}'
                             .format(pre_action, fname, source_root,
                                     cpe, cpe.output ))
-            
+        
     out = None
     try:
         #!iu.irods_put(fname, ifname)
@@ -124,9 +130,9 @@ def network_move(rec, qname, **kwargs):
 
     # successfully transfered to Valley
     logging.info('Successfully moved file from {} to {}'
-                 .format(fname,sync_root))
+                 .format(newfname, sync_root))
     mirror_fname = os.path.join(valley_root,
-                                os.path.relpath(fname, source_root))
+                                os.path.relpath(newfname, source_root))
     try:
         # What if QUEUE is down?!!!
         #!du.push_to_q(dq_host, dq_port, mirror_fname, rec['checksum'])

@@ -568,7 +568,7 @@ def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True, **kwargs):
  new filename that fullfills standards
     options :: e.g. {'INSTRUME': 'KOSMOS', 'OBSERVAT': 'KPNO'}
 '''
-    orig_fullname = opt_params.get('filename','<unknown>')
+    orig_fullname = opt_params.get('filename','<no filename option provided>')
     for k,v in options.items():
         if forceRecalc or (k not in hdr):
             hdr[k] = v
