@@ -11,7 +11,6 @@ from datetime import datetime
 #! from . import irods_utils as iu
 from . import submit as ts
 from . import diag
-
 import dataq.dqutils as du
 import dataq.red_utils as ru
 
@@ -139,15 +138,6 @@ def network_move(rec, qname, **kwargs):
         ru.push_direct(dq_host, redis_port,
                        mirror_fname, rec['checksum'],
                        qcfg[nextq])
-        
-        # Files removed by rsync through option '--remove-source-files' above
-        #
-        #!os.remove(fname)
-        #!logging.info('Removed file "{}" from mountain cache'.format(fname))
-        #!optfname = fname + ".options"
-        #!if os.path.exists(optfname):
-        #!    os.remove(optfname)
-        #!    logging.debug('Removed options file: {}'.format(optfname))
     except Exception as ex:
         logging.error('Failed to push to queue on {}:{}; {}'
                         .format(dq_host, dq_port, ex ))

@@ -4,12 +4,11 @@ from codecs import open  # To use a consistent encoding
 from os import path
 from glob import glob
 
-#!personalities = glob(path.join('tada_support','personalities','*'))
-
-
 here = path.abspath(path.dirname(__file__))
+print('here={}'.format(here))
 
 # Get the long description from the relevant file
+
 #!with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
 #!    long_description = f.read()
 long_description="Collect telescope data from mountain tops, deliver to far-away archives."

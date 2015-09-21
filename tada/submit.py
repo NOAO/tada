@@ -118,8 +118,6 @@ RETURN: irods location of hdr file.
     warn_unknown = opt_params.get('warn_unknown', False) # 1 | (False)
     orig_fullname = opt_params.get('filename','<unknown>')
 
-    #!logging.debug('Options in prep_for_ingest: {}'.format(options))
-    #!logging.debug('Params  in prep_for_ingest: {}'.format(opt_params))
 
     hdr_ifname = "None"
     try:
@@ -281,10 +279,63 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
         if foundHdr:
             iu.irods_put331(saved_hdr, new_ihdr) # restore saved hdr
         else:
-            # hard to test this; may it hasn't been tested at all!
+            # hard to test this; maybe it hasn't been tested at all!
             iu.irods_remove331(new_ihdr) # remove our new hdr
         raise
 
     iu.irods_put331(ifname, destfname) # iput renamed FITS
     return destfname
 
+##############################################################################
+def direct_submit(fitsfile, personality_file,
+                  moddir=None, overwrite=False, timeout=60):
+    pers_dict = fu.get_personality_dict(personality_file)
+
+def main():
+    'Direct access to TADA submit-to-archive, without using queue.'
+    parser = argparse.ArgumentParser(
+        description='Submit file to Noao Science Archive',
+        epilog='EXAMPLE: %(prog)s myfile.fits'
+    )
+    parser.add_argument('fitsfile',
+                        type=argparse.FileType('rb'))
+    )
+    parser.add_argument('personalityfile',
+                        type=argparse.FileType('rt'))
+    )
+
+    parser.add_argument('--moddir',
+                        help="Directory that will contain the (possibly modified, possibly renamed) file as submitted.  [default=$HOME/.tada/submitted",
+                        )
+    parser.add_argument('--overwrite',
+                        help='If file already exist in archive, overwrite it!',
+                        action='store_true'
+                        )
+    parser.add_argument('--timeout',
+                        type=int,
+                        help='Seconds to wait for Archive to respond',
+                        )
+    args = parser.parse_args()
+
+
+    numeric_level = getattr(logging, args.loglevel.upper(), None)
+    if not isinstance(numeric_level, int):
+        parser.error('Invalid log level: %s' % args.loglevel) 
+        logging.config.dictConfig(LOG_SETTINGS)
+
+    #!logging.debug('Debug output is enabled!!')
+    ############################################################################
+
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
+
+
+    direct_submit(args.fitsfile, args.personalityfile,
+                  moddir=args.noddir,
+                  overwrite=args.overwrite,
+                  timeout=args.timeout,
+                  )
+    
+if __name__ == '__main__':
+    main()
