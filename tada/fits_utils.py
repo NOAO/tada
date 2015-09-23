@@ -635,7 +635,41 @@ def show_hdr_values(msg, hdr):
         print('{}="{}"'.format(key,hdr.get(key,'<not given>')),end=', ')
     print()
 
+def get_options_dict(options_file):
+    logging.debug('EXECUTING: get_options_dict({})'
+                  .format(options_file))
+
+    if not os.path.exists(options_file):
+        logging.warning('options_file does not exist: {}'.format(options_file))
+        return dict(), dict()
+
+    optstr = ''    
+    with open(options_file, encoding='utf-8') as f:
+        optstr = f.readline()
+
+    options = dict()
+    opt_params = dict()
+    for opt in optstr.split():
+        k, v = opt.split('=')
+        if k[0] != '_':
+            continue
+        if k[1] == '_':
+            opt_params[k[2:]] = v
+        else:
+            options[k[1:]] = v.replace('_', ' ')                
+    logging.debug('get_options_dict({}) => popts_dict={}, pprms_dict={}'
+                  .format(options_file, options, opt_params))
+    return options, opt_params
+
 def get_personality_dict(personality_file):
+    logging.debug('EXECUTING: get_personality_dict({})'
+                  .format(personality_file))
+
+    if not os.path.exists(personality_file):
+        logging.warning('personality_file does not exist: {}'
+                        .format(personality_file))
+        return dict(), dict()
+    
     cmd = 'source {}; echo $TADAOPTS'.format(personality_file)
     optstr = subprocess.check_output(['bash', '-c', cmd ]).decode()
     options = dict()
@@ -648,6 +682,8 @@ def get_personality_dict(personality_file):
             opt_params[k[2:]] = v
         else:
             options[k[1:]] = v.replace('_', ' ')                
+    logging.debug('get_personality_dict({}) => popts_dict={}, pprms_dict={}'
+                  .format(personality_file, options, opt_params))
     return options, opt_params
     
 def apply_options(options, hdr):

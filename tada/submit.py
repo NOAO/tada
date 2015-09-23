@@ -74,7 +74,10 @@ def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
     return result
     
 
-def prep_for_ingest(mirror_fname, **kwargs):
+def prep_for_ingest(mirror_fname,
+                    personality_options=dict(),
+                    personality_params=dict(),
+                    **kwargs):
     """GIVEN: FITS absolute path
 DO: 
   validate RAW fields
@@ -96,22 +99,25 @@ RETURN: irods location of hdr file.
     #   e.g. lpr -P astro -o _INSTRUME=KOSMOS  -o _OBSERVAT=KPNO  foo.fits
     # Only use options starting with '_' and remove '_' from dict key.
     # +++ Add code here to handle other kinds of options passed from LPR.
-    optfname = mirror_fname + ".options"
-    optstr = ''
-    if os.path.exists(optfname):
-        with open(optfname,encoding='utf-8') as f:
-            optstr = f.readline()
-    options = dict()
-    opt_params = dict()
-    for opt in optstr.split():
-        k, v = opt.split('=')
-        if k[0] != '_':
-            continue
-        if k[1] == '_':
-            opt_params[k[2:]] = v
-        else:
-            options[k[1:]] = v.replace('_', ' ')                
-        
+    #! optfname = mirror_fname + ".options"
+    #! optstr = ''
+    #! if os.path.exists(optfname):
+    #!     with open(optfname,encoding='utf-8') as f:
+    #!         optstr = f.readline()
+    #! options = dict()
+    #! opt_params = dict()
+    #! for opt in optstr.split():
+    #!     k, v = opt.split('=')
+    #!     if k[0] != '_':
+    #!         continue
+    #!     if k[1] == '_':
+    #!         opt_params[k[2:]] = v
+    #!     else:
+    #!         options[k[1:]] = v.replace('_', ' ')                
+
+    options = personality_options
+    opt_params = personality_params
+    
     # +++ API: under-under parameters via lp options
     jidt = opt_params.get('jobid_type',None)  # plain | seconds | (False)
     source = opt_params.get('source','raw')   # pipeline | (dome)
@@ -265,8 +271,13 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
                    )
     saved_hdr = None
 
+    popts, pprms = fu.get_options_dict(ifname + ".options")
+
     try:
-        new_ihdr,destfname,origfname = prep_for_ingest(ifname, **cfgprms)
+        new_ihdr,destfname,origfname = prep_for_ingest(ifname,
+                                                       personality_options=popts,
+                                                       personality_params=pprms,
+                                                       **cfgprms)
         saved_hdr = os.path.join('/var/tada', new_ihdr)
         foundHdr = iu.irods_get331(new_ihdr, saved_hdr)
     except:
@@ -287,10 +298,20 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     return destfname
 
 ##############################################################################
-def direct_submit(fitsfile, personality_file,
+def direct_submit(fitsfile,
+                  personality_files=[],
                   moddir=None, overwrite=False, timeout=60):
-    pers_dict = fu.get_personality_dict(personality_file)
+    logging.debug('EXECUTING: direct_submit({}, personality_files={})'
+                  .format(fitsfile, personality_files))
+    popts_dict = dict()
+    pprms_dict = dict()
+    for pf in personality_files:
+        popts, pprms = fu.get_personality_dict(pf)        
+        popts_dict.update(popts)
+        pprms_dict.update(pprms)
 
+    #new_ihdr,destfname,origfname = prep_for_ingest(filsfile, **cfgprms)          
+ 
 def main():
     'Direct access to TADA submit-to-archive, without using queue.'
     parser = argparse.ArgumentParser(
@@ -298,32 +319,46 @@ def main():
         epilog='EXAMPLE: %(prog)s myfile.fits'
     )
     parser.add_argument('fitsfile',
-                        type=argparse.FileType('rb'))
+                        help='FITS file to ingest into archive',
+                        type=argparse.FileType('rb')
     )
-    parser.add_argument('personalityfile',
-                        type=argparse.FileType('rt'))
+    parser.add_argument('-p', '--personality',
+                        action='append',
+                        default=[],
+                        help='Personality file used to modify FITS header. Multiple allowed.',
+                        type=argparse.FileType('rt')
     )
 
-    parser.add_argument('--moddir',
+    parser.add_argument('-m', '--moddir',
                         help="Directory that will contain the (possibly modified, possibly renamed) file as submitted.  [default=$HOME/.tada/submitted",
                         )
-    parser.add_argument('--overwrite',
+    parser.add_argument('-o', '--overwrite',
                         help='If file already exist in archive, overwrite it!',
                         action='store_true'
                         )
-    parser.add_argument('--timeout',
+    parser.add_argument('-t', '--timeout',
                         type=int,
                         help='Seconds to wait for Archive to respond',
                         )
+    parser.add_argument('-l', '--loglevel',
+                        help='Kind of diagnostic output',
+                        choices=['CRTICAL', 'ERROR', 'WARNING',
+                                 'INFO', 'DEBUG'],
+                        default='WARNING')
     args = parser.parse_args()
+    args.fitsfile.close()
+    args.fitsfile = args.fitsfile.name
+    pers_list = [p.name for p in args.personality]
 
 
-    numeric_level = getattr(logging, args.loglevel.upper(), None)
-    if not isinstance(numeric_level, int):
+    log_level = getattr(logging, args.loglevel.upper(), None)
+    if not isinstance(log_level, int):
         parser.error('Invalid log level: %s' % args.loglevel) 
-        logging.config.dictConfig(LOG_SETTINGS)
+    logging.basicConfig(level=log_level,
+                        format='%(levelname)s %(message)s',
+                        datefmt='%m-%d %H:%M')
+    logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
-    #!logging.debug('Debug output is enabled!!')
     ############################################################################
 
     if len(sys.argv) == 1:
@@ -331,11 +366,15 @@ def main():
         sys.exit(1)
 
 
-    direct_submit(args.fitsfile, args.personalityfile,
-                  moddir=args.noddir,
+    # direct_submit /sandbox/data/raw/nhs_2014_n14_299403.fits
+    # direct_submit --loglevel=DEBUG /sandbox/tada/tests/smoke/data/k4k_140922_234607_zri.fits.fz -p /sandbox/tada-cli/personalities/bok.personality
+    direct_submit(args.fitsfile,
+                  personality_files=pers_list,
+                  moddir=args.moddir,
                   overwrite=args.overwrite,
                   timeout=args.timeout,
                   )
     
 if __name__ == '__main__':
     main()
+ 
