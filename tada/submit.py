@@ -13,6 +13,7 @@ import pathlib
 import urllib.request
 import datetime
 import subprocess
+import shutil
 from copy import copy
 
 from . import fits_utils as fu
@@ -20,7 +21,7 @@ from . import file_naming as fn
 from . import exceptions as tex
 from . import irods331 as iu
 from . import ingest_decoder as idec
- 
+from . import config 
 
 def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
@@ -75,8 +76,8 @@ def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
     
 
 def prep_for_ingest(mirror_fname,
-                    personality_options=dict(),
-                    personality_params=dict(),
+                    persona_options=dict(),
+                    persona_params=dict(),
                     **kwargs):
     """GIVEN: FITS absolute path
 DO: 
@@ -115,8 +116,8 @@ RETURN: irods location of hdr file.
     #!     else:
     #!         options[k[1:]] = v.replace('_', ' ')                
 
-    options = personality_options
-    opt_params = personality_params
+    options = persona_options
+    opt_params = persona_params
     
     # +++ API: under-under parameters via lp options
     jidt = opt_params.get('jobid_type',None)  # plain | seconds | (False)
@@ -275,8 +276,8 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 
     try:
         new_ihdr,destfname,origfname = prep_for_ingest(ifname,
-                                                       personality_options=popts,
-                                                       personality_params=pprms,
+                                                       persona_options=popts,
+                                                       persona_params=pprms,
                                                        **cfgprms)
         saved_hdr = os.path.join('/var/tada', new_ihdr)
         foundHdr = iu.irods_get331(new_ihdr, saved_hdr)
@@ -300,17 +301,53 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 ##############################################################################
 def direct_submit(fitsfile,
                   personality_files=[],
-                  moddir=None, overwrite=False, timeout=60):
-    logging.debug('EXECUTING: direct_submit({}, personality_files={})'
-                  .format(fitsfile, personality_files))
-    popts_dict = dict()
-    pprms_dict = dict()
-    for pf in personality_files:
-        popts, pprms = fu.get_personality_dict(pf)        
-        popts_dict.update(popts)
-        pprms_dict.update(pprms)
+                  moddir=None, overwrite=False, timeout=60,
+                  qname='submit', qcfg=None):
+    logging.debug('EXECUTING: direct_submit({}, personality_files={}, moddir={})'
+                  .format(fitsfile, personality_files, moddir))
 
-    #new_ihdr,destfname,origfname = prep_for_ingest(filsfile, **cfgprms)          
+    cfgprms = dict(mirror_dir =  qcfg[qname]['mirror_dir'],
+                   archive331 =  qcfg[qname]['archive_irods331'],
+                   mars_host  =  qcfg[qname].get('mars_host'),
+                   mars_port  =  qcfg[qname].get('mars_port'),
+                   )
+    saved_hdr = None
+
+    iu.irods_setenv(host=qcfg[qname]['arch_irods_host'],
+                    port=qcfg[qname]['arch_irods_port'],
+                    )
+
+    popts = dict()
+    pprms = dict()
+    for pf in personality_files:
+        po, pp = fu.get_personality_dict(pf)        
+        popts.update(po)
+        pprms.update(pp)
+
+    newfile = shutil.copy(fitsfile, moddir)
+    
+    try:
+        new_ihdr,destfname,origfname = prep_for_ingest(newfile,
+                                                       persona_options=popts,
+                                                       persona_params=pprms,
+                                                       **cfgprms)
+        saved_hdr = os.path.join('/var/tada', new_ihdr)
+        foundHdr = iu.irods_get331(new_ihdr, saved_hdr)
+    except:
+        raise
+
+    try:
+        http_archive_ingest(new_ihdr, qname, qcfg=qcfg, origfname=origfname)
+    except:
+        if foundHdr:
+            iu.irods_put331(saved_hdr, new_ihdr) # restore saved hdr
+        else:
+            # hard to test this; maybe it hasn't been tested at all!
+            iu.irods_remove331(new_ihdr) # remove our new hdr
+        raise
+
+    iu.irods_put331(ifname, destfname) # iput renamed FITS
+    return destfname
  
 def main():
     'Direct access to TADA submit-to-archive, without using queue.'
@@ -329,8 +366,11 @@ def main():
                         type=argparse.FileType('rt')
     )
 
+    dflt_moddir = os.path.expanduser('~/.tada/submitted')
+    dflt_config = '/etc/tada/tada.conf'
     parser.add_argument('-m', '--moddir',
-                        help="Directory that will contain the (possibly modified, possibly renamed) file as submitted.  [default=$HOME/.tada/submitted",
+                        default=dflt_moddir,
+                        help="Directory that will contain the (possibly modified, possibly renamed) file as submitted.  [default={}]".format(dflt_moddir),
                         )
     parser.add_argument('-o', '--overwrite',
                         help='If file already exist in archive, overwrite it!',
@@ -339,6 +379,10 @@ def main():
     parser.add_argument('-t', '--timeout',
                         type=int,
                         help='Seconds to wait for Archive to respond',
+                        )
+    parser.add_argument('-c', '--config',
+                        default=dflt_config,
+                        help='Config file. [default={}]'.format(dflt_config),
                         )
     parser.add_argument('-l', '--loglevel',
                         help='Kind of diagnostic output',
@@ -365,16 +409,21 @@ def main():
         parser.print_help()
         sys.exit(1)
 
+    qname = 'submit'
+    qcfg, dirs = config.get_config(None,
+                                   validate=False,
+                                   json_filename=args.config)
 
     # direct_submit /sandbox/data/raw/nhs_2014_n14_299403.fits
-    # direct_submit --loglevel=DEBUG /sandbox/tada/tests/smoke/data/k4k_140922_234607_zri.fits.fz -p /sandbox/tada-cli/personalities/bok.personality
+    # direct_submit --loglevel=DEBUG /data/bok/20150706/d7210.0007.fits.fz -p /sandbox/tada-cli/personalities/bok.personality 
     direct_submit(args.fitsfile,
                   personality_files=pers_list,
                   moddir=args.moddir,
                   overwrite=args.overwrite,
                   timeout=args.timeout,
+                  qcfg=qcfg
                   )
     
 if __name__ == '__main__':
     main()
- 
+
