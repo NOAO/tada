@@ -118,8 +118,17 @@ testOutput tada3_4 $findout '^\#' n
 
 ##########################
 # 4_1: pass ingest using options
-file=$tdata/ct582021.fits.fz 
-opt="$optprms -o _INSTRUME=mosaic -o _DTPROPID=2014B-0461"
+#! file=$tdata/ct582021.fits.fz (TADA validation makes this RAW-invalid)
+#!opt="$optprms -o _INSTRUME=mosaic -o _DTPROPID=2014B-0461"
+file=$tdata/obj_355.fits
+# (Personality = wiyn-whirc)
+opt="$optprms \
+ -o __calchdr=PROPIDplusCentury,DTCALDATfromDATEOBStus \
+ -o _DTTELESC=WIYN \
+ -o _DTINSTRU=mosaic \
+ -o _DTSITE=whirc \
+ -o __filename=$file \
+"
 status=`basename $file`.status
 findout=find-`basename $file`.out
 cleanStart  > /dev/null

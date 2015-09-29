@@ -10,6 +10,7 @@ import sys
 import argparse
 import logging
 import traceback
+import magic
 
 
 import astropy.io.fits as pyfits
@@ -78,14 +79,10 @@ TIER3_EHDU_RAW_FIELDS = 'SEEING1'.split()
 # All bets are off in the original FITS file does not contain all of these.
 RAW_REQUIRED_FIELDS = set([
     'DATE-OBS',
-    'DTSITE',   # Required for standard file name (pg 9, "File Naming Conv...")
-    'DTTELESC', # Required for standard file name (pg 9, "File Naming Conv...")
-    'DTINSTRU', # Required for standard file name (pg 9, "File Naming Conv...")
     'INSTRUME',
-    'OBSERVAT',
-    'OBSID',
-    # 'PROPID', # Presumably archive uses DTPROPID id instead
-    # 'DTPROPID',# could be looked up in schedule so moved to COOKED
+    #!'OBSERVAT',
+    'TELESCOP',
+
     # 'PROPOSER', #!!! will use PROPID when PROPOSER doesn't exist in raw hdr
 ])
 
@@ -100,6 +97,11 @@ INGEST_REQUIRED_FIELDS = set([
     'DTTELESC', # needed to construct full file path in archive
     'DTACQNAM', # file name supplied at telescope; User knows only THIS name
     'DTNSANAM', # file name in archive (renamed from user supplied)
+    'DTSITE',   # Required for standard file name (pg 9, "File Naming Conv...")
+    'DTTELESC', # Required for standard file name (pg 9, "File Naming Conv...")
+    'DTINSTRU', # Required for standard file name (pg 9, "File Naming Conv...")
+    'OBSID',
+
 ])
 
 # We should try to fill these fields were practical. They are used in
@@ -524,6 +526,7 @@ DATASUM = '0         '          /  checksum of data records
 
 def validate_raw_hdr(hdr, orig_fullname):
     missing = missing_in_raw_hdr(hdr)
+    logging.debug('EXECUTE fu.validate_raw_hdr(); missing={}'.format(missing))
     if len(missing) > 0:
         raise tex.InsufficientRawHeader(
             'Raw FITS header is missing required metadata fields ({}) '
@@ -585,7 +588,7 @@ def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True, **kwargs):
                 func = eval('hf.'+funcname)
                 calc_funcs.append(func)
             except:
-                traceback.print_exc()
+                #!traceback.print_exc()
                 raise Exception('Function name "{}" given in option "calchdr"'
                                 ' does not exist in tada/hdr_calc_funcs.py'
                                 .format(funcname))
@@ -601,7 +604,7 @@ def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True, **kwargs):
         dateobs = dt.datetime.strptime(chg['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
     except:
         raise tex.SubmitException(
-            'Could parse DATE-OBS field ({}) in header of: {}'
+            'Could not parse DATE-OBS field ({}) in header of: {}'
             .format(chg['DATE-OBS'], orig_fullname))
 
     if forceRecalc:
@@ -636,8 +639,7 @@ def show_hdr_values(msg, hdr):
     print()
 
 def get_options_dict(options_file):
-    logging.debug('EXECUTING: get_options_dict({})'
-                  .format(options_file))
+    logging.debug('EXECUTING: get_options_dict({})'.format(options_file))
 
     if not os.path.exists(options_file):
         logging.warning('options_file does not exist: {}'.format(options_file))
@@ -690,6 +692,34 @@ def apply_options(options, hdr):
     for k,v in options.items():
         hdr[k] = v  # overwrite with explicit fields from personality
 
+def UNCOMPPLETE_hdrtxt_to_dict(ffile):
+    hdr = dict()
+    with open(ffile) as f:
+        for line in f:
+            if '=' in line:
+                kstr,vstr = line.split('/')[0].strip().split('=')
+                hdr[kstr.strip()] = vstr.strip()
+    return hdr
+
+def hdrtxt_to_hdr(ffile):
+    hdr = pyfits.Header()
+    with open(ffile) as f:
+        for line in f:
+            if '=' in line:
+                kstr,vstr = line.split('/')[0].strip().split('=')
+                hdr[kstr.strip()] = vstr.strip()
+    return hdr
+
+def txt_to_hdr(ffile):
+    hdr = dict()
+    with open(ffile) as f:
+        for line in f:
+            if '=' in line:
+                kstr,vstr = line.split('/')[0].strip().split('=')
+                hdr[kstr.strip()] = vstr.strip()
+    return hdr
+
+    
 # EXAMPLE:
 #   find /data/raw -name "*.fits*" -print0 | xargs --null  fits_compliant
 def fits_compliant(fits_file_list,
@@ -698,6 +728,13 @@ def fits_compliant(fits_file_list,
                    show_values=False, show_header=False, show_stdfname=True,
                    required=False, verbose=False):
     """Check FITS file for complaince with Archive Ingest."""
+    logging.debug('EXECUTING fits_compliant({}, personalities={}, '
+                  'quiet={}, '
+                  'show_values={}, show_header={}, show_stdfname={}, '
+                  'required={}, verbose={})'
+                  .format(fits_file_list, personalities, quiet,
+                          show_values, show_header, show_stdfname,
+                          required, verbose))
     if personalities == None:
         personalities = []
     bad = 0
@@ -732,6 +769,7 @@ def fits_compliant(fits_file_list,
         opt_params.update(prms)
     #!print('DBG: options={}, opt_params={}'.format(options, opt_params))
     for ffile in fits_file_list:
+        is_text = (magic.from_file(ffile).decode() == 'ASCII text')
         valid = True
         missing_raw = []
         missing_cooked = []
@@ -739,8 +777,18 @@ def fits_compliant(fits_file_list,
         fname_fields = None
         try:
             #!valid_header(ffile)
-            hdr = pyfits.open(ffile)[0].header # use only first in list.
-            apply_options(options, hdr)
+            if is_text:
+                logging.debug('fits_compliant: {} is TEXT header'.format(ffile))
+                hdr = hdrtxt_to_hdr(ffile)
+            else:
+                # use only first in list.
+                #!hdr = dict(pyfits.open(ffile)[0].header.items())
+                hdr = pyfits.open(ffile)[0].header
+            hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname, here to pass validate
+            hdr['DTACQNAM'] = ffile
+
+            if opt_params.get('OPS_PREAPPLY_UPDATE','NO') == 'YES': #!!!
+                apply_options(options, hdr)
             missing_raw = missing_in_raw_hdr(hdr)
             fname_fields = modify_hdr(hdr, ffile, options, opt_params)
             missing_cooked = missing_in_archive_hdr(hdr)
@@ -851,6 +899,8 @@ def main():
                         datefmt='%m-%d %H:%M')
     logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
+
+    # fits_compliant /data/raw/nhs_2014_n14_299403.fits
     fits_compliant(args.infiles,
                    personalities=args.personality,
                    quiet=args.quiet,

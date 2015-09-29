@@ -33,7 +33,8 @@ def decodeIngest(response):
     dpuri = root.get('dataProductUri')
     success = ((itype == 'SUCCESS') or (itype == 'SUCCESS_WITH_WARNING'))
     msg = '' if success else root.find('./message/user').text 
-    return success,'Operator:: ' + msg
+    #return success,'Operator:: ' + msg
+    return success, msg
 
 ###############################################################################
 

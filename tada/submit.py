@@ -3,6 +3,7 @@
 import sys
 import argparse
 import logging
+import logging.config
 import astropy.io.fits as pyfits
 import os
 import os.path
@@ -14,6 +15,8 @@ import urllib.request
 import datetime
 import subprocess
 import shutil
+import magic
+import yaml
 from copy import copy
 
 from . import fits_utils as fu
@@ -25,7 +28,7 @@ from . import config
 
 def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
- Archive Ingest via REST-like interface."""
+ Archive Ingest via REST-like interface. Return: (statusBool, message)"""
     import random # for stubbing random failures (not for production)
 
     logging.debug('EXECUTING: http_archive_ingest({}, {})'
@@ -42,7 +45,6 @@ def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
                      .format(arch_host, arch_port, hdr_ipath))
     logging.debug('archserver_url = {}'.format(archserver_url))
 
-    result = True
     if qcfg[qname].get('disable_archive_svc',0) > 0:
         logging.warning('Ingest DISABLED. '
                         'http_archive_ingest() using prob_fail= {}'
@@ -55,9 +57,6 @@ def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
         response = ''
         try:
             with urllib.request.urlopen(archserver_url) as f:
-                # As of 1/15/2015 the only two possible responses are:
-                #   "Success" or "Failure"
-                #!response = f.readline().decode('utf-8')
                 response = f.read().decode('utf-8')
             logging.debug('ARCH server response: {}'.format(response))
         except:
@@ -65,19 +64,19 @@ def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
         success, operator_msg = idec.decodeIngest(response)
         logging.debug('ARCH server: success={}, msg={}'
                       .format(success, operator_msg))
-        #!result = True if response == "Success" else False
-        #!if not result:
+        message = operator_msg
         if not success:
             #! operator_msg = idec.decodeIngest(response)
-            raise tex.SubmitException('HTTP response from NSA server for file {}: "{}"; {}'
-            .format(origfname, response, operator_msg))
+            message = ('HTTP response from NSA server for file {}: "{}"; {}'
+                       .format(origfname, response, operator_msg))
+            #raise tex.SubmitException(message)
 
-    return result
+    return (success, message, operator_msg)
     
 
 def prep_for_ingest(mirror_fname,
-                    persona_options=dict(),
-                    persona_params=dict(),
+                    persona_options=dict(),  # e.g. (under "__DTSITE"
+                    persona_params=dict(),   # e.g. (under,under) "__FOO"
                     **kwargs):
     """GIVEN: FITS absolute path
 DO: 
@@ -118,6 +117,8 @@ RETURN: irods location of hdr file.
 
     options = persona_options
     opt_params = persona_params
+    logging.debug('prep_for_ingest(): options={}, opt_params={}'
+                  .format(options, opt_params))
     
     # +++ API: under-under parameters via lp options
     jidt = opt_params.get('jobid_type',None)  # plain | seconds | (False)
@@ -125,16 +126,18 @@ RETURN: irods location of hdr file.
     warn_unknown = opt_params.get('warn_unknown', False) # 1 | (False)
     orig_fullname = opt_params.get('filename','<unknown>')
 
-
     hdr_ifname = "None"
     try:
         # augment hdr (add fields demanded of downstream process)
         hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
         hdr = hdulist[0].header # use only first in list.
-        fu.apply_options(options, hdr)
+        if opt_params.get('OPS_PREAPPLY_UPDATE','NO') == 'YES': #!!!
+            fu.apply_options(options, hdr)
         hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname, here to pass validate
         hdr['DTACQNAM'] = orig_fullname
+        logging.debug('DBG-1: {} hdrkeys={}'.format(mirror_fname, list(hdr.keys())))
         fu.validate_raw_hdr(hdr, orig_fullname)
+        logging.debug('DBG-2: hdr-keys={}'.format(list(hdr.keys())))
         fname_fields = fu.modify_hdr(hdr, mirror_fname, options, opt_params,
                                      **kwargs)
         fu.validate_cooked_hdr(hdr, orig_fullname)
@@ -205,7 +208,7 @@ RETURN: irods location of hdr file.
 
         # END with tempfile
     except:
-        traceback.print_exc()
+        #!traceback.print_exc()
         raise
         #! raise tex.SubmitException('Bad header content in file {}'
         #!                           .format(orig_fullname))
@@ -283,10 +286,14 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
         foundHdr = iu.irods_get331(new_ihdr, saved_hdr)
     except:
         #! traceback.print_exc()
-        raise
+       raise
     
     try:
-        http_archive_ingest(new_ihdr, qname, qcfg=qcfg, origfname=origfname)
+        success,msg,m2 = http_archive_ingest(new_ihdr, qname,
+                                             qcfg=qcfg, origfname=origfname)
+        if not success:
+            raise tex.SubmitException(message)
+
     except:
         if foundHdr:
             iu.irods_put331(saved_hdr, new_ihdr) # restore saved hdr
@@ -302,10 +309,16 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 def direct_submit(fitsfile,
                   personality_files=[],
                   moddir=None, overwrite=False, timeout=60,
-                  qname='submit', qcfg=None):
+                  qname='submit', qcfg=None,
+                  trace=False):
     logging.debug('EXECUTING: direct_submit({}, personality_files={}, moddir={})'
                   .format(fitsfile, personality_files, moddir))
-
+    if 'FITS image data' not in str(magic.from_file(fitsfile)):
+        sys.exit('Cannot ingest non-FITS file: {}'.format(fitsfile))
+        
+    success = True
+    statuscode = 0    # for sys.exit(statuscode)
+    statusmsg = 'NA'
     cfgprms = dict(mirror_dir =  qcfg[qname]['mirror_dir'],
                    archive331 =  qcfg[qname]['archive_irods331'],
                    mars_host  =  qcfg[qname].get('mars_host'),
@@ -313,9 +326,11 @@ def direct_submit(fitsfile,
                    )
     saved_hdr = None
 
-    iu.irods_setenv(host=qcfg[qname]['arch_irods_host'],
-                    port=qcfg[qname]['arch_irods_port'],
-                    )
+    # Just run script as TADA user to gain full TADA irods and permissions 
+    #!iu.irods_setenv(host=qcfg[qname]['arch_irods_host'],
+    #!                port=qcfg[qname]['arch_irods_port'],
+    #!                resource=qcfg[qname]['arch_irods_resource'],
+    #!                )
 
     popts = dict()
     pprms = dict()
@@ -324,6 +339,7 @@ def direct_submit(fitsfile,
         popts.update(po)
         pprms.update(pp)
 
+    os.makedirs(moddir, exist_ok=True)
     newfile = shutil.copy(fitsfile, moddir)
     
     try:
@@ -333,21 +349,32 @@ def direct_submit(fitsfile,
                                                        **cfgprms)
         saved_hdr = os.path.join('/var/tada', new_ihdr)
         foundHdr = iu.irods_get331(new_ihdr, saved_hdr)
-    except:
-        raise
+    except Exception as err:
+        if trace:
+            traceback.print_exc()
+        statusmsg = str(err) + '!!!'
+        success = False
+        statuscode = 1
+        sys.exit(statusmsg)
 
-    try:
-        http_archive_ingest(new_ihdr, qname, qcfg=qcfg, origfname=origfname)
-    except:
+
+    success,m1,msg = http_archive_ingest(new_ihdr, qname,
+                                         qcfg=qcfg, origfname=origfname)
+    if not success:
         if foundHdr:
             iu.irods_put331(saved_hdr, new_ihdr) # restore saved hdr
         else:
             # hard to test this; maybe it hasn't been tested at all!
             iu.irods_remove331(new_ihdr) # remove our new hdr
-        raise
+        statusmsg = 'FAILED: {} not archived; {}'.format(fitsfile, msg)
+        statuscode = 2
+    else:
+        iu.irods_put331(newfile, destfname) # iput renamed FITS
+        statusmsg= 'SUCCESS: archived {} as {}'.format(fitsfile, destfname)
+        statuscode = 0
 
-    iu.irods_put331(ifname, destfname) # iput renamed FITS
-    return destfname
+    print(statusmsg, file=sys.stderr)
+    sys.exit(statuscode)
  
 def main():
     'Direct access to TADA submit-to-archive, without using queue.'
@@ -368,6 +395,7 @@ def main():
 
     dflt_moddir = os.path.expanduser('~/.tada/submitted')
     dflt_config = '/etc/tada/tada.conf'
+    logconf='/etc/tada/pop.yaml'
     parser.add_argument('-m', '--moddir',
                         default=dflt_moddir,
                         help="Directory that will contain the (possibly modified, possibly renamed) file as submitted.  [default={}]".format(dflt_moddir),
@@ -380,6 +408,11 @@ def main():
                         type=int,
                         help='Seconds to wait for Archive to respond',
                         )
+    parser.add_argument('--logconf',
+                        help='Logging configuration file (YAML format).'
+                        '[Default={}]'.format(logconf),
+                        default=logconf,
+                        type=argparse.FileType('r'))
     parser.add_argument('-c', '--config',
                         default=dflt_config,
                         help='Config file. [default={}]'.format(dflt_config),
@@ -401,7 +434,12 @@ def main():
     logging.basicConfig(level=log_level,
                         format='%(levelname)s %(message)s',
                         datefmt='%m-%d %H:%M')
-    logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
+    #!logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
+
+    logDict = yaml.load(args.logconf)
+    logging.config.dictConfig(logDict)
+    logging.getLogger().setLevel(log_level)
+
 
     ############################################################################
 
@@ -414,8 +452,8 @@ def main():
                                    validate=False,
                                    json_filename=args.config)
 
-    # direct_submit /sandbox/data/raw/nhs_2014_n14_299403.fits
-    # direct_submit --loglevel=DEBUG /data/bok/20150706/d7210.0007.fits.fz -p /sandbox/tada-cli/personalities/bok.personality 
+    # out=`sudo -u tada sh -c "direct_submit --loglevel=DEBUG /data/bok/20150706/d7210.0008.fits.fz -p /sandbox/tada-cli/personalities/bok.personality 2>&1"`
+    # out=`fits_submit -p bok /data/bok/20150706/d7210.0008.fits.fz `
     direct_submit(args.fitsfile,
                   personality_files=pers_list,
                   moddir=args.moddir,

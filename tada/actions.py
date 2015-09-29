@@ -17,14 +17,14 @@ import dataq.red_utils as ru
 # +++ Add code here if TADA needs to handle additional types of files!!!
 def file_type(filename):
     """Return an abstracted file type string.  MIME isn't always good enough."""
+    type = 'UNKNOWN'
     if magic.from_file(filename).decode().find('FITS image data') >= 0:
-        return('FITS')
+        type = 'FITS'
     elif magic.from_file(filename).decode().find('JPEG image data') >= 0:
-        return('JPEG')
+        type = 'JPEG'
     elif magic.from_file(filename).decode().find('script text executable') >= 0:
-        return('shell script')
-    else:
-        return('UNKNOWN')
+        type = 'shell script'
+    return type
     
 
 ##############################################################################

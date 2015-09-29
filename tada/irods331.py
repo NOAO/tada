@@ -22,7 +22,8 @@ def irods_init331():
     return True
 
         
-def irods_setenv(host,port,resource='noao-tuc-archvol'):
+def irods_setenv(host, port, resource):
+    tag='irods_setenv'
     envDir = os.path.expanduser('~/.irods')
     pre_env = os.path.join(envDir,'.irodsEnv.pre-tada')
     irods_env = os.path.join(envDir,'.irodsEnv')
@@ -54,7 +55,8 @@ irodsCwd /noao-tuc-z1/home/cache
 
 def irods_put331(local_fname, irods_fname):
     "Copy local_fname to irods_fname, creating dirs if needed."
-    logging.debug('irods_put331({}, {})'.format(local_fname, irods_fname))
+    tag='irods_put331'
+    logging.debug('{}({}, {})'.format(tag, local_fname, irods_fname))
     #!logging.debug('   irods_put331 env:{})'.format(os.environ))
     icmdpath = ('/usr/local/share/applications/irods3.3.1/iRODS/clients'
                 '/icommands/bin')
@@ -66,19 +68,24 @@ def irods_put331(local_fname, irods_fname):
         subprocess.check_output([os.path.join(icmdpath, 'iput'),
                                  '-f', '-K', local_fname, irods_fname])
     except subprocess.CalledProcessError as ex:
-        logging.error('Execution failed: {}; {}'
-                      .format(ex, ex.output.decode('utf-8')))
+        logging.error('FAILED {}: {}; {}'
+                      .format(tag, ex, ex.output.decode('utf-8')))
         raise
 
 def irods_get331( irods_fname, local_fname):
     "Copy irods_fname to local_fname."
-    logging.debug('irods_get331({}, {})'.format(irods_fname, local_fname))
+    tag='irods_get331'
+    logging.debug('{}({}, {})'.format(tag, irods_fname, local_fname))
     icmdpath = ('/usr/local/share/applications/irods3.3.1/iRODS/clients'
                 '/icommands/bin')
     try:
         subprocess.check_output([os.path.join(icmdpath, 'iget'),
-                                 '-f', '-K', local_fname, irods_fname])
+                                 '-f', '-K', local_fname, irods_fname],
+                                stderr=subprocess.DEVNULL,
+        )
     except subprocess.CalledProcessError as ex:
+        logging.debug('FAILED {}: {}; {}'
+                      .format(tag, ex, ex.output.decode('utf-8')))
         return False
     
     return True
@@ -86,14 +93,15 @@ def irods_get331( irods_fname, local_fname):
 
 def irods_remove331(irods_fname):
     "Remove irods_fname from irods"
-    logging.debug('irods_remove331({})'.format(irods_fname))
+    tag='irods_remove331'
+    logging.debug('{}({})'.format(tag, irods_fname))
     icmdpath = ('/usr/local/share/applications/irods3.3.1/iRODS/clients'
                 '/icommands/bin')
     try:
         subprocess.check_output([os.path.join(icmdpath, 'irm'),
                                  '-f', irods_fname])
     except subprocess.CalledProcessError as ex:
-        logging.error('Execution failed: {}; {}'
-                      .format(ex, ex.output.decode('utf-8')))
+        logging.error('FAILED {}: {}; {}'
+                      .format(tag, ex, ex.output.decode('utf-8')))
         raise
 

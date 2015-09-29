@@ -1,4 +1,6 @@
 """Install TADA: data flow software from Dome to Archive."""
+# See: https://packaging.python.org/en/latest/distributing/
+
 from setuptools import setup, find_packages 
 from codecs import open  # To use a consistent encoding
 from os import path
