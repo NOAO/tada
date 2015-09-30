@@ -224,9 +224,9 @@ this function.'''
                          hdr['DTPROPID'])
     elif source == 'pipeline':
         return PurePath('/noao-tuc-z1/pipeline',
-                        'Q_unknownday',
-                        'unknown',
-                        hdr['DTCALDAT'].replace('-',''))
+                        hdr['DTSUBMIT'],
+                        hdr['PLQUEUE'],
+                        hdr['PLQNAME'])
     else:
         raise Exception('Unrecognized source type: "{}"'.format(source))
     return None

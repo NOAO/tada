@@ -28,7 +28,7 @@ PATH=$tadadir/../tada-cli/scripts:$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:
 
 source smoke-lib.sh
 return_code=0
-SMOKEOUT="README-smoke-results.fits_submit.txt"
+SMOKEOUT="README-smoke-results.pipeline_submit.txt"
 
 echo ""
 echo "Starting tests in \"$dir\" ..."
@@ -37,32 +37,13 @@ echo ""
 
 function ingest () {
     ffile=$1; shift
-    pers=""
-    for p; do
-	pers="$pers -p $p"
-    done
 	
-    fits_submit -p smoke $pers $ffile 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
+    pipeline_submit $ffile 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
 }
 
 
-##########################
-# 1_1: non-FITS
-testCommand fs1_1 "ingest $tdata/uofa-mandle.jpg" "^\#" n
-
-##########################
-# 2_1: pass ingest without options
-testCommand fs2_1 "ingest $tdata/k4k_140922_234607_zri.fits.fz" "^\#" n
-
-
-##########################
-# 3_1: fail ingest
-testCommand fs3_1 "ingest $tdata/kp109391.fits.fz" "^\#" n
-
-
-##########################
-# 4_1: pass ingest using options
-testCommand fs4_1 "ingest $tdata/obj_355.fits wiyn-whirc" "^\#" n
+testCommand ps1_1 "ingest $tdata/uofa-mandle.jpg" "^\#" n
+testCommand ps2_1 "ingest $tdata/c4d_130901_031805_oow_g_d2.fits.fz" "^\#" n
 
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"

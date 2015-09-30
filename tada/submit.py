@@ -135,9 +135,8 @@ RETURN: irods location of hdr file.
             fu.apply_options(options, hdr)
         hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname, here to pass validate
         hdr['DTACQNAM'] = orig_fullname
-        logging.debug('DBG-1: {} hdrkeys={}'.format(mirror_fname, list(hdr.keys())))
+        #!logging.debug('DBG-1: {} hdrkeys={}'.format(mirror_fname, list(hdr.keys())))
         fu.validate_raw_hdr(hdr, orig_fullname)
-        logging.debug('DBG-2: hdr-keys={}'.format(list(hdr.keys())))
         fname_fields = fu.modify_hdr(hdr, mirror_fname, options, opt_params,
                                      **kwargs)
         fu.validate_cooked_hdr(hdr, orig_fullname)
@@ -154,8 +153,7 @@ RETURN: irods location of hdr file.
         else:
             jobid = None
         if source == 'pipeline':
-            new_basename = hdr['PLDSID']
-
+            new_basename = hdr['PLDSID'] + ".fits.fz"
             logging.debug('Source=pipeline so using basename:{}'
                           .format(new_basename))
         else:
@@ -165,13 +163,15 @@ RETURN: irods location of hdr file.
                                              orig=mirror_fname)
         hdr['DTNSANAM'] = new_basename
 
-        new_ipath = fn.generate_archive_path(hdr, source=source)
+        new_ipath = fn.generate_archive_path(hdr, source=source) / new_basename
+        logging.debug('new_basename={}, new_ipath={}'
+                      .format(new_basename, new_ipath))
         ext = fu.fits_extension(new_basename)
-        new_ipath = new_ipath / new_basename
+        logging.debug('ext={}'.format(ext))
+        #!new_ipath = new_ipath / new_basename
         new_ifname = str(new_ipath)
         new_ihdr = new_ifname.replace(ext,'.hdr')
-        logging.debug('new_ipath={}, new_basename={}, new_ifname={}'
-                      .format(new_ipath, new_basename, new_ifname))
+        logging.debug('new_ifname={}, new_ihdr={}'.format(new_ifname, new_ihdr))
 
         # Print without blank cards or trailing whitespace
         hdrstr = hdr.tostring(sep='\n',padding=False)
