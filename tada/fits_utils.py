@@ -358,22 +358,22 @@ def missing_in_recommended_hdr(hdr):
     "Header from FITS doesn't contain all fields recommended for ingest."
     return missing_in_hdr(hdr, INGEST_RECOMMENDED_FIELDS)
 
-def valid_header(fits_file):
-    """Read FITS metadata and insure it has what we need. 
-Raise exception if not."""
-    try:
-        # Only look at first/primary HDU?!!! (Header Data Unit)
-        hdulist = pyfits.open(fits_file) # can be compressed
-        hdr = hdulist[0].header
-    except Exception as err:
-        raise tex.InvalidHeader('Metadata keys could not be read: {}'
-                                       .format(err))
-    missing = missing_in_raw_hdr(hdr)
-    if len(missing) > 0:
-        raise tex.HeaderMissingKeys(
-            'Missing required metadata keys: {} in file {}'
-            .format(missing, hdr.get(DTACQNAM,'NA')))
-    return True
+#! def valid_header(fits_file):
+#!     """Read FITS metadata and insure it has what we need. 
+#! Raise exception if not."""
+#!     try:
+#!         # Only look at first/primary HDU?!!! (Header Data Unit)
+#!         hdulist = pyfits.open(fits_file) # can be compressed
+#!         hdr = hdulist[0].header
+#!     except Exception as err:
+#!         raise tex.InvalidHeader('Metadata keys could not be read: {}'
+#!                                        .format(err))
+#!     missing = missing_in_raw_hdr(hdr)
+#!     if len(missing) > 0:
+#!         raise tex.HeaderMissingKeys(
+#!             'Missing required metadata keys: {} in file {}'
+#!             .format(missing, hdr.get(DTACQNAM,'NA')))
+#!     return True
 
 
 

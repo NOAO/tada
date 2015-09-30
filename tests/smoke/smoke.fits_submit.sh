@@ -3,12 +3,8 @@
 # PURPOSE:    Wrapper for smoke test; 
 # EXAMPLE:
 #   ~/sandbox/tada/tests/smoke/smoke.direct_submit.sh
-# This file tests DIRECT submit (no queue, no valley) of:
-#   1. non-FITS; (reject, not try to ingest)
-#   2. compliant FITS with no options (no need for them, so iongest success)
-#   3. non-compliant FITS (ingest failure)
-#   4. FITS made compliant via passed personality options (ingest success)
-#
+# This file tests DIRECT submit (no queue, no valley)
+
 
 cmd=`basename $0`
 
@@ -20,11 +16,13 @@ tadadir=$(dirname $testdir)
 tdata=$SCRIPTDIR/data
 # tdata=/sandbox/tada/tests/smoke/data
 
+echo "tadadir=$tadadir, SCRIPTDIR=$SCRIPTDIR"
+
 dir=$SCRIPTDIR
 origdir=`pwd`
 cd $dir
 
-PATH=$tadadir/../tada-cli/scripts:$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:$PATH
+export PATH=$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:$PATH
 
 source smoke-lib.sh
 return_code=0
@@ -46,28 +44,30 @@ function ingest () {
 }
 
 
-##########################
-# 1_1: non-FITS
+## non-FITS; (reject, not try to ingest)
 testCommand fs1_1 "ingest $tdata/uofa-mandle.jpg" "^\#" n
 
-##########################
-# 2_1: pass ingest without options
+## compliant FITS with no options (no need for them, so ingest success)
 testCommand fs2_1 "ingest $tdata/k4k_140922_234607_zri.fits.fz" "^\#" n
 
-
-##########################
-# 3_1: fail ingest
+## non-compliant FITS (ingest failure)
 testCommand fs3_1 "ingest $tdata/kp109391.fits.fz" "^\#" n
 
-
-##########################
-# 4_1: pass ingest using options
+## FITS made compliant via passed personality options; compress on-the-fly
+## (ingest success)
 testCommand fs4_1 "ingest $tdata/obj_355.fits wiyn-whirc" "^\#" n
+
+
+## FITS made compliant via passed personality options; multi-extensions
+## (ingest success)
+#!testCommand fs5_1 "ingest $tdata/obj_355.fits.fz wiyn-whirc" "^\#" n
 
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"
 #!exit $return_code
 ###########################################a
+
+
 
 
 ##############################################################################
