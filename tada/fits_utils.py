@@ -24,57 +24,6 @@ from . import exceptions as tex
 from . import hdr_calc_funcs as hf
 from . import exceptions as tex
 
-##############################################################################
-# "Required" fields per tier per Email from Brian Thomas on 1/7/15
-# (Subject:Tiers of complaince and Archive ICD)
-#
-
-TIER0_PHDU_RAW_FIELDS = '''OBSTYPE PROCTYPE PRODTYPE DATE-OBS PROPID
-   TELESCOP OBSERVAT INSTRUME NAXIS SB_ID SB_RECNO PIPELINE PLVER'''.split()
-TIER0_EHDU_RAW_FIELDS = 'NAXIS NAXIS1 NAXIS2 EXTNAME INHERIT'.split()
-
-TIER1_PHDU_RAW_FIELDS = '''OBJECT FILENAME RA DEC EQUINOX RADESYS EXPTIME
-   TELRA TELDEC'''.split()
-TIER1_EHDU_RAW_FIELDS = 'RA1 DEC1'.split()
-
-TIER1_PHDU_PROCESSED_FIELDS = (TIER1_EHDU_RAW_FIELDS +
-                               '''DTTITLE DTACQNAM DTNSANAM DTINSTRU DTTELESC
-                               DTSITE DTUTC DTPI DTSITE'''.split())
-
-TIER2_PHDU_RAW_FIELDS = 'AIRMASS HA ZD'.split()
-TIER2_EHDU_RAW_FIELDS = 'AIRMASS1'.split()
-
-TIER2_PHDU_PROCESSED_FIELDS = (TIER2_PHDU_RAW_FIELDS +
-                               '''CORN1RA CORN2RA CORN3RA CORN4RA CORN1DEC
-                               CORN2DEC CORN3DEC CORN4DEC'''.split())
-TIER2_EHDU_PROCESSED_FIELDS = (TIER2_EHDU_RAW_FIELDS +
-                               '''COR1RA1 COR2RA1 COR3RA1 COR4RA1 COR1DEC1
-                               COR2DEC1 COR3DEC1 COR4DEC1'''.split())
-
-TIER3_PHDU_RAW_FIELDS = 'FILTER SEEING'.split()
-TIER3_EHDU_RAW_FIELDS = 'SEEING1'.split()
-
-
-
-##############################################################################
-# Req-A1: set of header keywords required by NSA ingestion per
-# "safestore_raw_pixel_data.pdf (Use Case Specification)
-#    DTACCOUN observing account name
-#    DTACQNAM file name supplied at telescope
-#    DTACQUIS host name of data acquisition computer
-#    DTCALDAT calendar date from observing schedule
-#    DTCOPYRI copyright holder of data
-#    DTINSTRU instrument identifier
-#    DTNSANAM file name in storage system
-#    DTOBSERV scheduling institution
-#    DTPI Principal Investigator
-#    DTPIAFFL PI affiliation
-#    DTPROPID observing proposal ID
-#    DTPUBDAT calendar date of public release   #
-#    DTSITE observatory location
-#    DTTELESC telescope identifier
-#    DTTITLE title of obser
-##############################################################################
 
 #DOC: vvv
 # All bets are off in the original FITS file does not contain all of these.
@@ -134,168 +83,6 @@ INGEST_RECOMMENDED_FIELDS = set([
 #   'DTUTC',
 ])    
 #DOC: ^^^
-
-
-# common between a SINGLE Raw and Cooked pair
-#   "Cooked":: contains (at least) added fields required for Archive Ingest
-common_fields = [
-    '',
-    'AIRMASS',
-    'ALT',
-    'AZ',
-    'BITPIX',
-    'DATE-OBS',
-    'DEC',
-    'DECDIFF',
-    'DECINDEX',
-    'DECINST',
-    'DECOFF',
-    'DECZERO',
-    'DOMEAZ',
-    'DOMEERR',
-    'EXPCOADD',
-    'EXPID',
-    'EXPTIME',
-    'EXTEND',
-    'FILENAME',
-    'FILTER',
-    'HA',
-    'INSTRUME',
-    'LAMPSTAT',
-    'MJD-OBS',
-    'MOSSIZE',
-    'NAXIS',
-    'NCOADD',
-    'NDETS',
-    'NEXTEND',
-    'NFC1FILT',
-    'NFC1GDR',
-    'NFC1POS',
-    'NFC2FILT',
-    'NFC2GDR',
-    'NFC2POS',
-    'NFDETTMP',
-    'NFECPOS',
-    'NFFILPOS',
-    'NFFW1POS',
-    'NFFW2POS',
-    'NFOSSTMP',
-    'NOCAOE',
-    'NOCBIAS',
-    'NOCCOADD',
-    'NOCDDOF',
-    'NOCDGAVG',
-    'NOCDHS',
-    'NOCDITER',
-    'NOCDPAT',
-    'NOCDPOS',
-    'NOCDREP',
-    'NOCDROF',
-    'NOCFOCUS',
-    'NOCFSMPL',
-    'NOCFSN',
-    'NOCID',
-    'NOCLAMP',
-    'NOCMDOF',
-    'NOCMITER',
-    'NOCMPAT',
-    'NOCMPOS',
-    'NOCMREP',
-    'NOCMROF',
-    'NOCNO',
-    'NOCNPOS',
-    'NOCNUM',
-    'NOCOAE',
-    'NOCODEC',
-    'NOCORA',
-    'NOCPIE',
-    'NOCPOST',
-    'NOCSCR',
-    'NOCSKY',
-    'NOCSYS',
-    'NOCTIM',
-    'NOCTOT',
-    'NOCTYP',
-    'NOHS',
-    'OBJDEC',
-    'OBJECT',
-    'OBJEPOCH',
-    'OBJRA',
-    'OBSERVAT',
-    'OBSERVER',
-    'OBSID',
-    'OBSTYPE',
-    'PROCTYPE',
-    'PROPID',
-    'PROPOSER',
-    'RA',
-    'RADECEQ',
-    'RADECSYS',
-    'RADIFF',
-    'RAINDEX',
-    'RAINST',
-    'RAOFF',
-    'RAZERO',
-    'SEQID',
-    'SEQNUM',
-    'SIMPLE',
-    'ST',
-    'TCPGDR',
-    'TCPTRACK',
-    'TELDEC',
-    'TELEQUIN',
-    'TELESCOP',
-    'TELFOCUS',
-    'TELOP',
-    'TELRA',
-    'TELRADEC',
-    'TIME-OBS',
-    'TIMESYS',
-    'ZD']
-
-# This information was derived from a SINGLE pair of example FITS
-# files (corresponding to the file Before and After STB modified the
-# header).
-#
-# Fields added to raw FITS before ingesting. Its unknown which of these
-# are strictly required.
-added_fields = [
-    'CHECKSUM',
-    'DATASUM',
-    'DTACCOUN', # Req-A1: observing account name
-    'DTACQNAM', # Req-A1: file name supplied at telescope
-    'DTACQUIS', # Req-A1: host name of data acquisition computer
-    'DTCALDAT', # Req-A1: calendar date from observing schedule
-    'DTCOPYRI', # Req-A1: copyright holder of data
-    'DTINSTRU', # Req-A1: instrument identifier
-    'DTNSANAM', # Req-A1: file name in storage system
-    'DTOBSERV', # Req-A1: scheduling institution
-    'DTPI',     # Req-A1: Principal Investigator
-    'DTPIAFFL', # Req-A1: PI affiliation
-    'DTPROPID', # Req-A1: observing proposal ID
-    'DTPUBDAT', # Req-A1: calendar date of public release  ##
-    'DTSITE',   # Req-A1: observatory location
-    'DTSTATUS',
-    'DTTELESC', # Req-A1: telescope identifier
-    'DTTITLE',  # Req-A1: title of obser
-    'DTUTC',
-    'DT_RTNAM',
-    'ODATEOBS',
-    'RECNO',
-    'RMCOUNT',
-    'SB_ACCOU',
-    'SB_DIR1',
-    'SB_DIR2',
-    'SB_DIR3',
-    'SB_HOST',
-    'SB_ID',
-    'SB_LOCAL',
-    'SB_NAME',
-    'SB_RECNO',
-    'SB_RTNAM',
-    'SB_SITE',
-    ]
-
 
 
 def print_header(msg, hdr=None, fits_filename=None):
@@ -525,6 +312,16 @@ CHECKSUM= 'mhElmh9lmhClmh9l'    /  ASCII 1's complement checksum
 DATASUM = '0         '          /  checksum of data records                 
 """    
 
+def validate_dateobs_content(dateobs, datestr):
+    'DATE-OBS content: Correct century and Not Future'
+    if str(dateobs.year)[:2] != '20':
+        raise tex.BadFieldContent(
+        'DATE-OBS is not current century.  Value={}' .format(datestr))
+    if dateobs > dt.datetime.now():
+        raise tex.BadFieldContent(
+            'DATE-OBS is in the future.  Value={}'.format(datestr))
+    return True    
+
 def validate_raw_hdr(hdr, orig_fullname):
     missing = missing_in_raw_hdr(hdr)
     logging.debug('EXECUTE fu.validate_raw_hdr(); missing={}'.format(missing))
@@ -533,6 +330,7 @@ def validate_raw_hdr(hdr, orig_fullname):
             'Raw FITS header is missing required metadata fields ({}) '
             'in file {}'
             .format(', '.join(sorted(missing)), orig_fullname))
+    
     return True    
 
 def validate_cooked_hdr(hdr, orig_fullname):
@@ -607,7 +405,8 @@ def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True, **kwargs):
         raise tex.SubmitException(
             'Could not parse DATE-OBS field ({}) in header of: {}'
             .format(chg['DATE-OBS'], orig_fullname))
-
+    validate_dateobs_content(dateobs, chg['DATE-OBS'])
+    
     if forceRecalc:
         for k,v in chg.items():
             hdr[k] = v
@@ -670,7 +469,8 @@ def fix_hdr(hdr, fname, options, opt_params, **kwargs):
         raise tex.SubmitException(
             'Could not parse DATE-OBS field ({}) in header of: {}'
             .format(hdr['DATE-OBS'], orig_fullname))
-
+    validate_dateobs_content(dateobs, hdr['DATE-OBS'])
+    
     ext = fits_extension(fname)
     return (hdr.get('DTSITE', 'na'),
             hdr.get('DTTELESC', 'na'),
