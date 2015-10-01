@@ -592,10 +592,10 @@ def fits_compliant(fits_file_list,
     logging.debug('EXECUTING fits_compliant({}, personalities={}, '
                   'quiet={}, '
                   'show_values={}, show_header={}, show_stdfname={}, '
-                  'required={}, verbose={})'
+                  'required={}, verbose={}, trace={})'
                   .format(fits_file_list, personalities, quiet,
                           show_values, show_header, show_stdfname,
-                          required, verbose))
+                          required, verbose, trace))
     if personalities == None:
         personalities = []
     bad = 0
@@ -733,6 +733,9 @@ def main():
     parser.add_argument('-q','--quiet',
                         action='store_true',
                         help='Do not list each compliant file')
+    parser.add_argument('-t','--trace',
+                        action='store_true',
+                        help='Produce stack trace on error')
     parser.add_argument('-p','--personality',
                         action='append',
                         help=('Personality file that adds explicit and '
@@ -773,7 +776,8 @@ def main():
                    quiet=args.quiet,
                    required=args.required,
                    show_values=args.values,
-                   show_header=args.header)
+                   show_header=args.header,
+                   trace=args.trace)
 
 if __name__ == '__main__':
 
