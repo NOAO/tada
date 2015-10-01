@@ -50,7 +50,7 @@ testCommand fs1_1 "ingest $tdata/uofa-mandle.jpg" "^\#" n
 ## compliant FITS with no options (no need for them, so ingest success)
 testCommand fs2_1 "ingest $tdata/k4k_140922_234607_zri.fits.fz" "^\#" n
 
-## non-compliant FITS (ingest failure)
+## bad format for DATE-OBS
 testCommand fs3_1 "ingest $tdata/kp109391.fits.fz" "^\#" n
 
 ## FITS made compliant via passed personality options; compress on-the-fly
@@ -60,7 +60,9 @@ testCommand fs4_1 "ingest $tdata/obj_355.fits wiyn-whirc" "^\#" n
 
 ## FITS made compliant via passed personality options; multi-extensions
 ## (ingest success)
-#!testCommand fs5_1 "ingest $tdata/obj_355.fits.fz wiyn-whirc" "^\#" n
+testCommand fs5_1 "ingest $tdata/obj_355.fits.fz wiyn-whirc" "^\#" n
+
+## non-compliant FITS (ingest failure)
 
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"

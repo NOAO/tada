@@ -129,16 +129,19 @@ RETURN: irods location of hdr file.
     hdr_ifname = "None"
     try:
         # augment hdr (add fields demanded of downstream process)
-        hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
-        hdr = hdulist[0].header # use only first in list.
+        #! hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
+        #! hdr = hdulist[0].header # use only first in list.
+        hdr = fu.get_hdr_as_dict(mirror_fname)
         if opt_params.get('OPS_PREAPPLY_UPDATE','NO') == 'YES': #!!!
             fu.apply_options(options, hdr)
         hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname, here to pass validate
         hdr['DTACQNAM'] = orig_fullname
         #!logging.debug('DBG-1: {} hdrkeys={}'.format(mirror_fname, list(hdr.keys())))
         fu.validate_raw_hdr(hdr, orig_fullname)
-        fname_fields = fu.modify_hdr(hdr, mirror_fname, options, opt_params,
-                                     **kwargs)
+        #!fname_fields = fu.modify_hdr(hdr, mirror_fname, options, opt_params,
+        #!                             **kwargs)
+        fname_fields = fu.fix_hdr(hdr, mirror_fname,
+                                  options, opt_params, **kwargs)
         fu.validate_cooked_hdr(hdr, orig_fullname)
         fu.validate_recommended_hdr(hdr, orig_fullname)
         # Generate standards conforming filename
@@ -174,7 +177,11 @@ RETURN: irods location of hdr file.
         logging.debug('new_ifname={}, new_ihdr={}'.format(new_ifname, new_ihdr))
 
         # Print without blank cards or trailing whitespace
-        hdrstr = hdr.tostring(sep='\n',padding=False)
+        hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
+        fitshdr = hdulist[0].header # use only first in list.
+        #!logging.debug('modified hdr dict={}'.format(hdr))
+        fitshdr.update(hdr)
+        hdrstr = fitshdr.tostring(sep='\n',padding=False)
         hdulist.flush()
         hdulist.close()         # now FITS header is MODIFIED
         md5 = subprocess.check_output("md5sum -b {} | cut -f1 -d' '"
