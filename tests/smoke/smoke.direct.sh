@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 # AUTHORS:    S. Pothier
 # PURPOSE:    Wrapper for smoke test;
 
@@ -7,6 +7,7 @@ SCRIPT=$(readlink -e $0)     #Absolute path to this script
 SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script is in
 testdir=$(dirname $SCRIPTDIR)
 tadadir=$(dirname $testdir)
+# tadadir=/sandbox/tada
 tdata=$SCRIPTDIR/data
 # tdata=/sandbox/tada/tests/smoke/data
 
@@ -27,6 +28,9 @@ echo "Starting tests in \"$dir\" ..."
 echo ""
 echo ""
 
+echo "Remove all provisional files before starting."
+curl -s -S "http://localhost:8000/provisional/rollback/"
+
 ###########################################
 ### fits_compliant
 ###
@@ -44,38 +48,56 @@ function fsubmit () {
     ffile=$1; shift
     pers=""
     for p; do
-	pers="$pers -p $p"
+	    pers="$pers -p $p"
     done
-    fits_submit -p smoke $pers $ffile 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
+    #!fits_submit -p smoke $pers $ffile 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
+    msg=`fits_submit -p smoke $pers $ffile 2>&1`
+    status=$?
+    if [ $status -eq 0 ]; then
+        # e.g. msg="SUCCESS: archived /sandbox/tada/tests/smoke/data/obj_355.fits as /noao-tuc-z1/mtn/20141219/WIYN/2012B-0500/uuuu_141220_130138_uuu_TADATEST_2417885023.fits"
+        irodsfile=`echo $msg | cut -s --delimiter=' ' --fields=5`
+        archfile=`basename $irodsfile`
+        echo $msg 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
+        curl -s -S "http://mars.sdm.noao.edu:8000/provisional/add/$archfile/?source=$ffile"
+        echo ""
+        echo "Successful ingest. Added $archfile to PROVISIONAL list via ws"
+    else
+       echo $msg 2>&1
+    fi
+    return $status
 }
 
 
 ## non-FITS; (reject, not try to ingest)
-testCommand fs1_1 "fsubmit $tdata/uofa-mandle.jpg" "^\#" n
+testCommand fs1_1 "fsubmit $tdata/uofa-mandle.jpg" "^\#" n 1
 
 ## compliant FITS with no options (no need for them, so ingest success)
 testCommand fs2_1 "fsubmit $tdata/k4k_140922_234607_zri.fits.fz" "^\#" n
 
+## compliant FITS with no options (BUT, already inserted above so ingest FAIL)
+testCommand fs2b_1 "fsubmit $tdata/k4k_140922_234607_zri.fits.fz" "^\#" n 2
+
 ## bad format for DATE-OBS
-testCommand fs3_1 "fsubmit $tdata/kp109391.fits.fz" "^\#" n
+testCommand fs3_1 "fsubmit $tdata/kp109391.fits.fz" "^\#" n 1
 
 ## FITS made compliant via passed personality options; compress on-the-fly
 ## (ingest success)
 testCommand fs4_1 "fsubmit $tdata/obj_355.fits wiyn-whirc" "^\#" n
-
 
 ## FITS made compliant via passed personality options; multi-extensions
 ## (ingest success)
 testCommand fs5_1 "fsubmit $tdata/obj_355.fits.fz wiyn-whirc" "^\#" n
 
 ## non-compliant FITS, missing RAW (ingest failure)
-testCommand fs6_1 "fsubmit $tdata/kptest.fits" "^\#" n
+testCommand fs6_1 "fsubmit $tdata/kptest.fits" "^\#" n 1
 
 ###########################################
 ### pipeline_submit
 ###
 function psubmit () {
     ffile=$1; shift
+    #msg=`pipeline_submit $ffile 2>&1`
+    #!status=$?
     pipeline_submit $ffile 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
 }
 

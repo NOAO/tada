@@ -30,7 +30,7 @@ echo ""
 echo ""
 
 
-## non-FITS; (reject, not try to ingest)
+## bad DATE-OBS format
 testCommand fc1_1 "fits_compliant --header $tdata/kp109391.fits.fz" "^\#" n
 
 ###########################################

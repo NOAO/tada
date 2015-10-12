@@ -44,7 +44,7 @@ function ingest () {
 }
 
 
-## non-FITS; (reject, not try to ingest)
+## non-FITS; (reject, do not try to ingest)
 testCommand fs1_1 "ingest $tdata/uofa-mandle.jpg" "^\#" n
 
 ## compliant FITS with no options (no need for them, so ingest success)

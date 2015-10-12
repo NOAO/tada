@@ -1,8 +1,9 @@
-/sandbox/tada/tests/smoke/data/kptest.fits:	 NOT compliant; Missing fields, raw: ['INSTRUME'], cooked: [], recommended: []
+k4n_080225_065758_suu.fits produced from /sandbox/tada/tests/smoke/data/kptest.fits
+/sandbox/tada/tests/smoke/data/kptest.fits:	 NOT compliant; Missing fields, raw: [], cooked: ['INSTRUME'], recommended: ['PROCTYPE', 'PRODTYPE']
 Fields missing from at least one file:
-   Raw:         ['INSTRUME']
-   Cooked:      []
-   Recommended: []
+   Raw:         []
+   Cooked:      ['INSTRUME']
+   Recommended: ['PROCTYPE', 'PRODTYPE']
    (Cooked & Recommended exclude files that have missing Raw fields)
 
 0 of 1 files are compliant (for Archive Ingest)

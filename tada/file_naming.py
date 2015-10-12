@@ -133,7 +133,8 @@ prodLUT = {
 def generate_fname(site, telescope, instrument,
                    obsdt, obstype, proctype, prodtype, ext,
                    orig=None,
-                   jobid=False,
+                   #jobid=False,
+                   tag='',
                    wunk=False):
     """Generate standard filename from metadata values.
 e.g. k4k_140923_024819_uri.fits.fz"""
@@ -168,9 +169,12 @@ e.g. k4k_140923_024819_uri.fits.fz"""
         )
 
     std='{instrument}_{date}_{time}_{obstype}{proctype}{prodtype}'
-    if jobid:
-        fields['jobid'] = jobid
-        new_fname = (std+"_{jobid}.{ext}").format(**fields)
+    #!if jobid:
+    #!    fields['jobid'] = jobid
+    #!    new_fname = (std+"_TADATEST_{jobid}.{ext}").format(**fields)
+    if tag != '':
+        fields['tag'] = tag
+        new_fname = (std+"_{tag}.{ext}").format(**fields)
     else:
         new_fname = (std+".{ext}").format(**fields)
     return new_fname

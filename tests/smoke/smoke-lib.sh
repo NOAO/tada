@@ -199,7 +199,7 @@ function testCommand () {
     failcnt=$((failcnt + 1))
     return_code=1
   else
-    echo "*** $proc PASSED [$testName] ($tn; Command correctly returned zero status ***"
+    echo "*** $proc PASSED [$testName] ($tn; Command correctly returned status = $expectedStatus***"
   fi
   
 

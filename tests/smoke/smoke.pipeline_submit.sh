@@ -37,7 +37,6 @@ echo ""
 
 function ingest () {
     ffile=$1; shift
-	
     pipeline_submit $ffile 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
 }
 

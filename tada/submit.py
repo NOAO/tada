@@ -122,6 +122,7 @@ RETURN: irods location of hdr file.
     
     # +++ API: under-under parameters via lp options
     jidt = opt_params.get('jobid_type',None)  # plain | seconds | (False)
+    tag = opt_params.get('job_tag','')
     source = opt_params.get('source','raw')   # pipeline | (dome)
     warn_unknown = opt_params.get('warn_unknown', False) # 1 | (False)
     orig_fullname = opt_params.get('filename','<unknown>')
@@ -145,23 +146,26 @@ RETURN: irods location of hdr file.
         fu.validate_cooked_hdr(hdr, orig_fullname)
         fu.validate_recommended_hdr(hdr, orig_fullname)
         # Generate standards conforming filename
-        # EXCEPT: add field when JIDT given.
+        # EXCEPT: add field when JOBID_TYPE and/or JOB_TAG given.
         if jidt == 'plain':
             jobid = pathlib.PurePath(mirror_fname).parts[-2]
+            tag = jobid
         elif jidt == 'seconds': 
             # hundredths of a second since 1/1/2015
             jobid = str(int((datetime.datetime.now()
                              - datetime.datetime(2015,1,1)) 
                             .total_seconds()*100))
-        else:
-            jobid = None
+            tag = jobid if tag == '' else (jobid + '_' + tag)
+        #! else:
+            #!jobid = None
         if source == 'pipeline':
             new_basename = hdr['PLDSID'] + ".fits.fz"
             logging.debug('Source=pipeline so using basename:{}'
                           .format(new_basename))
         else:
             new_basename = fn.generate_fname(*fname_fields,
-                                             jobid=jobid,
+                                             #! jobid=jobid,
+                                             tag=tag,
                                              wunk=warn_unknown,
                                              orig=mirror_fname)
         hdr['DTNSANAM'] = new_basename
@@ -315,10 +319,13 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 ##############################################################################
 def direct_submit(fitsfile,
                   personality_files=[],
-                  moddir=None, overwrite=False, timeout=60,
-                  qname='submit', qcfg=None,
+                  moddir=None,
+                  timeout=60, #!!!
+                  qname='submit',
+                  qcfg=None,
                   trace=False):
-    logging.debug('EXECUTING: direct_submit({}, personality_files={}, moddir={})'
+    logging.debug('EXECUTING: direct_submit({}, personality_files={}, '
+                  'moddir={})'
                   .format(fitsfile, personality_files, moddir))
     if 'FITS image data' not in str(magic.from_file(fitsfile)):
         sys.exit('Cannot ingest non-FITS file: {}'.format(fitsfile))
@@ -407,10 +414,10 @@ def main():
                         default=dflt_moddir,
                         help="Directory that will contain the (possibly modified, possibly renamed) file as submitted.  [default={}]".format(dflt_moddir),
                         )
-    parser.add_argument('-o', '--overwrite',
-                        help='If file already exist in archive, overwrite it!',
-                        action='store_true'
-                        )
+#!    parser.add_argument('-o', '--overwrite',
+#!                        help='If file already exist in archive, overwrite it!',
+#!                        action='store_true'
+#!                        )
     parser.add_argument('-t', '--timeout',
                         type=int,
                         help='Seconds to wait for Archive to respond',
@@ -464,7 +471,6 @@ def main():
     direct_submit(args.fitsfile,
                   personality_files=pers_list,
                   moddir=args.moddir,
-                  overwrite=args.overwrite,
                   timeout=args.timeout,
                   qcfg=qcfg
                   )

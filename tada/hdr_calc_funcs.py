@@ -85,11 +85,11 @@ def DTCALDATfromDATEOBSchile(orig, **kwargs):
 
 def PROPIDtoDT(orig, **kwargs):
     'Depends on: PROPID'
-    return {'DTPROPID': orig['PROPID'] }
+    return {'DTPROPID': orig.get('PROPID','NA') }
 
 def PROPIDplusCentury(orig, **kwargs):
     'Depends on: PROPID. Add missing century'
-    return {'DTPROPID': '20' + orig['PROPID'].strip('"') }
+    return {'DTPROPID': '20' + orig.get('PROPID','NA').strip('"') }
 
 def INSTRUMEtoDT(orig, **kwargs):
     'Depends on: INSTRUME'

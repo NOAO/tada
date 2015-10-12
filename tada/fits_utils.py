@@ -29,7 +29,6 @@ from . import exceptions as tex
 # All bets are off in the original FITS file does not contain all of these.
 RAW_REQUIRED_FIELDS = set([
     'DATE-OBS',
-    'INSTRUME',
     #!'OBSERVAT',
     'TELESCOP',
 
@@ -42,6 +41,8 @@ RAW_REQUIRED_FIELDS = set([
 # be required in Legacy code.
 INGEST_REQUIRED_FIELDS = set([
     'SIMPLE',
+    'INSTRUME', # !!! moved from RAW_REQUIRED to satisfy:
+                # /scraped/mtn_raw/ct15m-echelle/chi150724.1000.fits
     'DTPROPID', # observing proposal ID
     'DTCALDAT', # calendar date from observing schedule
     'DTTELESC', # needed to construct full file path in archive
@@ -658,11 +659,12 @@ def fits_compliant(fits_file_list,
                 missing_cooked = missing_in_archive_hdr(hdr)
                 missing_recommended = missing_in_recommended_hdr(hdr)
         except Exception as err:
-            if not quiet:
-                print('EXCEPTION in fits_compliant: {}'.format(err))
+            print('EXCEPTION in fits_compliant on {}: {}'
+                  .format(ffile, err))
             if trace:
                 traceback.print_exc()            
             valid = False
+
         all_missing_raw.update(missing_raw)
         all_missing_cooked.update(missing_cooked)
         all_missing_recommended.update(missing_recommended)
@@ -671,7 +673,8 @@ def fits_compliant(fits_file_list,
 
         if show_stdfname and fname_fields != None:
             new_basename = fn.generate_fname(*fname_fields)
-            print('{} produced from {}'.format(new_basename, ffile))
+            if not quiet:
+                print('{} produced from {}'.format(new_basename, ffile))
         if show_values:
             show_hdr_values('Post modify', hdr) # only "interesting" ones
         if show_header:
