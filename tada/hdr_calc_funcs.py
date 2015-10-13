@@ -39,6 +39,9 @@ Depends on: DTCALDAT, DTTELESC, (DTPROPID)'''
     new = {'DTPROPID': propid }
     return new
 
+def tsepDATEOBS(orig, **kwargs):
+    return {'DATE-OBS': orig['DATE-OBS'].replace(' ','T')}
+    
 def addTimeToDATEOBS(orig, **kwargs):
     'Use TIME-OBS for time portion of DATEOBS. Depends on: DATE-OBS, TIME-OBS'
     if ('T' in orig['DATE-OBS']):

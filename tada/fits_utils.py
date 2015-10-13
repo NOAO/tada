@@ -18,6 +18,7 @@ import astropy.io.fits as pyfits
 import os.path
 import datetime as dt
 import subprocess
+from astropy.utils.exceptions import AstropyWarning, AstropyUserWarning
  
 from . import file_naming as fn
 from . import exceptions as tex
@@ -586,10 +587,12 @@ def get_hdr_as_dict(fitsfile):
 def fits_compliant(fits_file_list,
                    personalities=[],
                    quiet=False,
+                   ignore_recommended=False,
                    show_values=False, show_header=False, show_stdfname=True,
                    required=False, verbose=False,
                    trace=False):
     """Check FITS file for complaince with Archive Ingest."""
+    import warnings
     logging.debug('EXECUTING fits_compliant({}, personalities={}, '
                   'quiet={}, '
                   'show_values={}, show_header={}, show_stdfname={}, '
@@ -597,10 +600,15 @@ def fits_compliant(fits_file_list,
                   .format(fits_file_list, personalities, quiet,
                           show_values, show_header, show_stdfname,
                           required, verbose, trace))
+
+    warnings.simplefilter('error',AstropyWarning)
+    warnings.simplefilter('error',AstropyUserWarning)
+
     if personalities == None:
         personalities = []
     bad = 0
     bad_files = set()
+    exception_cnt = 0
     if required:
         print('These fields MUST be in raw fits header (or provided by '
               'options at submit time). If not, field calculation will not '
@@ -659,6 +667,7 @@ def fits_compliant(fits_file_list,
                 missing_cooked = missing_in_archive_hdr(hdr)
                 missing_recommended = missing_in_recommended_hdr(hdr)
         except Exception as err:
+            exception_cnt += 1
             print('EXCEPTION in fits_compliant on {}: {}'
                   .format(ffile, err))
             if trace:
@@ -688,29 +697,45 @@ def fits_compliant(fits_file_list,
         else:
             bad_files.add(ffile)
             bad += 1
-            print('{}:\t NOT compliant; '
-                  'Missing fields, raw: {}, cooked: {}, recommended: {}'
-                  .format(ffile,
-                          sorted(missing_raw),
-                          sorted(missing_cooked),
-                          sorted(missing_recommended)))
+            if ignore_recommended:
+                print('{}:\t NOT compliant; '
+                      'Missing fields or bad content; '
+                      'raw: {}, cooked: {}, exceptions: {}'
+                      .format(ffile,
+                              sorted(missing_raw),
+                              sorted(missing_cooked),
+                              exception_cnt,
+                  ))
+            else:
+                print('{}:\t NOT compliant; '
+                      'Missing fields or bad content; '
+                      'raw: {}, cooked: {}, recommended: {}, '
+                      'exceptions: {}'
+                      .format(ffile,
+                              sorted(missing_raw),
+                              sorted(missing_cooked),
+                              sorted(missing_recommended),
+                              exception_cnt,
+                  ))
 
     if (verbose and (bad > 0)):
         print('Non-complaint files: {}'.format(', '.join(bad_files)))
 
     if len(fits_file_list) > 0:
-        if (len(all_missing_raw)
-            + len(all_missing_cooked)
-            + len(all_missing_recommended)) > 0:
+        recom_cnt = 0 if ignore_recommended else len(all_missing_recommended)
+        if (len(all_missing_raw) + len(all_missing_cooked)+ recom_cnt) > 0:
             print('Fields missing from at least one file:\n'
                   '   Raw:         {}\n'
                   '   Cooked:      {}\n'          
                   '   Recommended: {}\n'
+                  '   Exceptions:  {}\n'
                   '   (Cooked & Recommended exclude files that have missing '
                   'Raw fields)'
                   .format(sorted(all_missing_raw),
                           sorted(all_missing_cooked),
-                          sorted(all_missing_recommended)))
+                          sorted(all_missing_recommended),
+                          exception_cnt,
+                  ))
         print('\n{} of {} files are compliant (for Archive Ingest)'
               .format(len(fits_file_list)-bad, len(fits_file_list)))
 
@@ -736,6 +761,9 @@ def main():
     parser.add_argument('-q','--quiet',
                         action='store_true',
                         help='Do not list each compliant file')
+    parser.add_argument('--ignore_recommended',
+                        action='store_true',
+                        help='Do not report on RECOMMENDED fields.')
     parser.add_argument('-t','--trace',
                         action='store_true',
                         help='Produce stack trace on error')
@@ -778,6 +806,7 @@ def main():
                    personalities=args.personality,
                    quiet=args.quiet,
                    required=args.required,
+                   ignore_recommended=args.ignore_recommended,
                    show_values=args.values,
                    show_header=args.header,
                    trace=args.trace)

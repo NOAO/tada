@@ -29,7 +29,7 @@ echo ""
 echo ""
 
 echo "Remove all provisional files before starting."
-curl -s -S "http://localhost:8000/provisional/rollback/"
+curl -s -S "http://mars.sdm.noao.edu:8000/provisional/rollback/"
 
 ###########################################
 ### fits_compliant
