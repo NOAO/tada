@@ -11,8 +11,10 @@ from datetime import datetime
 #! from . import irods_utils as iu
 from . import submit as ts
 from . import diag
+from . import exceptions as tex
 import dataq.dqutils as du
 import dataq.red_utils as ru
+
 
 # +++ Add code here if TADA needs to handle additional types of files!!!
 def file_type(filename):
@@ -102,12 +104,13 @@ def network_move(rec, qname, **kwargs):
                    ###
                    '--chmod=ugo=rwX',
                    '--compress', # compress file data during the transfer
-                   '--contimeout=5',
+                   '--contimeout=20',
                    '--password-file', '/etc/tada/rsync.pwd',
                    '--recursive',
                    '--remove-source-files',
                    #sender removes synchronized files (non-dir)
-                   '--timeout=20',
+                   '--timeout=40', # seconds
+                   '--verbose',
                    source_root, sync_root]
         diag.dbgcmd(cmdline)
         tic = time.time()
@@ -125,7 +128,8 @@ def network_move(rec, qname, **kwargs):
                             ))
         # Any failure means put back on queue. Keep queue handling
         # outside of actions where possible.
-        raise
+        # raise # Do NOT raise exception since we will re-do rsync next time around
+        return False
 
     # successfully transfered to Valley
     logging.info('Successfully moved file from {} to {}'
@@ -193,7 +197,8 @@ configuration field: maximum_errors_per_record)
         except Exception as sex:
             logsubmit(submitlog, ifname, ifname, 'submit_to_archive',
                       fail=True)
-            raise sex
+            raise tex.SubmitException('Failed to submit {}: {}'
+                                      .format(ifname, sex))
         else:
             logging.info('PASSED submit_to_archive; {} as {}'
                          .format(ifname, destfname))

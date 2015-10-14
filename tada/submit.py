@@ -303,7 +303,7 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
         success,msg,m2 = http_archive_ingest(new_ihdr, qname,
                                              qcfg=qcfg, origfname=origfname)
         if not success:
-            raise tex.SubmitException(message)
+            raise tex.SubmitException(msg)
 
     except:
         if foundHdr:
