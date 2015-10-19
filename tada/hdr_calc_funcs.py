@@ -21,22 +21,52 @@ from dateutil import tz
 import datetime as dt
 from . import hdr_calc_utils as ut
 
+##############################################################################
+
+def ws_lookup_propid(date, telescope, **kwargs):
+    host=kwargs.get('mars_host')
+    port=kwargs.get('mars_port')
+    if host == None:
+        return dict()
+    if port == None:
+        return dict()    
+
+    # tele, date = ('ct13m', '2014-12-25')
+    date = orig.get('DTCALDAT')
+    tele = orig.get('DTTELESC')
+    propid = ut.http_get_propid_from_schedule(tele, date, host=host, port=port)
+    return propid
+    
+##############################################################################
+
+
+def trustHdrPropid(orig, **kwargs):
+    if orig.get('DTPROPID'):
+        return orig
+    else:
+        return {'DTPROPID':
+                ws_lookup_propid(orig.get('DTCALDAT'), orig.get('DTTELESC'))}
+
+
+def trustSchedPropid(orig, **kwargs):
+    pid = ws_lookup_propid(orig.get('DTCALDAT'), orig.get('DTTELESC'))
+    if pid != orig.get('DTPROPID'):
+        logging.warning('PROPIID values from header ({}) and schedule ({}) '
+                        'did not match. Using value from schedule.'
+                        .format(orig.get('DTPROPID'), pid))
+    return {'DTPROPID':
+            ws_lookup_propid(orig.get('DTCALDAT'), orig.get('DTTELESC'))}
+    
+
 def lookupPROPID(orig, **kwargs):
     '''Only lookup if DTPROPID not present. 
 Depends on: DTCALDAT, DTTELESC, (DTPROPID)'''
 
     if 'DTPROPID' in orig:
         return dict()
-    host=kwargs.get('mars_host')
-    port=kwargs.get('mars_port')
-    if host == None:
-        return dict()
-    
-    #!tele, date = ('ct13m', '2014-12-25')
-    date = orig.get('DTCALDAT')
-    tele = orig.get('DTTELESC')
-    propid = ut.http_get_propid_from_schedule(tele, date, host=host, port=port)
-    new = {'DTPROPID': propid }
+
+    new = {'DTPROPID': ws_lookup_propid(orig.get('DTCALDAT'),
+                                        orig.get('DTTELESC'))}
     return new
 
 def tsepDATEOBS(orig, **kwargs):

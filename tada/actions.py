@@ -7,6 +7,7 @@ import magic
 import shutil
 import time
 from datetime import datetime
+from pathlib import PurePath
 
 #! from . import irods_utils as iu
 from . import submit as ts
@@ -92,26 +93,30 @@ def network_move(rec, qname, **kwargs):
     out = None
     try:
         #!iu.irods_put(fname, ifname)
+        # The directory of newfname is unique (user/jobid)
+        # Copy full contents of directory containing newfname to corresponding
+        # directory on remote machine (under mountain_mirror).
         cmdline = ['rsync', 
-                   #! '--acls',
                    '--super',
-                   #! '--archive',
-                   #! '--group',    # preserve group
-                   #! '--owner',    # preserve owner (if run as super-user)
                    '--perms',    # preserve permissions
-                   #! '--stats',    # give some file-transfer stats
-                   #! '--times',    # preserve modification times
+                   '--stats',    # give some file-transfer stats
                    ###
                    '--chmod=ugo=rwX',
-                   '--compress', # compress file data during the transfer
+                   #!'--compress', # we generally fpack fits files
                    '--contimeout=20',
                    '--password-file', '/etc/tada/rsync.pwd',
                    '--recursive',
+                   '--relative',
                    '--remove-source-files',
                    #sender removes synchronized files (non-dir)
                    '--timeout=40', # seconds
-                   '--verbose',
-                   source_root, sync_root]
+                   #! '--verbose',
+                   #! source_root, sync_root]
+                   (str(PurePath(newfname).parent).replace(source_root,
+                                                           source_root+'/.')
+                    + '/'),
+                   sync_root
+                   ]
         diag.dbgcmd(cmdline)
         tic = time.time()
         out = subprocess.check_output(cmdline,
@@ -132,6 +137,7 @@ def network_move(rec, qname, **kwargs):
         return False
 
     # successfully transfered to Valley
+    logging.debug('rsync output:{}'.format(out))
     logging.info('Successfully moved file from {} to {}'
                  .format(newfname, sync_root))
     mirror_fname = os.path.join(valley_root,

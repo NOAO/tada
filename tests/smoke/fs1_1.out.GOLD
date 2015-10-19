@@ -1,1 +1,2 @@
+EXECUTED: fits_submit -p smoke  /sandbox/tada/tests/smoke/data/uofa-mandle.jpg
 Cannot ingest non-FITS file: /sandbox/tada/tests/smoke/data/uofa-mandle.jpg

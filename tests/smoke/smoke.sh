@@ -60,7 +60,7 @@ function dqout () {
 }
 
 echo ""
-echo "Starting tests in \"$dir\" ..."
+echo "Starting tests in \"$SCRIPT\" ..."
 echo ""
 echo ""
 

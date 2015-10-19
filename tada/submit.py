@@ -422,6 +422,10 @@ def main():
                         type=int,
                         help='Seconds to wait for Archive to respond',
                         )
+    parser.add_argument('--trace',
+                        action='store_true',
+                        help='Produce stack trace on error')
+
     parser.add_argument('--logconf',
                         help='Logging configuration file (YAML format).'
                         '[Default={}]'.format(logconf),
@@ -472,6 +476,7 @@ def main():
                   personality_files=pers_list,
                   moddir=args.moddir,
                   timeout=args.timeout,
+                  trace=args.trace,
                   qcfg=qcfg
                   )
     

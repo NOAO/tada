@@ -23,8 +23,7 @@ from astropy.utils.exceptions import AstropyWarning, AstropyUserWarning
 from . import file_naming as fn
 from . import exceptions as tex
 from . import hdr_calc_funcs as hf
-from . import exceptions as tex
-
+from . import scrub
 
 #DOC: vvv
 # All bets are off in the original FITS file does not contain all of these.
@@ -398,7 +397,7 @@ def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True, **kwargs):
     for calcfunc in calc_funcs:
         new = calcfunc(chg, **kwargs)
         chg.update(new)
-        logging.debug('new field values={}'.format(new))    
+        logging.debug('MOD:new field values={}'.format(new))    
     #! logging.debug('updated field values={}'.format(chg))    
     #! chg, dateobs = fc.calc_hdr(hdr, fname, **options)
     try:
@@ -434,16 +433,21 @@ def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True, **kwargs):
 
 
 def fix_hdr(hdr, fname, options, opt_params, **kwargs):
-    '''Modify header dict in place to suit Archive Ingest. Return fields needed to construct
- new filename that fullfills standards
+    '''Modify header dict in place to suit Archive Ingest. Return fields
+ needed to construct new filename that fullfills standards.
+
     options :: e.g. {'INSTRUME': 'KOSMOS', 'OBSERVAT': 'KPNO'}
-'''
+
+    '''
     orig_fullname = opt_params.get('filename',
                                    hdr.get('DTACQNAM',
                                            '<no filename option provided>'))
     for k,v in options.items():
         hdr[k] = v
-    
+
+    errors = scrub.scrub_hdr(hdr)
+    tex.BadFieldContent(errors)
+
     # Validate after explicit overrides, before calculated fields.
     # This is because calc-funcs may depend on required fields.
     #!validate_raw_hdr(hdr)
@@ -463,8 +467,8 @@ def fix_hdr(hdr, fname, options, opt_params, **kwargs):
     logging.debug('calc_funcs={}'.format(calc_funcs))
     for calcfunc in calc_funcs:
         new = calcfunc(hdr, **kwargs)
-        hdr.update(new)
         logging.debug('new field values={}'.format(new))    
+        hdr.update(new)
     try:
         dateobs = dt.datetime.strptime(hdr['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
     except:
@@ -717,12 +721,17 @@ def fits_compliant(fits_file_list,
                               sorted(missing_recommended),
                               exception_cnt,
                   ))
+    # END for ffile
 
     if (verbose and (bad > 0)):
         print('Non-complaint files: {}'.format(', '.join(bad_files)))
 
     if len(fits_file_list) > 0:
         recom_cnt = 0 if ignore_recommended else len(all_missing_recommended)
+        #!print('DBG: amr={}, amc={}, arc={}'
+        #!      .format(len(all_missing_raw),
+        #!              len(all_missing_cooked),
+        #!              recom_cnt))
         if (len(all_missing_raw) + len(all_missing_cooked)+ recom_cnt) > 0:
             print('Fields missing from at least one file:\n'
                   '   Raw:         {}\n'

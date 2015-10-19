@@ -22,3 +22,8 @@ class InsufficientArchiveHeader(Exception):
 class BadFieldContent(Exception):
     "A FITS header field value has bad content."
     pass
+
+class SubmitException(Exception):
+    "Something went wrong with submit to archive"
+    pass
+

@@ -11,7 +11,7 @@ tadadir=$(dirname $testdir)
 tdata=$SCRIPTDIR/data
 # tdata=/sandbox/tada/tests/smoke/data
 
-echo "tadadir=$tadadir, SCRIPTDIR=$SCRIPTDIR"
+echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
 
 dir=$SCRIPTDIR
 origdir=`pwd`
@@ -24,12 +24,15 @@ return_code=0
 SMOKEOUT="README-smoke-results.fits_submit.txt"
 
 echo ""
-echo "Starting tests in \"$dir\" ..."
+echo "Starting tests in \"$SCRIPT\" ..."
 echo ""
+if curl -s -S "http://mars.sdm.noao.edu:8000/provisional/rollback/" > /dev/null
+then
+    echo "REMOVED all provisional files before starting."
+else
+    echo "COULD NOT remove all provisional files before starting."    
+fi
 echo ""
-
-echo "Remove all provisional files before starting."
-curl -s -S "http://mars.sdm.noao.edu:8000/provisional/rollback/"
 
 ###########################################
 ### fits_compliant
@@ -62,7 +65,10 @@ function fsubmit () {
         echo ""
         echo "Successful ingest. Added $archfile to PROVISIONAL list via ws"
     else
-       echo $msg 2>&1
+        #! >&2 echo "EXECUTED: fits_submit -p smoke $pers $ffile"  
+        #! >&2 echo $msg
+        echo "EXECUTED: fits_submit -p smoke $pers $ffile"  
+        echo $msg
     fi
     return $status
 }
@@ -78,7 +84,7 @@ testCommand fs2_1 "fsubmit $tdata/k4k_140922_234607_zri.fits.fz" "^\#" n
 testCommand fs2b_1 "fsubmit $tdata/k4k_140922_234607_zri.fits.fz" "^\#" n 2
 
 ## bad format for DATE-OBS
-testCommand fs3_1 "fsubmit $tdata/kp109391.fits.fz" "^\#" n 1
+testCommand fs3_1 "fsubmit $tdata/kp109391.fits.fz" "^\#"  n 2
 
 ## FITS made compliant via passed personality options; compress on-the-fly
 ## (ingest success)
@@ -106,6 +112,7 @@ testCommand ps2_1 "psubmit $tdata/c4d_130901_031805_oow_g_d2.fits.fz" "^\#" n
 
 
 
+
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"
 #!exit $return_code
@@ -113,6 +120,14 @@ testCommand ps2_1 "psubmit $tdata/c4d_130901_031805_oow_g_d2.fits.fz" "^\#" n
 
 
 ##############################################################################
+
+#!if curl -s -S "http://mars.sdm.noao.edu:8000/provisional/stuff/" > /dev/null
+#!then
+#!    echo "STUFFED all references containing 'TADA' into provisional."
+#!else
+#!    echo "COULD NOT stuff references containing 'TADA' into provisional."
+#!fi
+
 
 rm $SMOKEOUT 2>/dev/null
 if [ $return_code -eq 0 ]; then
