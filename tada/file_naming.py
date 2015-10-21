@@ -216,6 +216,7 @@ def generate_archive_path(hdr, source='raw'):
     '''Generate filename irods path sufficient for Portal staged FTP
 functioning. All modifications to hdr should be done before calling
 this function.'''
+    #logging.debug('DBG: generate_archive_path({},source={}'.format(hdr,source))
     if source == 'raw':
         return PurePath('/noao-tuc-z1/mtn',
                          hdr['DTCALDAT'].replace('-',''),
@@ -233,4 +234,4 @@ this function.'''
                         hdr['PLQNAME'])
     else:
         raise Exception('Unrecognized source type: "{}"'.format(source))
-    return None
+    # END

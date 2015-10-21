@@ -117,8 +117,8 @@ RETURN: irods location of hdr file.
 
     options = persona_options
     opt_params = persona_params
-    logging.debug('prep_for_ingest(): options={}, opt_params={}'
-                  .format(options, opt_params))
+    #!logging.debug('prep_for_ingest(): options={}, opt_params={}'
+    #!              .format(options, opt_params))
     
     # +++ API: under-under parameters via lp options
     jidt = opt_params.get('jobid_type',None)  # plain | seconds | (False)
@@ -171,14 +171,11 @@ RETURN: irods location of hdr file.
         hdr['DTNSANAM'] = new_basename
 
         new_ipath = fn.generate_archive_path(hdr, source=source) / new_basename
-        logging.debug('new_basename={}, new_ipath={}'
-                      .format(new_basename, new_ipath))
         ext = fu.fits_extension(new_basename)
-        logging.debug('ext={}'.format(ext))
         #!new_ipath = new_ipath / new_basename
         new_ifname = str(new_ipath)
         new_ihdr = new_ifname.replace(ext,'.hdr')
-        logging.debug('new_ifname={}, new_ihdr={}'.format(new_ifname, new_ihdr))
+        #logging.debug('new_ifname={},new_ihdr={}'.format(new_ifname, new_ihdr))
 
         # Print without blank cards or trailing whitespace
         hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
@@ -229,7 +226,7 @@ RETURN: irods location of hdr file.
     # At this point both FITS and HDR are in archive331
     #
 
-    logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
+    #!logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
     return new_ihdr, new_ifname, orig_fullname
     # END prep_for_ingest()
 
@@ -352,6 +349,7 @@ def direct_submit(fitsfile,
         po, pp = fu.get_personality_dict(pf)        
         popts.update(po)
         pprms.update(pp)
+    pprms['filename'] = fitsfile
 
     os.makedirs(moddir, exist_ok=True)
     newfile = shutil.copy(fitsfile, moddir)
@@ -366,7 +364,7 @@ def direct_submit(fitsfile,
     except Exception as err:
         if trace:
             traceback.print_exc()
-        statusmsg = str(err) + '!!!'
+        statusmsg = str(err)
         success = False
         statuscode = 1
         sys.exit(statusmsg)

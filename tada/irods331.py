@@ -56,7 +56,7 @@ irodsCwd /noao-tuc-z1/home/cache
 def irods_put331(local_fname, irods_fname):
     "Copy local_fname to irods_fname, creating dirs if needed."
     tag='irods_put331'
-    logging.debug('{}({}, {})'.format(tag, local_fname, irods_fname))
+    #!logging.debug('{}({}, {})'.format(tag, local_fname, irods_fname))
     #!logging.debug('   irods_put331 env:{})'.format(os.environ))
     icmdpath = ('/usr/local/share/applications/irods3.3.1/iRODS/clients'
                 '/icommands/bin')
@@ -84,7 +84,7 @@ def irods_get331( irods_fname, local_fname):
                                 stderr=subprocess.DEVNULL,
         )
     except subprocess.CalledProcessError as ex:
-        logging.debug('FAILED {}: {}; {}'
+        logging.debug('did not do {}: {}; {}'
                       .format(tag, ex, ex.output.decode('utf-8')))
         return False
     

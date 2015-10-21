@@ -325,7 +325,7 @@ def validate_dateobs_content(dateobs, datestr):
 
 def validate_raw_hdr(hdr, orig_fullname):
     missing = missing_in_raw_hdr(hdr)
-    logging.debug('EXECUTE fu.validate_raw_hdr(); missing={}'.format(missing))
+    #!logging.debug('EXECUTE fu.validate_raw_hdr(); missing={}'.format(missing))
     if len(missing) > 0:
         raise tex.InsufficientRawHeader(
             'Raw FITS header is missing required metadata fields ({}) '
@@ -445,8 +445,8 @@ def fix_hdr(hdr, fname, options, opt_params, **kwargs):
     for k,v in options.items():
         hdr[k] = v
 
-    errors = scrub.scrub_hdr(hdr)
-    tex.BadFieldContent(errors)
+    scrub_errors = scrub.scrub_hdr(hdr)
+    #tex.BadFieldContent(scrub_errors)
 
     # Validate after explicit overrides, before calculated fields.
     # This is because calc-funcs may depend on required fields.
@@ -464,10 +464,10 @@ def fix_hdr(hdr, fname, options, opt_params, **kwargs):
                 raise Exception('Function name "{}" given in option "calchdr"'
                                 ' does not exist in tada/hdr_calc_funcs.py'
                                 .format(funcname))
-    logging.debug('calc_funcs={}'.format(calc_funcs))
+    logging.debug('calc_funcs={}'.format([f.__name__ for f in calc_funcs]))
     for calcfunc in calc_funcs:
         new = calcfunc(hdr, **kwargs)
-        logging.debug('new field values={}'.format(new))    
+        logging.debug('[{}] new field values={}'.format(calcfunc.__name__, new))
         hdr.update(new)
     try:
         dateobs = dt.datetime.strptime(hdr['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
@@ -477,6 +477,13 @@ def fix_hdr(hdr, fname, options, opt_params, **kwargs):
             .format(hdr['DATE-OBS'], orig_fullname))
     validate_dateobs_content(dateobs, hdr['DATE-OBS'])
     
+    if hdr.get('DTPROPID') == 'BADSCRUB':
+        raise tex.SubmitException(
+            'Could not create good DTPROPID from PROPID ({}) or schedule '
+            'lookup for header of: {}'
+            .format(hdr.get('PROPID'), orig_fullname))
+        
+
     ext = fits_extension(fname)
     return (hdr.get('DTSITE', 'na'),
             hdr.get('DTTELESC', 'na'),
@@ -496,7 +503,7 @@ def show_hdr_values(msg, hdr):
     print()
 
 def get_options_dict(options_file):
-    logging.debug('EXECUTING: get_options_dict({})'.format(options_file))
+    #!logging.debug('EXECUTING: get_options_dict({})'.format(options_file))
 
     if not os.path.exists(options_file):
         logging.warning('options_file does not exist: {}'.format(options_file))
@@ -516,8 +523,8 @@ def get_options_dict(options_file):
             opt_params[k[2:]] = v
         else:
             options[k[1:]] = v.replace('_', ' ')                
-    logging.debug('get_options_dict({}) => popts_dict={}, pprms_dict={}'
-                  .format(options_file, options, opt_params))
+    #!logging.debug('get_options_dict({}) => popts_dict={}, pprms_dict={}'
+    #!              .format(options_file, options, opt_params))
     return options, opt_params
 
 def get_personality_dict(personality_file):

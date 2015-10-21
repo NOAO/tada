@@ -24,38 +24,52 @@ from . import hdr_calc_utils as ut
 ##############################################################################
 
 def ws_lookup_propid(date, telescope, **kwargs):
+    logging.debug('ws_lookup_propid; kwargs={}'.format(kwargs))
     host=kwargs.get('mars_host')
     port=kwargs.get('mars_port')
-    if host == None:
-        return dict()
-    if port == None:
-        return dict()    
+    if host == None or port == None:
+        logging.error('Missing host ({}) or port ({}) for MARS.'
+                      .format(host,port))
+        return None
 
-    # tele, date = ('ct13m', '2014-12-25')
-    date = orig.get('DTCALDAT')
-    tele = orig.get('DTTELESC')
-    propid = ut.http_get_propid_from_schedule(tele, date, host=host, port=port)
+    # telescope, date = ('ct13m', '2014-12-25')
+    logging.debug('WS schedule lookup; DTCALDAT="{}", DTTELESC="{}"'
+                  .format(date,telescope))
+    propid = ut.http_get_propid_from_schedule(telescope, date,
+                                              host=host, port=port)
     return propid
     
 ##############################################################################
 
 
 def trustHdrPropid(orig, **kwargs):
-    if orig.get('DTPROPID'):
-        return orig
+    propid = orig.get('DTPROPID')
+    if propid != 'BADSCRUB':
+        return {'DTPROPID': propid}
     else:
-        return {'DTPROPID':
-                ws_lookup_propid(orig.get('DTCALDAT'), orig.get('DTTELESC'))}
+        propid = ws_lookup_propid(orig.get('DTCALDAT'), orig.get('DTTELESC'),
+                                  **kwargs)
+        if propid == None:
+            return {}
+        else:
+            return {'DTPROPID': propid}
+                
 
 
 def trustSchedPropid(orig, **kwargs):
-    pid = ws_lookup_propid(orig.get('DTCALDAT'), orig.get('DTTELESC'))
-    if pid != orig.get('DTPROPID'):
-        logging.warning('PROPIID values from header ({}) and schedule ({}) '
-                        'did not match. Using value from schedule.'
-                        .format(orig.get('DTPROPID'), pid))
-    return {'DTPROPID':
-            ws_lookup_propid(orig.get('DTCALDAT'), orig.get('DTTELESC'))}
+    logging.debug('EXECUTING: trustSchedPropid')
+
+    pid = ws_lookup_propid(orig.get('DTCALDAT'), orig.get('DTTELESC'),
+                           **kwargs)
+    #!if pid != orig.get('DTPROPID'):
+    #!    logging.warning('PROPIID values from header ({}) and schedule ({}) '
+    #!                    'did not match. Using value from schedule.'
+    #!                    .format(orig.get('DTPROPID'), pid))
+    if pid == None:
+        return {}
+    else:
+        return {'DTPROPID': pid}
+
     
 
 def lookupPROPID(orig, **kwargs):
@@ -66,7 +80,8 @@ Depends on: DTCALDAT, DTTELESC, (DTPROPID)'''
         return dict()
 
     new = {'DTPROPID': ws_lookup_propid(orig.get('DTCALDAT'),
-                                        orig.get('DTTELESC'))}
+                                        orig.get('DTTELESC'),
+                                        **kwargs)}
     return new
 
 def tsepDATEOBS(orig, **kwargs):

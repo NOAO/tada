@@ -1,7 +1,7 @@
 '''Clean the values for fields if possible.
 
-All SCRUBBED functions ("scrubbed_FIELDNAME") have the same signature:
-scrubbed_FIELDNAME(origValue,hdr) => goodValue
+All SCRUBBED functions ("scrub_FIELDNAME") have the same signature:
+scrub_FIELDNAME(origValue,hdr) => goodValue
 RETURN: None if value cannot be coerced to good value, else return good value.
 SIDE-EFFECT; hdr may be modified
 '''
@@ -27,9 +27,10 @@ import collections
 #  15B-0115
 
 
-valid_dtpropids = set(['wiyn','noao','soar','smarts'])
+valid_dtpropids = set(['wiyn','noao','soar','smarts', 'BADSCRUB'])
 propidRE = re.compile(r'20\d{2}[AB]-\d{4}')
-def scrubbed_dtpropid(value, hdr):
+def scrub_propid(value, hdr):
+    #! logging.debug('DBG: scrub_propid({},{})'.format(value, hdr))
     if value in valid_dtpropids:
         return value
     if propidRE.match(value):
@@ -39,8 +40,9 @@ def scrubbed_dtpropid(value, hdr):
         new = '20'+value
         if propidRE.match(new):
             return new
-
-    return None
+    # For Propid, we MAY do schedule lookup downstream. Always 
+    # do lookup if DTPROPID=BADSCRUB.
+    return 'BADSCRUB'
 
 
 
@@ -130,12 +132,12 @@ yyyy-mm-ddThh:mm:ss.nnnnnnnnn'''
     #!return dateobs
     return dtstr
 
-def scrubbed_dateobs(UNUSED_value, hdr):
+def scrub_dateobs(UNUSED_value, hdr):
     return(normalize_dateobs(hdr))
 
 ##############################################################################
 def scrub_hdr(hdr):
-    'SIDE-EFFECT: hdr modified where fields need scrubbing'
+    'SIDE-EFFECT: hdr modified where fields need scrubbbing'
     errors = []
     for k,(func,newname,savename) in scrub_fields.items():
         origValue = hdr.get(k)
@@ -147,17 +149,17 @@ def scrub_hdr(hdr):
             errors.append('Could not coerce {} to a good value for field {}'
                           .format(origValue,k))
         else:
-            if goodValue != origValue:
-                logging.debug('SCRUB: Replacing {} value {} -> {}'.format(k,origValue, goodValue))
-                if savename != None:
-                    hdr[savename] = origValue
-                hdr[newname] = goodValue
+            hdr[newname] = goodValue
+            logging.debug('SCRUB: Setting {}= {}'.format(newname, goodValue))
+            if goodValue != origValue and savename != None:
+                hdr[savename] = origValue
     return errors
 
 
 scrub_fields = collections.OrderedDict([
-    # OrigName   Function              NewName      SaveName
-    ('DTPROPID', (scrubbed_dtpropid, 'DTPROPID',   None      )),
-    ('DATE-OBS', (scrubbed_dateobs,  'DATE-OBS',  'ODATEOBS' )),
+    # OrigName   Function          NewName      SaveName
+    ('PROPID',   (scrub_propid,   'DTPROPID',   None      )),
+    ('AAPROPID', (scrub_propid,   'DTPROPID',   None      )),
+    ('DATE-OBS', (scrub_dateobs,  'DATE-OBS',  'ODATEOBS' )),
 ])
 
