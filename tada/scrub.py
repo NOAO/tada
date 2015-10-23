@@ -52,16 +52,13 @@ def scrub_propid(value, hdr):
 # See also: hdr_calc_funcs.py
 #
 
-dateobs_values_from_past_hdrs = [
-    '2014-04-25',
-    '2014-09-22T18:02:59',
-    '2004-10-16T19:53:04.0',
-    '2005-03-09T03:23:30.5',
-    '2014-12-22 12:53:01.211',
-    '2015-02-22T18:11:35.088305',
-    '2015-05-07T08:55:56.429488359',
-    ]
-
+## dateobs_values_from_past_hdrs = ['2014-04-25',
+##                                  '2014-09-22T18:02:59',
+##                                  '2004-10-16T19:53:04.0',
+##                                  '2005-03-09T03:23:30.5',
+##                                  '2014-12-22 12:53:01.211',
+##                                  '2015-02-22T18:11:35.088305',
+##                                  '2015-05-07T08:55:56.429488359',  ]
 
 # This parses the known examples.  But its possible that DATE-OBS is
 # "allowed" to be any ISO8601 date/time.  ISO allows LOTS of things
@@ -107,10 +104,21 @@ def parse_dateobs(dtstr):
         time = dt.time()
     return dt.datetime.combine(date,time)
 
+def validate_dateobs_content(dateobs, datestr):
+    'DATE-OBS content: Correct century and Not Future'
+    if str(dateobs.year)[:2] != '20':
+        raise tex.BadFieldContent(
+        'DATE-OBS is not current century.  Value={}' .format(datestr))
+    if dateobs > dt.datetime.now():
+        raise tex.BadFieldContent(
+            'DATE-OBS is in the future.  Value={}'.format(datestr))
+    return True    
+
 def normalize_dateobs(hdr):
     '''Return a DATE-OBS value that always has the same format: 
 yyyy-mm-ddThh:mm:ss.nnnnnnnnn'''
 
+    #dateobs = dt.datetime.strptime(chg['DATE-OBS'],'%Y-%m-%dT%H:%M:%S.%f')    
     if 'DATE-OBS' not in hdr:
         return None
     hdr['ODATEOBS'] = hdr['DATE-OBS'] # save original
@@ -123,14 +131,18 @@ yyyy-mm-ddThh:mm:ss.nnnnnnnnn'''
         else:
             logging.warning('INSTRUME=90prime contains DATE-OBS without TIME '
                             'so using TIME from TIME-OBS.')
-            dateobs = parse_dateobs('{}T{}'.format(hdr['DATE-OBS'], hdr['TIME-OBS']))
+            dateobs = parse_dateobs('{}T{}'.format(hdr['DATE-OBS'],
+                                                   hdr['TIME-OBS']))
     else:
         dateobs = parse_dateobs(hdr['DATE-OBS'])
 
     dtstr = (dateobs+dt.timedelta(microseconds=1)).isoformat()
+    # => e.g. '2002-12-25T00:00:00.000001'
+    validate_dateobs_content(dateobs, dtstr)
     hdr['DATE-OBS'] = dtstr   # save normalized version
     #!return dateobs
     return dtstr
+
 
 def scrub_dateobs(UNUSED_value, hdr):
     return(normalize_dateobs(hdr))

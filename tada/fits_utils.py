@@ -31,8 +31,30 @@ RAW_REQUIRED_FIELDS = set([
     'DATE-OBS',
     #!'OBSERVAT',
     'TELESCOP',
-
     # 'PROPOSER', #!!! will use PROPID when PROPOSER doesn't exist in raw hdr
+])
+
+
+# These fields are required to construct the Archive filename and path.
+# Some may be common with INGEST_REQUIRED (below).
+FILENAME_REQUIRED_FIELDS = set([
+    # for BASENAME
+    'DTSITE',
+    'DTTELESC',
+    'DTINSTRU',
+    'OBSTYPE',
+    'PROCTYPE',
+    'PRODTYPE',
+
+    # for PATH (dome)
+    'DTCALDAT',
+    'DTTELESC',
+    'DTPROPID',
+
+    # for PATH (pipeline)
+    #! 'DTSUBMIT',
+    #! 'PLQUEUE',
+    #! 'PLQNAME',
 ])
 
 # To be able to ingest a fits file into the archive, all of these must
@@ -43,6 +65,7 @@ INGEST_REQUIRED_FIELDS = set([
     'SIMPLE',
     'INSTRUME', # !!! moved from RAW_REQUIRED to satisfy:
                 # /scraped/mtn_raw/ct15m-echelle/chi150724.1000.fits
+    'OBSERVAT', # needed for std filename
     'DTPROPID', # observing proposal ID
     'DTCALDAT', # calendar date from observing schedule
     'DTTELESC', # needed to construct full file path in archive
@@ -51,8 +74,6 @@ INGEST_REQUIRED_FIELDS = set([
     'DTSITE',   # Required for standard file name (pg 9, "File Naming Conv...")
     'DTTELESC', # Required for standard file name (pg 9, "File Naming Conv...")
     'DTINSTRU', # Required for standard file name (pg 9, "File Naming Conv...")
-    'OBSID',
-
 ])
 
 # We should try to fill these fields were practical. They are used in
@@ -73,9 +94,9 @@ INGEST_RECOMMENDED_FIELDS = set([
     'DTSITE',
     'DTTELESC',
     'DTTITLE',
-    'OBSERVAT',
     'PROCTYPE',
     'PRODTYPE',
+    'OBSID',
 #   'DTACCOUN', # observing account name
 #   'DTACQUIS', # host name of data acquisition computer
 #   'DTOBSERV', # scheduling institution
@@ -137,6 +158,11 @@ def missing_in_raw_hdr(hdr):
     """Header from original FITS input to TADA doesn't contain minimum
  acceptable fields."""
     return missing_in_hdr(hdr, RAW_REQUIRED_FIELDS)
+
+def missing_in_filename_hdr(hdr):
+    """Header from FITS doesn't contain minimum fields acceptable for
+ generating standard filename."""
+    return missing_in_hdr(hdr, FILENAME_REQUIRED_FIELDS)
 
 def missing_in_archive_hdr(hdr):
     """Header from FITS doesn't contain minimum fields acceptable for
@@ -313,15 +339,6 @@ CHECKSUM= 'mhElmh9lmhClmh9l'    /  ASCII 1's complement checksum
 DATASUM = '0         '          /  checksum of data records                 
 """    
 
-def validate_dateobs_content(dateobs, datestr):
-    'DATE-OBS content: Correct century and Not Future'
-    if str(dateobs.year)[:2] != '20':
-        raise tex.BadFieldContent(
-        'DATE-OBS is not current century.  Value={}' .format(datestr))
-    if dateobs > dt.datetime.now():
-        raise tex.BadFieldContent(
-            'DATE-OBS is in the future.  Value={}'.format(datestr))
-    return True    
 
 def validate_raw_hdr(hdr, orig_fullname):
     missing = missing_in_raw_hdr(hdr)
@@ -335,7 +352,7 @@ def validate_raw_hdr(hdr, orig_fullname):
     return True    
 
 def validate_cooked_hdr(hdr, orig_fullname):
-    missing = missing_in_archive_hdr(hdr)
+    missing = missing_in_archive_hdr(hdr)  | missing_in_filename_hdr(hdr)
     if len(missing) > 0:
         raise tex.InsufficientArchiveHeader(
             'Modified FITS header is missing required metadata fields ({}) '
@@ -352,92 +369,84 @@ def validate_recommended_hdr(hdr, orig_fullname):
             .format(', '.join(sorted(missing)), orig_fullname))
     return True
 
-def fits_extension(fname):
-    '''Return extension of any file matching <basename>.fits.*, basename.fits
-Extension may be: ".fits.fz", ".fits", ".fits.gz", etc'''
-    _, ext = os.path.splitext(fname)
-    if ext != '.fits':
-        _, e2  = os.path.splitext(_)
-        ext = e2 + ext
-    return ext
 
 
 
 # SIDE-EFFECTS: fields added to FITS header
 # Used istb/src/header.{h,c} for hints.
 # raw: nhs_2014_n14_299403.fits
-def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True, **kwargs):
-    '''Modify header to suit Archive Ingest. Return fields needed to construct
- new filename that fullfills standards
-    options :: e.g. {'INSTRUME': 'KOSMOS', 'OBSERVAT': 'KPNO'}
-'''
-    orig_fullname = opt_params.get('filename','<no filename option provided>')
-    for k,v in options.items():
-        if forceRecalc or (k not in hdr):
-            hdr[k] = v
-    
-    # Validate after explicit overrides, before calculated fields.
-    # This is because calc-funcs may depend on required fields.
-    #!validate_raw_hdr(hdr)
-
-    calc_param = opt_params.get('calchdr',None)
-    calc_funcs = []
-    if calc_param != None:
-        for funcname in calc_param.split(','):
-            try:
-                func = eval('hf.'+funcname)
-                calc_funcs.append(func)
-            except:
-                #!traceback.print_exc()
-                raise Exception('Function name "{}" given in option "calchdr"'
-                                ' does not exist in tada/hdr_calc_funcs.py'
-                                .format(funcname))
-    logging.debug('calc_funcs={}'.format(calc_funcs))
-    chg = dict(hdr.items()) # plain dictionary of hdr; no FITS specific access
-    for calcfunc in calc_funcs:
-        new = calcfunc(chg, **kwargs)
-        chg.update(new)
-        logging.debug('MOD:new field values={}'.format(new))    
-    #! logging.debug('updated field values={}'.format(chg))    
-    #! chg, dateobs = fc.calc_hdr(hdr, fname, **options)
-    try:
-        dateobs = dt.datetime.strptime(chg['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
-    except:
-        raise tex.SubmitException(
-            'Could not parse DATE-OBS field ({}) in header of: {}'
-            .format(chg['DATE-OBS'], orig_fullname))
-    validate_dateobs_content(dateobs, chg['DATE-OBS'])
-    
-    if forceRecalc:
-        for k,v in chg.items():
-            hdr[k] = v
-    else: # Use existing field if it is present, else use new one
-        for k,v in chg.items():
-            hdr[k] = hdr.get(k,v)
-
-    # If we have what we need in RAW and doing everything we should in
-    # this function, then we should never be missing anything in archive_hdr.
-    # This check is therefore here only to catch programming errors.
-    #!validate_cooked_hdr(hdr)
-    #!validate_recommended_hdr(hdr)
-    
-    ext = fits_extension(fname)
-    return (hdr.get('DTSITE', 'na'),
-            hdr.get('DTTELESC', 'na'),
-            hdr.get('DTINSTRU', 'na'),
-            dateobs, 
-            hdr.get('OBSTYPE', 'nota').lower(),
-            hdr.get('PROCTYPE', 'nota').lower(),
-            hdr.get('PRODTYPE', 'nota').lower(),
-            ext[1:])
+#! def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True, **kwargs):
+#!     '''Modify header to suit Archive Ingest. Return fields needed to construct
+#!  new filename that fullfills standards
+#!     options :: e.g. {'INSTRUME': 'KOSMOS', 'OBSERVAT': 'KPNO'}
+#! '''
+#!     orig_fullname = opt_params.get('filename','<no filename option provided>')
+#!     for k,v in options.items():
+#!         if forceRecalc or (k not in hdr):
+#!             hdr[k] = v
+#!     
+#!     # Validate after explicit overrides, before calculated fields.
+#!     # This is because calc-funcs may depend on required fields.
+#!     #!validate_raw_hdr(hdr)
+#! 
+#!     calc_param = opt_params.get('calchdr',None)
+#!     calc_funcs = []
+#!     if calc_param != None:
+#!         for funcname in calc_param.split(','):
+#!             try:
+#!                 func = eval('hf.'+funcname)
+#!                 calc_funcs.append(func)
+#!             except:
+#!                 #!traceback.print_exc()
+#!                 raise Exception('Function name "{}" given in option "calchdr"'
+#!                                 ' does not exist in tada/hdr_calc_funcs.py'
+#!                                 .format(funcname))
+#!     logging.debug('calc_funcs={}'.format(calc_funcs))
+#!     chg = dict(hdr.items()) # plain dictionary of hdr; no FITS specific access
+#!     for calcfunc in calc_funcs:
+#!         new = calcfunc(chg, **kwargs)
+#!         chg.update(new)
+#!         logging.debug('MOD:new field values={}'.format(new))    
+#!     #! logging.debug('updated field values={}'.format(chg))    
+#!     #! chg, dateobs = fc.calc_hdr(hdr, fname, **options)
+#!     #!try:
+#!     #!    dateobs = dt.datetime.strptime(chg['DATE-OBS'],'%Y-%m-%dT%H:%M:%S.%f')
+#!     #!except:
+#!     #!    raise tex.SubmitException(
+#!     #!        'Could not parse DATE-OBS field ({}) in header of: {}'
+#!     #!        .format(chg['DATE-OBS'], orig_fullname))
+#!     #!validate_dateobs_content(dateobs, chg['DATE-OBS'])
+#!     
+#!     if forceRecalc:
+#!         for k,v in chg.items():
+#!             hdr[k] = v
+#!     else: # Use existing field if it is present, else use new one
+#!         for k,v in chg.items():
+#!             hdr[k] = hdr.get(k,v)
+#! 
+#!     # If we have what we need in RAW and doing everything we should in
+#!     # this function, then we should never be missing anything in archive_hdr.
+#!     # This check is therefore here only to catch programming errors.
+#!     #!validate_cooked_hdr(hdr)
+#!     #!validate_recommended_hdr(hdr)
+#!     
+#!     ext = fits_extension(fname)
+#!     return (hdr.get('DTSITE', 'na'),
+#!             hdr.get('DTTELESC', 'na'),
+#!             hdr.get('DTINSTRU', 'na'),
+#!             dateobs, 
+#!             hdr.get('OBSTYPE', 'nota').lower(),
+#!             hdr.get('PROCTYPE', 'nota').lower(),
+#!             hdr.get('PRODTYPE', 'nota').lower(),
+#!             ext[1:])
 
 
 def fix_hdr(hdr, fname, options, opt_params, **kwargs):
-    '''Modify header dict in place to suit Archive Ingest. Return fields
- needed to construct new filename that fullfills standards.
+    '''
+SIDE-EFFECT: Modify hdr dict in place to suit Archive Ingest. 
+Include fields in hdr needed to construct new filename that fullfills standards.
 
     options :: e.g. {'INSTRUME': 'KOSMOS', 'OBSERVAT': 'KPNO'}
-
     '''
     orig_fullname = opt_params.get('filename',
                                    hdr.get('DTACQNAM',
@@ -470,29 +479,29 @@ def fix_hdr(hdr, fname, options, opt_params, **kwargs):
         logging.debug('[{}] new field values={}'.format(calcfunc.__name__, new))
         hdr.update(new)
     try:
-        dateobs = dt.datetime.strptime(hdr['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
+        dateobs = dt.datetime.strptime(hdr['DATE-OBS'],'%Y-%m-%dT%H:%M:%S.%f')
     except:
         raise tex.SubmitException(
             'Could not parse DATE-OBS field ({}) in header of: {}'
             .format(hdr['DATE-OBS'], orig_fullname))
-    validate_dateobs_content(dateobs, hdr['DATE-OBS'])
+    #!validate_dateobs_content(dateobs, hdr['DATE-OBS'])
     
-    if hdr.get('DTPROPID') == 'BADSCRUB':
+    if hdr.get('DTPROPID') == 'BADSCRUB' or hdr.get('DTPROPID') == 'NOSCHED': 
         raise tex.SubmitException(
             'Could not create good DTPROPID from PROPID ({}) or schedule '
             'lookup for header of: {}'
             .format(hdr.get('PROPID'), orig_fullname))
         
 
-    ext = fits_extension(fname)
-    return (hdr.get('DTSITE', 'na'),
-            hdr.get('DTTELESC', 'na'),
-            hdr.get('DTINSTRU', 'na'),
-            dateobs, 
-            hdr.get('OBSTYPE', 'nota').lower(),
-            hdr.get('PROCTYPE', 'nota').lower(),
-            hdr.get('PRODTYPE', 'nota').lower(),
-            ext[1:])
+    #!old_return = (hdr.get('DTSITE', 'na'),
+    #!              hdr.get('DTTELESC', 'na'),
+    #!              hdr.get('DTINSTRU', 'na'),
+    #!              dateobs, 
+    #!              hdr.get('OBSTYPE', 'nota').lower(),
+    #!              hdr.get('PROCTYPE', 'nota').lower(),
+    #!              hdr.get('PRODTYPE', 'nota').lower(),
+    #!              ext[1:])
+    # END: fix_hdr()
 
 def show_hdr_values(msg, hdr):
     """Show the values for 'interesting' header fields"""
@@ -626,6 +635,13 @@ def fits_compliant(fits_file_list,
               'be attempted, and ingest will be aborted: \n\t{}'
               .format( '\n\t'.join(sorted(RAW_REQUIRED_FIELDS))))
 
+        print('These fields MUST be in hdr to be able to calculate standard '
+              'Archive filename and path. They may '
+              'be calculated from raw fits fields and options provided '
+              'at submit time. If any of these fields are not in hdr after '
+              'calculation, ingest will be aborted: \n\t{}'
+              .format( '\n\t'.join(sorted(FILENAME_REQUIRED_FIELDS))))
+
         print('These fields MUST be in hdr given to Ingest. They may '
               'be calculated from raw fits fields and options provided '
               'at submit time. If any of these fields are not in hdr after '
@@ -655,7 +671,7 @@ def fits_compliant(fits_file_list,
         missing_raw = []
         missing_cooked = []
         missing_recommended = []
-        fname_fields = None
+        #!fname_fields = None
         try:
             #!valid_header(ffile)
             if is_text:
@@ -673,8 +689,7 @@ def fits_compliant(fits_file_list,
             missing_raw = missing_in_raw_hdr(hdr)
             if len(missing_raw) == 0:
                 #!fname_fields = modify_hdr(hdr, ffile, options, opt_params)
-                fname_fields = fix_hdr(hdr, ffile, options, opt_params)
-
+                fix_hdr(hdr, ffile, options, opt_params)
                 missing_cooked = missing_in_archive_hdr(hdr)
                 missing_recommended = missing_in_recommended_hdr(hdr)
         except Exception as err:
@@ -691,8 +706,10 @@ def fits_compliant(fits_file_list,
         if (len(missing_raw) + len(missing_cooked)) > 0:
             valid = False
 
-        if show_stdfname and fname_fields != None:
-            new_basename = fn.generate_fname(*fname_fields)
+        if show_stdfname:
+            new_basename = fn.generate_fname(hdr, fn.fits_extension(ffile),
+                                             orig=ffile,
+                                             require_known=False)
             if not quiet:
                 print('{} produced from {}'.format(new_basename, ffile))
         if show_values:

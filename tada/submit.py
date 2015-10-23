@@ -124,7 +124,6 @@ RETURN: irods location of hdr file.
     jidt = opt_params.get('jobid_type',None)  # plain | seconds | (False)
     tag = opt_params.get('job_tag','')
     source = opt_params.get('source','raw')   # pipeline | (dome)
-    warn_unknown = opt_params.get('warn_unknown', False) # 1 | (False)
     orig_fullname = opt_params.get('filename','<unknown>')
 
     hdr_ifname = "None"
@@ -158,23 +157,23 @@ RETURN: irods location of hdr file.
             tag = jobid if tag == '' else (jobid + '_' + tag)
         #! else:
             #!jobid = None
+        ext = fn.fits_extension(orig_fullname)
         if source == 'pipeline':
             new_basename = hdr['PLDSID'] + ".fits.fz"
             logging.debug('Source=pipeline so using basename:{}'
                           .format(new_basename))
         else:
-            new_basename = fn.generate_fname(*fname_fields,
+            new_basename = fn.generate_fname(hdr, ext,
                                              #! jobid=jobid,
                                              tag=tag,
-                                             wunk=warn_unknown,
                                              orig=mirror_fname)
         hdr['DTNSANAM'] = new_basename
 
         new_ipath = fn.generate_archive_path(hdr, source=source) / new_basename
-        ext = fu.fits_extension(new_basename)
+        ext = fn.fits_extension(new_basename)
         #!new_ipath = new_ipath / new_basename
         new_ifname = str(new_ipath)
-        new_ihdr = new_ifname.replace(ext,'.hdr')
+        new_ihdr = new_ifname.replace(ext,'hdr')
         #logging.debug('new_ifname={},new_ihdr={}'.format(new_ifname, new_ihdr))
 
         # Print without blank cards or trailing whitespace

@@ -24,6 +24,9 @@ from . import hdr_calc_utils as ut
 ##############################################################################
 
 def ws_lookup_propid(date, telescope, **kwargs):
+    """Return propid from schedule 
+-OR- None if cannot reach service
+-OR- '' if service reachable but lookup fails."""
     logging.debug('ws_lookup_propid; kwargs={}'.format(kwargs))
     host=kwargs.get('mars_host')
     port=kwargs.get('mars_port')
@@ -57,7 +60,8 @@ def trustHdrPropid(orig, **kwargs):
 
 
 def trustSchedPropid(orig, **kwargs):
-    logging.debug('EXECUTING: trustSchedPropid')
+    '''Propid from schedule trumps header.  
+But if not found in schedule, use header'''
 
     pid = ws_lookup_propid(orig.get('DTCALDAT'), orig.get('DTTELESC'),
                            **kwargs)
@@ -66,10 +70,11 @@ def trustSchedPropid(orig, **kwargs):
     #!                    'did not match. Using value from schedule.'
     #!                    .format(orig.get('DTPROPID'), pid))
     if pid == None:
-        return {}
+        return {'DTPROPID': 'NOSCHED'}
+    elif pid == '':
+        return {'DTPROPID': orig.get('DTPROPID', orig.get('PROPID', 'MISSCHED'))}
     else:
         return {'DTPROPID': pid}
-
     
 
 def lookupPROPID(orig, **kwargs):
@@ -181,7 +186,7 @@ def DTTELESCfromINSTRUME(orig, **kwargs):
 #!        tele, dt_str = orig['OBSID'].split('.')
 #!        new['DTTELESC'] = tele
 
-    new['DTINSTRU'] = instrument # eg. 'NEWFIRM'
+    #! new['DTINSTRU'] = instrument # eg. 'NEWFIRM'
     return new
 
 

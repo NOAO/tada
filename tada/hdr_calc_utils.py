@@ -7,15 +7,15 @@ def http_get_propid_from_schedule(telescope, date, host=None, port=8000):
     'Use MARS web-service to get PROPID given: Telescope, Date of observation.'
     url = ('http://{}:{}/schedule/propid/{}/{}/'
            .format(host, port, telescope, date))
-    logging.debug('MARS: PROPID from schedule; url = {}'.format(url))
-    response = ''
+    logging.debug('MARS: get PROPID from schedule; url = {}'.format(url))
+    propid = None
     try:
         with urllib.request.urlopen(url,timeout=4) as f:
             response = f.read().decode('utf-8')
-            logging.debug('MARS: server response: {}'.format(response))
-            
+            logging.debug('MARS: server response="{}"'.format(response))
+            return response
     except:
-        logging.error('MARS: Could not retrieve DTPROPID from schedule using {}'
+        logging.error('MARS: Error contacting schedule service via {}'
                       .format(url))
-    propid = 'NOSCHED' if response == '' else response
+        return None
     return propid

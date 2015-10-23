@@ -27,3 +27,7 @@ class SubmitException(Exception):
     "Something went wrong with submit to archive"
     pass
 
+
+class NotInLut(Exception):
+    "A used key was not found in an internal LookUp Table"
+    pass
