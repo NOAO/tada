@@ -15,9 +15,11 @@ $SCRIPTDIR/smoke.direct.sh
 
 # Mountain (dome) or Valley
 $SCRIPTDIR/smoke.sh
-$SCRIPTDIR/smoke.raw_post.sh
+#!$SCRIPTDIR/smoke.raw_post.sh
 
-echo "Remember to try Portal to prove stated files can be retrieved!"
+echo "Remember to:"
+echo "  1. try Portal to prove stated files can be retrieved!"
+echo "  2. verify Archive filenames look ok: http://localhost:8000/provisional/"
 
 
 

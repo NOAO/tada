@@ -90,18 +90,28 @@ Depends on: DTCALDAT, DTTELESC, (DTPROPID)'''
     return new
 
 def tsepDATEOBS(orig, **kwargs):
-    return {'DATE-OBS': orig['DATE-OBS'].replace(' ','T')}
+    if 'ODATEOBS' in orig:
+        logging.warning('Overwriting existing ODATEOBS!')
+    return {'ODATEOBS': orig['DATE-OBS'],            # save original
+            'DATE-OBS': orig['DATE-OBS'].replace(' ','T')  }
     
 def addTimeToDATEOBS(orig, **kwargs):
     'Use TIME-OBS for time portion of DATEOBS. Depends on: DATE-OBS, TIME-OBS'
     if ('T' in orig['DATE-OBS']):
         new = dict()
     else:
+        if 'ODATEOBS' in orig:
+            logging.warning('Overwriting existing ODATEOBS!')
         new = {'ODATEOBS': orig['DATE-OBS'],            # save original
                'DATE-OBS': orig['DATE-OBS'] + 'T' + orig['TIME-OBS']
            }
     return new
-        
+
+def DATEOBSfromDATE(orig, **kwargs):
+    if 'ODATEOBS' in orig:
+        logging.warning('Overwriting existing ODATEOBS!')
+    return {'ODATEOBS': orig['DATE-OBS'],            # save original
+            'DATE-OBS': orig['DATE']+'.0' }
 
 #DATEOBS is UTC, so convert DATEOBS to localdate and localtime, then:
 #if [ $localtime > 12:00]; then DTCALDAT=localdate; else DTCALDAT=localdate-1 

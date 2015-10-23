@@ -7,6 +7,7 @@ SIDE-EFFECT; hdr may be modified
 '''
 import re
 import datetime as dt
+import time as tt
 import logging
 import collections
 
@@ -74,7 +75,7 @@ dateobsRE = re.compile(r'''
 ''', flags=re.VERBOSE)
 
 # NB: value should be in UTC
-def parse_dateobs(dtstr):
+def parse_dateobs(dtstr, timestr=None):
     'Return datetime object representing value of DATE-OBS'
 
     m = dateobsRE.match(dtstr)
@@ -97,12 +98,19 @@ def parse_dateobs(dtstr):
     if md['hour']:
         nano = float(md['nano']) if md['nano'] else 0
         time = dt.time(int(md['hour']), int(md['min']), int(md['sec']), 0)
-
+        return dt.datetime.combine(date,time)
+    elif timestr != None:
+        if len(timestr) > 8:
+            return dt.datetime.strptime(dtstr + 'T' + timestr,
+                                        '%Y-%m-%dT%H:%M:%S.%f')
+        else:
+            return dt.datetime.strptime(dtstr + 'T' + timestr,
+                                        '%Y-%m-%dT%H:%M:%S')
     else:
         #!logging.warning('No TIME found in DATE-OBS ({}), using zeros.'
         #!                .format(dtstr))
-        time = dt.time()
-    return dt.datetime.combine(date,time)
+        #!time = dt.time()
+        return date
 
 def validate_dateobs_content(dateobs, datestr):
     'DATE-OBS content: Correct century and Not Future'
@@ -123,21 +131,24 @@ yyyy-mm-ddThh:mm:ss.nnnnnnnnn'''
         return None
     hdr['ODATEOBS'] = hdr['DATE-OBS'] # save original
 
-    if hdr.get('INSTRUME') == '90prime':
-        if 'TIME-OBS' not in hdr:
-            logging.error('INSTRUME=90prime contains DATE-OBS without TIME '
-                          'and to TIME-OBS exists to use for TIME.')
-            return None
-        else:
-            logging.warning('INSTRUME=90prime contains DATE-OBS without TIME '
-                            'so using TIME from TIME-OBS.')
-            dateobs = parse_dateobs('{}T{}'.format(hdr['DATE-OBS'],
-                                                   hdr['TIME-OBS']))
-    else:
-        dateobs = parse_dateobs(hdr['DATE-OBS'])
+    #!if hdr.get('INSTRUME') == '90prime':
+    #!    if 'TIME-OBS' not in hdr:
+    #!        logging.error('INSTRUME=90prime contains DATE-OBS without TIME '
+    #!                      'and to TIME-OBS exists to use for TIME.')
+    #!        return None
+    #!    else:
+    #!        logging.warning('INSTRUME=90prime contains DATE-OBS without TIME '
+    #!                        'so using TIME from TIME-OBS.')
+    #!        dateobs = parse_dateobs('{}T{}'.format(hdr['DATE-OBS'],
+    #!                                               hdr['TIME-OBS']))
+    #!else:
+    dateobs = parse_dateobs(hdr['DATE-OBS'], timestr=hdr.get('TIME-OBS'))
 
-    dtstr = (dateobs+dt.timedelta(microseconds=1)).isoformat()
-    # => e.g. '2002-12-25T00:00:00.000001'
+    #!dtstr = (dateobs+dt.timedelta(microseconds=1)).isoformat()
+    dtstr = dateobs.isoformat()
+    if dateobs.microsecond == 0:
+        dtstr += '.0' # make parsing easier
+    # dtstr => e.g. '2002-12-25T00:00:00.000001'
     validate_dateobs_content(dateobs, dtstr)
     hdr['DATE-OBS'] = dtstr   # save normalized version
     #!return dateobs
