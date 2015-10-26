@@ -1,0 +1,2 @@
+EXECUTED: fits_submit -p smoke /sandbox/tada/tests/smoke/data-scrape/ct4m-decam/list.txt 
+ERROR: File given as -p option (/sandbox/tada-cli/personalities//sandbox/tada/tests/smoke/data-scrape/ct4m-decam/list.txt.personality) was not found or not a regular file. Aborting!
