@@ -59,15 +59,19 @@ function fsub () {
 
 
 
-testCommand sc1_1 "fsub bok23m-90prime $tdata/bok23m-90prime/d7212.0062.fits.fz" "^\#" n
-testCommand sc2_1 "fsub ct13m-andicam $tdata/ct13m-andicam/ir141225.0179.fits.fz" "^\#" n
-testCommand sc3_1 "fsub ct15m-echelle $tdata/ct15m-echelle/chi150724.1000.fits.fz" "^\#" n
-testCommand sc4_1 "fsub ct4m-cosmos $tdata/ct4m-cosmos/n3.25523.fits.fz" "^\#" n
-#testCommand sc5_1 "fsub ct4m-decam  $tdata/ct4m-decam/list.txt" "^\#" n
-testCommand sc6_1 "fsub kp09m-hdi $tdata/kp09m-hdi/c7015t0267b00.fits.fz" "^\#" n
-testCommand sc7_1 "fsub kp4m-mosaic_1_1 $tdata/kp4m-mosaic_1_1/spw54553.fits.fz" "^\#" n
-testCommand sc8_1 "fsub kp4m-newfirm $tdata/kp4m-newfirm/nhs_2015_n04_319685.fits.fz" "^\#" n
-testCommand sc9_1 "fsub soar-goodman $tdata/soar-goodman/0079.spec_flat.fits.fz" "^\#" n
+testCommand sc1_1  "fsub bok23m-90prime $tdata/bok23m-90prime/d7212.0062.fits.fz" "^\#" n
+testCommand sc2_1  "fsub ct13m-andicam $tdata/ct13m-andicam/ir141225.0179.fits.fz" "^\#" n
+testCommand sc3_1  "fsub ct15m-echelle $tdata/ct15m-echelle/chi150724.1000.fits.fz" "^\#" n
+testCommand sc4_1  "fsub ct4m-cosmos $tdata/ct4m-cosmos/n3.25523.fits.fz" "^\#" n
+testCommand sc5_1  "fsub ct4m-decam  $tdata/ct4m-decam//DECam_00482540.fits.fz" "^\#" n
+testCommand sc6_1  "fsub kp09m-hdi $tdata/kp09m-hdi/c7015t0267b00.fits.fz" "^\#" n
+testCommand sc13_1 "fsub kp4m-kosmos $tdata/kp4m-kosmos/a.20153.fits.fz" "^\#" n
+testCommand sc7_1  "fsub kp4m-mosaic_1_1 $tdata/kp4m-mosaic_1_1/spw54553.fits.fz" "^\#" n
+testCommand sc8_1  "fsub kp4m-newfirm $tdata/kp4m-newfirm/nhs_2015_n04_319685.fits.fz" "^\#" n
+testCommand sc9_1  "fsub soar-goodman $tdata/soar-goodman/0079.spec_flat.fits.fz" "^\#" n
+#soar-osiris  # scrape has no "passable" files for this instrument
+#soar-sami    # scrape has no "passable" files for this instrument
+testCommand sc14_1 "fsub soar-soi $tdata/soar-soi/test.027.fits.fz" "^\#" n
 testCommand sc10_1 "fsub soar-spartan $tdata/soar-spartan/011-6365d0.fits.fz" "^\#" n
 testCommand sc11_1 "fsub wiyn-bench $tdata/wiyn-bench/24dec_2014.061.fits.fz" "^\#" n
 testCommand sc12_1 "fsub wiyn-whirc $tdata/wiyn-whirc/obj_355.fits.fz" "^\#" n

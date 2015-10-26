@@ -1,2 +1,3 @@
-EXECUTED: fits_submit -p smoke /sandbox/tada/tests/smoke/data-scrape/ct4m-decam/list.txt 
-ERROR: File given as -p option (/sandbox/tada-cli/personalities//sandbox/tada/tests/smoke/data-scrape/ct4m-decam/list.txt.personality) was not found or not a regular file. Aborting!
+SUCCESS: archived /sandbox/tada/tests/smoke/data-scrape/ct4m-decam//DECam_00482540.fits.fz 
+Added provisional name (id=c4d_151007_093102_zri_TADASMOKE.fits.fz, source=/sandbox/tada/tests/smoke/data-scrape/ct4m-decam//DECam_00482540.fits.fz)
+Successful ingest. Added c4d_151007_093102_zri_TADASMOKE.fits.fz to PROVISIONAL list via ws
