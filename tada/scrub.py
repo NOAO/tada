@@ -28,7 +28,7 @@ import collections
 #  15B-0115
 
 
-valid_dtpropids = set(['wiyn','noao','soar','smarts', 'BADSCRUB'])
+valid_dtpropids = set(['wiyn','noao','soar','smarts', 'tspec', 'BADSCRUB'])
 propidRE = re.compile(r'20\d{2}[AB]-\d{4}')
 def scrub_propid(value, hdr):
     #! logging.debug('DBG: scrub_propid({},{})'.format(value, hdr))

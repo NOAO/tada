@@ -24,11 +24,11 @@ from . import file_naming as fn
 from . import exceptions as tex
 from . import hdr_calc_funcs as hf
 from . import scrub
+from . import config 
 
 #DOC: vvv
 # All bets are off in the original FITS file does not contain all of these.
 RAW_REQUIRED_FIELDS = set([
-    'DATE-OBS',
     #!'OBSERVAT',
     'TELESCOP',
     # 'PROPOSER', #!!! will use PROPID when PROPOSER doesn't exist in raw hdr
@@ -38,6 +38,8 @@ RAW_REQUIRED_FIELDS = set([
 # These fields are required to construct the Archive filename and path.
 # Some may be common with INGEST_REQUIRED (below).
 FILENAME_REQUIRED_FIELDS = set([
+    'DATE-OBS',  # triplespec doesn't have it; comes from other field
+
     # for BASENAME
     'DTSITE',
     'DTTELESC',
@@ -610,9 +612,17 @@ def fits_compliant(fits_file_list,
                    ignore_recommended=False,
                    show_values=False, show_header=False, show_stdfname=True,
                    required=False, verbose=False,
+                   qname='submit',
+                   qcfg=None,
                    trace=False):
     """Check FITS file for complaince with Archive Ingest."""
     import warnings
+    cfgprms = dict(mirror_dir =  qcfg[qname]['mirror_dir'],
+                   archive331 =  qcfg[qname]['archive_irods331'],
+                   mars_host  =  qcfg[qname].get('mars_host'),
+                   mars_port  =  qcfg[qname].get('mars_port'),
+                   )
+
     logging.debug('EXECUTING fits_compliant({}, personalities={}, '
                   'quiet={}, '
                   'show_values={}, show_header={}, show_stdfname={}, '
@@ -689,7 +699,7 @@ def fits_compliant(fits_file_list,
             missing_raw = missing_in_raw_hdr(hdr)
             if len(missing_raw) == 0:
                 #!fname_fields = modify_hdr(hdr, ffile, options, opt_params)
-                fix_hdr(hdr, ffile, options, opt_params)
+                fix_hdr(hdr, ffile, options, opt_params, **cfgprms)
                 missing_cooked = missing_in_archive_hdr(hdr)
                 missing_recommended = missing_in_recommended_hdr(hdr)
         except Exception as err:
@@ -777,6 +787,7 @@ def fits_compliant(fits_file_list,
 
 def main():
     "Parse command line arguments and do the work."
+    dflt_config = '/etc/tada/tada.conf'
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=('Check for compliance of FITS files with respect '
@@ -813,6 +824,10 @@ def main():
     parser.add_argument('--header',
                         action='store_true',
                         help='Show full header')
+    parser.add_argument('-c', '--config',
+                        default=dflt_config,
+                        help='Config file. [default={}]'.format(dflt_config),
+                        )
     parser.add_argument('--loglevel',
                         help='Kind of diagnostic output',
                         choices=['CRTICAL', 'ERROR', 'WARNING',
@@ -833,6 +848,11 @@ def main():
                         datefmt='%m-%d %H:%M')
     logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
+    qname = 'submit'
+    qcfg, dirs = config.get_config(None,
+                                   validate=False,
+                                   json_filename=args.config)
+
 
     # fits_compliant /data/raw/nhs_2014_n14_299403.fits
     fits_compliant(args.infiles,
@@ -842,7 +862,8 @@ def main():
                    ignore_recommended=args.ignore_recommended,
                    show_values=args.values,
                    show_header=args.header,
-                   trace=args.trace)
+                   trace=args.trace,
+                   qcfg=qcfg )
 
 if __name__ == '__main__':
 

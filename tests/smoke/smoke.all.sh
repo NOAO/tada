@@ -12,6 +12,7 @@ SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script is in
 #! $SCRIPTDIR/smoke.fits_submit.sh
 #! $SCRIPTDIR/smoke.pipeline_submit.sh
 $SCRIPTDIR/smoke.direct.sh
+$SCRIPTDIR/smoke.scrape.sh
 
 # Mountain (dome) or Valley
 $SCRIPTDIR/smoke.sh

@@ -26,12 +26,12 @@ from . import hdr_calc_utils as ut
 def ws_lookup_propid(date, telescope, **kwargs):
     """Return propid from schedule 
 -OR- None if cannot reach service
--OR- '' if service reachable but lookup fails."""
+-OR- 'NA' if service reachable but lookup fails."""
     logging.debug('ws_lookup_propid; kwargs={}'.format(kwargs))
     host=kwargs.get('mars_host')
     port=kwargs.get('mars_port')
     if host == None or port == None:
-        logging.error('Missing host ({}) or port ({}) for MARS.'
+        logging.error('Missing MARS host ({}) or port ({}).'
                       .format(host,port))
         return None
 
@@ -44,7 +44,13 @@ def ws_lookup_propid(date, telescope, **kwargs):
     
 ##############################################################################
 
-
+def fixTriplespec(orig, **kwargs):
+    new = {'DATE-OBS': orig['UTSHUT'],
+           'INSTRUME': orig['INSTRUM'],  }
+    logging.debug('fixTriplespec: fields DATE-OBS ({}), INSTRUME ({})'
+                  .format(new['DATE-OBS'], new['INSTRUME']))
+    return  new
+    
 def trustHdrPropid(orig, **kwargs):
     propid = orig.get('DTPROPID')
     if propid != 'BADSCRUB':
@@ -62,7 +68,6 @@ def trustHdrPropid(orig, **kwargs):
 def trustSchedPropid(orig, **kwargs):
     '''Propid from schedule trumps header.  
 But if not found in schedule, use header'''
-
     pid = ws_lookup_propid(orig.get('DTCALDAT'), orig.get('DTTELESC'),
                            **kwargs)
     #!if pid != orig.get('DTPROPID'):
@@ -71,11 +76,21 @@ But if not found in schedule, use header'''
     #!                    .format(orig.get('DTPROPID'), pid))
     if pid == None:
         return {'DTPROPID': 'NOSCHED'}
-    elif pid == '':
+    elif pid == 'NA':
         return {'DTPROPID': orig.get('DTPROPID', orig.get('PROPID', 'MISSCHED'))}
     else:
         return {'DTPROPID': pid}
-    
+
+def trustSchedOrAAPropid(orig, **kwargs):
+    '''Propid from schedule trumps header.  
+But if not found in schedule, use field AAPROPID from header'''
+    pid = ws_lookup_propid(orig.get('DTCALDAT'), orig.get('DTTELESC'), **kwargs)
+    if pid == None:
+        return {'DTPROPID': 'NOSCHED'}
+    elif pid == 'NA':
+        return {'DTPROPID': orig.get('AAPROPID', 'na')}
+    else:
+        return {'DTPROPID': pid}
 
 def lookupPROPID(orig, **kwargs):
     '''Only lookup if DTPROPID not present. 

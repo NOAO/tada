@@ -60,11 +60,12 @@ stiLUT = {
     ('cp', 'soar', 'spartan ir camera'):   'pss',   # added
     ('cp', 'soar', 'sam'):       'psa',  
     ('ct', 'ct4m', 'decam'):     'c4d',  
-    ('ct', 'ct4m', 'cosmos'):    'c4c',  
+    ('ct', 'ct4m', 'cosmos'):    'c4c', 
     ('ct', 'ct4m', 'ispi'):      'c4i',  
     ('ct', 'ct4m', 'arcon'):     'c4a',  
     ('ct', 'ct4m', 'mosaic'):    'c4m',  
     ('ct', 'ct4m', 'newfirm'):   'c4n',  
+    ('ct', 'ct4m', 'triplespec'): 'c4t',  
     ('ct', 'ct15m', 'chiron'):   'c15e',  
     ('ct', 'ct15m', 'echelle'):  'c15e',  # added
     ('ct', 'ct15m', 'arcon'):    'c15s',  
@@ -196,7 +197,8 @@ e.g. k4k_140923_024819_uri.fits.fz"""
                         .format(obstype, sorted(obsLUT.keys()), orig))
  
     # e.g. DATEOBS='2002-12-25T00:00:00.000001'
-    obsdt = dt.datetime.strptime(hdr['DATE-OBS'],'%Y-%m-%dT%H:%M:%S.%f')
+    obsdt = dt.datetime.strptime(hdr.get('DATE-OBS','NA'),
+                                 '%Y-%m-%dT%H:%M:%S.%f')
     date = obsdt.date().strftime('%y%m%d')
     time = obsdt.time().strftime('%H%M%S')
 
