@@ -3,6 +3,8 @@ smoke-2.status
 
 OBSOLETE/
 bok/
+tests/smoke/data
+tests/smoke/data-scrape
 env_tada
 
 tt
