@@ -24,7 +24,32 @@ from . import file_naming as fn
 from . import exceptions as tex
 from . import irods331 as iu
 from . import ingest_decoder as idec
-from . import config 
+from . import config
+
+def audit_svc(source_pathname, archive_filename, status, metadata,
+              ws_host=None, ws_port=8000):
+    """Add audit record to svc."""
+    if ws_host == None or ws_port == None:
+        logging.error('Missing AUDIT host ({}) or port ({}).'
+                      .format(host,port))
+        return False
+    url = 'http://{}:{}/audit/add/'.format(ws_host, ws_port)
+    jsonobj = ('{"source":"{}","archive":"{}","status":"{}", "metadata":"{}}'
+               .format(source_opathname,
+                       archive_filename,
+                       status,
+                       metadata))
+    try:
+        with urllib.request.urlopen(url,data=jsonobj, timeout=4) as f:
+            response = f.read().decode('utf-8')
+            logging.debug('MARS: server response="{}"'.format(response))
+            return response
+    except:
+        logging.error('AUDIT: Error contacting service via {}'.format(url))
+        return False
+    return True
+
+
 
 def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to

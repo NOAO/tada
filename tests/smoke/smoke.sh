@@ -25,7 +25,10 @@ SCRIPT=$(readlink -e $0)
 SCRIPTDIR=$(dirname $SCRIPT)
 testdir=$(dirname $SCRIPTDIR)
 tadadir=$(dirname $testdir)
-tdata=$SCRIPTDIR/data
+#tdata=$SCRIPTDIR/data
+tdata=$SCRIPTDIR/tada-test-data/basic
+# tdata=/sandbox/tada/tests/smoke/tada-test-data/basic
+
 
 dir=$SCRIPTDIR
 origdir=`pwd`

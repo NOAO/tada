@@ -62,7 +62,6 @@ def trustHdrPropid(orig, **kwargs):
             return {}
         else:
             return {'DTPROPID': propid}
-                
 
 
 def trustSchedPropid(orig, **kwargs):
@@ -129,14 +128,14 @@ def DATEOBSfromDATE(orig, **kwargs):
             'DATE-OBS': orig['DATE']+'.0' }
 
 #DATEOBS is UTC, so convert DATEOBS to localdate and localtime, then:
-#if [ $localtime > 12:00]; then DTCALDAT=localdate; else DTCALDAT=localdate-1 
+#if [ $localtime > 9:00]; then DTCALDAT=localdate; else DTCALDAT=localdate-1
 def DTCALDATfromDATEOBStus(orig, **kwargs):
     'Depends on: DATE-OBS'
     local_zone = tz.gettz('America/Phoenix')
     utc = dt.datetime.strptime(orig['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
     utc = utc.replace(tzinfo=tz.tzutc()) # set UTC zone
     localdt = utc.astimezone(local_zone)
-    if localdt.time().hour > 12:
+    if localdt.time().hour > 9:
         caldate = localdt.date()
     else:
         caldate = localdt.date() - dt.timedelta(days=1)

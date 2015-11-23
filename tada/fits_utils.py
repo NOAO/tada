@@ -457,6 +457,8 @@ Include fields in hdr needed to construct new filename that fullfills standards.
         hdr[k] = v
 
     scrub_errors = scrub.scrub_hdr(hdr)
+    if len(scrub_errors) > 0:
+        logging.warning('scrub_errors={}'.format(scrub_errors))
     #tex.BadFieldContent(scrub_errors)
 
     # Validate after explicit overrides, before calculated fields.
@@ -696,6 +698,9 @@ def fits_compliant(fits_file_list,
 
             if opt_params.get('OPS_PREAPPLY_UPDATE','NO') == 'YES': #!!!
                 apply_options(options, hdr)
+            if show_header:
+                print('Post modify:')
+                pprint(hdr)
             missing_raw = missing_in_raw_hdr(hdr)
             if len(missing_raw) == 0:
                 #!fname_fields = modify_hdr(hdr, ffile, options, opt_params)
@@ -724,10 +729,6 @@ def fits_compliant(fits_file_list,
                 print('{} produced from {}'.format(new_basename, ffile))
         if show_values:
             show_hdr_values('Post modify', hdr) # only "interesting" ones
-        if show_header:
-            #print_header('Post modify', hdr=hdr)
-            print('Post modify:')
-            pprint(hdr)
 
         if valid:
             if not quiet:

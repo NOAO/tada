@@ -11,7 +11,7 @@ import time as tt
 import logging
 import collections
 
-
+from . import exceptions as tex
 
 
 ##############################################################################
@@ -107,10 +107,19 @@ def parse_dateobs(dtstr, timestr=None):
             return dt.datetime.strptime(dtstr + 'T' + timestr,
                                         '%Y-%m-%dT%H:%M:%S')
     else:
+        # no time provided.  Time in DATE-OBS is critical to making
+        # generated filename unique.  So fail if we cannot come up
+        # with a time.  Heroic methods should be embraced to find
+        # something in the header that can be used for the time (and
+        # set in the personality file)
+        
+        #return date
         #!logging.warning('No TIME found in DATE-OBS ({}), using zeros.'
         #!                .format(dtstr))
         #!time = dt.time()
-        return date
+        #!return dt.datetime.combine(date,time)
+        raise tex.BadFieldContent('No TIME given in DATE-OBS')
+        
 
 def validate_dateobs_content(dateobs, datestr):
     'DATE-OBS content: Correct century and Not Future'
@@ -146,6 +155,7 @@ yyyy-mm-ddThh:mm:ss.nnnnnnnnn'''
 
     #!dtstr = (dateobs+dt.timedelta(microseconds=1)).isoformat()
     dtstr = dateobs.isoformat()
+    logging.debug('SCRUB: normalize_dateobs; dtstr = {}'.format(dtstr))
     if dateobs.microsecond == 0:
         dtstr += '.0' # make parsing easier
     # dtstr => e.g. '2002-12-25T00:00:00.000001'
@@ -156,7 +166,11 @@ yyyy-mm-ddThh:mm:ss.nnnnnnnnn'''
 
 
 def scrub_dateobs(UNUSED_value, hdr):
-    return(normalize_dateobs(hdr))
+    try:
+        good = normalize_dateobs(hdr)
+    except:
+        return None
+    return(good)
 
 ##############################################################################
 def scrub_hdr(hdr):
