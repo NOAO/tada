@@ -1,3 +1,3 @@
-SUCCESS: archived /sandbox/tada/tests/smoke/data-scrape/kp09m-hdi/c7015t0267b00.fits.fz 
-Added provisional name (id=k09h_141224_115224_zri_TADASMOKE.fits.fz, source=/sandbox/tada/tests/smoke/data-scrape/kp09m-hdi/c7015t0267b00.fits.fz)
+SUCCESS: archived /data/scraped/mtn_raw/kp09m-hdi/c7015t0267b00.fits.fz 
+Added provisional name (id=k09h_141224_115224_zri_TADASMOKE.fits.fz, source=/data/scraped/mtn_raw/kp09m-hdi/c7015t0267b00.fits.fz)
 Successful ingest. Added k09h_141224_115224_zri_TADASMOKE.fits.fz to PROVISIONAL list via ws

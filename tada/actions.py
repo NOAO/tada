@@ -112,9 +112,7 @@ def network_move(rec, qname, **kwargs):
                    '--timeout=40', # seconds
                    #! '--verbose',
                    #! source_root, sync_root]
-                   (str(PurePath(newfname).parent).replace(source_root,
-                                                           source_root+'/.')
-                    + '/'),
+                   (str(PurePath(newfname).parent) + '/'),
                    sync_root
                    ]
         diag.dbgcmd(cmdline)

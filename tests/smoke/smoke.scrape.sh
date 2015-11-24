@@ -8,7 +8,8 @@ SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script is in
 testdir=$(dirname $SCRIPTDIR)
 tadadir=$(dirname $testdir)
 # tadadir=/sandbox/tada
-tdata=$SCRIPTDIR/data-scrape
+#!tdata=$SCRIPTDIR/data-scrape
+tdata=/data/scraped/mtn_raw
 # tdata=/sandbox/tada/tests/smoke/data-scrape
 
 echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
@@ -26,13 +27,24 @@ SMOKEOUT="README-smoke-results.scrape.txt"
 echo ""
 echo "Starting tests in \"$SCRIPT\" ..."
 echo ""
-if curl -s -S "http://mars.sdm.noao.edu:8000/provisional/rollback/" > /dev/null
+echo -n "Removing provisional files before starting..."
+if curl --max-time 30 -s -S "http://mars.sdm.noao.edu:8000/provisional/rollback/" > /dev/null
 then
+    echo "DONE"
     echo "REMOVED all provisional files before starting."
 else
+    echo "DONE"
     echo "COULD NOT remove all provisional files before starting."    
 fi
+
 echo ""
+if [ -d "$tdata" ]; then
+    echo "Using data directory: $tdata"
+else
+    echo "Could not find data directory: $tdata; ABORTING!"
+    exit 1
+fi
+    
 
 ###########################################
 ### fits_submit
@@ -63,7 +75,7 @@ testCommand sc1_1  "fsub bok23m-90prime $tdata/bok23m-90prime/d7212.0062.fits.fz
 testCommand sc2_1  "fsub ct13m-andicam $tdata/ct13m-andicam/ir141225.0179.fits.fz" "^\#" n
 testCommand sc3_1  "fsub ct15m-echelle $tdata/ct15m-echelle/chi150724.1000.fits.fz" "^\#" n
 testCommand sc4_1  "fsub ct4m-cosmos $tdata/ct4m-cosmos/n3.25523.fits.fz" "^\#" n
-testCommand sc5_1  "fsub ct4m-decam  $tdata/ct4m-decam//DECam_00482540.fits.fz" "^\#" n
+testCommand sc5_1  "fsub ct4m-decam  $tdata/ct4m-decam/DECam_00482540.fits.fz" "^\#" n
 testCommand sc6_1  "fsub kp09m-hdi $tdata/kp09m-hdi/c7015t0267b00.fits.fz" "^\#" n
 testCommand sc13_1 "fsub kp4m-kosmos $tdata/kp4m-kosmos/a.20153.fits.fz" "^\#" n
 testCommand sc7_1  "fsub kp4m-mosaic_1_1 $tdata/kp4m-mosaic_1_1/spw54553.fits.fz" "^\#" n

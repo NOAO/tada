@@ -1,3 +1,3 @@
-SUCCESS: archived /sandbox/tada/tests/smoke/data-scrape/kp4m-newfirm/nhs_2015_n04_319685.fits.fz 
-Added provisional name (id=k4n_151005_023255_ori_TADASMOKE.fits.fz, source=/sandbox/tada/tests/smoke/data-scrape/kp4m-newfirm/nhs_2015_n04_319685.fits.fz)
+SUCCESS: archived /data/scraped/mtn_raw/kp4m-newfirm/nhs_2015_n04_319685.fits.fz 
+Added provisional name (id=k4n_151005_023255_ori_TADASMOKE.fits.fz, source=/data/scraped/mtn_raw/kp4m-newfirm/nhs_2015_n04_319685.fits.fz)
 Successful ingest. Added k4n_151005_023255_ori_TADASMOKE.fits.fz to PROVISIONAL list via ws
