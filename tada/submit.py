@@ -149,7 +149,11 @@ RETURN: irods location of hdr file.
     jidt = opt_params.get('jobid_type',None)  # plain | seconds | (False)
     tag = opt_params.get('job_tag','')
     source = opt_params.get('source','raw')   # pipeline | (dome)
-    orig_fullname = opt_params.get('filename','<unknown>')
+    
+    # We want "filename" to always be given an option.
+    # But we also don't want to force setting of options if we can
+    # avoid it. So we use the only fname available: mirror_fname.
+    orig_fullname = opt_params.get('filename',mirror_fname)
 
     hdr_ifname = "None"
     try:
@@ -196,10 +200,12 @@ RETURN: irods location of hdr file.
 
         new_ipath = fn.generate_archive_path(hdr, source=source) / new_basename
         ext = fn.fits_extension(new_basename)
+        logging.debug('orig_fullname={}, new_basename={}, ext={}'
+                      .format(orig_fullname, new_basename, ext))
         #!new_ipath = new_ipath / new_basename
         new_ifname = str(new_ipath)
         new_ihdr = new_ifname.replace(ext,'hdr')
-        #logging.debug('new_ifname={},new_ihdr={}'.format(new_ifname, new_ihdr))
+        logging.debug('new_ifname={},new_ihdr={}'.format(new_ifname, new_ihdr))
 
         # Print without blank cards or trailing whitespace
         hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
@@ -250,7 +256,7 @@ RETURN: irods location of hdr file.
     # At this point both FITS and HDR are in archive331
     #
 
-    #!logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
+    logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
     return new_ihdr, new_ifname, orig_fullname
     # END prep_for_ingest()
 
