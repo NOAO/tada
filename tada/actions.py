@@ -92,7 +92,16 @@ def network_move(rec, qname, **kwargs):
         
     out = None
     try:
-        #!iu.irods_put(fname, ifname)
+        # Use feature of rsync 2.6.7 and later that limits path info
+        # sent as implied directories.  The "./" marker in the path
+        # means "append path after this to destination prefix to get
+        # destination path".
+        # e.g. '/var/tada/mountain_cache/./pothiers/1294/'
+        rsync_source_path = '/'.join([str(PurePath(source_root)),
+                                      '.',
+                                      str(PurePath(newfname)
+                                          .relative_to(source_root).parent),
+                                      ''])
         # The directory of newfname is unique (user/jobid)
         # Copy full contents of directory containing newfname to corresponding
         # directory on remote machine (under mountain_mirror).
@@ -112,9 +121,7 @@ def network_move(rec, qname, **kwargs):
                    '--timeout=40', # seconds
                    #! '--verbose',
                    #! source_root, sync_root]
-                   (str(PurePath(newfname).parent).replace(source_root,
-                                                           source_root+'/.')
-                    + '/'),
+                   rsync_source_path,
                    sync_root
                    ]
         diag.dbgcmd(cmdline)
