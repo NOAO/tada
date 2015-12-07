@@ -182,36 +182,36 @@ def bokOBSID(orig, **kwargs):
     "Depends on DATE-OBS"
     return {'OBSID': 'bok23m.'+orig['DATE-OBS'] }
 
-def DTTELESCfromINSTRUME(orig, **kwargs):
-    "Instrument specific calculations. Depends on: INSTRUME, OBSID"
-    new = dict() # Fields to calculate
-    instrument = orig['INSTRUME'].lower()
-
-    # e.g. OBSID = 'kp4m.20141114T122626'
-    # e.g. OBSID = 'soar.sam.20141220T015929.7Z'
-    #!tele, dt_str = orighdr['OBSID'].split('.')
-    if 'cosmos' == instrument:
-        tele, dt_str = orig['OBSID'].split('.')
-        new['DTTELESC'] = tele
-    elif 'mosaic1.1' == instrument:
-        tele, dt_str = orig['OBSID'].split('.')
-        new['DTTELESC'] = tele
-    elif 'soi' == instrument:
-        tele, inst, dt_str1, dt_str2 = orig['OBSID'].split('.')
-        new['DTTELESC'] = tele
-#!    elif '90prime' == instrument: # BOK
-#!        # FILENAME='bokrm.20140425.0119.fits' / base filename at acquisition
-#!        tele = orig.get('TELESCOP', None)
-#!        if tele == None:
-#!            tele, datestr, *rest = orig['FILENAME'].split('.')
-#!        new['DTTELESC'] = tele
-#!        new['OBSTYPE'] = orig.get('IMAGETYP','object')
-#!    else:
-#!        tele, dt_str = orig['OBSID'].split('.')
-#!        new['DTTELESC'] = tele
-
-    #! new['DTINSTRU'] = instrument # eg. 'NEWFIRM'
-    return new
+#! def DTTELESCfromINSTRUME(orig, **kwargs):
+#!     "Instrument specific calculations. Depends on: INSTRUME, OBSID"
+#!     new = dict() # Fields to calculate
+#!     instrument = orig['INSTRUME'].lower()
+#! 
+#!     # e.g. OBSID = 'kp4m.20141114T122626'
+#!     # e.g. OBSID = 'soar.sam.20141220T015929.7Z'
+#!     #!tele, dt_str = orighdr['OBSID'].split('.')
+#!     if 'cosmos' == instrument:
+#!         tele, dt_str = orig['OBSID'].split('.')
+#!         new['DTTELESC'] = tele
+#!     elif 'mosaic1.1' == instrument:
+#!         tele, dt_str = orig['OBSID'].split('.')
+#!         new['DTTELESC'] = tele
+#!     elif 'soi' == instrument:
+#!         tele, inst, dt_str1, dt_str2 = orig['OBSID'].split('.')
+#!         new['DTTELESC'] = tele
+#! #!    elif '90prime' == instrument: # BOK
+#! #!        # FILENAME='bokrm.20140425.0119.fits' / base filename at acquisition
+#! #!        tele = orig.get('TELESCOP', None)
+#! #!        if tele == None:
+#! #!            tele, datestr, *rest = orig['FILENAME'].split('.')
+#! #!        new['DTTELESC'] = tele
+#! #!        new['OBSTYPE'] = orig.get('IMAGETYP','object')
+#! #!    else:
+#! #!        tele, dt_str = orig['OBSID'].split('.')
+#! #!        new['DTTELESC'] = tele
+#! 
+#!     #! new['DTINSTRU'] = instrument # eg. 'NEWFIRM'
+#!     return new
 
 
     

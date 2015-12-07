@@ -179,7 +179,8 @@ def scrub_hdr(hdr):
     for k,(func,newname,savename) in scrub_fields.items():
         origValue = hdr.get(k)
         if origValue == None:
-            errors.append('No value found for field {} during scrub.'.format(k))
+            errors.append('No value found for field {} during scrub using {}.'
+                          .format(k, func.__name__))
             continue
         goodValue = func(origValue, hdr)
         if goodValue == None:

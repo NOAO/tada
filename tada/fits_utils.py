@@ -65,8 +65,6 @@ FILENAME_REQUIRED_FIELDS = set([
 # be required in Legacy code.
 INGEST_REQUIRED_FIELDS = set([
     'SIMPLE',
-    'INSTRUME', # !!! moved from RAW_REQUIRED to satisfy:
-                # /scraped/mtn_raw/ct15m-echelle/chi150724.1000.fits
     'OBSERVAT', # needed for std filename
     'DTPROPID', # observing proposal ID
     'DTCALDAT', # calendar date from observing schedule
@@ -84,6 +82,8 @@ INGEST_REQUIRED_FIELDS = set([
 # before ingest, a warning will be logged indicating the missing
 # fields.
 INGEST_RECOMMENDED_FIELDS = set([
+    'INSTRUME', # !!! moved from RAW_REQUIRED to satisfy:
+                # /scraped/mtn_raw/ct15m-echelle/chi150724.1000.fits
     'DTACQNAM',
     'DTCALDAT', # calendar date from observing schedule
     'DTCOPYRI', # copyright holder of data (ADDED!!!)

@@ -18,6 +18,7 @@ import shutil
 import magic
 import yaml
 from copy import copy
+import json
 
 from . import fits_utils as fu
 from . import file_naming as fn
@@ -26,34 +27,39 @@ from . import irods331 as iu
 from . import ingest_decoder as idec
 from . import config
 
-def audit_svc(source_pathname, archive_filename, status, metadata,
-              ws_host=None, ws_port=8000):
+def audit_svc(source_pathname, archive_filename, status, metadatadict,
+              ws_host='mars.sdm.noao.edu', ws_port=8000, svc_timeout=1):
     """Add audit record to svc."""
     if ws_host == None or ws_port == None:
         logging.error('Missing AUDIT host ({}) or port ({}).'
                       .format(host,port))
         return False
-    url = 'http://{}:{}/audit/add/'.format(ws_host, ws_port)
-    jsonobj = ('{"source":"{}","archive":"{}","status":"{}", "metadata":"{}}'
-               .format(source_opathname,
-                       archive_filename,
-                       status,
-                       metadata))
+    logging.debug('Adding audit record')
+    url = 'http://{}:{}/audit/add'.format(ws_host, ws_port)
+    ddict = dict(source = source_pathname,
+                 archive = archive_filename,
+                 status = status,
+                 metadata = metadatadict,  #updated metadata fields
+                 )
+    data = bytes(json.dumps(ddict), 'utf-8')
+    req = urllib.request.Request(url)
+    req.add_header('Content-Type', 'application/json')
     try:
-        with urllib.request.urlopen(url,data=jsonobj, timeout=4) as f:
+        with urllib.request.urlopen(req, data=data, timeout=svc_timeout) as f:
             response = f.read().decode('utf-8')
-            logging.debug('MARS: server response="{}"'.format(response))
+            #!logging.debug('MARS: server response="{}"'.format(response))
             return response
-    except:
-        logging.error('AUDIT: Error contacting service via {}'.format(url))
+    except  Exception as err:
+        logging.error('AUDIT: Error contacting service via "{}"; {}'
+                      .format(url, str(err)))
         return False
     return True
 
 
-
 def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
- Archive Ingest via REST-like interface. Return: (statusBool, message)"""
+Archive Ingest via REST-like interface. 
+RETURN: (statusBool, message, operatorMessage)"""
     import random # for stubbing random failures (not for production)
 
     logging.debug('EXECUTING: http_archive_ingest({}, {})'
@@ -98,6 +104,7 @@ def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
 
     return (success, message, operator_msg)
     
+
 
 def prep_for_ingest(mirror_fname,
                     persona_options=dict(),  # e.g. (under "__DTSITE"
@@ -327,8 +334,11 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
        raise
     
     try:
-        success,msg,m2 = http_archive_ingest(new_ihdr, qname,
-                                             qcfg=qcfg, origfname=origfname)
+        (success, msg,
+         ops_msg) = http_archive_ingest(new_ihdr, qname,
+                                   qcfg=qcfg, origfname=origfname)
+        if pprms.get('do_audit',False):
+            audit_svc(origfname, destfname, ops_msg, popts)
         if not success:
             raise tex.SubmitException(msg)
 
@@ -400,15 +410,17 @@ def direct_submit(fitsfile,
         sys.exit(statusmsg)
 
 
-    success,m1,msg = http_archive_ingest(new_ihdr, qname,
+    success,m1,ops_msg = http_archive_ingest(new_ihdr, qname,
                                          qcfg=qcfg, origfname=origfname)
+    if pprms.get('do_audit','0') == '1':
+        audit_svc(origfname, destfname, ops_msg, popts)
     if not success:
         if foundHdr:
             iu.irods_put331(saved_hdr, new_ihdr) # restore saved hdr
         else:
             # hard to test this; maybe it hasn't been tested at all!
             iu.irods_remove331(new_ihdr) # remove our new hdr
-        statusmsg = 'FAILED: {} not archived; {}'.format(fitsfile, msg)
+        statusmsg = 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg)
         statuscode = 2
     else:
         iu.irods_put331(newfile, destfname) # iput renamed FITS

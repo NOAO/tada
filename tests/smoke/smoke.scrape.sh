@@ -63,7 +63,7 @@ function fsub () {
         echo ""
         echo "Successful ingest. Added $archfile to PROVISIONAL list via ws"
     else
-        echo "EXECUTED: fits_submit -p smoke $pers $ffile"  
+        echo "EXECUTED: fits_submit -p smoke -p $pers $ffile"  
         echo $msg
     fi
     return $status
