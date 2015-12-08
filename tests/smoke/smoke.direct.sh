@@ -55,7 +55,7 @@ fi
 ## bad DATE-OBS content
 testCommand fc1_1 "fits_compliant --header $tdata/basic/kp109391.fits.fz 2>&1" "^\#" n 1
 
-# missing raw
+# compliant
 testCommand fc2_1 "fits_compliant $tdata/basic/kptest.fits 2>&1" "^\#" n
 
 ###########################################
