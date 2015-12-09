@@ -23,11 +23,12 @@ class BadFieldContent(Exception):
     "A FITS header field value has bad content."
     pass
 
-class SubmitException(Exception):
-    "Something went wrong with submit to archive"
-    pass
-
 
 class NotInLut(Exception):
     "A used key was not found in an internal LookUp Table"
+    pass
+
+
+class IrodsContentException(Exception):
+    "Irods contains something that prevents ingest"
     pass

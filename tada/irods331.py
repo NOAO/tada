@@ -79,6 +79,8 @@ def irods_get331( irods_fname, local_fname):
     icmdpath = ('/usr/local/share/applications/irods3.3.1/iRODS/clients'
                 '/icommands/bin')
     try:
+        # -f:: force overwrite of local file if it exists
+        # -K:: verify checksum
         subprocess.check_output([os.path.join(icmdpath, 'iget'),
                                  '-f', '-K', local_fname, irods_fname],
                                 stderr=subprocess.DEVNULL,
@@ -105,3 +107,18 @@ def irods_remove331(irods_fname):
                       .format(tag, ex, ex.output.decode('utf-8')))
         raise
 
+def irods_exists331(irods_fname):
+    "Find out if file already exists. RETURN: True if it does"
+    tag='irods_exists331'
+    logging.debug('{}({})'.format(tag, irods_fname))
+    icmdpath = ('/usr/local/share/applications/irods3.3.1/iRODS/clients'
+                '/icommands/bin')
+    try:
+        stat = subprocess.call([os.path.join(icmdpath, 'ils'),irods_fname])
+    except subprocess.CalledProcessError as ex:
+        logging.error('FAILED {}: {}; {}'
+                      .format(tag, ex, ex.output.decode('utf-8')))
+        return False
+    return (stat == 0)
+
+    

@@ -60,7 +60,7 @@ def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
 Archive Ingest via REST-like interface. 
 RETURN: (statusBool, message, operatorMessage)"""
-    import random # for stubbing random failures (not for production)
+    #!import random # for stubbing random failures (not for production)
 
     logging.debug('EXECUTING: http_archive_ingest({}, {})'
                   .format(hdr_ipath, qname))
@@ -76,31 +76,31 @@ RETURN: (statusBool, message, operatorMessage)"""
                      .format(arch_host, arch_port, hdr_ipath))
     logging.debug('archserver_url = {}'.format(archserver_url))
 
-    if qcfg[qname].get('disable_archive_svc',0) > 0:
-        logging.warning('Ingest DISABLED. '
-                        'http_archive_ingest() using prob_fail= {}'
-                        .format(prob_fail))
-        if random.random() <= prob_fail:
-            raise tex.SubmitException(
-                'Killed by cosmic ray with probability {}'
-                .format(prob_fail))
-    else:
-        response = ''
-        try:
-            with urllib.request.urlopen(archserver_url) as f:
-                response = f.read().decode('utf-8')
-            logging.debug('ARCH server response: {}'.format(response))
-        except:
-            raise
-        success, operator_msg = idec.decodeIngest(response)
-        logging.debug('ARCH server: success={}, msg={}'
-                      .format(success, operator_msg))
-        message = operator_msg
-        if not success:
-            #! operator_msg = idec.decodeIngest(response)
-            message = ('HTTP response from NSA server for file {}: "{}"; {}'
-                       .format(origfname, response, operator_msg))
-            #raise tex.SubmitException(message)
+    #!if qcfg[qname].get('disable_archive_svc',0) > 0:
+    #!    logging.warning('Ingest DISABLED. '
+    #!                    'http_archive_ingest() using prob_fail= {}'
+    #!                    .format(prob_fail))
+    #!    if random.random() <= prob_fail:
+    #!        raise tex.SubmitException(
+    #!            'Killed by cosmic ray with probability {}'
+    #!            .format(prob_fail))
+    #!else:
+    response = ''
+    try:
+        with urllib.request.urlopen(archserver_url) as f:
+            response = f.read().decode('utf-8')
+        logging.debug('ARCH server response: {}'.format(response))
+    except:
+        raise
+    success, operator_msg = idec.decodeIngest(response)
+    logging.debug('ARCH server: success={}, msg={}'
+                  .format(success, operator_msg))
+    message = operator_msg
+    if not success:
+        #! operator_msg = idec.decodeIngest(response)
+        message = ('HTTP response from NSA server for file {}: "{}"; {}'
+                   .format(origfname, response, operator_msg))
+        #raise tex.SubmitException(message)
 
     return (success, message, operator_msg)
     
@@ -191,8 +191,7 @@ RETURN: irods location of hdr file.
                              - datetime.datetime(2015,1,1)) 
                             .total_seconds()*100))
             tag = jobid if tag == '' else (jobid + '_' + tag)
-        #! else:
-            #!jobid = None
+
         ext = fn.fits_extension(orig_fullname)
         if source == 'pipeline':
             new_basename = hdr['PLDSID'] + ".fits.fz"
@@ -213,6 +212,11 @@ RETURN: irods location of hdr file.
         new_ifname = str(new_ipath)
         new_ihdr = new_ifname.replace(ext,'hdr')
         logging.debug('new_ifname={},new_ihdr={}'.format(new_ifname, new_ihdr))
+        if iu.irods_exist331(new_ihdr):
+            msg = ('iRODS file already exists at {}. Not ingesting {}'
+                   .format(new_ihdr, source))
+            logging.error(msg)
+            raise tex.IrodsContentException(msg)
 
         # Print without blank cards or trailing whitespace
         hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
@@ -323,32 +327,21 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     popts, pprms = fu.get_options_dict(ifname + ".options")
 
     try:
+        # Following does irods_put331 to new_ihdr if the hdr looks valid
         new_ihdr,destfname,origfname = prep_for_ingest(ifname,
                                                        persona_options=popts,
                                                        persona_params=pprms,
                                                        **cfgprms)
-        saved_hdr = os.path.join('/var/tada', new_ihdr)
-        foundHdr = iu.irods_get331(new_ihdr, saved_hdr)
     except:
         #! traceback.print_exc()
        raise
     
-    try:
-        (success, msg,
-         ops_msg) = http_archive_ingest(new_ihdr, qname,
-                                   qcfg=qcfg, origfname=origfname)
-        if pprms.get('do_audit',False):
-            audit_svc(origfname, destfname, ops_msg, popts)
-        if not success:
-            raise tex.SubmitException(msg)
-
-    except:
-        if foundHdr:
-            iu.irods_put331(saved_hdr, new_ihdr) # restore saved hdr
-        else:
-            # hard to test this; maybe it hasn't been tested at all!
-            iu.irods_remove331(new_ihdr) # remove our new hdr
-        raise
+   (success, msg, ops_msg) = http_archive_ingest(new_ihdr, qname,
+                                                 qcfg=qcfg, origfname=origfname)
+   if pprms.get('do_audit',False):
+       audit_svc(origfname, destfname, ops_msg, popts)
+    if not success:
+        raise tex.SubmitException(msg)
 
     iu.irods_put331(ifname, destfname) # iput renamed FITS
     return destfname
