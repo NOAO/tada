@@ -392,8 +392,6 @@ def direct_submit(fitsfile,
                                                        persona_options=popts,
                                                        persona_params=pprms,
                                                        **cfgprms)
-        saved_hdr = os.path.join('/var/tada', new_ihdr)
-        foundHdr = iu.irods_get331(new_ihdr, saved_hdr)
     except Exception as err:
         if trace:
             traceback.print_exc()
@@ -408,11 +406,6 @@ def direct_submit(fitsfile,
     if pprms.get('do_audit','0') == '1':
         audit_svc(origfname, destfname, ops_msg, popts)
     if not success:
-        if foundHdr:
-            iu.irods_put331(saved_hdr, new_ihdr) # restore saved hdr
-        else:
-            # hard to test this; maybe it hasn't been tested at all!
-            iu.irods_remove331(new_ihdr) # remove our new hdr
         statusmsg = 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg)
         statuscode = 2
     else:
