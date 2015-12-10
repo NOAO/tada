@@ -199,7 +199,7 @@ function testCommand () {
     failcnt=$((failcnt + 1))
     return_code=1
   else
-    echo "*** $proc PASSED [$testName] ($tn; Command correctly returned zero status ***"
+    echo "*** $proc PASSED [$testName] ($tn; Command correctly returned status = $expectedStatus***"
   fi
   
 
@@ -209,6 +209,7 @@ function testCommand () {
   if [ -s $err ]; then
     cat $err
     echo "*** $proc FAILED [$testName] ($tn; Output was sent to STDERR: $err) ***"
+    failcnt=$((failcnt + 1))
     return_code=1
   else
     echo "*** $proc PASSED [$testName] ($tn; no STDERR output) ***"

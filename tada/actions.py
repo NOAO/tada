@@ -7,25 +7,27 @@ import magic
 import shutil
 import time
 from datetime import datetime
+from pathlib import PurePath
 
 #! from . import irods_utils as iu
 from . import submit as ts
 from . import diag
-
+from . import exceptions as tex
 import dataq.dqutils as du
 import dataq.red_utils as ru
+
 
 # +++ Add code here if TADA needs to handle additional types of files!!!
 def file_type(filename):
     """Return an abstracted file type string.  MIME isn't always good enough."""
+    type = 'UNKNOWN'
     if magic.from_file(filename).decode().find('FITS image data') >= 0:
-        return('FITS')
+        type = 'FITS'
     elif magic.from_file(filename).decode().find('JPEG image data') >= 0:
-        return('JPEG')
+        type = 'JPEG'
     elif magic.from_file(filename).decode().find('script text executable') >= 0:
-        return('shell script')
-    else:
-        return('UNKNOWN')
+        type = 'shell script'
+    return type
     
 
 ##############################################################################
@@ -60,50 +62,68 @@ def network_move(rec, qname, **kwargs):
                         .format(fname, source_root))
 
     ifname = os.path.join(sync_root, os.path.relpath(fname, source_root))
-    
+    optfname = ifname + ".options"    
+    newfname = fname
     logging.debug('pre_action={}'.format(pre_action))
     if pre_action:
         # pre_action is full path to shell script to run.
-        # WARNING: a bad script could do bad things to the mountain_cache files!!!
-        # Must accept two params:
+        # WARNING: a bad script could do bad things to the
+        #    mountain_cache files!!!
+        # Must accept three params:
         #   1. absolute path of file from queue
         #   2. absolute path mountain_cache
+        #   3. absolute path of file containing options 
         # Stdout and stderr from pre_action will be logged to INFO.
         # Error (non-zero return code) will be logged to ERROR but normal
         # TADA processing will continue.
         try:
-            cmdline = [pre_action, fname, source_root]
+            cmdline = [pre_action, fname, source_root, fname+'.options']
             diag.dbgcmd(cmdline)
-            out = subprocess.check_output(cmdline, stderr=subprocess.STDOUT)
-            if len(out) > 0:
-                logging.info(out)
+            bout = subprocess.check_output(cmdline, stderr=subprocess.STDOUT)
+            if len(bout) > 0:
+                out = bout.decode('utf-8')
+                newfname = out.split()[0]
+                logging.info('pre_action "{}", newfname={}, output: {}'
+                             .format(pre_action, newfname, out))
         except subprocess.CalledProcessError as cpe:
             logging.warning('Failed Transfer pre_action ({} {} {}) {}; {}'
                             .format(pre_action, fname, source_root,
                                     cpe, cpe.output ))
-            
+        
     out = None
     try:
-        #!iu.irods_put(fname, ifname)
+        # Use feature of rsync 2.6.7 and later that limits path info
+        # sent as implied directories.  The "./" marker in the path
+        # means "append path after this to destination prefix to get
+        # destination path".
+        # e.g. '/var/tada/mountain_cache/./pothiers/1294/'
+        rsync_source_path = '/'.join([str(PurePath(source_root)),
+                                      '.',
+                                      str(PurePath(newfname)
+                                          .relative_to(source_root).parent),
+                                      ''])
+        # The directory of newfname is unique (user/jobid)
+        # Copy full contents of directory containing newfname to corresponding
+        # directory on remote machine (under mountain_mirror).
         cmdline = ['rsync', 
-                   #! '--acls',
                    '--super',
-                   #! '--archive',
-                   #! '--group',    # preserve group
-                   #! '--owner',    # preserve owner (if run as super-user)
                    '--perms',    # preserve permissions
-                   #! '--stats',    # give some file-transfer stats
-                   #! '--times',    # preserve modification times
+                   '--stats',    # give some file-transfer stats
                    ###
                    '--chmod=ugo=rwX',
-                   '--compress', # compress file data during the transfer
-                   '--contimeout=5',
+                   #!'--compress', # we generally fpack fits files
+                   '--contimeout=20',
                    '--password-file', '/etc/tada/rsync.pwd',
                    '--recursive',
+                   '--relative',
                    '--remove-source-files',
                    #sender removes synchronized files (non-dir)
-                   '--timeout=20',
-                   source_root, sync_root]
+                   '--timeout=40', # seconds
+                   #! '--verbose',
+                   #! source_root, sync_root]
+                   rsync_source_path,
+                   sync_root
+                   ]
         diag.dbgcmd(cmdline)
         tic = time.time()
         out = subprocess.check_output(cmdline,
@@ -120,28 +140,21 @@ def network_move(rec, qname, **kwargs):
                             ))
         # Any failure means put back on queue. Keep queue handling
         # outside of actions where possible.
-        raise
+        # raise # Do NOT raise exception since we will re-do rsync next time around
+        return False
 
     # successfully transfered to Valley
+    logging.debug('rsync output:{}'.format(out))
     logging.info('Successfully moved file from {} to {}'
-                 .format(fname,sync_root))
+                 .format(newfname, sync_root))
     mirror_fname = os.path.join(valley_root,
-                                os.path.relpath(fname, source_root))
+                                os.path.relpath(newfname, source_root))
     try:
         # What if QUEUE is down?!!!
         #!du.push_to_q(dq_host, dq_port, mirror_fname, rec['checksum'])
         ru.push_direct(dq_host, redis_port,
                        mirror_fname, rec['checksum'],
                        qcfg[nextq])
-        
-        # Files removed by rsync through option '--remove-source-files' above
-        #
-        #!os.remove(fname)
-        #!logging.info('Removed file "{}" from mountain cache'.format(fname))
-        #!optfname = fname + ".options"
-        #!if os.path.exists(optfname):
-        #!    os.remove(optfname)
-        #!    logging.debug('Removed options file: {}'.format(optfname))
     except Exception as ex:
         logging.error('Failed to push to queue on {}:{}; {}'
                         .format(dq_host, dq_port, ex ))
@@ -197,7 +210,8 @@ configuration field: maximum_errors_per_record)
         except Exception as sex:
             logsubmit(submitlog, ifname, ifname, 'submit_to_archive',
                       fail=True)
-            raise sex
+            raise tex.SubmitException('Failed to submit {}: {}'
+                                      .format(ifname, sex))
         else:
             logging.info('PASSED submit_to_archive; {} as {}'
                          .format(ifname, destfname))

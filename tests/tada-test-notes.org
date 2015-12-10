@@ -1,0 +1,24 @@
+* Overview
+Need to test on each of 3 different host types: dome, mountain, valley
+
+Generally: submit file to TADA and verify it moved through system ok.
+(Dome -> Mountain -> Valley -> Archive)
+
+see also t0.sh
+
+* Dome
+- execute: raw_post with personality
+- check:  portal, did it make it?  Can it be downloaded.
+- check:  logs in ~/.tada/*
+
+* Mountain
+- execute: raw_post with personality
+- check: /var/log/messages
+- check: tada logs
+  + /var/log/tada/astropost.log
+  + /var/log/tada/dqd.err  
+  + /var/log/tada/dqd.log
+  + /var/log/tada/pop.log
+
+* Valley
+- execute: fits_submit (direct submit without queues)

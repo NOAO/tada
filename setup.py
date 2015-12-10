@@ -1,17 +1,22 @@
 """Install TADA: data flow software from Dome to Archive."""
+# See: https://packaging.python.org/en/latest/distributing/
+
 from setuptools import setup, find_packages 
 from codecs import open  # To use a consistent encoding
 from os import path
 from glob import glob
 
-#!personalities = glob(path.join('tada_support','personalities','*'))
-
-
 here = path.abspath(path.dirname(__file__))
+print('here={}'.format(here))
 
 # Get the long description from the relevant file
-with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
-    long_description = f.read()
+
+#!with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
+#!    long_description = f.read()
+long_description="Collect telescope data from mountain tops, deliver to far-away archives."
+
+with open(path.join(here,'tada','VERSION')) as version_file:
+    version = version_file.read().strip()
 
 setup(
     name='tada', #!!! change to "stari" or something else if using on PyPI
@@ -19,7 +24,9 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.0.2rc3',
+    # EXAMPLE: '0.0.4rc2',
+    #!version='0.1.1',
+    version=version,
 
     description='Collect telescope data from mountain tops, deliver to far-away archives',
     long_description=long_description,
@@ -69,7 +76,7 @@ setup(
     # project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/technical.html#install-requires-vs-requirements-files
-    install_requires=['dataq',],
+    #!install_requires=['dataq',],
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
@@ -77,6 +84,7 @@ setup(
     #!package_data={
     #!    'tada_support': ['personalities/*', 'scripts/*', 'dev-scripts/*',],
     #!},
+    package_data={'tada': ['VERSION',]},
 
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages.
@@ -94,9 +102,10 @@ setup(
     entry_points={
         'console_scripts': [
             #! 'mockingest=tada.mock_ingest:main',
+            #! 'prep_fits_for_ingest=tada.prep_fits_for_ingest:main',
             'fits_compliant=tada.fits_utils:main',
             'extract_fits_header=tada.fits_utils:extract_header',
-            #! 'prep_fits_for_ingest=tada.prep_fits_for_ingest:main',
+            'direct_submit=tada.submit:main',
         ],
     },
 )

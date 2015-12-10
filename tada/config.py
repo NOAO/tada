@@ -65,7 +65,7 @@ def validate_config(cfg, fname=None, qnames=None):
                             ', '.join(qnames),
                         ))
 
-def get_config(queue_names, json_filename='/etc/tada/tada.conf'):
+def get_config(queue_names, json_filename='/etc/tada/tada.conf', validate=True):
     """Read multi-queue config from json_filename.  Validate its
 contents. Insure queue_names are all in the list of named queues."""
 
@@ -74,11 +74,15 @@ contents. Insure queue_names are all in the list of named queues."""
     except:
         raise Exception('ERROR: Could not read dataqueue config file "{}"'
                         .format(json_filename))
-
-    validate_config(cfg, qnames=queue_names, fname=json_filename)
+    if validate:
+        validate_config(cfg, qnames=queue_names, fname=json_filename)
     
     lut = get_config_lut(cfg)
-    missing = set(queue_names) - set(lut.keys())
+
+    if validate:
+        missing = set(queue_names) - set(lut.keys())
+    else:
+        missing = set()
     if len(missing) > 0:
         raise Exception(
             'ERROR: Config file "{}" does not contain named queues: {}'

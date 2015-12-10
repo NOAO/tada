@@ -25,7 +25,10 @@ SCRIPT=$(readlink -e $0)
 SCRIPTDIR=$(dirname $SCRIPT)
 testdir=$(dirname $SCRIPTDIR)
 tadadir=$(dirname $testdir)
-tdata=$SCRIPTDIR/data
+#tdata=$SCRIPTDIR/data
+tdata=$SCRIPTDIR/tada-test-data/basic
+# tdata=/sandbox/tada/tests/smoke/tada-test-data/basic
+
 
 dir=$SCRIPTDIR
 origdir=`pwd`
@@ -60,7 +63,7 @@ function dqout () {
 }
 
 echo ""
-echo "Starting tests in \"$dir\" ..."
+echo "Starting tests in \"$SCRIPT\" ..."
 echo ""
 echo ""
 
@@ -78,7 +81,7 @@ opt="$optprms "
 status=`basename $file`.status
 findout=find-`basename $file`.out
 cleanStart  > /dev/null
-testCommand tada1_1 "tada-submit $opt $prms $file 2>&1" "^\#" y
+testCommand tada1_1 "tada-submit $opt $prms $file 2>&1" "^\#" n
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada1_2 $status.clean '^\#' n
 testCommand tada1_3 "dqout 2>&1" "^\#" n
@@ -88,17 +91,17 @@ testOutput tada1_4 $findout '^\#' n
 
 ##########################
 # 2_1: pass ingest without options
-file=$tdata/k4k_140922_234607_zri.fits.fz
+file="$tdata/cleaned-bok.fits.fz"
 opt="$optprms "
 status=`basename $file`.status
 findout=find-`basename $file`.out
 cleanStart  > /dev/null
-testCommand tada2_1 "tada-submit $opt $prms $file 2>&1" "^\#" y
+testCommand tada2_1 "tada-submit $opt $prms $file 2>&1" "^\#" n
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada2_2 $status.clean '^\#' n
 testCommand tada2_3 "dqout 2>&1" "^\#" n
 find /var/tada/mountain-mirror /var/tada/noarchive -type f | sed 's|/[0-9]\+/|/|g' | sort > $findout
-testOutput tada2_4 $findout '^\#' y
+testOutput tada2_4 $findout '^\#' n
 
 
 ##########################
@@ -108,7 +111,7 @@ opt="$optprms "
 status=`basename $file`.status
 findout=find-`basename $file`.out
 cleanStart  > /dev/null
-testCommand tada3_1 "tada-submit $opt $prms $file 2>&1" "^\#" y
+testCommand tada3_1 "tada-submit $opt $prms $file 2>&1" "^\#" n
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada3_2 $status.clean '^\#' n
 testCommand tada3_3 "dqout 2>&1" "^\#" n
@@ -118,12 +121,21 @@ testOutput tada3_4 $findout '^\#' n
 
 ##########################
 # 4_1: pass ingest using options
-file=$tdata/ct582021.fits.fz 
-opt="$optprms -o _INSTRUME=mosaic -o _DTPROPID=2014B-0461"
+file=$tdata/obj_355.fits
+# (Personality = wiyn-whirc)
+opt="$optprms \
+ -o __calchdr=PROPIDplusCentury,IMAGTYPEtoOBSTYPE,DTCALDATfromDATEOBStus \
+ -o _DTTELESC=WIYN \
+ -o _DTINSTRU=whirc \
+ -o _DTSITE=kp \
+ -o _PROCTYPE=raw \
+ -o _PRODTYPE=image \
+ -o __filename=$file \
+"
 status=`basename $file`.status
 findout=find-`basename $file`.out
 cleanStart  > /dev/null
-testCommand tada4_1 "tada-submit $opt $prms $file 2>&1" "^\#" y
+testCommand tada4_1 "tada-submit $opt $prms $file 2>&1" "^\#" n
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada4_2 $status.clean '^\#' n
 testCommand tada4_3 "dqout 2>&1" "^\#" n

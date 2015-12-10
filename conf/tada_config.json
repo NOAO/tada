@@ -21,7 +21,7 @@
             
             "_COMMENT": "type specific fields follow",
             "next_queue": "submit",
-            "cache_dir": "/var/tada/mountain_cache/",
+            "cache_dir": "/var/tada/mountain_cache",
             "mirror_dir":  "valley::mountain_mirror",
             
             "_END": "dummy"

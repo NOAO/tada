@@ -1,0 +1,11 @@
+WARNING scrub_errors=['No value found for field AAPROPID during scrub using scrub_propid.']
+k4n_080225_065758_suu.fits produced from /sandbox/tada/tests/smoke/tada-test-data/basic/kptest.fits
+/sandbox/tada/tests/smoke/tada-test-data/basic/kptest.fits:	 IS compliant
+Fields missing from at least one file:
+   Raw:         []
+   Cooked:      []
+   Recommended: ['INSTRUME', 'PROCTYPE', 'PRODTYPE']
+   Exceptions:  0
+   (Cooked & Recommended exclude files that have missing Raw fields)
+
+1 of 1 files are compliant (for Archive Ingest)

@@ -5,6 +5,8 @@ import os.path
 import datetime as dt
 from pathlib import PurePath 
 
+from . import exceptions as tex
+
 # From: http://ast.noao.edu/data/docs
 table1_str = '''
 | Site         | Telescope | Instrument | Type                   | Prefix |
@@ -51,17 +53,21 @@ table1_str = '''
 stiLUT = {
     # (site, telescope,instrument): Prefix 
     ('cp', 'soar', 'goodman'):   'psg',  
+    ('cp', 'soar', 'goodman spectrograph'):   'psg',  # added
     ('cp', 'soar', 'osiris'):    'pso',  
     ('cp', 'soar', 'soi'):       'psi',  
     ('cp', 'soar', 'spartan'):   'pss',  
+    ('cp', 'soar', 'spartan ir camera'):   'pss',   # added
     ('cp', 'soar', 'sam'):       'psa',  
     ('ct', 'ct4m', 'decam'):     'c4d',  
-    ('ct', 'ct4m', 'cosmos'):    'c4c',  
+    ('ct', 'ct4m', 'cosmos'):    'c4c', 
     ('ct', 'ct4m', 'ispi'):      'c4i',  
     ('ct', 'ct4m', 'arcon'):     'c4a',  
     ('ct', 'ct4m', 'mosaic'):    'c4m',  
     ('ct', 'ct4m', 'newfirm'):   'c4n',  
+    ('ct', 'ct4m', 'triplespec'): 'c4t',  
     ('ct', 'ct15m', 'chiron'):   'c15e',  
+    ('ct', 'ct15m', 'echelle'):  'c15e',  # added
     ('ct', 'ct15m', 'arcon'):    'c15s',  
     ('ct', 'ct13m', 'andicam'):  'c13a',  
     ('ct', 'ct1m', 'y4kcam'):    'c1i',  
@@ -70,10 +76,12 @@ stiLUT = {
     ('kp', 'kp4m', 'mosaic'):    'k4m',  
     ('kp', 'kp4m', 'newfirm'):   'k4n',  
     ('kp', 'kp4m', 'kosmos'):    'k4k',  
+    ('kp', 'kp4m', 'cosmos'):    'k4k',  
     ('kp', 'kp4m', 'ice'):       'k4i',  
     ('kp', 'kp4m', 'wildfire'):  'k4w',  
     ('kp', 'kp4m', 'flamingos'): 'k4f',  
     ('kp', 'kp35m', 'whirc'):     'kww',  
+    ('kp', 'wiyn', 'whirc'):     'kww',  # added
     ('kp', 'kp35m', 'bench'):     'kwb',  
     ('kp', 'kp35m', 'minimo/ice'):'kwi',  
     ('kp', 'kp35m', '(p)odi'):    'kwo',  
@@ -96,10 +104,15 @@ obsLUT = {
     'bias':                      'z',
     'zero':                      'z',  # added 5/8/15 for bok
     'dome or projector flat':    'f',
+    'dflat':                     'f', # added 10/23/15 (per dsid.c)
     'flat':                      'f',
+    'projector':                 'f', # added 10/23/15 (per dsid.c)
     'sky':                       's',
+    'skyflat':                   's', # added 10/23/15 (per dsid.c)
     'dark':                      'd',
     'calibration or comparison': 'c',
+    'comp':                      'c', # added 10/23/15 (per dsid.c)
+    'comparison':                'c', # added 10/23/15 (per dsid.c)
     'illumination calibration':  'i',
     'focus':                     'g',
     'fringe':                    'h',
@@ -120,86 +133,118 @@ procLUT = {
 
 prodLUT = {
     #Product-type:         code    
-    'image': 'i',   
+    'image':               'i',   
     'image 2nd version 1': 'j',   
-    'dqmask': 'd',   
-    'expmap': 'e',   
-    'graphics (size)': 'gn',   
-    'weight': 'w',   
-    'nota':                 'u',   
+    'dqmask':              'd',   
+    'expmap':              'e',   
+    'graphics (size)':     'gn',   
+    'weight':              'w',   
+    'nota':                'u',   
     }
 
+def fits_extension(fname):
+    '''Return extension of any file matching <basename>.fits.*, basename.fits
+Extension may be: ".fits.fz", ".fits", ".fits.gz", etc'''
+    _, ext = os.path.splitext(fname)
+    if ext != '.fits':
+        _, e2  = os.path.splitext(_)
+        ext = e2 + ext
+    return ext[1:]
 
-def generate_fname(site, telescope, instrument,
-                   obsdt, obstype, proctype, prodtype, ext,
+
+#!def generate_fname(site, telescope, instrument,
+#!                   obsdt,
+#!                   obstype, proctype, prodtype,
+#!                   ext,
+#!                   orig=None,
+#!                   #jobid=False,
+#!                   tag='',
+#!                   wunk=True):
+def generate_fname(hdr, # dict
+                   ext,
                    orig=None,
-                   jobid=False,
-                   wunk=False):
+                   require_known=True,
+                   tag='' ):
     """Generate standard filename from metadata values.
 e.g. k4k_140923_024819_uri.fits.fz"""
-    if wunk != False:
-        if 'u' == obsLUT.get(obstype, 'u'):
-            logging.warning('Unknown OBSTYPE "{}" in {}'
-                            .format(obstype, orig))
-        if 'u' == procLUT.get(proctype, 'u'):
-            logging.warning('Unknown PROCTYPE "{}" in {}'
-                            .format(proctype, orig))
-        if 'u' == prodLUT.get(prodtype, 'u'):
-            logging.warning('Unknown PRODTYPE "{}" in {}'
-                            .format(prodtype, orig))
+    site = hdr.get('DTSITE','nota').lower()
+    telescope = hdr.get('DTTELESC','nota').lower()
+    instrument = hdr.get('DTINSTRU','nota').lower()
+    obstype = hdr.get('OBSTYPE', 'nota').lower()
+    proctype = hdr.get('PROCTYPE', 'nota').lower()
+    prodtype = hdr.get('PRODTYPE', 'nota').lower()
+    logging.debug('generate_fname: site="{}", tele="{}", instrument="{}", '
+                  'obstype="{}", proctype="{}", prodtype="{}"'
+                  .format(site, telescope, instrument,
+                          obstype, proctype, prodtype))
 
+    # Do NOT allow any "u" parts to the generated filename
+    if require_known:
+        if (site, telescope, instrument) not in stiLUT:
+            msg=('Unknown combination of SITE({}), TELESCOPE({}), '
+                 'and INSTRUMENT({}) in stiLUT (for {})'
+                 .format(site, telescope, instrument,  orig))
+            raise tex.NotInLut(msg)
+        if proctype not in procLUT:
+            raise tex.NotInLut('Unknown PROCTYPE({}) in procLUT({}) (for {})'
+                               .format(proctype, sorted(procLUT.keys()),  orig))
+        if prodtype not in prodLUT:
+            raise tex.NotInLut('Unknown PRODTYPE({}) in prodLUT({}) (for {})'
+                               .format(prodtype, sorted(prodLUT.keys()), orig))
+
+    if obstype not in obsLUT:
+        logging.warning('Unknown OBSTYPE({}) in obsLUT({}) (for {})'
+                        .format(obstype, sorted(obsLUT.keys()), orig))
  
-    #!(date,time) = datetime.split('.')[-1].split('T')
-    # e.g. "20141220T015929"
+    # e.g. DATEOBS='2002-12-25T00:00:00.000001'
+    obsdt = dt.datetime.strptime(hdr.get('DATE-OBS','NA'),
+                                 '%Y-%m-%dT%H:%M:%S.%f')
     date = obsdt.date().strftime('%y%m%d')
     time = obsdt.time().strftime('%H%M%S')
 
     fields = dict(
-        instrument=stiLUT.get((site.lower(),
-                               telescope.lower(),
-                               instrument.lower()),
-                              'uuuu'),
+        prefix=stiLUT.get((site, telescope, instrument), 'uuuu'),
         date=date,
         time=time,
         obstype=obsLUT.get(obstype, 'u'),    # if not in LUT, use "u"!!!
-        proctype=procLUT.get(proctype, 'u'), # if not in LUT, use "u"!!!
-        prodtype=prodLUT.get(prodtype, 'u'), # if not in LUT, use "u"!!!
+        proctype=procLUT.get(proctype,'u'),
+        prodtype=prodLUT.get(prodtype,'u'),
         ext=ext,
         )
 
-    std='{instrument}_{date}_{time}_{obstype}{proctype}{prodtype}'
-    if jobid:
-        fields['jobid'] = jobid
-        new_fname = (std+"_{jobid}.{ext}").format(**fields)
+    std='{prefix}_{date}_{time}_{obstype}{proctype}{prodtype}'
+    if tag != '':
+        fields['tag'] = tag
+        new_fname = (std+"_{tag}.{ext}").format(**fields)
     else:
         new_fname = (std+".{ext}").format(**fields)
     return new_fname
 
 # UNDER CONSTRUCTION
-def generate_archive_basename(hdr, origfname, jobid=False, wunk=False):
-    '''Generate standard filename from metadata values. All modifications
-to hdr should be done before calling this function.  Returns something
-like: k4k_140923_024819_uri.fits.fz'''
-    obsdt = dt.datetime.strptime(hdr['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
-    date = obsdt.date().strftime('%y%m%d')
-    time = obsdt.time().strftime('%H%M%S')
-    _,ext = os.path.splitext(origfname)
-    fields = dict(
-        instrument = hdr.get('INSTRUME'),
-        date = date,
-        time=time,
-        obstype = hdr.get('OBSTYPE'),
-        proctype = hdr.get('PROCTYPE'),
-        prodtype = hdr.get('PRODTYPE'),
-        extension = ext[1:]
-        )
-    std='{instrument}_{date}_{time}_{obstype}{proctype}{prodtype}'
-    if jobid:
-        fields['jobid'] = jobid
-        new_fname = (std+"_{jobid}.{extension}").format(**fields)
-    else:
-        new_fname = (std+".{extension}").format(**fields)
-    return new_fname
+#!def generate_archive_basename(hdr, origfname, jobid=False, wunk=False):
+#!    '''Generate standard filename from metadata values. All modifications
+#!to hdr should be done before calling this function.  Returns something
+#!like: k4k_140923_024819_uri.fits.fz'''
+#!    obsdt = dt.datetime.strptime(hdr['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
+#!    date = obsdt.date().strftime('%y%m%d')
+#!    time = obsdt.time().strftime('%H%M%S')
+#!    _,ext = os.path.splitext(origfname)
+#!    fields = dict(
+#!        instrument = hdr.get('INSTRUME'),
+#!        date = date,
+#!        time=time,
+#!        obstype = hdr.get('OBSTYPE'),
+#!        proctype = hdr.get('PROCTYPE'),
+#!        prodtype = hdr.get('PRODTYPE'),
+#!        extension = ext[1:]
+#!        )
+#!    std='{instrument}_{date}_{time}_{obstype}{proctype}{prodtype}'
+#!    if jobid:
+#!        fields['jobid'] = jobid
+#!        new_fname = (std+"_{jobid}.{extension}").format(**fields)
+#!    else:
+#!        new_fname = (std+".{extension}").format(**fields)
+#!    return new_fname
 
 
 
@@ -212,6 +257,7 @@ def generate_archive_path(hdr, source='raw'):
     '''Generate filename irods path sufficient for Portal staged FTP
 functioning. All modifications to hdr should be done before calling
 this function.'''
+    #logging.debug('DBG: generate_archive_path({},source={}'.format(hdr,source))
     if source == 'raw':
         return PurePath('/noao-tuc-z1/mtn',
                          hdr['DTCALDAT'].replace('-',''),
@@ -224,9 +270,9 @@ this function.'''
                          hdr['DTPROPID'])
     elif source == 'pipeline':
         return PurePath('/noao-tuc-z1/pipeline',
-                        'Q_unknownday',
-                        'unknown',
-                        hdr['DTCALDAT'].replace('-',''))
+                        hdr['DTSUBMIT'],
+                        hdr['PLQUEUE'],
+                        hdr['PLQNAME'])
     else:
         raise Exception('Unrecognized source type: "{}"'.format(source))
-    return None
+    # END

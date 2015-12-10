@@ -1,8 +1,14 @@
+*.tgz
 smoke-2.find
 smoke-2.status
 
+data/
+
 OBSOLETE/
 bok/
+tests/smoke/data
+tests/smoke/data-scrape
+tests/smoke/tada-test-data/
 env_tada
 
 tt
@@ -80,3 +86,4 @@ target/
 *~
 *\#
 .\#*
+*.bak

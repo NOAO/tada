@@ -1,0 +1,3 @@
+FAILED: /sandbox/tada/tests/smoke/tada-test-data/basic/c4d_130901_031805_oow_g_d2.fits.fz not archived; Header for reference:[c4d_130901_031805_oow_g_d2.fits.fz] has already been stored in the database
+ABORT of pipeline_submit
+

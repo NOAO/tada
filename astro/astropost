@@ -55,7 +55,7 @@ error() {
     local parent_lineno="$2"
     local message="$3"
     local code="${4:-1}"
-    echo "Did not complete! Error near line ${parent_lineno}." >> ${logfile}
+    echo "Did not complete! Error near line ${parent_lineno} in astropost." >> ${logfile}
 
     if [[ -n "$message" ]] ; then
         echo "${message}; exiting with status ${code}" >> ${logfile}
