@@ -4,6 +4,7 @@ import logging
 import os.path
 import datetime as dt
 from pathlib import PurePath 
+import csv
 
 from . import exceptions as tex
 
@@ -50,7 +51,7 @@ table1_str = '''
 
 
 # CONTAINS DUPLICATES!!! (e.g. "Arcon") needs Telescope for disambiguation.
-stiLUT = {
+default_stiLUT = {
     # (site, telescope,instrument): Prefix 
     ('cp', 'soar', 'goodman'):   'psg',  
     ('cp', 'soar', 'goodman spectrograph'):   'psg',  # added
@@ -74,6 +75,7 @@ stiLUT = {
     ('ct', 'ct09m', 'arcon'):    'c09i',  
     ('ct', 'ctlab', 'cosmos'):   'clc',  
     ('kp', 'kp4m', 'mosaic'):    'k4m',  
+    ('kp', 'kp4m', 'mosaic3'):   'k4m',  # added
     ('kp', 'kp4m', 'newfirm'):   'k4n',  
     ('kp', 'kp4m', 'kosmos'):    'k4k',  
     ('kp', 'kp4m', 'cosmos'):    'k4k',  
@@ -164,6 +166,7 @@ def generate_fname(hdr, # dict
                    ext,
                    orig=None,
                    require_known=True,
+                   sti_fname='/etc/tada/prefix_table.csv',
                    tag='' ):
     """Generate standard filename from metadata values.
 e.g. k4k_140923_024819_uri.fits.fz"""
@@ -178,6 +181,16 @@ e.g. k4k_140923_024819_uri.fits.fz"""
                   .format(site, telescope, instrument,
                           obstype, proctype, prodtype))
 
+    stiLUT = default_stiLUT.copy()
+    if os.path.exists(sti_fname):
+        lut=dict()
+        with open(sti_fname) as csvfile:
+            for site, telescope,instrument,prefix,*rest in csv.reader(csvfile):
+                if site[0] == '#': continue
+                lut[(site, telescope,instrument)] = prefix
+        stiLUT.update(lut)
+    logging.debug('DBG: stiLUT={}'.format(stiLUT))
+    
     # Do NOT allow any "u" parts to the generated filename
     if require_known:
         if (site, telescope, instrument) not in stiLUT:

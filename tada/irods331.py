@@ -114,7 +114,8 @@ def irods_exists331(irods_fname):
     icmdpath = ('/usr/local/share/applications/irods3.3.1/iRODS/clients'
                 '/icommands/bin')
     try:
-        stat = subprocess.call([os.path.join(icmdpath, 'ils'),irods_fname])
+        stat = subprocess.call([os.path.join(icmdpath, 'ils'),irods_fname],
+                               stderr=subprocess.DEVNULL )
     except subprocess.CalledProcessError as ex:
         logging.error('FAILED {}: {}; {}'
                       .format(tag, ex, ex.output.decode('utf-8')))

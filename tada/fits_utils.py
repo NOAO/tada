@@ -709,11 +709,13 @@ def fits_compliant(fits_file_list,
                 missing_recommended = missing_in_recommended_hdr(hdr)
         except Exception as err:
             exception_cnt += 1
-            print('EXCEPTION in fits_compliant on {}: {}'
-                  .format(ffile, err))
+            print('EXCEPTION in fits_compliant on {}: {}'.format(ffile, err))
             if trace:
                 traceback.print_exc()            
             valid = False
+            bad_files.add(ffile)
+            bad += 1
+            continue
 
         all_missing_raw.update(missing_raw)
         all_missing_cooked.update(missing_cooked)
@@ -782,6 +784,8 @@ def fits_compliant(fits_file_list,
                   ))
         print('\n{} of {} files are compliant (for Archive Ingest)'
               .format(len(fits_file_list)-bad, len(fits_file_list)))
+        if exception_cnt > 0:
+            sys.exit('Abnormal termination due to exception(s)')
 
 
 ##############################################################################
@@ -865,6 +869,7 @@ def main():
                    show_header=args.header,
                    trace=args.trace,
                    qcfg=qcfg )
+    
 
 if __name__ == '__main__':
 

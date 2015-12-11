@@ -81,14 +81,6 @@ Post modify:
  'XTENSION': 'BINTABLE',
  'ZD': '37.810'}
 EXCEPTION in fits_compliant on /sandbox/tada/tests/smoke/tada-test-data/basic/kp109391.fits.fz: Could not parse DATE-OBS field (2004-12-16) in header of: /sandbox/tada/tests/smoke/tada-test-data/basic/kp109391.fits.fz
-Traceback (most recent call last):
-  File "/usr/bin/fits_compliant", line 9, in <module>
-    load_entry_point('tada==0.1.17', 'console_scripts', 'fits_compliant')()
-  File "/usr/lib/python3.4/site-packages/tada-0.1.17-py3.4.egg/tada/fits_utils.py", line 867, in main
-  File "/usr/lib/python3.4/site-packages/tada-0.1.17-py3.4.egg/tada/fits_utils.py", line 727, in fits_compliant
-  File "/usr/lib/python3.4/site-packages/tada-0.1.17-py3.4.egg/tada/file_naming.py", line 201, in generate_fname
-  File "/usr/lib64/python3.4/_strptime.py", line 500, in _strptime_datetime
-    tt, fraction = _strptime(data_string, format)
-  File "/usr/lib64/python3.4/_strptime.py", line 337, in _strptime
-    (data_string, format))
-ValueError: time data '2004-12-16' does not match format '%Y-%m-%dT%H:%M:%S.%f'
+
+0 of 1 files are compliant (for Archive Ingest)
+Abnormal termination due to exception(s)
