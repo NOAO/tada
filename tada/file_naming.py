@@ -51,7 +51,7 @@ table1_str = '''
 
 
 # CONTAINS DUPLICATES!!! (e.g. "Arcon") needs Telescope for disambiguation.
-default_stiLUT = {
+stiLUT = {
     # (site, telescope,instrument): Prefix 
     ('cp', 'soar', 'goodman'):   'psg',  
     ('cp', 'soar', 'goodman spectrograph'):   'psg',  # added
@@ -181,13 +181,12 @@ e.g. k4k_140923_024819_uri.fits.fz"""
                   .format(site, telescope, instrument,
                           obstype, proctype, prodtype))
 
-    stiLUT = default_stiLUT.copy()
     if os.path.exists(sti_fname):
         lut=dict()
         with open(sti_fname) as csvfile:
-            for site, telescope,instrument,prefix,*rest in csv.reader(csvfile):
+            for s, t,i,pfx,*rest in csv.reader(csvfile):
                 if site[0] == '#': continue
-                lut[(site, telescope,instrument)] = prefix
+                lut[(s, t,i)] = pfx
         stiLUT.update(lut)
     logging.debug('DBG: stiLUT={}'.format(stiLUT))
     
@@ -215,6 +214,9 @@ e.g. k4k_140923_024819_uri.fits.fz"""
     date = obsdt.date().strftime('%y%m%d')
     time = obsdt.time().strftime('%H%M%S')
 
+    logging.debug('DBG: stiLUT key={}, val={}'
+                  .format((site, telescope, instrument),
+                          stiLUT.get((site, telescope, instrument), 'uuuu')))
     fields = dict(
         prefix=stiLUT.get((site, telescope, instrument), 'uuuu'),
         date=date,
