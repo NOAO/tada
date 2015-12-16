@@ -188,7 +188,6 @@ e.g. k4k_140923_024819_uri.fits.fz"""
                 if site[0] == '#': continue
                 lut[(s, t,i)] = pfx
         stiLUT.update(lut)
-    logging.debug('DBG: stiLUT={}'.format(stiLUT))
     
     # Do NOT allow any "u" parts to the generated filename
     if require_known:

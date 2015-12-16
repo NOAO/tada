@@ -108,6 +108,24 @@ INGEST_RECOMMENDED_FIELDS = set([
 ])    
 #DOC: ^^^
 
+# Fields used in hdr_calc_funcs.py
+SUPPORT_FIELDS = set([
+    'IMAGETYP',
+    'DATE-OBS',
+    'TIME-OBS',
+    'DATE',
+    'PROPID',
+    'PLDSID',
+    'PLQUEUE',
+    'PLQNAME',
+    ])
+
+USED_FIELDS = (RAW_REQUIRED_FIELDS
+               | FILENAME_REQUIRED_FIELDS
+               | INGEST_REQUIRED_FIELDS
+               | INGEST_RECOMMENDED_FIELDS
+               | SUPPORT_FIELDS)
+
 
 def print_header(msg, hdr=None, fits_filename=None):
     """Provide HDR or FITS_FILENAME"""
@@ -597,15 +615,27 @@ def txt_to_hdr(ffile):
     return hdr
 
 def get_hdr_as_dict(fitsfile):
+    #!hdict = dict()
+    #!for hdu in pyfits.open(fitsfile):
+    #!    hdict.update(dict(hdu.header))
+
     hdict = dict()
-    for hdu in pyfits.open(fitsfile):
-        hdict.update(dict(hdu.header))
-    # Never modify these
-    hdict.pop('',None)
-    hdict.pop('COMMENT',None)
-    hdict.pop('HISTORY',None)
+    hdulist = pyfits.open(fitsfile)
+    for field in USED_FIELDS:
+        if field in hdulist[0].header:
+            # use existing Primary HDU field
+            hdict[field] = hdulist[0].header[field]
+        else:
+            # use last existing Extension HDU field
+            for hdu in hdulist[1:]:
+                if field in hdu.header:
+                    hdict[field] = hdu.header[field]
+
+    modified_keys = sorted(list(hdict.keys()))
+    hdict['COMMENT'] = 'MODIFIED:{}'.format(','.join(modified_keys))
     return hdict
-    
+
+
 # EXAMPLE:
 #   find /data/raw -name "*.fits*" -print0 | xargs --null  fits_compliant
 def fits_compliant(fits_file_list,

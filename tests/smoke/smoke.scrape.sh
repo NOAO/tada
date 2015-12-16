@@ -21,21 +21,16 @@ cd $dir
 export PATH=$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:$PATH
 
 source smoke-lib.sh
+source mars.sh
 return_code=0
 SMOKEOUT="README-smoke-results.scrape.txt"
 
 echo ""
 echo "Starting tests in \"$SCRIPT\" ..."
 echo ""
-echo -n "Removing provisional files before starting..."
-if curl --max-time 30 -s -S "http://mars.sdm.noao.edu:8000/provisional/rollback/" > /dev/null
-then
-    echo "DONE"
-    echo "REMOVED all provisional files before starting."
-else
-    echo "DONE"
-    echo "COULD NOT remove all provisional files before starting."    
-fi
+mars_stuff
+mars_rollback
+echo ""
 
 echo ""
 if [ -d "$tdata" ]; then

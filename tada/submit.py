@@ -175,8 +175,12 @@ RETURN: irods location of hdr file.
         fu.validate_raw_hdr(hdr, orig_fullname)
         #!fname_fields = fu.modify_hdr(hdr, mirror_fname, options, opt_params,
         #!                             **kwargs)
-        fname_fields = fu.fix_hdr(hdr, mirror_fname,
-                                  options, opt_params, **kwargs)
+        try:
+            fname_fields = fu.fix_hdr(hdr, mirror_fname,
+                                      options, opt_params, **kwargs)
+        except Exception as err:
+            raise tex.CannotModifyHeader('Could not update FITS header; '
+                                         '{}'.format(err))
         fu.validate_cooked_hdr(hdr, orig_fullname)
         fu.validate_recommended_hdr(hdr, orig_fullname)
         # Generate standards conforming filename

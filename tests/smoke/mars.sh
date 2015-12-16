@@ -6,6 +6,7 @@ marsurl="http://mars.sdm.noao.edu:8000"
 copts="--connect-timeout 10 --max-time 600 -s -S"
 
 function mars_rollback () {
+    #echo -n "rolling back..."
     if curl $copts "$marsurl/provisional/rollback/" > /dev/null
     then
         echo "REMOVED all provisional files before starting."
