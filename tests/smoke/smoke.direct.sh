@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 # AUTHORS:    S. Pothier
 # PURPOSE:    Wrapper for smoke test
 #   Quickest test done on valley to test:
@@ -25,22 +25,19 @@ cd $dir
 export PATH=$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:$PATH
 
 source smoke-lib.sh
+source mars.sh
 return_code=0
 SMOKEOUT="README-smoke-results.direct.txt"
 
 echo ""
 echo "Starting tests in \"$SCRIPT\" ..."
 echo ""
-if curl -s -S "http://mars.sdm.noao.edu:8000/provisional/rollback/" > /dev/null
-then
-    echo "REMOVED all provisional files before starting."
-else
-    echo "COULD NOT remove all provisional files before starting."    
-fi
+mars_stuff
+mars_rollback
 echo ""
 
 if [ -d "$tdata/basic" ]; then
-    echo "data directory ($tdata/basic) exists. Using it"
+    echo "Data directory ($tdata/basic) exists. Using it!"
 else
     echo "data directory ($tdata/basic) does not exist. Transfering it"
     wget http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
@@ -74,9 +71,8 @@ function fsub () {
         irodsfile=`echo $msg | cut -s --delimiter=' ' --fields=5`
         archfile=`basename $irodsfile`
         echo $msg 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
-        curl -s -S "http://mars.sdm.noao.edu:8000/provisional/add/$archfile/?source=$ffile"
+        mars_add "$archfile" "$ffile"
         echo ""
-        echo "Successful ingest. Added $archfile to PROVISIONAL list via ws"
     else
         #! >&2 echo "EXECUTED: fits_submit -p smoke $pers $ffile"  
         #! >&2 echo $msg
@@ -132,13 +128,6 @@ testCommand ps2_1 "psubmit $tdata/basic/c4d_130901_031805_oow_g_d2.fits.fz" "^\#
 
 
 ##############################################################################
-
-#!if curl -s -S "http://mars.sdm.noao.edu:8000/provisional/stuff/" > /dev/null
-#!then
-#!    echo "STUFFED all references containing 'TADA' into provisional."
-#!else
-#!    echo "COULD NOT stuff references containing 'TADA' into provisional."
-#!fi
 
 
 rm $SMOKEOUT 2>/dev/null

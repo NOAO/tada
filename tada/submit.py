@@ -103,8 +103,6 @@ RETURN: (statusBool, message, operatorMessage)"""
         #raise tex.SubmitException(message)
 
     return (success, message, operator_msg)
-    
-
 
 def prep_for_ingest(mirror_fname,
                     persona_options=dict(),  # e.g. (under "__DTSITE"
@@ -156,6 +154,7 @@ RETURN: irods location of hdr file.
     jidt = opt_params.get('jobid_type',None)  # plain | seconds | (False)
     tag = opt_params.get('job_tag','')
     source = opt_params.get('source','raw')   # pipeline | (dome)
+    resubmit = opt_params.get('test_resubmit', '0') == '1'
     
     # We want "filename" to always be given an option.
     # But we also don't want to force setting of options if we can
@@ -176,8 +175,12 @@ RETURN: irods location of hdr file.
         fu.validate_raw_hdr(hdr, orig_fullname)
         #!fname_fields = fu.modify_hdr(hdr, mirror_fname, options, opt_params,
         #!                             **kwargs)
-        fname_fields = fu.fix_hdr(hdr, mirror_fname,
-                                  options, opt_params, **kwargs)
+        try:
+            fname_fields = fu.fix_hdr(hdr, mirror_fname,
+                                      options, opt_params, **kwargs)
+        except Exception as err:
+            raise tex.CannotModifyHeader('Could not update FITS header; '
+                                         '{}'.format(err))
         fu.validate_cooked_hdr(hdr, orig_fullname)
         fu.validate_recommended_hdr(hdr, orig_fullname)
         # Generate standards conforming filename
@@ -212,11 +215,26 @@ RETURN: irods location of hdr file.
         new_ifname = str(new_ipath)
         new_ihdr = new_ifname.replace(ext,'hdr')
         logging.debug('new_ifname={},new_ihdr={}'.format(new_ifname, new_ihdr))
-        if iu.irods_exist331(new_ihdr):
-            msg = ('iRODS file already exists at {}. Not ingesting {}'
-                   .format(new_ihdr, source))
-            logging.error(msg)
-            raise tex.IrodsContentException(msg)
+
+        # Abort ingest if either HDR or FITS already exist under irods
+        if iu.irods_exists331(new_ihdr):
+            msg = ('iRODS HDR file already exists at {} on submit of {}.'
+                   .format(new_ihdr, orig_fullname))
+            if resubmit:
+                logging.error(msg + ' Trying to ingest anyhow.')
+            else:
+                msg = msg + ' Aborting attempt to ingest.'
+                logging.error(msg)
+                raise tex.IrodsContentException(msg)
+        if iu.irods_exists331(new_ifname):
+            msg = ('iRODS FITS file already exists at {} on submit of {}.'
+                   .format(new_ifname, orig_fullname))
+            if resubmit:
+                logging.error(msg + ' Trying to ingest anyhow.')
+            else:
+                msg = msg + ' Aborting attempt to ingest.'
+                logging.error(msg)
+                raise tex.IrodsContentException(msg)
 
         # Print without blank cards or trailing whitespace
         hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
@@ -335,12 +353,12 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
                                                        **cfgprms)
     except:
         #! traceback.print_exc()
-       raise
+        raise
     
-   (success, msg, ops_msg) = http_archive_ingest(new_ihdr, qname,
+    (success, msg, ops_msg) = http_archive_ingest(new_ihdr, qname,
                                                  qcfg=qcfg, origfname=origfname)
-   if pprms.get('do_audit',False):
-       audit_svc(origfname, destfname, ops_msg, popts)
+    if pprms.get('do_audit',False):
+        audit_svc(origfname, destfname, ops_msg, popts)
     if not success:
         raise tex.SubmitException(msg)
 

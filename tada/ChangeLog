@@ -1,4 +1,7 @@
-2015-12-08  Steve Pothier  <pothier@noao.edu>
+2015-12-16  Steve Pothier  <pothier@noao.edu>
 
-	* submit.py (submit_to_archive): 
+	* fits_utils.py (get_hdr_as_dict): copy non-PrimaryHDU fields that
+	we care about (USED_FIELDS) to primary.  These will be the only
+	ones modified. The full primary output to HDR file.
+
 

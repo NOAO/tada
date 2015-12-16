@@ -4,6 +4,7 @@ import logging
 import os.path
 import datetime as dt
 from pathlib import PurePath 
+import csv
 
 from . import exceptions as tex
 
@@ -74,6 +75,7 @@ stiLUT = {
     ('ct', 'ct09m', 'arcon'):    'c09i',  
     ('ct', 'ctlab', 'cosmos'):   'clc',  
     ('kp', 'kp4m', 'mosaic'):    'k4m',  
+    ('kp', 'kp4m', 'mosaic3'):   'k4m',  # added
     ('kp', 'kp4m', 'newfirm'):   'k4n',  
     ('kp', 'kp4m', 'kosmos'):    'k4k',  
     ('kp', 'kp4m', 'cosmos'):    'k4k',  
@@ -164,6 +166,7 @@ def generate_fname(hdr, # dict
                    ext,
                    orig=None,
                    require_known=True,
+                   sti_fname='/etc/tada/prefix_table.csv',
                    tag='' ):
     """Generate standard filename from metadata values.
 e.g. k4k_140923_024819_uri.fits.fz"""
@@ -178,6 +181,14 @@ e.g. k4k_140923_024819_uri.fits.fz"""
                   .format(site, telescope, instrument,
                           obstype, proctype, prodtype))
 
+    if os.path.exists(sti_fname):
+        lut=dict()
+        with open(sti_fname) as csvfile:
+            for s, t,i,pfx,*rest in csv.reader(csvfile):
+                if site[0] == '#': continue
+                lut[(s, t,i)] = pfx
+        stiLUT.update(lut)
+    
     # Do NOT allow any "u" parts to the generated filename
     if require_known:
         if (site, telescope, instrument) not in stiLUT:
@@ -202,6 +213,9 @@ e.g. k4k_140923_024819_uri.fits.fz"""
     date = obsdt.date().strftime('%y%m%d')
     time = obsdt.time().strftime('%H%M%S')
 
+    logging.debug('DBG: stiLUT key={}, val={}'
+                  .format((site, telescope, instrument),
+                          stiLUT.get((site, telescope, instrument), 'uuuu')))
     fields = dict(
         prefix=stiLUT.get((site, telescope, instrument), 'uuuu'),
         date=date,

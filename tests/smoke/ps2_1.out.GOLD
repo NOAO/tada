@@ -1,3 +1,3 @@
-FAILED: /sandbox/tada/tests/smoke/tada-test-data/basic/c4d_130901_031805_oow_g_d2.fits.fz not archived; Header for reference:[c4d_130901_031805_oow_g_d2.fits.fz] has already been stored in the database
+iRODS HDR file already exists at /noao-tuc-z1/pipeline/Q20151216/DESY1/20130831/c4d_130901_031805_oow_g_d2.hdr on submit of /sandbox/tada/tests/smoke/tada-test-data/basic/c4d_130901_031805_oow_g_d2.fits.fz. Aborting attempt to ingest.
 ABORT of pipeline_submit
-
+/noao-tuc-z1/pipeline/Q20151216/DESY1/20130831/c4d_130901_031805_oow_g_d2.hdr

@@ -7,6 +7,10 @@ class InvalidHeader(SubmitException):
     "Exception when FITS header doesn't contains everything we need."
     pass
 
+class CannotModifyHeader(SubmitException):
+    "Exception when untrapped part of updating FITS header fails."
+    pass
+
 class HeaderMissingKeys(SubmitException):
     "Exception when FITS header doesn't contains everything we need."
     pass
@@ -23,11 +27,9 @@ class BadFieldContent(Exception):
     "A FITS header field value has bad content."
     pass
 
-
 class NotInLut(Exception):
     "A used key was not found in an internal LookUp Table"
     pass
-
 
 class IrodsContentException(Exception):
     "Irods contains something that prevents ingest"
