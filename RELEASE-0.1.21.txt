@@ -1,0 +1,9 @@
+12/16/2015
+
+Hotfix in support of BOK batch ingests.
+
+- Abort ingest if *.hdr file exists under iRODS. To disable abort (but
+  still warn), add "__test_resubmit=1" to personality.
+- Fixed duplicate EXTNAME in bok data
+- All header mods now done to PrimaryHDU and include only fields in
+  defined list (try: "fitsheader baz.fits.fz | grep MODIFIED:")
