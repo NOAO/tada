@@ -226,7 +226,7 @@ RETURN: irods location of hdr file.
                 msg = msg + ' Aborting attempt to ingest.'
                 logging.error(msg)
                 raise tex.IrodsContentException(msg)
-        if iu.irods_exists331(new_ifname):
+        elif iu.irods_exists331(new_ifname):
             msg = ('iRODS FITS file already exists at {} on submit of {}.'
                    .format(new_ifname, orig_fullname))
             if resubmit:
@@ -404,6 +404,8 @@ def direct_submit(fitsfile,
 
     os.makedirs(moddir, exist_ok=True)
     newfile = shutil.copy(fitsfile, moddir)
+    logging.debug('direct_submit: popts={}'.format(popts))
+    logging.debug('direct_submit: pprms={}'.format(pprms))
     
     try:
         new_ihdr,destfname,origfname = prep_for_ingest(newfile,
@@ -418,7 +420,16 @@ def direct_submit(fitsfile,
         statuscode = 1
         sys.exit(statusmsg)
 
-
+    if pprms.get('dry_run','0') == '1':
+        logging.debug('Doing dry_run (no ingest)')
+        statusmsg= ('SUCCESS: DRY-RUN of ingest {} as {}'
+                    .format(fitsfile, destfname))
+        statuscode = 0
+        print(statusmsg, file=sys.stderr)
+        sys.exit(statuscode)
+    else:
+        logging.debug('DBG: no dry_run.')
+        
     success,m1,ops_msg = http_archive_ingest(new_ihdr, qname,
                                          qcfg=qcfg, origfname=origfname)
     if pprms.get('do_audit','0') == '1':
@@ -479,7 +490,7 @@ def main():
                         default=dflt_config,
                         help='Config file. [default={}]'.format(dflt_config),
                         )
-    parser.add_argument('-l', '--loglevel',
+    parser.add_argument('--loglevel', '-l', 
                         help='Kind of diagnostic output',
                         choices=['CRTICAL', 'ERROR', 'WARNING',
                                  'INFO', 'DEBUG'],

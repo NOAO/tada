@@ -117,8 +117,8 @@ function psubmit () {
     pipeline_submit $ffile 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
 }
 
-testCommand ps1_1 "psubmit $tdata/basic/uofa-mandle.jpg" "^\#" n
-testCommand ps2_1 "psubmit $tdata/basic/c4d_130901_031805_oow_g_d2.fits.fz" "^\#" n
+#!testCommand ps1_1 "psubmit $tdata/basic/uofa-mandle.jpg" "^\#" n
+#!testCommand ps2_1 "psubmit $tdata/basic/c4d_130901_031805_oow_g_d2.fits.fz" "^\#" n
 
 
 ###########################################
