@@ -121,30 +121,6 @@ DO:
 mirror_fname :: Mountain mirror on valley
 RETURN: irods location of hdr file.
     """
-
-    #!logging.debug('prep_for_ingest: fname={}, m_dir={}, a_dir={}'
-    #!              .format(mirror_fname, mirror_dir, archive331))
-
-    # Name/values passed on LPR command line.
-    #   e.g. lpr -P astro -o _INSTRUME=KOSMOS  -o _OBSERVAT=KPNO  foo.fits
-    # Only use options starting with '_' and remove '_' from dict key.
-    # +++ Add code here to handle other kinds of options passed from LPR.
-    #! optfname = mirror_fname + ".options"
-    #! optstr = ''
-    #! if os.path.exists(optfname):
-    #!     with open(optfname,encoding='utf-8') as f:
-    #!         optstr = f.readline()
-    #! options = dict()
-    #! opt_params = dict()
-    #! for opt in optstr.split():
-    #!     k, v = opt.split('=')
-    #!     if k[0] != '_':
-    #!         continue
-    #!     if k[1] == '_':
-    #!         opt_params[k[2:]] = v
-    #!     else:
-    #!         options[k[1:]] = v.replace('_', ' ')                
-
     options = persona_options
     opt_params = persona_params
     #!logging.debug('prep_for_ingest(): options={}, opt_params={}'
@@ -211,10 +187,15 @@ RETURN: irods location of hdr file.
         ext = fn.fits_extension(new_basename)
         logging.debug('orig_fullname={}, new_basename={}, ext={}'
                       .format(orig_fullname, new_basename, ext))
-        #!new_ipath = new_ipath / new_basename
         new_ifname = str(new_ipath)
         new_ihdr = new_ifname.replace(ext,'hdr')
         logging.debug('new_ifname={},new_ihdr={}'.format(new_ifname, new_ihdr))
+
+        #!if opt_params.get('dry_run','0') == '1':
+        #!    logging.debug('Doing dry_run (no ingest)')
+        #!    msg= ('SUCCESS: DRY-RUN of ingest {} as {}'
+        #!          .format(mirror_fname, new_ifname))
+        #!    raise tex.SuccessfulNonIngest(msg)
 
         # Abort ingest if either HDR or FITS already exist under irods
         if iu.irods_exists331(new_ihdr):
@@ -388,12 +369,6 @@ def direct_submit(fitsfile,
                    )
     saved_hdr = None
 
-    # Just run script as TADA user to gain full TADA irods and permissions 
-    #!iu.irods_setenv(host=qcfg[qname]['arch_irods_host'],
-    #!                port=qcfg[qname]['arch_irods_port'],
-    #!                resource=qcfg[qname]['arch_irods_resource'],
-    #!                )
-
     popts = dict()
     pprms = dict()
     for pf in personality_files:
@@ -420,15 +395,6 @@ def direct_submit(fitsfile,
         statuscode = 1
         sys.exit(statusmsg)
 
-    if pprms.get('dry_run','0') == '1':
-        logging.debug('Doing dry_run (no ingest)')
-        statusmsg= ('SUCCESS: DRY-RUN of ingest {} as {}'
-                    .format(fitsfile, destfname))
-        statuscode = 0
-        print(statusmsg, file=sys.stderr)
-        sys.exit(statuscode)
-    else:
-        logging.debug('DBG: no dry_run.')
         
     success,m1,ops_msg = http_archive_ingest(new_ihdr, qname,
                                          qcfg=qcfg, origfname=origfname)

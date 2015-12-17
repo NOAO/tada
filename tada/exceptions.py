@@ -34,3 +34,9 @@ class NotInLut(Exception):
 class IrodsContentException(Exception):
     "Irods contains something that prevents ingest"
     pass
+
+
+class SuccessfulNonIngest(Exception):
+    "We did not ingest. On purpose. (e.g. dry-run)"
+    pass
+    
