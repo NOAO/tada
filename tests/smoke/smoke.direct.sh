@@ -40,7 +40,7 @@ if [ -d "$tdata/basic" ]; then
     echo "Data directory ($tdata/basic) exists. Using it!"
 else
     echo "data directory ($tdata/basic) does not exist. Transfering it"
-    wget http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
+    wget -nc http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
     tar xf fits-test-data.tgz
 fi
 
@@ -86,12 +86,12 @@ function fsub () {
 ## non-FITS; (reject, not try to ingest)
 testCommand fs1_1 "fsub $tdata/basic/uofa-mandle.jpg" "^\#" n 1
 
-## compliant FITS with no options (no need for them, so ingest success)
-file2="$tdata/basic/cleaned-bok.fits.fz"
-testCommand fs2_1 "fsub $file2" "^\#" n
-
-## compliant FITS with no options (BUT, already inserted above so ingest FAIL)
-testCommand fs2b_1 "fsub $file2" "^\#" n 2
+#!## compliant FITS with no options (no need for them, so ingest success)
+#!file2="$tdata/basic/cleaned-bok.fits.fz"
+#!testCommand fs2_1 "fsub $file2" "^\#" n
+#!
+#!## compliant FITS with no options (BUT, already inserted above so ingest FAIL)
+#!testCommand fs2b_1 "fsub $file2" "^\#" n 2
 
 ## bad format for DATE-OBS
 testCommand fs3_1 "fsub $tdata/basic/kp109391.fits.fz" "^\#"  n 1
