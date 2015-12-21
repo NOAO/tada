@@ -54,7 +54,7 @@ function fcom () {
     ffile=$1
     msg=`fits_compliant --header $ffile  2>&1`
     status=$?
-    msg=`echo $msg | perl -pe "s|$tdata||"`
+    msg=`echo $msg | perl -pe "s|$tdata||g"`
     echo "$msg"
     return $status
 }
