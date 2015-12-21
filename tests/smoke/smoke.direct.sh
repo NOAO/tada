@@ -79,7 +79,8 @@ function fsub () {
         mars_add "$archfile" "$ffile"
         echo ""
     else
-        echo "EXECUTED: direct_submit -p smoke $pers $ffile"  
+	tailffile=`echo $ffile | perl -pe "s|$tdata||"`
+        echo "EXECUTED: direct_submit -p smoke $pers $tailffile"  
         echo $msg
     fi
     return $status

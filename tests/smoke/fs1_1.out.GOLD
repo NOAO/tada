@@ -1,2 +1,2 @@
-EXECUTED: direct_submit -p smoke  /sandbox/tada/tests/smoke/tada-test-data/basic/uofa-mandle.jpg
+EXECUTED: direct_submit -p smoke  /basic/uofa-mandle.jpg
 Cannot ingest non-FITS file: /basic/uofa-mandle.jpg

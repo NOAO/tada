@@ -1,2 +1,2 @@
-EXECUTED: direct_submit -p smoke  /sandbox/tada/tests/smoke/tada-test-data/basic/kp109391.fits.fz
+EXECUTED: direct_submit -p smoke  /basic/kp109391.fits.fz
 Could not update FITS header; Could not parse DATE-OBS field (2004-12-16) in header of: /basic/kp109391.fits.fz
