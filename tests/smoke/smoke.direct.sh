@@ -18,6 +18,7 @@ tdata=$SCRIPTDIR/tada-test-data
 # tdata=/sandbox/tada/tests/smoke/tada-test-data/basic
 
 echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
+ppath=/opt/tada-cli/personalities
 
 dir=$SCRIPTDIR
 origdir=`pwd`
@@ -63,9 +64,10 @@ function fsub () {
     ffile=$1; shift
     pers=""
     for p; do
-	    pers="$pers -p $p"
+	    pers="$pers -p $ppath/$p.personality"
     done
-    msg=`fits_submit -p smoke $pers $ffile 2>&1 `
+    #~msg=`fits_submit -p smoke $pers $ffile 2>&1 `
+    msg=`direct_submit -p $ppath/smoke.personality $pers $ffile 2>&1 `
     status=$?
     msg=`echo $msg | perl -pe "s|$tdata||"`
     #echo "msg=$msg"
@@ -77,9 +79,7 @@ function fsub () {
         mars_add "$archfile" "$ffile"
         echo ""
     else
-        #! >&2 echo "EXECUTED: fits_submit -p smoke $pers $ffile"  
-        #! >&2 echo $msg
-        echo "EXECUTED: fits_submit -p smoke $pers $ffile"  
+        echo "EXECUTED: direct_submit -p smoke $pers $ffile"  
         echo $msg
     fi
     return $status
