@@ -50,12 +50,15 @@ fi
 ###########################################
 ### fits_compliant
 ###
+function fcom () {
+    ffile=$1
+    msg=`fits_compliant --header $ffile  2>&1`
+    status=$?
+    msg=`echo $msg | perl -pe "s|$tdata||"`
+    echo "$msg"
+    return $status
+}
 
-## bad DATE-OBS content
-testCommand fc1_1 "fits_compliant --header $tdata/basic/kp109391.fits.fz 2>&1" "^\#" n 1
-
-# compliant
-testCommand fc2_1 "fits_compliant $tdata/basic/kptest.fits 2>&1" "^\#" n
 
 ###########################################
 ### fits_submit
@@ -85,6 +88,14 @@ function fsub () {
     fi
     return $status
 }
+
+##############################################################################
+
+## bad DATE-OBS content
+testCommand fc1_1 "fcom $tdata/basic/kp109391.fits.fz" "^\#" n 1
+
+# compliant
+testCommand fc2_1 "fcom $tdata/basic/kptest.fits" "^\#" n
 
 
 ## non-FITS; (reject, not try to ingest)
