@@ -14,6 +14,7 @@ tadadir=$(dirname $testdir)
 # tadadir=/sandbox/tada
 #tdata=$SCRIPTDIR/data
 tdata=$SCRIPTDIR/tada-test-data
+#tdata=/data/tada-test-data
 # tdata=/sandbox/tada/tests/smoke/tada-test-data/basic
 
 echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
@@ -64,8 +65,10 @@ function fsub () {
     for p; do
 	    pers="$pers -p $p"
     done
-    msg=`fits_submit -p smoke $pers $ffile 2>&1`
+    msg=`fits_submit -p smoke $pers $ffile 2>&1 `
     status=$?
+    msg=`echo $msg | perl -pe "s|$tdata||"`
+    #echo "msg=$msg"
     if [ $status -eq 0 ]; then
         # e.g. msg="SUCCESS: archived /sandbox/tada/tests/smoke/data/obj_355.fits as /noao-tuc-z1/mtn/20141219/WIYN/2012B-0500/uuuu_141220_130138_uuu_TADATEST_2417885023.fits"
         irodsfile=`echo $msg | cut -s --delimiter=' ' --fields=5`
