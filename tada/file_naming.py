@@ -213,9 +213,6 @@ e.g. k4k_140923_024819_uri.fits.fz"""
     date = obsdt.date().strftime('%y%m%d')
     time = obsdt.time().strftime('%H%M%S')
 
-    logging.debug('DBG: stiLUT key={}, val={}'
-                  .format((site, telescope, instrument),
-                          stiLUT.get((site, telescope, instrument), 'uuuu')))
     fields = dict(
         prefix=stiLUT.get((site, telescope, instrument), 'uuuu'),
         date=date,

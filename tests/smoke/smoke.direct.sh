@@ -14,6 +14,7 @@ tadadir=$(dirname $testdir)
 # tadadir=/sandbox/tada
 #tdata=$SCRIPTDIR/data
 tdata=$SCRIPTDIR/tada-test-data
+#tdata=/data/tada-test-data
 # tdata=/sandbox/tada/tests/smoke/tada-test-data/basic
 
 echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
@@ -40,7 +41,7 @@ if [ -d "$tdata/basic" ]; then
     echo "Data directory ($tdata/basic) exists. Using it!"
 else
     echo "data directory ($tdata/basic) does not exist. Transfering it"
-    wget http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
+    wget -nc http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
     tar xf fits-test-data.tgz
 fi
 
@@ -64,8 +65,10 @@ function fsub () {
     for p; do
 	    pers="$pers -p $p"
     done
-    msg=`fits_submit -p smoke $pers $ffile 2>&1`
+    msg=`fits_submit -p smoke $pers $ffile 2>&1 `
     status=$?
+    msg=`echo $msg | perl -pe "s|$tdata||"`
+    #echo "msg=$msg"
     if [ $status -eq 0 ]; then
         # e.g. msg="SUCCESS: archived /sandbox/tada/tests/smoke/data/obj_355.fits as /noao-tuc-z1/mtn/20141219/WIYN/2012B-0500/uuuu_141220_130138_uuu_TADATEST_2417885023.fits"
         irodsfile=`echo $msg | cut -s --delimiter=' ' --fields=5`
@@ -86,12 +89,12 @@ function fsub () {
 ## non-FITS; (reject, not try to ingest)
 testCommand fs1_1 "fsub $tdata/basic/uofa-mandle.jpg" "^\#" n 1
 
-## compliant FITS with no options (no need for them, so ingest success)
-file2="$tdata/basic/cleaned-bok.fits.fz"
-testCommand fs2_1 "fsub $file2" "^\#" n
-
-## compliant FITS with no options (BUT, already inserted above so ingest FAIL)
-testCommand fs2b_1 "fsub $file2" "^\#" n 2
+#!## compliant FITS with no options (no need for them, so ingest success)
+#!file2="$tdata/basic/cleaned-bok.fits.fz"
+#!testCommand fs2_1 "fsub $file2" "^\#" n
+#!
+#!## compliant FITS with no options (BUT, already inserted above so ingest FAIL)
+#!testCommand fs2b_1 "fsub $file2" "^\#" n 2
 
 ## bad format for DATE-OBS
 testCommand fs3_1 "fsub $tdata/basic/kp109391.fits.fz" "^\#"  n 1

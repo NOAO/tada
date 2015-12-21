@@ -104,9 +104,34 @@ RETURN: (statusBool, message, operatorMessage)"""
 
     return (success, message, operator_msg)
 
+
+def iput_modified_fits(ifname, destfname, changed,
+                       moddir=None):
+    """IPUT modified version of IFNAME to DESTFNAME after updating its
+header to reflect content of CHANGED dict. If MODDIR given, use it for tempoerary modified file but delete after iput."""
+    if moddir != None:
+        os.makedirs(moddir, exist_ok=True)
+        modfile = shutil.copy(ifname, moddir)
+        os.chmod(modfile, 0o664)
+    else:
+        # this had better be writable or we will fail to modify it
+        # This file SHOULD be from mountain-mirror so writable by us.
+        modfile = ifname
+        
+    hdulist = pyfits.open(modfile, mode='update') # modify IN PLACE
+    fitshdr = hdulist[0].header # use only first in list.
+    fitshdr.update(changed)
+    hdulist.flush()
+    hdulist.close()         # now FITS header is MODIFIED
+    iu.irods_put331(modfile, destfname) # iput renamed FITS
+    if moddir != None:
+        os.remove(modfile)
+        logging.debug('DBG: Removed modfile={}'.format(modfile))
+
 def prep_for_ingest(mirror_fname,
                     persona_options=dict(),  # e.g. (under "__DTSITE"
                     persona_params=dict(),   # e.g. (under,under) "__FOO"
+                    moddir=None,
                     **kwargs):
     """GIVEN: FITS absolute path
 DO: 
@@ -145,12 +170,10 @@ RETURN: irods location of hdr file.
         hdr = fu.get_hdr_as_dict(mirror_fname)
         if opt_params.get('OPS_PREAPPLY_UPDATE','NO') == 'YES': #!!!
             fu.apply_options(options, hdr)
-        hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname, here to pass validate
         hdr['DTACQNAM'] = orig_fullname
-        #!logging.debug('DBG-1: {} hdrkeys={}'.format(mirror_fname, list(hdr.keys())))
+        # we will set DTNSANAM after we generate_fname, here to pass validate
+        hdr['DTNSANAM'] = 'NA' 
         fu.validate_raw_hdr(hdr, orig_fullname)
-        #!fname_fields = fu.modify_hdr(hdr, mirror_fname, options, opt_params,
-        #!                             **kwargs)
         try:
             fname_fields = fu.fix_hdr(hdr, mirror_fname,
                                       options, opt_params, **kwargs)
@@ -182,7 +205,6 @@ RETURN: irods location of hdr file.
                                              tag=tag,
                                              orig=mirror_fname)
         hdr['DTNSANAM'] = new_basename
-
         new_ipath = fn.generate_archive_path(hdr, source=source) / new_basename
         ext = fn.fits_extension(new_basename)
         logging.debug('orig_fullname={}, new_basename={}, ext={}'
@@ -191,11 +213,11 @@ RETURN: irods location of hdr file.
         new_ihdr = new_ifname.replace(ext,'hdr')
         logging.debug('new_ifname={},new_ihdr={}'.format(new_ifname, new_ihdr))
 
-        #!if opt_params.get('dry_run','0') == '1':
-        #!    logging.debug('Doing dry_run (no ingest)')
-        #!    msg= ('SUCCESS: DRY-RUN of ingest {} as {}'
-        #!          .format(mirror_fname, new_ifname))
-        #!    raise tex.SuccessfulNonIngest(msg)
+        if opt_params.get('dry_run','0') == '1':
+            logging.debug('Doing dry_run (no ingest)')
+            msg= ('SUCCESS: DRY-RUN of ingest {} as {}'
+                  .format(mirror_fname, new_ifname))
+            raise tex.SuccessfulNonIngest(msg)
 
         # Abort ingest if either HDR or FITS already exist under irods
         if iu.irods_exists331(new_ihdr):
@@ -217,20 +239,17 @@ RETURN: irods location of hdr file.
                 logging.error(msg)
                 raise tex.IrodsContentException(msg)
 
+        
         # Print without blank cards or trailing whitespace
-        hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
-        fitshdr = hdulist[0].header # use only first in list.
-        #!logging.debug('modified hdr dict={}'.format(hdr))
+        fitshdr = pyfits.getheader(mirror_fname)
         fitshdr.update(hdr)
         hdrstr = fitshdr.tostring(sep='\n',padding=False)
-        hdulist.flush()
-        hdulist.close()         # now FITS header is MODIFIED
         md5 = subprocess.check_output("md5sum -b {} | cut -f1 -d' '"
                                       .format(mirror_fname),
                                       shell=True)
         md5sum=md5.decode().strip()
         filesize=os.path.getsize(mirror_fname)
-        
+
         # Create hdr as temp file, i-put, delete tmp file (auto on close)
         # Archive requires extra fields prepended to hdr txt! :-<
         with tempfile.NamedTemporaryFile(mode='w', dir='/tmp') as f:
@@ -260,14 +279,16 @@ RETURN: irods location of hdr file.
         raise
         #! raise tex.SubmitException('Bad header content in file {}'
         #!                           .format(orig_fullname))
-  
+
+
+        
     #! iu.irods_put331(mirror_fname, new_ifname) # iput renamed FITS
     #
     # At this point both FITS and HDR are in archive331
     #
 
     logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
-    return new_ihdr, new_ifname, orig_fullname
+    return new_ihdr, new_ifname, hdr
     # END prep_for_ingest()
 
 ##########
@@ -324,13 +345,13 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     saved_hdr = None
 
     popts, pprms = fu.get_options_dict(ifname + ".options")
-
+    origfname = pprms.get('filename',ifname)
     try:
         # Following does irods_put331 to new_ihdr if the hdr looks valid
-        new_ihdr,destfname,origfname = prep_for_ingest(ifname,
-                                                       persona_options=popts,
-                                                       persona_params=pprms,
-                                                       **cfgprms)
+        new_ihdr,destfname,changed = prep_for_ingest(ifname,
+                                                     persona_options=popts,
+                                                     persona_params=pprms,
+                                                     **cfgprms)
     except:
         #! traceback.print_exc()
         raise
@@ -342,13 +363,13 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     if not success:
         raise tex.SubmitException(msg)
 
-    iu.irods_put331(ifname, destfname) # iput renamed FITS
+    #!iu.irods_put331(ifname, destfname) # iput renamed FITS
+    iput_modified_fits(ifname, destfname, changed) # iput renamed FITS
     return destfname
 
 ##############################################################################
-def direct_submit(fitsfile,
+def direct_submit(fitsfile, moddir,
                   personality_files=[],
-                  moddir=None,
                   timeout=60, #!!!
                   qname='submit',
                   qcfg=None,
@@ -377,16 +398,14 @@ def direct_submit(fitsfile,
         pprms.update(pp)
     pprms['filename'] = fitsfile
 
-    os.makedirs(moddir, exist_ok=True)
-    newfile = shutil.copy(fitsfile, moddir)
     logging.debug('direct_submit: popts={}'.format(popts))
     logging.debug('direct_submit: pprms={}'.format(pprms))
-    
+    origfname = fitsfile
     try:
-        new_ihdr,destfname,origfname = prep_for_ingest(newfile,
-                                                       persona_options=popts,
-                                                       persona_params=pprms,
-                                                       **cfgprms)
+        new_ihdr,destfname,changed = prep_for_ingest(fitsfile,
+                                                     persona_options=popts,
+                                                     persona_params=pprms,
+                                                     **cfgprms)
     except Exception as err:
         if trace:
             traceback.print_exc()
@@ -404,7 +423,9 @@ def direct_submit(fitsfile,
         statusmsg = 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg)
         statuscode = 2
     else:
-        iu.irods_put331(newfile, destfname) # iput renamed FITS
+        #!iu.irods_put331(newfile, destfname) # iput renamed FITS
+        # iput renamed, modified FITS
+        iput_modified_fits(fitsfile, destfname, changed, moddir=moddir) 
         statusmsg= 'SUCCESS: archived {} as {}'.format(fitsfile, destfname)
         statuscode = 0
 
@@ -433,7 +454,7 @@ def main():
     logconf='/etc/tada/pop.yaml'
     parser.add_argument('-m', '--moddir',
                         default=dflt_moddir,
-                        help="Directory that will contain the (possibly modified, possibly renamed) file as submitted.  [default={}]".format(dflt_moddir),
+                        help="Directory that will contain the (possibly modified, possibly renamed) file as submitted. Deleted after iRODS put. [default={}]".format(dflt_moddir),
                         )
 #!    parser.add_argument('-o', '--overwrite',
 #!                        help='If file already exist in archive, overwrite it!',
@@ -493,9 +514,8 @@ def main():
 
     # out=`sudo -u tada sh -c "direct_submit --loglevel=DEBUG /data/bok/20150706/d7210.0008.fits.fz -p /sandbox/tada-cli/personalities/bok.personality 2>&1"`
     # out=`fits_submit -p bok /data/bok/20150706/d7210.0008.fits.fz `
-    direct_submit(args.fitsfile,
+    direct_submit(args.fitsfile, args.moddir,
                   personality_files=pers_list,
-                  moddir=args.moddir,
                   timeout=args.timeout,
                   trace=args.trace,
                   qcfg=qcfg
