@@ -30,7 +30,9 @@ function mars_add () {
     ffile=$2
     if curl $copts "$marsurl/provisional/add/$archfile/?source=$ffile" >/dev/null
     then
-        echo "Added provisional name (id=$archfile, source=$ffile)"
+	# full path is  pain for testing
+        #!echo "Added provisional name (id=$archfile, source=$ffile)"
+        echo "Added provisional name for $archfile"
     else
         echo "COULD NOT add $archfile to PROVISIONAL list via ws"
     fi
