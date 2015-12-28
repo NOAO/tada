@@ -11,7 +11,7 @@ tadadir=$(dirname $testdir)
 #!tdata=$SCRIPTDIR/data-scrape
 # tdata=/data/scraped/mtn_raw
 # tdata=/sandbox/tada/tests/smoke/data-scrape
-tdata=$SCRIPTDIR/tada-test-data
+tdata=$SCRIPTDIR/tada-test-data/scrape
 
 echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
 ppath=/opt/tada-cli/personalities
@@ -61,7 +61,7 @@ function fsub () {
         echo ""
         echo "Successful ingest. Added $archfile to PROVISIONAL list via ws"
     else
-        echo "EXECUTED: fits_submit -p $ppath/smoke.personality -p $pers $ffile"  
+        echo "EXECUTED: direct_submit -p $ppath/smoke.personality -p $pers $ffile"  
         echo $msg
     fi
     return $status
