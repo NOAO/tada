@@ -1,2 +1,2 @@
-EXECUTED: direct_submit -p /opt/tada-cli/personalities/smoke.personality  /basic/uofa-mandle.jpg
+EXECUTED: direct_submit -p /opt/tada-cli/personalities/smoke.personality  /DATA/basic/uofa-mandle.jpg
 Cannot ingest non-FITS file: /basic/uofa-mandle.jpg

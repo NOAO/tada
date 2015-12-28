@@ -28,6 +28,7 @@ export PATH=$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:$PATH
 
 source smoke-lib.sh
 source mars.sh
+source fsub.sh
 return_code=0
 SMOKEOUT="README-smoke-results.direct.txt"
 
@@ -60,34 +61,6 @@ function fcom () {
 }
 
 
-###########################################
-### fits_submit
-###
-function fsub () {
-    ffile=$1; shift
-    pers=""
-    for p; do
-	    pers="$pers -p $ppath/$p.personality"
-    done
-    #~msg=`fits_submit -p smoke $pers $ffile 2>&1 `
-    msg=`direct_submit -p $ppath/smoke.personality $pers $ffile 2>&1 `
-    status=$?
-    msg=`echo $msg | perl -pe "s|$tdata||"`
-    #echo "msg=$msg"
-    if [ $status -eq 0 ]; then
-        # e.g. msg="SUCCESS: archived /sandbox/tada/tests/smoke/data/obj_355.fits as /noao-tuc-z1/mtn/20141219/WIYN/2012B-0500/uuuu_141220_130138_uuu_TADATEST_2417885023.fits"
-        irodsfile=`echo $msg | cut -s --delimiter=' ' --fields=5`
-        archfile=`basename $irodsfile`
-        echo $msg 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
-        mars_add "$archfile" "$ffile"
-        echo ""
-    else
-	tailffile=`echo $ffile | perl -pe "s|$tdata||"`
-        echo "EXECUTED: direct_submit -p $ppath/smoke.personality $pers $tailffile"  
-        echo $msg
-    fi
-    return $status
-}
 
 ##############################################################################
 
