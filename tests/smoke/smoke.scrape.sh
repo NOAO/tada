@@ -9,10 +9,12 @@ testdir=$(dirname $SCRIPTDIR)
 tadadir=$(dirname $testdir)
 # tadadir=/sandbox/tada
 #!tdata=$SCRIPTDIR/data-scrape
-tdata=/data/scraped/mtn_raw
+# tdata=/data/scraped/mtn_raw
 # tdata=/sandbox/tada/tests/smoke/data-scrape
+tdata=$SCRIPTDIR/tada-test-data
 
 echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
+ppath=/opt/tada-cli/personalities
 
 dir=$SCRIPTDIR
 origdir=`pwd`
@@ -45,11 +47,12 @@ fi
 ### fits_submit
 ###
 function fsub () {
-    pers=$1
+    pers=$ppath/$1.personality
     ffile=$2
 
-    msg=`fits_submit -p smoke -p $pers $ffile 2>&1`
+    msg=`direct_submit -p $ppath/smoke.personality -p $pers $ffile 2>&1`
     status=$?
+    msg=`echo $msg | perl -pe "s|$tdata||"`
     if [ $status -eq 0 ]; then
         irodsfile=`echo $msg | cut -s --delimiter=' ' --fields=5`
         archfile=`basename $irodsfile`
@@ -58,7 +61,7 @@ function fsub () {
         echo ""
         echo "Successful ingest. Added $archfile to PROVISIONAL list via ws"
     else
-        echo "EXECUTED: fits_submit -p smoke -p $pers $ffile"  
+        echo "EXECUTED: fits_submit -p $ppath/smoke.personality -p $pers $ffile"  
         echo $msg
     fi
     return $status
