@@ -83,7 +83,7 @@ function fsub () {
         echo ""
     else
 	tailffile=`echo $ffile | perl -pe "s|$tdata||"`
-        echo "EXECUTED: direct_submit -p smoke $pers $tailffile"  
+        echo "EXECUTED: direct_submit -p $ppath/smoke.personality $pers $tailffile"  
         echo $msg
     fi
     return $status
@@ -97,16 +97,15 @@ testCommand fc1_1 "fcom $tdata/basic/kp109391.fits.fz" "^\#" n 1
 # compliant
 testCommand fc2_1 "fcom $tdata/basic/kptest.fits" "^\#" n
 
-
 ## non-FITS; (reject, not try to ingest)
 testCommand fs1_1 "fsub $tdata/basic/uofa-mandle.jpg" "^\#" n 1
 
-#!## compliant FITS with no options (no need for them, so ingest success)
-#!file2="$tdata/basic/cleaned-bok.fits.fz"
-#!testCommand fs2_1 "fsub $file2" "^\#" n
-#!
-#!## compliant FITS with no options (BUT, already inserted above so ingest FAIL)
-#!testCommand fs2b_1 "fsub $file2" "^\#" n 2
+## compliant FITS with no options (no need for them, so ingest success)
+file2="$tdata/basic/cleaned-bok.fits.fz"
+testCommand fs2_1 "fsub $file2" "^\#" n
+
+## compliant FITS with no options (BUT, already inserted above so ingest FAIL)
+testCommand fs2b_1 "fsub $file2" "^\#" n 2
 
 ## bad format for DATE-OBS
 testCommand fs3_1 "fsub $tdata/basic/kp109391.fits.fz" "^\#"  n 1

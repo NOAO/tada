@@ -57,9 +57,8 @@ function fsub () {
         irodsfile=`echo $msg | cut -s --delimiter=' ' --fields=5`
         archfile=`basename $irodsfile`
         echo $msg 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
-        curl -s -S "http://mars.sdm.noao.edu:8000/provisional/add/$archfile/?source=$ffile"
+        mars_add "$archfile" "$ffile"
         echo ""
-        echo "Successful ingest. Added $archfile to PROVISIONAL list via ws"
     else
         echo "EXECUTED: direct_submit -p $ppath/smoke.personality -p $pers $ffile"  
         echo $msg
