@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 """Install TADA: data flow software from Dome to Archive."""
 # See: https://packaging.python.org/en/latest/distributing/
 
@@ -106,6 +107,7 @@ setup(
             'fits_compliant=tada.fits_utils:main',
             'extract_fits_header=tada.fits_utils:extract_header',
             'direct_submit=tada.submit:main',
+            #! 'tada_watch=tada.watch:main',
         ],
     },
 )
