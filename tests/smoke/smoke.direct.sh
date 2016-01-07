@@ -18,7 +18,6 @@ tdata=$SCRIPTDIR/tada-test-data
 # tdata=/sandbox/tada/tests/smoke/tada-test-data/basic
 
 echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
-ppath=/opt/tada-cli/personalities
 
 dir=$SCRIPTDIR
 origdir=`pwd`
@@ -46,20 +45,6 @@ else
     wget -nc http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
     tar xf fits-test-data.tgz
 fi
-
-
-###########################################
-### fits_compliant
-###
-function fcom () {
-    ffile=$1
-    msg=`fits_compliant --header $ffile  2>&1`
-    status=$?
-    msg=`echo $msg | perl -pe "s|$tdata||g"`
-    echo "$msg"
-    return $status
-}
-
 
 
 ##############################################################################
