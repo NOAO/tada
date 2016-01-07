@@ -1,0 +1,10 @@
+#!/bin/bash
+
+ddir="$HOME/tada-data/drop"
+rdir="$HOME/tada-data/rejected"
+tada_watch --loglevel=DEBUG $ddir $rdir
+
+rsync -r ~/fake-data ~/tada-data/drop
+
+
+
