@@ -107,6 +107,7 @@ obsLUT = {
     'zero':                      'z',  # added 5/8/15 for bok
     'dome or projector flat':    'f',
     'dflat':                     'f', # added 10/23/15 (per dsid.c)
+    'dome flat':                 'f', # for mosaic3 1/7/16
     'flat':                      'f',
     'projector':                 'f', # added 10/23/15 (per dsid.c)
     'sky':                       's',
