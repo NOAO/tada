@@ -30,26 +30,27 @@ def fake_submit(ifname, checksum, qname, qcfg):
         raise Exception('FAILED')
     return ifname
 
-def new_fits(ifname, watched_path, rejected_path, dest_path=None):
+def new_file(ifname, watched_path, rejected_path, dest_path=None):
     p = PurePath(ifname).relative_to(watched_path)
-    logging.debug('DBG: new_fits: ifname={}, p={}'
-                  .format(ifname, str(p)))
+    parts=p.parts
+    logging.debug('DBG: new_file: ifname={}, p={}, idir={}'
+                  .format(ifname, p.path, parts))
     #if isinstance(event, watchdog.events.FileCreatedEvent):
     if p.suffix == '.fz' or p.suffix == '.fits':
         logging.debug('Got FITS: {}'.format(ifname))
-        destfname=str(rejected_path / p)
+        destfname=(rejected_path / p).path
         try:
             #destfname = ts.submit_to_archive(ifname, checksum, 
             #                                 qname, qcfg)
             fake_submit(ifname, 'checksum', 'qname', 'qcfg')
         except Exception as sex:
             # FAILURE: stash it
-            logging.debug('Ingest FAILED: stash into: {}'
+            logging.info('Ingest FAILED: stash into: {}'
                           .format(destfname))
             shutil.move(ifname, destfname)
         else:
             # SUCCESS: remove it
-            logging.debug('Ingest SUCCEEDED: remove: {}'.format(ifname))
+            logging.info('Ingest SUCCEEDED: remove: {}'.format(ifname))
             os.remove(ifname)
     
 
@@ -60,10 +61,10 @@ class SubmitEventHandler(watchdog.events.FileSystemEventHandler):
         super(watchdog.events.FileSystemEventHandler).__init__()
         
     def on_created(self,event):
-        new_fits(event.src_path, self.watched_path, self.rejected_path)
+        new_file(event.src_path, self.watched_path, self.rejected_path)
     def on_moved(self,event):
         # for rsync: moved from tmp file to final filename
-        new_fits(event.dest_path, self.watched_path, self.rejected_path)
+        new_file(event.dest_path, self.watched_path, self.rejected_path)
                 
 def ingest_drops(watched_dir, rejected_dir):
     handler = SubmitEventHandler(watched_dir, rejected_dir)
