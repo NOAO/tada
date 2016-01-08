@@ -59,20 +59,6 @@ FILENAME_REQUIRED_FIELDS = set([
     #! 'PLQNAME',
 ])
 
-#DOC: vvv
-# All bets are off in the original FITS file does not contain all of these.
-RAW_REQUIRED_FIELDS = set([
-    'DATE-OBS',
-    'DTSITE',   # Required for standard file name (pg 9, "File Naming Conv...")
-    'DTTELESC', # Required for standard file name (pg 9, "File Naming Conv...")
-    'DTINSTRU', # Required for standard file name (pg 9, "File Naming Conv...")
-    'INSTRUME',
-    'OBSERVAT',
-    'OBSID',
-    'PROPID',
-    # 'PROPOSER', #!!! will use PROPID when PROPOSER doesn't exist in raw hdr
-])
-
 # To be able to ingest a fits file into the archive, all of these must
 # be present in the header.
 # The commented out lines are Requirements per document, but did not seem to

@@ -291,7 +291,6 @@ RETURN: irods location of hdr file.
     return new_ihdr, new_ifname, hdr
     # END prep_for_ingest()
 
-
 ##########
 # (-sp-) GRIM DETAILS: The Archive Ingest process is ugly and the
 # interface is not documented (AT ALL, as far as I can tell). It
