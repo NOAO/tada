@@ -104,8 +104,9 @@ obsLUT = {
     'object':                    'o',  
     'photometric standard':      'p',
     'bias':                      'z',
-    'zero':                      'z',  # added 5/8/15 for bok
+    'zero':                      'z', # added 5/8/15 for bok
     'dome or projector flat':    'f',
+    'dome flat':                 'f', # added 1/8/16 for mosaic3
     'dflat':                     'f', # added 10/23/15 (per dsid.c)
     'flat':                      'f',
     'projector':                 'f', # added 10/23/15 (per dsid.c)
