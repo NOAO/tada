@@ -1,3 +1,4 @@
-SUCCESS: archived /data/scraped/mtn_raw/ct4m-decam/DECam_00482540.fits.fz 
-Added provisional name (id=c4d_151007_093102_zri_TADASMOKE.fits.fz, source=/data/scraped/mtn_raw/ct4m-decam/DECam_00482540.fits.fz)
-Successful ingest. Added c4d_151007_093102_zri_TADASMOKE.fits.fz to PROVISIONAL list via ws
+SUCCESS: archived /ct4m-decam/DECam_00482540.fits.fz 
+Added provisional name for c4d_151007_093102_zri_TADASMOKE.fits.fz
+Successful ingest of c4d_151007_093102_zri_TADASMOKE.fits.fz.
+

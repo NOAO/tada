@@ -14,6 +14,7 @@ tadadir=$(dirname $testdir)
 # tadadir=/sandbox/tada
 #tdata=$SCRIPTDIR/data
 tdata=$SCRIPTDIR/tada-test-data
+#tdata=/data/tada-test-data
 # tdata=/sandbox/tada/tests/smoke/tada-test-data/basic
 
 echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
@@ -26,6 +27,7 @@ export PATH=$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:$PATH
 
 source smoke-lib.sh
 source mars.sh
+source fsub.sh
 return_code=0
 SMOKEOUT="README-smoke-results.direct.txt"
 
@@ -40,48 +42,18 @@ if [ -d "$tdata/basic" ]; then
     echo "Data directory ($tdata/basic) exists. Using it!"
 else
     echo "data directory ($tdata/basic) does not exist. Transfering it"
-    wget http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
+    wget -nc http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
     tar xf fits-test-data.tgz
 fi
 
 
-###########################################
-### fits_compliant
-###
+##############################################################################
 
 ## bad DATE-OBS content
-testCommand fc1_1 "fits_compliant --header $tdata/basic/kp109391.fits.fz 2>&1" "^\#" n 1
+testCommand fc1_1 "fcom $tdata/basic/kp109391.fits.fz" "^\#" n 1
 
 # compliant
-testCommand fc2_1 "fits_compliant $tdata/basic/kptest.fits 2>&1" "^\#" n
-
-###########################################
-### fits_submit
-###
-function fsub () {
-    ffile=$1; shift
-    pers=""
-    for p; do
-	    pers="$pers -p $p"
-    done
-    msg=`fits_submit -p smoke $pers $ffile 2>&1`
-    status=$?
-    if [ $status -eq 0 ]; then
-        # e.g. msg="SUCCESS: archived /sandbox/tada/tests/smoke/data/obj_355.fits as /noao-tuc-z1/mtn/20141219/WIYN/2012B-0500/uuuu_141220_130138_uuu_TADATEST_2417885023.fits"
-        irodsfile=`echo $msg | cut -s --delimiter=' ' --fields=5`
-        archfile=`basename $irodsfile`
-        echo $msg 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
-        mars_add "$archfile" "$ffile"
-        echo ""
-    else
-        #! >&2 echo "EXECUTED: fits_submit -p smoke $pers $ffile"  
-        #! >&2 echo $msg
-        echo "EXECUTED: fits_submit -p smoke $pers $ffile"  
-        echo $msg
-    fi
-    return $status
-}
-
+testCommand fc2_1 "fcom $tdata/basic/kptest.fits" "^\#" n
 
 ## non-FITS; (reject, not try to ingest)
 testCommand fs1_1 "fsub $tdata/basic/uofa-mandle.jpg" "^\#" n 1
@@ -117,8 +89,8 @@ function psubmit () {
     pipeline_submit $ffile 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
 }
 
-testCommand ps1_1 "psubmit $tdata/basic/uofa-mandle.jpg" "^\#" n
-testCommand ps2_1 "psubmit $tdata/basic/c4d_130901_031805_oow_g_d2.fits.fz" "^\#" n
+#!testCommand ps1_1 "psubmit $tdata/basic/uofa-mandle.jpg" "^\#" n
+#!testCommand ps2_1 "psubmit $tdata/basic/c4d_130901_031805_oow_g_d2.fits.fz" "^\#" n
 
 
 ###########################################

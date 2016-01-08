@@ -104,8 +104,9 @@ obsLUT = {
     'object':                    'o',  
     'photometric standard':      'p',
     'bias':                      'z',
-    'zero':                      'z',  # added 5/8/15 for bok
+    'zero':                      'z', # added 5/8/15 for bok
     'dome or projector flat':    'f',
+    'dome flat':                 'f', # added 1/8/16 for mosaic3
     'dflat':                     'f', # added 10/23/15 (per dsid.c)
     'flat':                      'f',
     'projector':                 'f', # added 10/23/15 (per dsid.c)
@@ -213,9 +214,6 @@ e.g. k4k_140923_024819_uri.fits.fz"""
     date = obsdt.date().strftime('%y%m%d')
     time = obsdt.time().strftime('%H%M%S')
 
-    logging.debug('DBG: stiLUT key={}, val={}'
-                  .format((site, telescope, instrument),
-                          stiLUT.get((site, telescope, instrument), 'uuuu')))
     fields = dict(
         prefix=stiLUT.get((site, telescope, instrument), 'uuuu'),
         date=date,
