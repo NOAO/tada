@@ -108,6 +108,7 @@ setup(
             'extract_fits_header=tada.fits_utils:extract_header',
             'direct_submit=tada.submit:main',
             'tada_watch=tada.watch:main',
+            'pers2yaml=tada.personality2yaml:main',
         ],
     },
 )
