@@ -1,1 +1,0 @@
-/home/pothiers/sandbox/tada-tools/dev-scripts/rpms-to-repo.sh
