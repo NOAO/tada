@@ -370,24 +370,26 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 ##############################################################################
 def direct_submit(fitsfile, moddir,
                   personality_files=[],
+                  personality=None, # dictionary from YAML 
                   timeout=60, #!!!
                   qname='submit',
                   qcfg=None,
                   trace=False):
-    logging.debug('EXECUTING: direct_submit({}, personality_files={}, '
+    logging.debug('EXECUTING: direct_submit({}, personality={}, personality_files={}, '
                   'moddir={})'
-                  .format(fitsfile, personality_files, moddir))
+                  .format(fitsfile, personality, personality_files, moddir))
     if 'FITS image data' not in str(magic.from_file(fitsfile)):
+        logging.error('Cannot ingest non-FITS file: {}'.format(fitsfile))
         sys.exit('Cannot ingest non-FITS file: {}'.format(fitsfile))
         
     success = True
     statuscode = 0    # for sys.exit(statuscode)
     statusmsg = 'NA'
-    cfgprms = dict(mirror_dir =  qcfg[qname]['mirror_dir'],
-                   archive331 =  qcfg[qname]['archive_irods331'],
-                   mars_host  =  qcfg[qname].get('mars_host'),
-                   mars_port  =  qcfg[qname].get('mars_port'),
-                   )
+    #!cfgprms = dict(mirror_dir =  qcfg[qname]['mirror_dir'],
+    #!               archive331 =  qcfg[qname]['archive_irods331'],
+    #!               mars_host  =  qcfg[qname].get('mars_host'),
+    #!               mars_port  =  qcfg[qname].get('mars_port'),
+    #!               )
     saved_hdr = None
 
     popts = dict()
@@ -397,6 +399,9 @@ def direct_submit(fitsfile, moddir,
         popts.update(po)
         pprms.update(pp)
     pprms['filename'] = fitsfile
+    if personality:
+        pprms.update(personality['params'])
+        popts.update(personality['options'])
 
     logging.debug('direct_submit: popts={}'.format(popts))
     logging.debug('direct_submit: pprms={}'.format(pprms))
@@ -456,18 +461,6 @@ def main():
                         default=dflt_moddir,
                         help="Directory that will contain the (possibly modified, possibly renamed) file as submitted. Deleted after iRODS put. [default={}]".format(dflt_moddir),
                         )
-#!    parser.add_argument('-o', '--overwrite',
-#!                        help='If file already exist in archive, overwrite it!',
-#!                        action='store_true'
-#!                        )
-    parser.add_argument('-t', '--timeout',
-                        type=int,
-                        help='Seconds to wait for Archive to respond',
-                        )
-    parser.add_argument('--trace',
-                        action='store_true',
-                        help='Produce stack trace on error')
-
     parser.add_argument('--logconf',
                         help='Logging configuration file (YAML format).'
                         '[Default={}]'.format(logconf),
@@ -477,6 +470,14 @@ def main():
                         default=dflt_config,
                         help='Config file. [default={}]'.format(dflt_config),
                         )
+    parser.add_argument('-t', '--timeout',
+                        type=int,
+                        help='Seconds to wait for Archive to respond',
+                        )
+    parser.add_argument('--trace',
+                        action='store_true',
+                        help='Produce stack trace on error')
+
     parser.add_argument('--loglevel', '-l', 
                         help='Kind of diagnostic output',
                         choices=['CRTICAL', 'ERROR', 'WARNING',

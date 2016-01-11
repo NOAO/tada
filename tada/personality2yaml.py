@@ -19,7 +19,7 @@ def pers2yaml(pers_fname, yaml_fname):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Ingest or stash files as the appear in watched directory',
+        description='Convert BASH style personality files to YAML format.',
         epilog='EXAMPLE: %(prog)s a b"'
         )
     parser.add_argument('pfile',
@@ -45,6 +45,6 @@ def main():
     pers2yaml(args.pfile, args.yfile)
     with open(args.yfile) as yf:
         dd = yaml.load(yf)
-        print('dd={}'.format(dd))
+        #!print('dd={}'.format(dd))
 if __name__ == '__main__':
     main()
