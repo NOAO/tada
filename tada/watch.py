@@ -92,13 +92,14 @@ class SubmitEventHandler(watchdog.events.FileSystemEventHandler):
                     yd = yaml.safe_load(yy)
                     pdict['params'].update(yd.get('params',{}))
                     pdict['options'].update(yd.get('options',{}))
-
+            pdict['params']['calchdr'] = ','.join(pdict['params'].get('calchdr',[]))
+            
             logging.debug('DBG: pdict={}'.format(pdict))
             try:
                 #!fake_submit(ifname, 'checksum', 'qname', 'qcfg')
                 destfname = ts.direct_submit(ifname, self.moddir,
                                              personality=pdict,
-                                             qcfg=self.qcfg)
+                                             qcfg=self.qcfg, trace=True)
             except Exception as sex:
                 # FAILURE: stash it
                 logging.info('Ingest FAILED: stash into: {}; {}'

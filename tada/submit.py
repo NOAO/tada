@@ -385,11 +385,11 @@ def direct_submit(fitsfile, moddir,
     success = True
     statuscode = 0    # for sys.exit(statuscode)
     statusmsg = 'NA'
-    #!cfgprms = dict(mirror_dir =  qcfg[qname]['mirror_dir'],
-    #!               archive331 =  qcfg[qname]['archive_irods331'],
-    #!               mars_host  =  qcfg[qname].get('mars_host'),
-    #!               mars_port  =  qcfg[qname].get('mars_port'),
-    #!               )
+    cfgprms = dict(mirror_dir =  qcfg[qname]['mirror_dir'],
+                   archive331 =  qcfg[qname]['archive_irods331'],
+                   mars_host  =  qcfg[qname].get('mars_host'),
+                   mars_port  =  qcfg[qname].get('mars_port'),
+                   )
     saved_hdr = None
 
     popts = dict()
