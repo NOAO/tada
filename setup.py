@@ -107,7 +107,7 @@ setup(
             'fits_compliant=tada.fits_utils:main',
             'extract_fits_header=tada.fits_utils:extract_header',
             'direct_submit=tada.submit:main',
-            #! 'tada_watch=tada.watch:main',
+            'tada_watch=tada.watch:main',
         ],
     },
 )
