@@ -344,7 +344,8 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
                    )
     saved_hdr = None
 
-    popts, pprms = fu.get_options_dict(ifname + ".options")
+    #!popts, pprms = fu.get_options_dict(ifname + ".options")
+    popts, pprms = fu.get_options_dict(ifname) # .yaml or .options
     origfname = pprms.get('filename',ifname)
     try:
         # Following does irods_put331 to new_ihdr if the hdr looks valid
@@ -367,11 +368,72 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     iput_modified_fits(ifname, destfname, changed) # iput renamed FITS
     return destfname
 
+
+def protected_direct_submit(fitsfile, moddir,
+                  personality=None, # dictionary from YAML 
+                  qname='submit',
+                  qcfg=None,
+                  trace=False):
+    """Blocking submit to archive without Queue. 
+Waits for ingest service to complete and returns its formated result.
+Traps for reasonable errors and returns those in returned value. 
+So, caller should not have to put this function in try/except."""
+    logging.debug('EXECUTING: protected_direct_submit({}, personality={},'
+                  'moddir={})'
+                  .format(fitsfile, personality,  moddir))
+    ok = True  
+    statusmsg = None
+    if 'FITS image data' not in str(magic.from_file(fitsfile)):
+        msg = 'Cannot ingest non-FITS file: {}'.format(fitsfile)
+        logging.error(msg)
+        return (False, msg)
+
+    cfgprms = dict(mirror_dir =  qcfg[qname].get('mirror_dir'),
+                   archive331 =  qcfg[qname].get('archive_irods331'),
+                   mars_host  =  qcfg[qname].get('mars_host'),
+                   mars_port  =  qcfg[qname].get('mars_port'),
+                   )
+
+    if personality == None:
+        personality = dict(params={}, options={})
+    if 'filename' not in personality['params']:
+        personality['params']['filename'] = fitsfile
+
+    pprms = personality['params']
+    popts = personality['options']
+    logging.debug('direct_submit: popts={}'.format(popts))
+    logging.debug('direct_submit: pprms={}'.format(pprms))
+    origfname = fitsfile
+    try:
+        new_ihdr, destfname, changed = prep_for_ingest(fitsfile,
+                                                       persona_options=popts,
+                                                       persona_params=pprms,
+                                                       **cfgprms)
+    except Exception as err:
+        if trace:
+            traceback.print_exc()
+        msg = str(err)
+        logging.error(msg)
+        return (False, msg)
+
+    success, m1, ops_msg = http_archive_ingest(new_ihdr, qname,
+                                               qcfg=qcfg, origfname=origfname)
+    if pprms.get('do_audit', '0') == '1':
+        audit_svc(origfname, destfname, ops_msg, popts)
+    if not success:
+        return(False, 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg))
+    else:
+        # iput renamed, modified FITS
+        iput_modified_fits(fitsfile, destfname, changed, moddir=moddir)
+        return(True, 'SUCCESS: archived {} as {}'.format(fitsfile, destfname))
+
+    return (ok, statusmsg)
+    # END: protected_direct_submit()
+    
 ##############################################################################
 def direct_submit(fitsfile, moddir,
                   personality_files=[],
                   personality=None, # dictionary from YAML 
-                  timeout=60, #!!!
                   qname='submit',
                   qcfg=None,
                   trace=False):
@@ -470,10 +532,10 @@ def main():
                         default=dflt_config,
                         help='Config file. [default={}]'.format(dflt_config),
                         )
-    parser.add_argument('-t', '--timeout',
-                        type=int,
-                        help='Seconds to wait for Archive to respond',
-                        )
+    #!parser.add_argument('-t', '--timeout',
+    #!                    type=int,
+    #!                    help='Seconds to wait for Archive to respond',
+    #!                    )
     parser.add_argument('--trace',
                         action='store_true',
                         help='Produce stack trace on error')
@@ -517,7 +579,6 @@ def main():
     # out=`fits_submit -p bok /data/bok/20150706/d7210.0008.fits.fz `
     direct_submit(args.fitsfile, args.moddir,
                   personality_files=pers_list,
-                  timeout=args.timeout,
                   trace=args.trace,
                   qcfg=qcfg
                   )

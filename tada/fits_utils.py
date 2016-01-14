@@ -18,6 +18,7 @@ import astropy.io.fits as pyfits
 import os.path
 import datetime as dt
 import subprocess
+import yaml
 from astropy.utils.exceptions import AstropyWarning, AstropyUserWarning
  
 from . import file_naming as fn
@@ -486,7 +487,8 @@ Include fields in hdr needed to construct new filename that fullfills standards.
     calc_param = opt_params.get('calchdr',None)
     calc_funcs = []
     if calc_param != None:
-        for funcname in calc_param.split(','):
+        #!for funcname in calc_param.split(','):
+        for funcname in calc_param:
             try:
                 func = eval('hf.'+funcname)
                 calc_funcs.append(func)
@@ -533,29 +535,29 @@ def show_hdr_values(msg, hdr):
         print('{}="{}"'.format(key,hdr.get(key,'<not given>')),end=', ')
     print()
 
-def get_options_dict(options_file):
-    #!logging.debug('EXECUTING: get_options_dict({})'.format(options_file))
+def get_options_dict(fits_filename):
+    if os.path.exists(fits_filename + '.yaml'):
+        with open(fits_filename + '.yaml') as yy:
+            yd = yaml.safe_load(yy)
+            options = yd.get('options', {})
+            opt_params = yd.get('params', {})
 
-    if not os.path.exists(options_file):
-        logging.warning('options_file does not exist: {}'.format(options_file))
+    elif os.path.exists(fits_filename + '.options'):
+        with open(fits_filename + '.options', encoding='utf-8') as f:
+            options = dict()
+            opt_params = dict()
+            for opt in f.readline().split():
+                k, v = opt.split('=')
+                if k[0] != '_':
+                    continue
+                if k[1] == '_':
+                    opt_params[k[2:]] = v
+                else:
+                    options[k[1:]] = v.replace('_', ' ')                
+    else:
+        logging.warning('Options file not found for: {}'.format(fits_filename))
         return dict(), dict()
 
-    optstr = ''    
-    with open(options_file, encoding='utf-8') as f:
-        optstr = f.readline()
-
-    options = dict()
-    opt_params = dict()
-    for opt in optstr.split():
-        k, v = opt.split('=')
-        if k[0] != '_':
-            continue
-        if k[1] == '_':
-            opt_params[k[2:]] = v
-        else:
-            options[k[1:]] = v.replace('_', ' ')                
-    #!logging.debug('get_options_dict({}) => popts_dict={}, pprms_dict={}'
-    #!              .format(options_file, options, opt_params))
     return options, opt_params
 
 def get_personality_dict(personality_file):
@@ -579,6 +581,9 @@ def get_personality_dict(personality_file):
             opt_params[k[2:]] = v
         else:
             options[k[1:]] = v.replace('_', ' ')                
+
+    if 'calchdr' in opt_params:
+        opt_params['calchdr'] = opt_params['calchdr'].split(',')
     logging.debug('get_personality_dict({}) => popts_dict={}, pprms_dict={}'
                   .format(personality_file, options, opt_params))
     return options, opt_params

@@ -69,10 +69,10 @@ def network_move(rec, qname, **kwargs):
         # pre_action is full path to shell script to run.
         # WARNING: a bad script could do bad things to the
         #    mountain_cache files!!!
-        # Must accept three params:
+        # Script must accept three params:
         #   1. absolute path of file from queue
         #   2. absolute path mountain_cache
-        #   3. absolute path of file containing options 
+        #   3. absolute path of file containing options
         # Stdout and stderr from pre_action will be logged to INFO.
         # Error (non-zero return code) will be logged to ERROR but normal
         # TADA processing will continue.
@@ -131,11 +131,10 @@ def network_move(rec, qname, **kwargs):
         logging.info('rsync completed in {:.2f} seconds'
                      .format(time.time() - tic))
     except Exception as ex:
-        logging.warning('Failed to transfer from Mountain ({}) to Valley. '
+        logging.warning('Failed to transfer from Mountain to Valley using: {}; '
                         '{}; {}'
-                        .format(os.getuid(),
+                        .format(' '.join(cmdline),
                                 ex,
-                                #!ex.output.decode('utf-8'),
                                 out
                             ))
         # Any failure means put back on queue. Keep queue handling
