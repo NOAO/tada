@@ -337,7 +337,7 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     """
     #!logging.debug('submit_to_archive({},{})'.format(ifname, qname))
     
-    cfgprms = dict(mirror_dir =  qcfg[qname]['mirror_dir'],
+    cfgprms = dict(#mirror_dir =  qcfg[qname]['mirror_dir'],
                    archive331 =  qcfg[qname]['archive_irods331'],
                    mars_host  =  qcfg[qname].get('mars_host'),
                    mars_port  =  qcfg[qname].get('mars_port'),
@@ -346,6 +346,7 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 
     #!popts, pprms = fu.get_options_dict(ifname + ".options")
     popts, pprms = fu.get_options_dict(ifname) # .yaml or .options
+    logging.debug('submit_to_archive(popts={},pprms={})'.format(popts, pprms))
     origfname = pprms.get('filename',ifname)
     try:
         # Following does irods_put331 to new_ihdr if the hdr looks valid
@@ -447,7 +448,7 @@ def direct_submit(fitsfile, moddir,
     success = True
     statuscode = 0    # for sys.exit(statuscode)
     statusmsg = 'NA'
-    cfgprms = dict(mirror_dir =  qcfg[qname]['mirror_dir'],
+    cfgprms = dict(#mirror_dir =  qcfg[qname]['mirror_dir'],
                    archive331 =  qcfg[qname]['archive_irods331'],
                    mars_host  =  qcfg[qname].get('mars_host'),
                    mars_port  =  qcfg[qname].get('mars_port'),
@@ -464,6 +465,7 @@ def direct_submit(fitsfile, moddir,
     if personality:
         pprms.update(personality['params'])
         popts.update(personality['options'])
+    logging.debug('direct_submit(params={},options={})'.format(pprms, popts))
 
     logging.debug('direct_submit: popts={}'.format(popts))
     logging.debug('direct_submit: pprms={}'.format(pprms))

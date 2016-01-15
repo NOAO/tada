@@ -1,8 +1,8 @@
 active QUEUE (0):
 inactive QUEUE (1):
-d034c5fbb2a4b1e4238532d74d3baa34 : checksum=d034c5fbb2a4b1e4238532d74d3baa34, filename=/var/tada/mountain-mirror/vagrant/kp109391.fits.fz
+d034c5fbb2a4b1e4238532d74d3baa34 : checksum=d034c5fbb2a4b1e4238532d74d3baa34, filename=/var/tada/cache/vagrant/kp109391.fits.fz
 Records (1):
-d034c5fbb2a4b1e4238532d74d3baa34 : checksum=d034c5fbb2a4b1e4238532d74d3baa34, filename=/var/tada/mountain-mirror/vagrant/kp109391.fits.fz
+d034c5fbb2a4b1e4238532d74d3baa34 : checksum=d034c5fbb2a4b1e4238532d74d3baa34, filename=/var/tada/cache/vagrant/kp109391.fits.fz
 
 Active queue length:   0
 Inactive queue length: 1

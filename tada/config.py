@@ -11,14 +11,14 @@ Q_REQUIRED_FIELDS = {'name', 'type', 'dq_host', 'dq_port',
 
 TYPE_SPECIFIC_REQ_FIELDS = dict(
     MOUNTAIN={
-        'cache_dir',
-        'mirror_dir',
+        #'cache_dir',
+        #'mirror_dir',
         'next_queue',
     },
     VALLEY={
-        'mirror_dir',
+        #'mirror_dir',
         'archive_irods331',
-        'noarchive_dir',
+        #'noarchive_dir',
     },
 )
 

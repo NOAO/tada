@@ -50,10 +50,10 @@ def network_move(rec, qname, **kwargs):
     dq_port = qcfg[nextq]['dq_port']
     redis_port = qcfg[nextq]['redis_port']
 
-    source_root = qcfg[qname]['cache_dir']
+    source_root = '/var/tada/cache' # qcfg[qname]['cache_dir']
     pre_action = qcfg[qname].get('pre_action',None)
-    sync_root = qcfg[qname]['mirror_dir']
-    valley_root = qcfg[nextq]['mirror_dir']
+    sync_root =  qcfg[qname]['mirror_dir']
+    valley_root = '/var/tada/cache' # qcfg[nextq]['mirror_dir']
     fname = rec['filename']            # absolute path
 
     logging.debug('source_root={}, fname={}'.format(source_root, fname))
@@ -183,8 +183,8 @@ configuration field: maximum_errors_per_record)
     dq_host = qcfg[qname]['dq_host']
     dq_port = qcfg[qname]['dq_port']
 
-    noarc_root =  qcfg[qname]['noarchive_dir']
-    mirror_root =  qcfg[qname]['mirror_dir']
+    noarc_root =  '/var/tada/anticache'   # qcfg[qname]['noarchive_dir']
+    mirror_root = '/var/tada/cache'       # qcfg[qname]['mirror_dir']
     submitlog =  qcfg[qname]['submitlog']
 
     # eg. /tempZone/mountain_mirror/other/vagrant/16/text/plain/fubar.txt

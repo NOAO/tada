@@ -554,6 +554,8 @@ def get_options_dict(fits_filename):
                     opt_params[k[2:]] = v
                 else:
                     options[k[1:]] = v.replace('_', ' ')                
+            if 'calchdr' in opt_params:
+                opt_params['calchdr'] = opt_params['calchdr'].split(',')
     else:
         logging.warning('Options file not found for: {}'.format(fits_filename))
         return dict(), dict()
@@ -654,7 +656,7 @@ def fits_compliant(fits_file_list,
                    trace=False):
     """Check FITS file for complaince with Archive Ingest."""
     import warnings
-    cfgprms = dict(mirror_dir =  qcfg[qname]['mirror_dir'],
+    cfgprms = dict(#mirror_dir =  qcfg[qname]['mirror_dir'],
                    archive331 =  qcfg[qname]['archive_irods331'],
                    mars_host  =  qcfg[qname].get('mars_host'),
                    mars_port  =  qcfg[qname].get('mars_port'),
