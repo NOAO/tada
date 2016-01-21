@@ -6,6 +6,7 @@
 SCRIPT=$(readlink -e $0)     #Absolute path to this script
 SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script is in
 
+source /sandbox/tada-tools/dev-scripts/irods_init.sh
 
 # Valley
 #! $SCRIPTDIR/smoke.fits_compliant.sh

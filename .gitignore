@@ -1,6 +1,7 @@
 *.tgz
 smoke-2.find
 smoke-2.status
+rpms-to-repo.sh
 
 data/
 

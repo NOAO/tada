@@ -5,7 +5,7 @@ wrapped into a service."""
 import argparse
 import logging
 import os.path
-
+from datetime import datetime
 
 import yaml
 
@@ -22,7 +22,7 @@ def main():
         epilog='EXAMPLE: %(prog)s a b"'
         )
     dflt_config = '/etc/tada/tada.conf'
-    logconf='/etc/tada/pop.yaml'
+    logconf='/etc/tada/watch.yaml'
     parser.add_argument('--logconf',
                         help='Logging configuration file (YAML format).'
                         '[Default={}]'.format(logconf),
@@ -54,6 +54,10 @@ def main():
     qcfg, dirs = config.get_config(None,
                                    validate=False,
                                    json_filename=args.config)
+    logging.info('watch_mountain: logdict={}'.format(logdict))
+    logging.info('watch_mountain: started: {}'
+                 .format(datetime.now().isoformat()))
+
     push_drops(qcfg)
 
 if __name__ == '__main__':
