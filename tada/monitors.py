@@ -49,6 +49,7 @@ collecting YAML files. Two locations will be looked in for YAML files:
   2. <ifname>.yaml                     (just one)
  """
     pdict = dict(options={}, params={})
+    pdict['params']['filename'] = ifname # default 
     for yfile in sorted(glob(watched_path + '/*/*.yaml')):
         logging.debug('DBG: reading YAML {}'.format(yfile))
         with open(yfile) as yy:
@@ -56,7 +57,6 @@ collecting YAML files. Two locations will be looked in for YAML files:
             pdict['params'].update(yd.get('params', {}))
             pdict['options'].update(yd.get('options', {}))
 
-    pdict['params']['filename'] = ifname # default 
     yfile = ifname + '.yaml'
     if os.path.isfile(yfile):
         with open(yfile) as yy:
