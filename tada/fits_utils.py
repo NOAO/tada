@@ -472,6 +472,7 @@ Include fields in hdr needed to construct new filename that fullfills standards.
     orig_fullname = opt_params.get('filename',
                                    hdr.get('DTACQNAM',
                                            '<no filename option provided>'))
+    logging.debug('fix_hdr; options={}'.format(options))
     for k,v in options.items():
         hdr[k] = v
 

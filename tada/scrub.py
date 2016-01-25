@@ -31,7 +31,7 @@ from . import exceptions as tex
 valid_dtpropids = set(['wiyn','noao','soar','smarts', 'tspec', 'BADSCRUB'])
 propidRE = re.compile(r'20\d{2}[AB]-\d{4}')
 def scrub_propid(value, hdr):
-    #! logging.debug('DBG: scrub_propid({},{})'.format(value, hdr))
+    logging.debug('DBG: scrub_propid({},{})'.format(value, hdr))
     if value in valid_dtpropids:
         return value
     if propidRE.match(value):

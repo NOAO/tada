@@ -42,32 +42,6 @@ If YAML files are found, they will be used for personalities.
 
 '''
 
-def options_from_yamls(watched_path, ifname):
-    """Returned combined options and parameters as single dict formed by 
-collecting YAML files. Two locations will be looked in for YAML files:
-  1. watched_path/<instrument>/*.yaml  (can be multiple)
-  2. <ifname>.yaml                     (just one)
- """
-    pdict = dict(options={}, params={})
-    pdict['params']['filename'] = ifname # default 
-    for yfile in sorted(glob(watched_path + '/*/*.yaml')):
-        logging.debug('DBG: reading YAML {}'.format(yfile))
-        with open(yfile) as yy:
-            yd = yaml.safe_load(yy)
-            pdict['params'].update(yd.get('params', {}))
-            pdict['options'].update(yd.get('options', {}))
-
-    yfile = ifname + '.yaml'
-    if os.path.isfile(yfile):
-        with open(yfile) as yy:
-            yd = yaml.safe_load(yy)
-            pdict['params'].update(yd.get('params', {}))
-            pdict['options'].update(yd.get('options', {}))
-
-
-    logging.debug('DBG: pdict={}'.format(pdict))
-    
-    return pdict 
 
 class SubmitEventHandler(watchdog.events.FileSystemEventHandler):
     def __init__(self, watched_dir, rejected_dir, moddir, qcfg):
@@ -168,7 +142,7 @@ to ANTICACHE."""
                 os.makedirs(os.path.dirname(cachename), exist_ok=True)
                 shutil.copy(ifname, cachename)
                 # Combine all personalities into one and send that to valley.,
-                pdict = options_from_yamls(self.dropdir, ifname)
+                pdict = options_from_yamls(ifname)
                 with open(cachename + '.yaml', 'w') as yf:
                     yaml.safe_dump(pdict, yf, width=50, indent=4)
 
@@ -179,15 +153,48 @@ to ANTICACHE."""
                     os.makedirs(os.path.dirname(statusname), exist_ok=True)
                     Path(statusname).touch(exist_ok=True)
                 except Exception as ex:
+                    # Push to dataq failed (file not put into TADA processing)
                     logging.error('Push FAILED with {}; {}'.format(ifname, ex))
                     logging.error(traceback.format_exc())
                     os.makedirs(os.path.dirname(anticachename), exist_ok=True)
                     shutil.move(cachename, anticachename)
             except Exception as ex:
+                # Something unexpected failed (makedirs, copy, yaml read/write)
                 logging.error('PushEventHandler.new_file FAILED with {}; {}'
                               .format(ifname, ex))
                 logging.error(traceback.format_exc())
             logging.debug('DBG-3: {}'.format(ifname))
+
+    def options_from_yamls(self, ifname):
+        """Returned combined options and parameters as single dict formed by 
+    collecting YAML files. Two locations will be looked in for YAML files:
+      1. cache/<instrument>/*.yaml  (can be multiple)
+      2. <ifname>.yaml              (just one)
+     """
+        pdict = dict(options={}, params={})
+        pdict['params']['filename'] = ifname # default 
+        yfiles = glob(os.path.join(self.dropdir,
+                                   str(PurePath(ifname).parts[4]),
+                                   '*.yaml'))
+        for yfile in sorted(yfiles):
+            logging.debug('DBG: reading YAML {}'.format(yfile))
+            with open(yfile) as yy:
+                yd = yaml.safe_load(yy)
+                pdict['params'].update(yd.get('params', {}))
+                pdict['options'].update(yd.get('options', {}))
+
+        yfile = ifname + '.yaml'
+        if os.path.isfile(yfile):
+            with open(yfile) as yy:
+                yd = yaml.safe_load(yy)
+                pdict['params'].update(yd.get('params', {}))
+                pdict['options'].update(yd.get('options', {}))
+
+
+        logging.debug('DBG: pdict={}'.format(pdict))
+
+        return pdict 
+            
 
 def push_drops(qcfg):
     watched_dir = '/var/tada/dropbox'
