@@ -8,7 +8,7 @@
 
 cmd=`basename $0`
 SCRIPT=$(readlink -e $0)     #Absolute path to this script
-SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script1 is in
+SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script is in
 testdir=$(dirname $SCRIPTDIR)
 tadadir=$(dirname $testdir)
 # tadadir=/sandbox/tada
@@ -27,6 +27,13 @@ source mars.sh
 source fsub.sh
 return_code=0
 SMOKEOUT="README-smoke-results.dropbox.txt"
+MANIFEST="$dir/manifest.out"
+rm  $MANIFEST > /dev/null
+touch $MANIFEST
+MAXRUNTIME=200  # max seconds to wait for all files to be submitted
+touch /var/log/tada/archived.manifest
+chgrp tada /var/log/tada/archived.manifest
+sdate=`date`
 
 echo ""
 echo "Starting tests in \"$SCRIPT\" ..."
@@ -43,23 +50,35 @@ else
     tar xf fits-test-data.tgz
 fi
 
-# SUCCESSFUL INGEST example:b
-# 2016-01-21 23:08:36,742 root            INFO     PASSED submit_to_archive; /var/tada/cache/vagrant/6/obj_355.fits.fz as /noao-tuc-z1/mtn/20141219/WIYN/2012B-0500/kww_141220_130138_ori_3334730996.fits
-#
-#grep "INFO     PASSED submit_to_archive" /var/log/tada/pop.log 
 
 function dbox () {
     srcdir=$1
-    mhost="mountain.`hostname --domain`"
-    # Force all fits files to be touched on remote (which creates event)
-    find $srcdir -name "*.fits*" -exec touch {} \;
-    rsync -avz --password-file ~/.tada/rsync.pwd $srcdir tada@$mhost::dropbox
-    finished-files.sh -m /var/log/tada/pop.log 
+    mtnhost="mountain.`hostname --domain`"
+    for f in `find $srcdir -name "*.fits" -o -name "*.fits.fz"`; do
+        # Force all fits files to be touched on remote (which creates event)
+        touch $f
+        if [ ! -f $f.yaml ]; then
+            add_test_personality.sh $f
+        fi
+        #echo "SUCCESSFUL submit_to_archive; $f" >> $MANIFEST
+        echo "$f" >> $MANIFEST
+    done
+    echo "Files submitted listed in: $MANIFEST"
+    #rsync -aiz --password-file ~/.tada/rsync.pwd $srcdir tada@$mtnhost::dropbox
+    rsync -az --password-file ~/.tada/rsync.pwd $srcdir tada@$mtnhost::dropbox
+    # INFO     SUCCESSFUL submit; /var/tada/cache/20141224/kp09m-hdi/c7015t0267b00.fits.fz as /noao-tuc-z1/mtn/20141223/kp09m/2014B-0711/k09h_141224_115224_zri_TADASMOKE,.fits.fz,
+    echo -n "#Waiting for $MAXRUNTIME seconds for all files to be submitted..." 
+    sleep $((MAXRUNTIME/2))
+    echo -n "half done..."
+    finished-log.sh -l /var/log/tada/archived.manifest $MANIFEST
+    sleep $((MAXRUNTIME/2))
+    echo "#done waiting"
+    finished-log.sh -l /var/log/tada/archived.manifest $MANIFEST
 }
 
 ##############################################################################
 
-testCommand db1_1 "dbox $tdata/scrape" "^\#" n 1
+testCommand db1_1 "dbox $tdata/scrape/" "^\#" n
 
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"
@@ -68,7 +87,6 @@ testCommand db1_1 "dbox $tdata/scrape" "^\#" n 1
 
 
 ##############################################################################
-
 
 rm $SMOKEOUT 2>/dev/null
 if [ $return_code -eq 0 ]; then
@@ -79,8 +97,15 @@ else
     echo "Smoke FAILED $failcnt/$totalcnt (no $SMOKEOUT produced)"
 fi
 
+cat <<EOF | mail -s "Smoke.dropbox completed!" pothier@email.noao.edu
+Started:  $sdate
+Finished: `date`
+
+Test score: passed=$(($totalcnt-$failcnt))/$totalcnt
+EOF
+
+
 
 # Don't move or remove! 
 cd $origdir
 exit $return_code
-

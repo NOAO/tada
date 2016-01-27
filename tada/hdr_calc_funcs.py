@@ -53,15 +53,16 @@ def fixTriplespec(orig, **kwargs):
     
 def trustHdrPropid(orig, **kwargs):
     propid = orig.get('DTPROPID')
-    if propid != 'BADSCRUB':
-        return {'DTPROPID': propid}
-    else:
+    if propid == 'BADSCRUB':
+        # fallback
         propid = ws_lookup_propid(orig.get('DTCALDAT'), orig.get('DTTELESC'),
                                   **kwargs)
         if propid == None:
             return {}
         else:
             return {'DTPROPID': propid}
+    else:
+        return {'DTPROPID': propid}
 
 
 def trustSchedPropid(orig, **kwargs):
@@ -155,8 +156,8 @@ def DTCALDATfromDATEOBSchile(orig, **kwargs):
         caldate = localdt.date()
     else:
         caldate = localdt.date() - dt.timedelta(days=1)
-    #!logging.debug('localdt={}, DATE-OBS={}, caldate={}'
-    #!              .format(localdt, orig['DATE-OBS'], caldate))
+    logging.debug('localdt={}, DATE-OBS={}, caldate={}'
+                  .format(localdt, orig['DATE-OBS'], caldate))
     new = {'DTCALDAT': caldate.isoformat()}
     return new
 

@@ -98,8 +98,9 @@ def ingest_drops(watched_dir, rejected_dir, moddir, qcfg):
 ##############################################################################
 ### Mountain Monitor
 ###
-### We directory structure of watched_dir/<instrument>/<day> (YYYYMMDD) and
-### for only a small subset of days to be changing. Therefore, it
+### Monitor directory structure of watched_dir/<day>/<instrument>
+### Where <day> is of form: YYYYMMDD
+### We expect only a small subset of days to be changing. Therefore, it
 ### would be *better* if only the changing subset were watched.  But
 ### that's harder.  So, for now, recursively watch "watched_dir".
 ###
@@ -111,6 +112,7 @@ to ANTICACHE."""
         self.dropdir = drop_dir
         self.statusdir = status_dir
         self.cachedir= '/var/tada/cache'
+        self.personalitydir= '/var/tada/personalities'
         self.anticachedir= '/var/tada/anticache'
         super(watchdog.events.FileSystemEventHandler).__init__()
 
@@ -142,7 +144,7 @@ to ANTICACHE."""
                 os.makedirs(os.path.dirname(cachename), exist_ok=True)
                 shutil.copy(ifname, cachename)
                 # Combine all personalities into one and send that to valley.,
-                pdict = options_from_yamls(ifname)
+                pdict = self.options_from_yamls(ifname)
                 with open(cachename + '.yaml', 'w') as yf:
                     yaml.safe_dump(pdict, yf, width=50, indent=4)
 
@@ -168,16 +170,18 @@ to ANTICACHE."""
     def options_from_yamls(self, ifname):
         """Returned combined options and parameters as single dict formed by 
     collecting YAML files. Two locations will be looked in for YAML files:
-      1. cache/<instrument>/*.yaml  (can be multiple)
+      1. <personality_dir>/<instrument>/*.yaml  (can be multiple)
       2. <ifname>.yaml              (just one)
      """
+        day,inst,*d = PurePath(ifname).relative_to(PurePath(self.dropdir)).parts
+        logging.debug('DBG: file={}, day={}, inst={}'.format(ifname, day, inst))
+
         pdict = dict(options={}, params={})
         pdict['params']['filename'] = ifname # default 
-        yfiles = glob(os.path.join(self.dropdir,
-                                   str(PurePath(ifname).parts[4]),
-                                   '*.yaml'))
+
+        yfiles = glob(os.path.join(self.personalitydir, inst, '*.yaml'))
+        logging.debug('DBG: read YAML files: {}'.format(yfiles))
         for yfile in sorted(yfiles):
-            logging.debug('DBG: reading YAML {}'.format(yfile))
             with open(yfile) as yy:
                 yd = yaml.safe_load(yy)
                 pdict['params'].update(yd.get('params', {}))

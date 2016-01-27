@@ -18,6 +18,7 @@ $SCRIPTDIR/smoke.scrape.sh
 # Mountain (dome) or Valley
 $SCRIPTDIR/smoke.sh
 #!$SCRIPTDIR/smoke.raw_post.sh
+$SCRIPTDIR/smoke.dropbox.sh
 
 echo "Remember to:"
 echo "  1. try Portal to prove stated files can be retrieved!"

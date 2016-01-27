@@ -7,8 +7,8 @@ from . import fits_utils as fu
 
 def pers2yaml(pers_fname, yaml_fname):
     po, pp = fu.get_personality_dict(pers_fname)    
-    if 'calchdr' in pp:
-        pp['calchdr'] = pp['calchdr'].split(',')
+    #!if 'calchdr' in pp:
+    #!    pp['calchdr'] = pp['calchdr'].split(',')
     data = dict(options=po, params=pp)
     with open(yaml_fname, 'w') as yf:
         yaml.safe_dump(data, yf, indent=4, width=20)

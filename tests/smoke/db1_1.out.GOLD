@@ -1,17 +1,30 @@
-sending incremental file list
-basic/
-basic/c4d_130901_031805_oow_g_d2.fits.fz
-basic/cleaned-bok.fits.fz
-basic/foo.hdr
-basic/k4k_140922_234607_zri.fits.fz
-basic/kp109391.fits.fz
-basic/kptest.fits
-basic/obj_355.fits
-basic/obj_355.fits.fz
-basic/uofa-mandle.jpg
-basic/raw/
-basic/raw/LTT1020_6606.052.fits
-basic/raw/chi141225.1238.fits
-
-sent 231720225 bytes  received 225 bytes  5207201.12 bytes/sec
-total size is 308639215  speedup is 1.33
+Files submitted listed in: /sandbox/tada/tests/smoke/manifest.out
+Waiting for 200 seconds for all files to be submitted...half done...# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+done waiting
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds
+# wait(30) Done in 0 seconds

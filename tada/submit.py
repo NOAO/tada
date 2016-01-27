@@ -335,7 +335,7 @@ checksum:: NOT USED
 qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 
     """
-    #!logging.debug('submit_to_archive({},{})'.format(ifname, qname))
+    logging.debug('submit_to_archive({},{})'.format(ifname, qname))
     
     cfgprms = dict(#mirror_dir =  qcfg[qname]['mirror_dir'],
                    archive331 =  qcfg[qname]['archive_irods331'],
@@ -363,10 +363,24 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     if pprms.get('do_audit',False):
         audit_svc(origfname, destfname, ops_msg, popts)
     if not success:
+        rejected = '/var/log/tada/rejected.manifest'
+        if os.path.exists(rejected):
+            with open(rejected, mode='a') as mf:
+                print('{}\t{}\t{}'
+                      .format(datetime.datetime.now(), origfname, destfname),
+                      file=mf)
         raise tex.SubmitException(msg)
 
     #!iu.irods_put331(ifname, destfname) # iput renamed FITS
     iput_modified_fits(ifname, destfname, changed) # iput renamed FITS
+    logging.info('SUCCESSFUL submit_to_archive; {} as {}'
+                 .format(origfname, destfname))
+    manifest = '/var/log/tada/archived.manifest'
+    if os.path.exists(manifest):
+        with open(manifest, mode='a') as mf:
+            print('{}\t{}\t{}'
+                  .format(datetime.datetime.now(), origfname, destfname),
+                  file=mf)
     return destfname
 
 
