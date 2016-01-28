@@ -8,10 +8,10 @@ function fsub () {
     ppath="/opt/tada-cli/personalities"
     pers=""
     for p; do
-	    pers="$pers -p $ppath/$p.personality"
+	    pers="$pers -p $ppath/$p/$p.yaml"
     done
     #~msg=`fits_submit -p smoke $pers $ffile 2>&1 `
-    msg=`direct_submit -p $ppath/smoke.personality $pers $ffile 2>&1 `
+    msg=`direct_submit -p $ppath/ops/smoke.yaml $pers $ffile 2>&1 `
     status=$?
     msg=`echo $msg | perl -pe "s|$tdata||"`
     #echo "msg=$msg"
@@ -24,7 +24,7 @@ function fsub () {
         echo ""
     else
 	tailffile=`echo $ffile | perl -pe "s|$tdata|/DATA|"`
-        echo "EXECUTED: direct_submit -p $ppath/smoke.personality $pers $tailffile"  
+        echo "EXECUTED: direct_submit -p $ppath/ops/smoke.yaml $pers $tailffile"  
         echo $msg
     fi
     return $status

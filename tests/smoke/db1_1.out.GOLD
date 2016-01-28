@@ -1,5 +1,5 @@
 Files submitted listed in: /sandbox/tada/tests/smoke/manifest.out
-Waiting for 200 seconds for all files to be submitted...half done...# wait(30) Done in 0 seconds
+#Waiting for 200 seconds for all files to be submitted...half done...# wait(30) Done in 0 seconds
 # wait(30) Done in 0 seconds
 # wait(30) Done in 0 seconds
 # wait(30) Done in 0 seconds
@@ -13,7 +13,7 @@ Waiting for 200 seconds for all files to be submitted...half done...# wait(30) D
 # wait(30) Done in 0 seconds
 # wait(30) Done in 0 seconds
 # wait(30) Done in 0 seconds
-done waiting
+#done waiting
 # wait(30) Done in 0 seconds
 # wait(30) Done in 0 seconds
 # wait(30) Done in 0 seconds
