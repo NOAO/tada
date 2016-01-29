@@ -16,8 +16,9 @@
 # AUTHORS:    S. Pothier
 ##############################################################################
 
-failcnt=0
-totalcnt=0
+# Default counters if something didn't previously set them
+x=${failcnt:=0}
+x=${totalcnt:=0}
 
 ##
 ## Test a module that modifies a database.

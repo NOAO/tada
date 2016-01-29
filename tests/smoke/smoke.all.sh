@@ -4,6 +4,9 @@
 ##  failure tests; make sure DIRECT ingest failures return non-zero status
 
 sdate=`date`
+tic=`date +'%s'`
+export failcnt=0
+export totalcnt=0
 masterfailcnt=0
 mastertotalcnt=0
 
@@ -15,26 +18,29 @@ source /sandbox/tada-tools/dev-scripts/irods_init.sh
 function tally () {
     mastertotalcnt=$((totalcnt + mastertotalcnt))
     masterfailcnt=$((failcnt + masterfailcnt))
+    echo "Score so far; passed=$(($totalcnt-$failcnt))/$totalcnt"
+    echo "Score so far; master passed=$(($mastertotalcnt-$masterfailcnt))/$mastertotalcnt"
 }
 
 # Mountain (dome) or Valley
 $SCRIPTDIR/smoke.sh; tally
-#!$SCRIPTDIR/smoke.raw_post.sh
+#!$SCRIPTDIR/smoke.raw_post.sh; tally
 $SCRIPTDIR/smoke.dropbox.sh; tally
 
 # Valley
-#! $SCRIPTDIR/smoke.fits_compliant.sh
-#! $SCRIPTDIR/smoke.fits_submit.sh
-#! $SCRIPTDIR/smoke.pipeline_submit.sh
+#! $SCRIPTDIR/smoke.fits_compliant.sh; tally
+#! $SCRIPTDIR/smoke.fits_submit.sh; tally
+#! $SCRIPTDIR/smoke.pipeline_submit.sh; tally
 $SCRIPTDIR/smoke.direct.sh; tally
 $SCRIPTDIR/smoke.scrape.sh; tally
 
+echo "Multi-test score: passed=$(($mastertotalcnt-$masterfailcnt))/$mastertotalcnt"
 echo "Remember to:"
 echo "  1. try Portal to prove stated files can be retrieved!"
 echo "  2. verify Archive filenames look ok: http://localhost:8000/provisional/"
 
-
-cat <<EOF | mail -s "Smoke.all completed!" pothier@email.noao.edu
+emins=$(((`date +'%s'` - tic)/60))
+cat <<EOF | mail -s "Smoke.all completed! ($emins)" pothier@email.noao.edu
 Scripot:  $SCRIPT
 Started:  $sdate
 Finished: `date`
@@ -45,6 +51,3 @@ Remember to:
   1. try Portal to prove stated files can be retrieved!
   2. verify Archive filenames look ok: http://localhost:8000/provisional/
 EOF
-
-
-
