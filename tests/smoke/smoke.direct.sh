@@ -8,7 +8,7 @@
 
 cmd=`basename $0`
 SCRIPT=$(readlink -e $0)     #Absolute path to this script
-SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script1 is in
+SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script is in
 testdir=$(dirname $SCRIPTDIR)
 tadadir=$(dirname $testdir)
 # tadadir=/sandbox/tada

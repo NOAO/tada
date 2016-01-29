@@ -16,6 +16,7 @@ from pprint import pprint
 
 import astropy.io.fits as pyfits
 import os.path
+from pathlib import PurePath
 import datetime as dt
 import subprocess
 import yaml
@@ -567,26 +568,33 @@ def get_personality_dict(personality_file):
     logging.debug('EXECUTING: get_personality_dict({})'
                   .format(personality_file))
 
+    options = dict()
+    opt_params = dict()
     if not os.path.exists(personality_file):
         logging.warning('personality_file does not exist: {}'
                         .format(personality_file))
-        return dict(), dict()
-    
-    cmd = 'source {}; echo $TADAOPTS'.format(personality_file)
-    optstr = subprocess.check_output(['bash', '-c', cmd ]).decode()
-    options = dict()
-    opt_params = dict()
-    for opt in optstr.replace('-o ', '').split():
-        k, v = opt.split('=')
-        if k[0] != '_':
-            continue
-        if k[1] == '_':
-            opt_params[k[2:]] = v
-        else:
-            options[k[1:]] = v.replace('_', ' ')                
+        return options, opt_params
 
-    if 'calchdr' in opt_params:
-        opt_params['calchdr'] = opt_params['calchdr'].split(',')
+    if PurePath(personality_file).suffix == '.yaml':
+        with open(personality_file) as yy:
+            yd = yaml.safe_load(yy)
+            options = yd.get('options', {})
+            opt_params = yd.get('params', {})
+    elif PurePath(personality_file).suffix == '.personality':
+        cmd = 'source {}; echo $TADAOPTS'.format(personality_file)
+        optstr = subprocess.check_output(['bash', '-c', cmd ]).decode()
+        for opt in optstr.replace('-o ', '').split():
+            k, v = opt.split('=')
+            if k[0] != '_':
+                continue
+            if k[1] == '_':
+                opt_params[k[2:]] = v
+            else:
+                options[k[1:]] = v.replace('_', ' ')                
+
+        if 'calchdr' in opt_params:
+            opt_params['calchdr'] = opt_params['calchdr'].split(',')
+        
     logging.debug('get_personality_dict({}) => popts_dict={}, pprms_dict={}'
                   .format(personality_file, options, opt_params))
     return options, opt_params

@@ -33,7 +33,6 @@ touch $MANIFEST
 MAXRUNTIME=200  # max seconds to wait for all files to be submitted
 touch /var/log/tada/archived.manifest
 chgrp tada /var/log/tada/archived.manifest
-sdate=`date`
 
 echo ""
 echo "Starting tests in \"$SCRIPT\" ..."
@@ -96,13 +95,6 @@ if [ $return_code -eq 0 ]; then
 else
     echo "Smoke FAILED $failcnt/$totalcnt (no $SMOKEOUT produced)"
 fi
-
-cat <<EOF | mail -s "Smoke.dropbox completed!" pothier@email.noao.edu
-Started:  $sdate
-Finished: `date`
-
-Test score: passed=$(($totalcnt-$failcnt))/$totalcnt
-EOF
 
 
 

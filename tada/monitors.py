@@ -179,7 +179,11 @@ to ANTICACHE."""
         pdict = dict(options={}, params={})
         pdict['params']['filename'] = ifname # default 
 
-        yfiles = glob(os.path.join(self.personalitydir, inst, '*.yaml'))
+        globpattern = os.path.join(self.personalitydir, inst, '*.yaml')
+        yfiles = glob(globpattern)
+        if len(yfiles) == 0:
+            logging.error("Didn't find expected YAML personality file(s) in: {}"
+                          .format(globpattern))
         logging.debug('DBG: read YAML files: {}'.format(yfiles))
         for yfile in sorted(yfiles):
             with open(yfile) as yy:

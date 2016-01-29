@@ -24,6 +24,7 @@ export PATH=$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:$PATH
 
 source smoke-lib.sh
 source mars.sh
+source fsub.sh
 return_code=0
 SMOKEOUT="README-smoke-results.scrape.txt"
 
@@ -46,44 +47,44 @@ fi
 ###########################################
 ### fits_submit
 ###
-function fsub () {
-    pers=$ppath/$1.personality
-    ffile=$2
+#!function fsub () {
+#!    pers=$ppath/$1.personality
+#!    ffile=$2
+#!
+#!    msg=`direct_submit -p $ppath/smoke.personality -p $pers $ffile 2>&1`
+#!    status=$?
+#!    msg=`echo $msg | perl -pe "s|$tdata||"`
+#!    if [ $status -eq 0 ]; then
+#!        irodsfile=`echo $msg | cut -s --delimiter=' ' --fields=5`
+#!        archfile=`basename $irodsfile`
+#!        echo $msg 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
+#!        mars_add "$archfile" "$ffile"
+#!        echo ""
+#!    else
+#!        echo "EXECUTED: direct_submit -p $ppath/smoke.personality -p $pers $ffile"  
+#!        echo $msg
+#!    fi
+#!    return $status
+#!}
 
-    msg=`direct_submit -p $ppath/smoke.personality -p $pers $ffile 2>&1`
-    status=$?
-    msg=`echo $msg | perl -pe "s|$tdata||"`
-    if [ $status -eq 0 ]; then
-        irodsfile=`echo $msg | cut -s --delimiter=' ' --fields=5`
-        archfile=`basename $irodsfile`
-        echo $msg 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
-        mars_add "$archfile" "$ffile"
-        echo ""
-    else
-        echo "EXECUTED: direct_submit -p $ppath/smoke.personality -p $pers $ffile"  
-        echo $msg
-    fi
-    return $status
-}
 
 
-
-testCommand sc1_1  "fsub bok23m-90prime $tdata/bok23m-90prime/d7212.0062.fits.fz" "^\#" n
-testCommand sc2_1  "fsub ct13m-andicam $tdata/ct13m-andicam/ir141225.0179.fits.fz" "^\#" n
-testCommand sc3_1  "fsub ct15m-echelle $tdata/ct15m-echelle/chi150724.1000.fits.fz" "^\#" n
-testCommand sc4_1  "fsub ct4m-cosmos $tdata/ct4m-cosmos/n3.25523.fits.fz" "^\#" n
-testCommand sc5_1  "fsub ct4m-decam  $tdata/ct4m-decam/DECam_00482540.fits.fz" "^\#" n
-testCommand sc6_1  "fsub kp09m-hdi $tdata/kp09m-hdi/c7015t0267b00.fits.fz" "^\#" n
-testCommand sc13_1 "fsub kp4m-kosmos $tdata/kp4m-kosmos/a.20153.fits.fz" "^\#" n
-testCommand sc7_1  "fsub kp4m-mosaic_1_1 $tdata/kp4m-mosaic_1_1/spw54553.fits.fz" "^\#" n
-testCommand sc8_1  "fsub kp4m-newfirm $tdata/kp4m-newfirm/nhs_2015_n04_319685.fits.fz" "^\#" n
-testCommand sc9_1  "fsub soar-goodman $tdata/soar-goodman/0079.spec_flat.fits.fz" "^\#" n
+testCommand sc1_1  "fsub $tdata/20150709/bok23m-90prime/d7212.0062.fits.fz bok23m-90prime" "^\#" n
+testCommand sc2_1  "fsub $tdata/01012011/ct13m-andicam/ir141225.0179.fits.fz ct13m-andicam" "^\#" n
+testCommand sc3_1  "fsub $tdata/01012011/ct15m-echelle/chi150724.1000.fits.fz ct15m-echelle" "^\#" n
+testCommand sc4_1  "fsub $tdata/20150705/ct4m-cosmos/n3.25523.fits.fz ct4m-cosmos" "^\#" n
+testCommand sc5_1  "fsub $tdata/20151007/ct4m-decam/DECam_00482540.fits.fz ct4m-decam " "^\#" n
+testCommand sc6_1  "fsub $tdata/20141224/kp09m-hdi/c7015t0267b00.fits.fz kp09m-hdi" "^\#" n
+testCommand sc13_1 "fsub $tdata/20150929/kp4m-kosmos/a.20153.fits.fz kp4m-kosmos" "^\#" n
+testCommand sc7_1  "fsub $tdata/20141215/kp4m-mosaic_1_1/spw54553.fits.fz kp4m-mosaic_1_1" "^\#" n
+testCommand sc8_1  "fsub $tdata/20141215/kp4m-newfirm/nhs_2015_n04_319685.fits.fz kp4m-newfirm" "^\#" n
+testCommand sc9_1  "fsub $tdata/01012011/soar-goodman/0079.spec_flat.fits.fz soar-goodman" "^\#" n
 #soar-osiris  # scrape has no "passable" files for this instrument
 #soar-sami    # scrape has no "passable" files for this instrument
-testCommand sc14_1 "fsub soar-soi $tdata/soar-soi/test.027.fits.fz" "^\#" n
-testCommand sc10_1 "fsub soar-spartan $tdata/soar-spartan/011-6365d0.fits.fz" "^\#" n
-testCommand sc11_1 "fsub wiyn-bench $tdata/wiyn-bench/24dec_2014.061.fits.fz" "^\#" n
-testCommand sc12_1 "fsub wiyn-whirc $tdata/wiyn-whirc/obj_355.fits.fz" "^\#" n
+testCommand sc14_1 "fsub $tdata/20141127/soar-soi/test.027.fits.fz soar-soi" "^\#" n
+testCommand sc10_1 "fsub $tdata/01012011/soar-spartan/011-6365d0.fits.fz soar-spartan" "^\#" n
+testCommand sc11_1 "fsub $tdata/01012011/wiyn-bench/24dec_2014.061.fits.fz wiyn-bench" "^\#" n
+testCommand sc12_1 "fsub $tdata/01012011/wiyn-whirc/obj_355.fits.fz wiyn-whirc" "^\#" n
 
 
 

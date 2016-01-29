@@ -89,7 +89,7 @@ Here's a list that is more or less right:
 
 * Remediation
 There is no defined or automatic remediation work-flow in this
-release. There are two main places you should look on BOTH Mountain
+release. There are a few main places you should look on BOTH Mountain
 and Valley if you think something went wrong:
 
 1. ~/var/log/tada/*~
@@ -97,6 +97,9 @@ and Valley if you think something went wrong:
    + Zero matches should return from ~grep -c " ERROR " /var/log/tada/pop.log~
 2. ~dqcli -s~
    + Everything in the inactive queue failed to ingest.
+3. get status of dropped files (and this User's Guide)
+   : rsync -az --password-file ~/.tada/rsync.pwd  tada@$mtnhost::statusbox /tmp/statusbox/
+   + With the above command, this doc will be in: ~/tmp/statusbox/tada-ug.pdf~
 
 * COMMENT POSTSCRIPT
 /(this section here to keep Document Comments out of the way)/
