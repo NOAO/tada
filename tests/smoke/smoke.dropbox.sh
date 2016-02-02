@@ -23,46 +23,41 @@ export PATH=$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:$PATH
 export PATH=$tadadir/../tada-cli/scripts:$PATH
 
 source smoke-lib.sh
-source mars.sh
-source fsub.sh
+
 return_code=0
 SMOKEOUT="README-smoke-results.dropbox.txt"
 MANIFEST="$dir/manifest.out"
 rm  $MANIFEST > /dev/null
 touch $MANIFEST
-MAXRUNTIME=200  # max seconds to wait for all files to be submitted
+MAXRUNTIME=210  # max seconds to wait for all files to be submitted
 touch /var/log/tada/archived.manifest
 chgrp tada /var/log/tada/archived.manifest
 
-echo ""
-echo "Starting tests in \"$SCRIPT\" ..."
-echo ""
-mars_stuff
-mars_rollback
-echo ""
-
-if [ -d "$tdata/basic" ]; then
-    echo "Data directory ($tdata/basic) exists. Using it!"
-else
-    echo "data directory ($tdata/basic) does not exist. Transfering it"
-    wget -nc http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
-    tar xf fits-test-data.tgz
-fi
+echo "# "
+echo "# Starting tests in \"smoke.dropbox.sh\" ..."
+echo "# "
+source tada-smoke-setup.sh
 
 
+function sbox () {
+    mtnhost="mountain.`hostname --domain`"
+    statusdir="$SCRIPTDIR/remote_status"
+    mkdir -p $statusdir
+    rsync -a --password-file ~/.tada/rsync.pwd tada@$mtnhost::statusbox $statusdir
+    find $mydir -type f
+}
+    
 function dbox () {
     srcdir=$1
     mtnhost="mountain.`hostname --domain`"
     for f in `find $srcdir -name "*.fits" -o -name "*.fits.fz"`; do
         # Force all fits files to be touched on remote (which creates event)
         touch $f
-        if [ ! -f $f.yaml ]; then
-            add_test_personality.sh $f
-        fi
+        add_test_personality.sh $f
         #echo "SUCCESSFUL submit_to_archive; $f" >> $MANIFEST
         echo "$f" >> $MANIFEST
     done
-    echo "Files submitted listed in: $MANIFEST"
+    echo "# List of files submitted is in: $MANIFEST"
     #rsync -aiz --password-file ~/.tada/rsync.pwd $srcdir tada@$mtnhost::dropbox
     rsync -az --password-file ~/.tada/rsync.pwd $srcdir tada@$mtnhost::dropbox
     # INFO     SUCCESSFUL submit; /var/tada/cache/20141224/kp09m-hdi/c7015t0267b00.fits.fz as /noao-tuc-z1/mtn/20141223/kp09m/2014B-0711/k09h_141224_115224_zri_TADASMOKE,.fits.fz,
@@ -77,7 +72,15 @@ function dbox () {
 
 ##############################################################################
 
-testCommand db1_1 "dbox $tdata/scrape/" "^\#" n
+# <date>/<instrument>/.../*.fits.fz
+testCommand db1_1 "dbox $tdata/scrape/" "^\#" y
+
+# Directory structure is wrong! (one too deep)
+# scrape/<date>/<instrument>/.../*.fits.fz
+#! testCommand db2_1 "dbox $tdata/scrape" "^\#" n
+#! testCommand db2_2 "sbox" "^\#" n
+
+
 
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"
@@ -100,4 +103,5 @@ fi
 
 # Don't move or remove! 
 cd $origdir
-exit $return_code
+#exit $return_code
+return $return_code

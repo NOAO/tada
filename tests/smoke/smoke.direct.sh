@@ -17,7 +17,7 @@ tdata=$SCRIPTDIR/tada-test-data
 #tdata=/data/tada-test-data
 # tdata=/sandbox/tada/tests/smoke/tada-test-data/basic
 
-echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
+# echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
 
 dir=$SCRIPTDIR
 origdir=`pwd`
@@ -26,26 +26,13 @@ cd $dir
 export PATH=$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:$PATH
 
 source smoke-lib.sh
-source mars.sh
-source fsub.sh
 return_code=0
 SMOKEOUT="README-smoke-results.direct.txt"
 
-echo ""
-echo "Starting tests in \"$SCRIPT\" ..."
-echo ""
-mars_stuff
-mars_rollback
-echo ""
-
-if [ -d "$tdata/basic" ]; then
-    echo "Data directory ($tdata/basic) exists. Using it!"
-else
-    echo "data directory ($tdata/basic) does not exist. Transfering it"
-    wget -nc http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
-    tar xf fits-test-data.tgz
-fi
-
+echo "# "
+echo "# Starting tests in \"smoke.direct.sh\" ..."
+echo "# "
+source tada-smoke-setup.sh
 
 ##############################################################################
 
@@ -114,5 +101,6 @@ fi
 
 # Don't move or remove! 
 cd $origdir
-exit $return_code
+#exit $return_code
+return $return_code
 

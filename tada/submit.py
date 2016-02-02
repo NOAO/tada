@@ -155,8 +155,8 @@ RETURN: irods location of hdr file.
     jidt = opt_params.get('jobid_type',None)  # plain | seconds | (False)
     tag = opt_params.get('job_tag','')
     source = opt_params.get('source','raw')   # pipeline | (dome)
-    resubmit = opt_params.get('test_resubmit', '0') == '1'
-    
+    resubmit = int(opt_params.get('test_resubmit', '0')) # GT 0::try even if HDR exists, ==1::also log error
+    logging.debug('resubmit=({})'.format(resubmit))
     # We want "filename" to always be given an option.
     # But we also don't want to force setting of options if we can
     # avoid it. So we use the only fname available: mirror_fname.
@@ -170,7 +170,8 @@ RETURN: irods location of hdr file.
         hdr = fu.get_hdr_as_dict(mirror_fname)
         if opt_params.get('OPS_PREAPPLY_UPDATE','NO') == 'YES': #!!!
             fu.apply_options(options, hdr)
-        hdr['DTACQNAM'] = orig_fullname
+        if 'DTACQNAM' not in hdr:
+            hdr['DTACQNAM'] = orig_fullname
         # we will set DTNSANAM after we generate_fname, here to pass validate
         hdr['DTNSANAM'] = 'NA' 
         fu.validate_raw_hdr(hdr, orig_fullname)
@@ -181,7 +182,8 @@ RETURN: irods location of hdr file.
             raise tex.CannotModifyHeader('Could not update FITS header; '
                                          '{}'.format(err))
         fu.validate_cooked_hdr(hdr, orig_fullname)
-        fu.validate_recommended_hdr(hdr, orig_fullname)
+        if opt_params.get('VERBOSE', False):
+            fu.validate_recommended_hdr(hdr, orig_fullname)
         # Generate standards conforming filename
         # EXCEPT: add field when JOBID_TYPE and/or JOB_TAG given.
         if jidt == 'plain':
@@ -223,8 +225,10 @@ RETURN: irods location of hdr file.
         if iu.irods_exists331(new_ihdr):
             msg = ('iRODS HDR file already exists at {} on submit of {}.'
                    .format(new_ihdr, orig_fullname))
-            if resubmit:
+            if resubmit == 1:
                 logging.error(msg + ' Trying to ingest anyhow.')
+            elif resubmit > 1:
+                pass
             else:
                 msg = msg + ' Aborting attempt to ingest.'
                 logging.error(msg)
@@ -232,8 +236,10 @@ RETURN: irods location of hdr file.
         elif iu.irods_exists331(new_ifname):
             msg = ('iRODS FITS file already exists at {} on submit of {}.'
                    .format(new_ifname, orig_fullname))
-            if resubmit:
+            if resubmit == 1:
                 logging.error(msg + ' Trying to ingest anyhow.')
+            elif resubmit > 1:
+                pass
             else:
                 msg = msg + ' Aborting attempt to ingest.'
                 logging.error(msg)

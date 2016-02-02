@@ -113,6 +113,7 @@ obsLUT = {
     'sky':                       's',
     'skyflat':                   's', # added 10/23/15 (per dsid.c)
     'dark':                      'd',
+    'calibration':               'c', # added 2/1/16 for ct15m-echelle
     'calibration or comparison': 'c',
     'comp':                      'c', # added 10/23/15 (per dsid.c)
     'comparison':                'c', # added 10/23/15 (per dsid.c)

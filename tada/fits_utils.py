@@ -478,8 +478,9 @@ Include fields in hdr needed to construct new filename that fullfills standards.
         hdr[k] = v
 
     scrub_errors = scrub.scrub_hdr(hdr)
-    if len(scrub_errors) > 0:
-        logging.warning('scrub_errors={}'.format(scrub_errors))
+    if opt_params.get('VERBOSE', False):
+        if len(scrub_errors) > 0:
+            logging.warning('scrub_errors={}'.format(scrub_errors))
     #tex.BadFieldContent(scrub_errors)
 
     # Validate after explicit overrides, before calculated fields.
@@ -740,7 +741,7 @@ def fits_compliant(fits_file_list,
                 #! hdr = pyfits.open(ffile)[0].header
                 hdr = get_hdr_as_dict(ffile)
             hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname, here to pass validate
-            hdr['DTACQNAM'] = ffile
+            #! hdr['DTACQNAM'] = ffile
 
             if opt_params.get('OPS_PREAPPLY_UPDATE','NO') == 'YES': #!!!
                 apply_options(options, hdr)

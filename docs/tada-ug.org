@@ -10,21 +10,25 @@ these steps.  (Slightly more details follow this section.)
 1. Copy ~/etc/tada/rsync.pwd~ from mountain or valley host to your home
    directory
 2. Change ownership permission so it is owned by you, permissions=0400
-3. Put FITS files in ~$mydir~ with structure: 
+3. Put FITS files in ~$fitsdir~ with structure: 
    ~<YYYYMMDD>/<instrument>/.../myfile.fits.fz~
 4. Set ~$mtnhost~ to the Mountain machine you want to submit to
 5. Submit your files
-   : rsync -avz --password-file ~/rsync.pwd $mydir tada@$mtnhost::dropbox
+   : rsync -avz --password-file ~/rsync.pwd $fitsdir tada@$mtnhost::dropbox
 
 That's it!  Files should start flowing from the mountain dropbox to
 the mountain tada queue, to the valley tada queue, to the archive.
 
 At any point, you can find what files have been submitted to the
 mountain queue with:
-  : rsync -a --password-file ~/.tada/rsync.pwd tada@$mtnhost::statusbox $mydir 
-  : find $mydir -type f
+  : rsync -a --password-file ~/.tada/rsync.pwd tada@$mtnhost::statusbox $fitsdir 
+  : find $fitsdir -type f
 This will also retrieve this User's Guide for the right release of
-TADA into ~$mydir/tada-ug.pdf~
+TADA into ~$fitsdir/tada-ug.pdf~
+
+If you want to force resubmit of all files in your local stash:
+  : find $fitsdir -name "*.fits" -o -name "*.fits.fz" -exec touch {} \;
+then submit as in #5 above.
 
 * About This Document
 see also: 
@@ -34,6 +38,10 @@ see also:
 This document is intended to be a /brief go-to document/ for using
 TADA. The intended audience is: Sean M. and Steve P.
 This documents release 0.2.2 of TADA (more or less).
+
+The source of this document is on [[https://github.com/pothiers/tada/blob/master/docs/tada-ug.org][github]].  It is rendered to PDF
+format for rsync delivery.  But github does a reasonably good job of
+rendering /.org/ files.
 
 * Overview
 This release of TADA will accept files from both a *dropbox* and the

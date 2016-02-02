@@ -119,5 +119,7 @@ fi
 
 # Don't move or remove! 
 cd $origdir
-exit $return_code
+#exit $return_code
+return $return_code
+
 

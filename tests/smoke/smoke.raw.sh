@@ -39,13 +39,15 @@ deletemirror=`type -path delete-mirror.sh`
 deletenoarch=`type -path delete-noarchive.sh`
 
 source smoke-lib.sh
+
 return_code=0
-SMOKEOUT="README-smoke-results.txt"
+SMOKEOUT="README-smoke-results.raw.txt"
 #!delay=7 # seconds
 delay=6 # seconds
 
 MIRROR=/var/tada/cache
 NOARCHIVE=/var/tada/anticache
+
 
 function cleanStart () {
     # Clear old transfer queue
@@ -65,10 +67,10 @@ function dqout () {
 	) | sed 's|/[0-9]\+/|/|g'
 }
 
-echo ""
-echo "Starting tests in \"$SCRIPT\" ..."
-echo ""
-echo ""
+echo "# "
+echo "# Starting tests in \"smoke.raw.sh\" ..."
+echo "# "
+source tada-smoke-setup.sh
 
 wait=50  # seconds to wait for file to make it thru ingest
 prms="-v 1 -c -t $wait"
@@ -158,7 +160,7 @@ testOutput tada4_4 $findout '^\#' n
 
 rm $SMOKEOUT 2>/dev/null
 if [ $return_code -eq 0 ]; then
-    echo ""
+    echo "#"
     echo "ALL $totalcnt smoke tests PASSED ($SMOKEOUT created)"
     echo "All $totalcnt tests passed on " `date` > $SMOKEOUT
 else
@@ -168,5 +170,6 @@ fi
 
 # Don't move or remove! 
 cd $origdir
-exit $return_code
+#exit $return_code
+return $return_code
 

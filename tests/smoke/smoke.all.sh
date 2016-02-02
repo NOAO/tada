@@ -13,26 +13,27 @@ mastertotalcnt=0
 SCRIPT=$(readlink -e $0)     #Absolute path to this script
 SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script is in
 
-source /sandbox/tada-tools/dev-scripts/irods_init.sh
-
 function tally () {
     mastertotalcnt=$((totalcnt + mastertotalcnt))
     masterfailcnt=$((failcnt + masterfailcnt))
     echo "Score so far; passed=$(($totalcnt-$failcnt))/$totalcnt"
     echo "Score so far; master passed=$(($mastertotalcnt-$masterfailcnt))/$mastertotalcnt"
+    totalcnt=0
+    failcnt=0
 }
 
 # Mountain (dome) or Valley
-$SCRIPTDIR/smoke.sh; tally
+#source $SCRIPTDIR/smoke.sh; tally
+source $SCRIPTDIR/smoke.raw.sh; tally
 #!$SCRIPTDIR/smoke.raw_post.sh; tally
-$SCRIPTDIR/smoke.dropbox.sh; tally
+source $SCRIPTDIR/smoke.dropbox.sh; tally
 
 # Valley
 #! $SCRIPTDIR/smoke.fits_compliant.sh; tally
 #! $SCRIPTDIR/smoke.fits_submit.sh; tally
 #! $SCRIPTDIR/smoke.pipeline_submit.sh; tally
-$SCRIPTDIR/smoke.direct.sh; tally
-$SCRIPTDIR/smoke.scrape.sh; tally
+source $SCRIPTDIR/smoke.direct.sh; tally
+source $SCRIPTDIR/smoke.scrape.sh; tally
 
 echo "Multi-test score: passed=$(($mastertotalcnt-$masterfailcnt))/$mastertotalcnt"
 echo "Remember to:"
