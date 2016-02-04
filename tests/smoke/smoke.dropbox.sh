@@ -50,7 +50,7 @@ function sbox () {
 function dbox () {
     srcdir=$1
     mtnhost="mountain.`hostname --domain`"
-    for f in `find $srcdir -name "*.fits" -o -name "*.fits.fz"`; do
+    for f in `find $srcdir \( -name "*.fits" -o -name "*.fits.fz" \)`; do
         # Force all fits files to be touched on remote (which creates event)
         touch $f
         add_test_personality.sh $f

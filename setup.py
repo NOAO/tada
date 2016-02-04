@@ -110,6 +110,7 @@ setup(
             'watch_valley=tada.watch_valley:main',
             'watch_mountain=tada.watch_mountain:main',
             'pers2yaml=tada.personality2yaml:main',
+            'remediate=tada.remediate:main',
         ],
     },
 )

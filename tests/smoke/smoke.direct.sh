@@ -14,8 +14,7 @@ tadadir=$(dirname $testdir)
 # tadadir=/sandbox/tada
 #tdata=$SCRIPTDIR/data
 tdata=$SCRIPTDIR/tada-test-data
-#tdata=/data/tada-test-data
-# tdata=/sandbox/tada/tests/smoke/tada-test-data/basic
+# tdata=/sandbox/tada/tests/smoke/tada-test-data
 
 # echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
 

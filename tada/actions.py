@@ -209,10 +209,11 @@ configuration field: maximum_errors_per_record)
         except Exception as sex:
             logsubmit(submitlog, ifname, ifname, 'submit_to_archive',
                       fail=True)
-            raise tex.SubmitException('Failed to submit {}: {}'
-                                      .format(ifname, sex))
+            logging.error('Failed to submit {}: {}'.format(ifname, sex))
+            return False
+            #!raise tex.SubmitException('Failed to submit {}: {}'
+            #!                          .format(ifname, sex))
         else:
-            # HERE!!!
             logging.debug('SUCCESSFUL fits submit; {} as {}'
                          .format(ifname, destfname))
             # successfully transfered to Archive

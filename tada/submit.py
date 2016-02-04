@@ -375,7 +375,8 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
                 print('{}\t{}\t{}'
                       .format(datetime.datetime.now(), origfname, destfname),
                       file=mf)
-        raise tex.SubmitException(msg)
+        logging.debug(msg)
+        raise tex.SubmitException(ops_msg)
 
     #!iu.irods_put331(ifname, destfname) # iput renamed FITS
     iput_modified_fits(ifname, destfname, changed) # iput renamed FITS

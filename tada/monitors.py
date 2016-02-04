@@ -106,9 +106,17 @@ from . import submit as ts
 ### that's harder.  So, for now, recursively watch "watched_dir".
 ###
 
+def get_qname():
+    cmd = 'source /etc/tada/dqd.conf; echo $qname'
+    valstr = subprocess.check_output(['bash', '-c', cmd ]).decode()
+    return valstr[:-1]
+
+
 class PushEventHandler(watchdog.events.FileSystemEventHandler):
     """Copy new FITS file to CACHE and push to DQ.  If can't push, move 
 to ANTICACHE."""
+    qname = get_qname()
+    
     def __init__(self, drop_dir, status_dir, qcfg):
         self.dropdir = drop_dir
         self.statusdir = status_dir
@@ -119,8 +127,13 @@ to ANTICACHE."""
         super(watchdog.events.FileSystemEventHandler).__init__()
 
     def pushfile(self, fullfname):
-        cmdstr = "md5sum {} | dqcli -q transfer --push  -".format(fullfname)
-        subprocess.check_call(cmdstr, shell=True)
+        cmdstr = ("md5sum {} | dqcli -q {} --push  -"
+                  .format(fullfname, self.qname))
+        logging.debug('EXECUTING: {}'.format(cmdstr))
+        try:
+            subprocess.check_call(cmdstr, shell=True)
+        except Exception as err:
+            logging.error('Could not push file. {}'.format(err))
 
     def on_created(self, event):
         self.new_file(event.src_path)
@@ -163,7 +176,7 @@ to ANTICACHE."""
 
                 try:
                     self.pushfile(cachename)
-                    logging.info('Pushed {} to mountain cache: {}'
+                    logging.info('Pushed {} to cache: {}'
                                  .format(ifname, cachename))
                     os.makedirs(os.path.dirname(statusname), exist_ok=True)
                     Path(statusname).touch(exist_ok=True)
