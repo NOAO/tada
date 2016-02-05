@@ -336,7 +336,7 @@ possible.  Ingest involves renaming to satisfy filename
 standards. There are numerous under-the-hood requirements imposed by
 how Archive works. See comments above for the grim details.
 
-ifname:: full path of fits file (in mirror-archive)
+ifname:: full path of fits file (in cache)
 checksum:: NOT USED
 qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 

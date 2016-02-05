@@ -46,6 +46,7 @@ fix <fitsfile> <key1=val1> [<key1=val1> ...]
 """
         fits,*p_list = arg.split()
         changes = parse_nv(p_list)
+        changes['TADAFIX'] = ' '.join(p_list)
         #! print('fix(fits={}, changes={}'.format(fits, changes))
         today = datetime.date.today().isoformat().replace('-','')
         workingfits = os.path.join(self.stagedir, today, 'fix', 
