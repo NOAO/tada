@@ -13,11 +13,77 @@ import os.path
 import os
 import shutil
 import yaml
-import datetime
+from datetime import datetime,date
 import socket
 from pathlib import PurePath
 import astropy.io.fits as pyfits
 
+from . import irods331 as iu
+from . import file_naming as fn
+
+def get_hdr_fname(fitsname):
+    """Derive HDR filename from FITS filename"""
+    return(fitsname.replace(fn.fits_extension(fitsname), 'hdr'))
+
+# /noao-tuc-z1/mtn/20151006/...  =>  /noao-tuc-z1/mtn/REMEDTRASH/20151006/...
+def move_archive_file_to_trash(fitsname):
+    """Move Archive/Mass-store (fits,hdr) file out of the way 
+and delete from DB in preparation for re-ingest"""
+    archive331 =  '/noao-tuc-z1/mtn'
+
+    # move irods files (fits, hdr) from standard location to /.../REMED/...
+    trash_fits = fitsname.replace(archive331, archive331+'/REMEDTRASH')
+    if not iu.irods_move331(fitsname, trash_fits):
+        print('ERROR: Could not imv from {} to {}'
+              .format(fitsname, trash_fits))
+        return None
+    hdrname = get_hdr_fname(fitsname)
+    trash_hdr = hdrname.replace(archive331, archive331+'/REMEDTRASH')
+    if not iu.irods_move331(hdrname, trash_hdr):
+        print('ERROR: Could not imv from {} to {}'
+              .format(hdrname, trash_hdr))
+        return None
+
+    # Delete from DB; see mars:perlport.drop_file(cursor, reference)
+    print('Removed file but did NOT delete from DB: {}'
+          .format(fitsname))
+    
+    
+def get_from_archive(fitsname,
+                     sandbox=os.path.expanduser('~/.tada/sandbox')):
+    """Copy FITS and HDR files from mass-store to local sandbox using irods"""
+    archive331 =  '/noao-tuc-z1/mtn'
+
+    # get FITS
+    local_fits = str(sandbox / PurePath(fitsname).relative_to(archive331))
+    os.makedirs(os.path.dirname(local_fits), exist_ok=True)
+    if not iu.irods_get331(fitsname, local_fits):
+        print('ERROR: Could not iget from {} to {}'
+              .format(fitsname, local_fits))
+        return None
+
+    # get HDR
+    hdrname = get_hdr_fname(fitsname)
+    local_hdr = str(sandbox / PurePath(hdrname).relative_to(archive331))
+    if not iu.irods_get331(hdrname, local_hdr):
+        print('ERROR: Could not iget from {} to {}'
+              .format(hdrname, local_hdr))
+        return None
+
+    # Record what we did
+    now = datetime.now().strftime('%m/%d/%y_%H:%M:%S')
+    fixdata = dict(archivefits=fitsname,
+                   archivehdr=hdrname,
+                   retrieved=now,
+                   sandbox=sandbox,
+                   )
+    yaml_fname = local_fits + '.fix.yaml'
+    with open(yaml_fname, 'w') as yf:
+        yaml.safe_dump(fixdata, yf, indent=4, width=20)
+
+    logging.debug('get from irods to: {}, {}'.format(local_fits, local_hdr))
+    return(local_fits, local_hdr)
+    
 def drop_dir(fitsdir):
     cmd = ('rsync -avz --password-file ~/.tada/rsync.pwd {}/ tada@{}::dropbox'
            .format(fitsdir, socket.getfqdn()))
@@ -31,8 +97,8 @@ class RepairShell(cmd.Cmd):
     prompt = '(repair) '
     file = None
     manifest = '/var/log/tada/submit.manifest'
-    stagedir = os.path.expanduser('~/.tada/stage')
-    os.makedirs(stagedir, exist_ok=True)
+    sandboxdir = os.path.expanduser('~/.tada/sandbox')
+    os.makedirs(sandboxdir, exist_ok=True)
     activeset = set()
 
     # ----- Remediation Work-flow commands --------
@@ -40,6 +106,19 @@ class RepairShell(cmd.Cmd):
         'Move everything from Inactive Queue to Active (re-submit)'
         subprocess.check_output(['dqcli', '--redo'])
         print(subprocess.check_output(['dqcli', '--summary']).decode('utf-8'))
+    def do_get(self, arg):
+        """Get files (FITS+HDR) from Archive and put in local sandbox. """
+        fits_list = arg.split()
+        for fits in fits_list:
+            lfits,lhdr = get_from_archive(fits)
+            if lfits:
+                self.activeset.add(lfits)
+            print('Saved 2 files: {}, {}'.format(lfits, lhdr))
+    def do_trash(self, arg):
+        """Move files in Mass Store to 'trash' (on mass store)"""
+        fits_list = arg.split()
+        for fits in fits_list:
+            move_archive_file_to_trash(fits)
     def do_fix(self, arg):
         """Apply header changes to a FITS file.
 fix <fitsfile> <key1=val1> [<key1=val1> ...]
@@ -48,8 +127,8 @@ fix <fitsfile> <key1=val1> [<key1=val1> ...]
         changes = parse_nv(p_list)
         changes['TADAFIX'] = ' '.join(p_list)
         #! print('fix(fits={}, changes={}'.format(fits, changes))
-        today = datetime.date.today().isoformat().replace('-','')
-        workingfits = os.path.join(self.stagedir, today, 'fix', 
+        today = date.today().isoformat().replace('-','')
+        workingfits = os.path.join(self.sandboxdir, today, 'fix', 
                                    PurePath(fits).name)
         os.makedirs(os.path.dirname(workingfits), exist_ok=True)
         self.activeset.add(workingfits)
@@ -69,7 +148,7 @@ fix <fitsfile> <key1=val1> [<key1=val1> ...]
         print('(Modified file written to: {}'.format(workingfits))
     def do_submit(self, arg):
         'Submit a FITS file to TADA for ingest.'
-        drop_dir(self.stagedir)
+        drop_dir(self.sandboxdir)
     def do_header(self, arg):
         """Display FITS header.
 header [<fitsfile>] 

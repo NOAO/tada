@@ -129,8 +129,8 @@ header to reflect content of CHANGED dict. If MODDIR given, use it for tempoerar
         logging.debug('DBG: Removed modfile={}'.format(modfile))
 
 def prep_for_ingest(mirror_fname,
-                    persona_options=dict(),  # e.g. (under "__DTSITE"
-                    persona_params=dict(),   # e.g. (under,under) "__FOO"
+                    persona_options=None,  # e.g. (under "_DTSITE")
+                    persona_params=None,   # e.g. (under,under) "__FOO"
                     moddir=None,
                     **kwargs):
     """GIVEN: FITS absolute path
@@ -146,8 +146,8 @@ DO:
 mirror_fname :: Mountain mirror on valley
 RETURN: irods location of hdr file.
     """
-    options = persona_options
-    opt_params = persona_params
+    options = persona_options if  persona_options else dict()
+    opt_params = persona_params if persona_params else dict()
     #!logging.debug('prep_for_ingest(): options={}, opt_params={}'
     #!              .format(options, opt_params))
     
