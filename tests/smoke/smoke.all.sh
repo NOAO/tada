@@ -24,7 +24,7 @@ function tally () {
 
 # Mountain (dome) or Valley
 #source $SCRIPTDIR/smoke.sh; tally
-source $SCRIPTDIR/smoke.raw.sh; tally
+#source $SCRIPTDIR/smoke.raw.sh; tally # REMOVED because uses deprecated LP
 #!$SCRIPTDIR/smoke.raw_post.sh; tally
 source $SCRIPTDIR/smoke.dropbox.sh; tally
 
@@ -42,7 +42,7 @@ echo "  2. verify Archive filenames look ok: http://localhost:8000/provisional/"
 
 emins=$(((`date +'%s'` - tic)/60))
 cat <<EOF | mail -s "Smoke.all completed! ($emins)" pothier@email.noao.edu
-Scripot:  $SCRIPT
+Script:   $SCRIPT
 Started:  $sdate
 Finished: `date`
 

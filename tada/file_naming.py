@@ -155,6 +155,17 @@ Extension may be: ".fits.fz", ".fits", ".fits.gz", etc'''
         ext = e2 + ext
     return ext[1:]
 
+def get_hdr_fname(fitsname):
+    """Derive HDR filename from FITS filename. 
+    Handle files like: x.fits, x.fits.fz, x.fits.gz"""
+    extension = ''
+    ext_list = PurePath(fitsname).suffixes
+    for ext in reversed(ext_list):
+        extension = ext + extension
+        if ext == '.fits':
+            break
+    return(fitsname.replace(extension, '.hdr'))
+
 
 #!def generate_fname(site, telescope, instrument,
 #!                   obsdt,

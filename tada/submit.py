@@ -7,6 +7,7 @@ import logging.config
 import astropy.io.fits as pyfits
 import os
 import os.path
+from pathlib import PurePath
 import socket
 import traceback
 import tempfile
@@ -105,29 +106,61 @@ RETURN: (statusBool, message, operatorMessage)"""
     return (success, message, operator_msg)
 
 
-def iput_modified_fits(ifname, destfname, changed,
-                       moddir=None):
-    """IPUT modified version of IFNAME to DESTFNAME after updating its
-header to reflect content of CHANGED dict. If MODDIR given, use it for tempoerary modified file but delete after iput."""
-    if moddir != None:
-        os.makedirs(moddir, exist_ok=True)
-        modfile = shutil.copy(ifname, moddir)
-        os.chmod(modfile, 0o664)
-    else:
+def new_fits(orig_fitspath, changes, moddir=None):
+    if moddir == None:
         # this had better be writable or we will fail to modify it
-        # This file SHOULD be from mountain-mirror so writable by us.
-        modfile = ifname
-        
-    hdulist = pyfits.open(modfile, mode='update') # modify IN PLACE
-    fitshdr = hdulist[0].header # use only first in list.
-    fitshdr.update(changed)
-    hdulist.flush()
-    hdulist.close()         # now FITS header is MODIFIED
-    iu.irods_put331(modfile, destfname) # iput renamed FITS
-    if moddir != None:
-        os.remove(modfile)
-        logging.debug('DBG: Removed modfile={}'.format(modfile))
+        # This file SHOULD be from cache so writable by us.
+        modfilepath = orig_fitspath
+    else:
+        os.makedirs(moddir, exist_ok=True)
+        modfilepath = shutil.copy(orig_fitspath, moddir)
+        os.chmod(modfilepath, 0o664)
 
+    logging.debug('new_fits modfilepath={}'.format(modfilepath))
+    # Apply changes to header (MODIFY IN PLACE)
+    hdulist = pyfits.open(modfilepath, mode='update') # modify IN PLACE
+    fitshdr = hdulist[0].header # use only first in list.
+    fitshdr.update(changes)
+    #hdulist.flush()
+    hdulist.close(output_verify='ignore')         # now FITS header is MODIFIED
+
+    return modfilepath
+
+def gen_hdr_file(fitsfilepath, new_basename):
+    """Generate a text .hdr file.  Directory containing fitsfilepath must be
+    writable.  That is where the hdr file will be written."""
+    # Print without blank cards or trailing whitespace
+    fitshdr = pyfits.getheader(fitsfilepath)
+    hdrstr = fitshdr.tostring(sep='\n', padding=False)
+    md5 = subprocess.check_output("md5sum -b {} | cut -f1 -d' '"
+                                  .format(fitsfilepath),
+                                  shell=True)
+    md5sum=md5.decode().strip()
+    filesize=os.path.getsize(fitsfilepath)
+    logging.debug('DBG: md5sum={}, filesize={}, base={}'
+                  .format(md5sum, filesize,new_basename))
+
+    # Archive requires extra fields prepended to hdr txt! :-<
+    hdrfilepath = str(PurePath(fitsfilepath).parent
+                      / fn.get_hdr_fname(new_basename))
+    with open(hdrfilepath, mode='w') as f:
+        ingesthdr = ('#filename = {filename}\n'
+                     '#reference = {filename}\n'
+                     '#filetype = TILED_FITS\n'
+                     '#filesize = {filesize} bytes\n'
+                     '#file_md5 = {checksum}\n\n'
+                 )
+        print(ingesthdr.format(filename=new_basename,
+                               filesize=filesize,
+                               checksum=md5sum),
+              file=f)
+        print(*[s.rstrip() for s in hdrstr.splitlines()
+                if s.strip() != ''],
+              sep='\n',
+              file=f, flush=True)
+    # END open
+    return hdrfilepath
+    
 def prep_for_ingest(mirror_fname,
                     persona_options=None,  # e.g. (under "_DTSITE")
                     persona_params=None,   # e.g. (under,under) "__FOO"
@@ -203,7 +236,6 @@ RETURN: irods location of hdr file.
                           .format(new_basename))
         else:
             new_basename = fn.generate_fname(hdr, ext,
-                                             #! jobid=jobid,
                                              tag=tag,
                                              orig=mirror_fname)
         hdr['DTNSANAM'] = new_basename
@@ -245,41 +277,11 @@ RETURN: irods location of hdr file.
                 logging.error(msg)
                 raise tex.IrodsContentException(msg)
 
-        
-        # Print without blank cards or trailing whitespace
-        fitshdr = pyfits.getheader(mirror_fname)
-        fitshdr.update(hdr)
-        hdrstr = fitshdr.tostring(sep='\n',padding=False)
-        md5 = subprocess.check_output("md5sum -b {} | cut -f1 -d' '"
-                                      .format(mirror_fname),
-                                      shell=True)
-        md5sum=md5.decode().strip()
-        filesize=os.path.getsize(mirror_fname)
-
-        # Create hdr as temp file, i-put, delete tmp file (auto on close)
-        # Archive requires extra fields prepended to hdr txt! :-<
-        with tempfile.NamedTemporaryFile(mode='w', dir='/tmp') as f:
-            ingesthdr = ('#filename = {filename}\n'
-                         '#reference = {filename}\n'
-                         '#filetype = TILED_FITS\n'
-                         '#filesize = {filesize} bytes\n'
-                         '#file_md5 = {checksum}\n\n'
-                     )
-            print(ingesthdr.format(filename=new_basename,
-                                   filesize=filesize, checksum=md5sum),
-                  file=f)
-            print(*[s.rstrip() for s in hdrstr.splitlines()
-                    if s.strip() != ''],
-                  sep='\n',
-                  file=f, flush=True)
-            
-            # The only reason we do this is to satisfy Archive Ingest!!!
-            # Since it has to have a reference to the FITS file anyhow,
-            # Archive Ingest SHOULD deal with the hdr.  Then again, maybe
-            # ingest does NOT care about the FITS file at all!
-            iu.irods_put331(f.name, new_ihdr)
-
-        # END with tempfile
+        # Create final (modified) FITS
+        newfits = new_fits(mirror_fname, hdr, moddir=moddir)
+        hdrfile = gen_hdr_file(newfits, new_basename)
+        iu.irods_put331(hdrfile, new_ihdr)
+        os.remove(hdrfile)        
     except:
         #!traceback.print_exc()
         raise
@@ -294,7 +296,7 @@ RETURN: irods location of hdr file.
     #
 
     logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
-    return new_ihdr, new_ifname, hdr
+    return new_ihdr, new_ifname, hdr, newfits
     # END prep_for_ingest()
 
 ##########
@@ -330,7 +332,7 @@ RETURN: irods location of hdr file.
 # 
 ##########
 #
-def submit_to_archive(ifname, checksum, qname, qcfg=None):
+def submit_to_archive(ifname, checksum, qname, qcfg=None, moddir=None):
     """Ingest a FITS file (really JUST Header) into the archive if
 possible.  Ingest involves renaming to satisfy filename
 standards. There are numerous under-the-hood requirements imposed by
@@ -342,6 +344,7 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 
     """
     logging.debug('submit_to_archive({},{})'.format(ifname, qname))
+
     
     cfgprms = dict(#mirror_dir =  qcfg[qname]['mirror_dir'],
                    archive331 =  qcfg[qname]['archive_irods331'],
@@ -353,13 +356,15 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     #!popts, pprms = fu.get_options_dict(ifname + ".options")
     popts, pprms = fu.get_options_dict(ifname) # .yaml or .options
     logging.debug('submit_to_archive(popts={},pprms={})'.format(popts, pprms))
-    origfname = pprms.get('filename',ifname)
+    origfname = pprms.get('filename', ifname)
     try:
         # Following does irods_put331 to new_ihdr if the hdr looks valid
-        new_ihdr,destfname,changed = prep_for_ingest(ifname,
-                                                     persona_options=popts,
-                                                     persona_params=pprms,
-                                                     **cfgprms)
+        new_ihdr,destfname,changed,modfits = prep_for_ingest(
+            ifname,
+            persona_options=popts,
+            persona_params=pprms,
+            moddir=None,
+            **cfgprms)
     except:
         #! traceback.print_exc()
         raise
@@ -376,10 +381,15 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
                       .format(datetime.datetime.now(), origfname, destfname),
                       file=mf)
         logging.debug(msg)
+        if moddir != None:
+            os.remove(modfits)
+            logging.debug('DBG: Removed modfits={}'.format(modfits))
         raise tex.SubmitException(ops_msg)
 
-    #!iu.irods_put331(ifname, destfname) # iput renamed FITS
-    iput_modified_fits(ifname, destfname, changed) # iput renamed FITS
+    iu.irods_put331(modfits, destfname) # iput renamed FITS
+    if moddir != None:
+        os.remove(modfits)
+        logging.debug('DBG: Removed modfits={}'.format(modfits))
     logging.info('SUCCESSFUL submit_to_archive; {} as {}'
                  .format(origfname, destfname))
     manifest = '/var/log/tada/archived.manifest'
@@ -427,9 +437,10 @@ So, caller should not have to put this function in try/except."""
     logging.debug('direct_submit: pprms={}'.format(pprms))
     origfname = fitsfile
     try:
-        new_ihdr, destfname, changed = prep_for_ingest(fitsfile,
+        new_ihdr, destfname, changed, modfits = prep_for_ingest(fitsfile,
                                                        persona_options=popts,
                                                        persona_params=pprms,
+                                                       moddir=moddir,
                                                        **cfgprms)
     except Exception as err:
         if trace:
@@ -443,12 +454,17 @@ So, caller should not have to put this function in try/except."""
     if pprms.get('do_audit', '0') == '1':
         audit_svc(origfname, destfname, ops_msg, popts)
     if not success:
+        if moddir != None:
+            os.remove(modfits)
+            logging.debug('DBG: Removed modfits={}'.format(modfits))
         return(False, 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg))
     else:
         # iput renamed, modified FITS
-        iput_modified_fits(fitsfile, destfname, changed, moddir=moddir)
+        iu.irods_put331(modfits, destfname) # iput renamed FITS
+        if moddir != None:
+            os.remove(modfits)
+            logging.debug('DBG: Removed modfits={}'.format(modfits))
         return(True, 'SUCCESS: archived {} as {}'.format(fitsfile, destfname))
-
     return (ok, statusmsg)
     # END: protected_direct_submit()
     
@@ -492,9 +508,10 @@ def direct_submit(fitsfile, moddir,
     logging.debug('direct_submit: pprms={}'.format(pprms))
     origfname = fitsfile
     try:
-        new_ihdr,destfname,changed = prep_for_ingest(fitsfile,
+        new_ihdr,destfname,changed,modfits = prep_for_ingest(fitsfile,
                                                      persona_options=popts,
                                                      persona_params=pprms,
+                                                     moddir=moddir,
                                                      **cfgprms)
     except Exception as err:
         if trace:
@@ -515,11 +532,15 @@ def direct_submit(fitsfile, moddir,
     else:
         #!iu.irods_put331(newfile, destfname) # iput renamed FITS
         # iput renamed, modified FITS
-        iput_modified_fits(fitsfile, destfname, changed, moddir=moddir) 
+        iu.irods_put331(modfits, destfname) # iput renamed FITS
+
         statusmsg= 'SUCCESS: archived {} as {}'.format(fitsfile, destfname)
         statuscode = 0
 
     print(statusmsg, file=sys.stderr)
+    if moddir != None:
+        os.remove(modfits)
+        logging.debug('DBG: Removed modfits={}'.format(modfits))
     sys.exit(statuscode)
  
 def main():
@@ -580,11 +601,11 @@ def main():
     logging.basicConfig(level=log_level,
                         format='%(levelname)s %(message)s',
                         datefmt='%m-%d %H:%M')
-    logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
     logDict = yaml.load(args.logconf)
     logging.config.dictConfig(logDict)
     logging.getLogger().setLevel(log_level)
+    #logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
 
     ############################################################################
