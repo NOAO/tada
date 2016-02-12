@@ -4,6 +4,7 @@ d034c5fbb2a4b1e4238532d74d3baa34 : checksum=d034c5fbb2a4b1e4238532d74d3baa34, fi
 Records (1):
 d034c5fbb2a4b1e4238532d74d3baa34 : checksum=d034c5fbb2a4b1e4238532d74d3baa34, filename=/var/tada/cache/vagrant/kp109391.fits.fz
 
+Queue Name:            submit
 Active queue length:   0
 Inactive queue length: 1
 Num records tracked:   1

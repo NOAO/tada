@@ -72,7 +72,7 @@ def irods_put331(local_fname, irods_fname):
                       .format(tag, ex, ex.output.decode('utf-8')))
         raise
 
-def irods_get331( irods_fname, local_fname):
+def irods_get331(irods_fname, local_fname):
     "Copy irods_fname to local_fname."
     tag='irods_get331'
     logging.debug('{}({}, {})'.format(tag, irods_fname, local_fname))
@@ -82,16 +82,33 @@ def irods_get331( irods_fname, local_fname):
         # -f:: force overwrite of local file if it exists
         # -K:: verify checksum
         subprocess.check_output([os.path.join(icmdpath, 'iget'),
-                                 '-f', '-K', local_fname, irods_fname],
+                                 '-f', '-K', irods_fname, local_fname],
                                 stderr=subprocess.DEVNULL,
         )
     except subprocess.CalledProcessError as ex:
         logging.debug('did not do {}: {}; {}'
                       .format(tag, ex, ex.output.decode('utf-8')))
         return False
-    
     return True
 
+def irods_move331(src_irods_fname, dst_irods_fname):
+    "Move src_irods_fname to dst_irods_fname."
+    tag='irods_move331'
+    logging.debug('{}({}, {})'.format(tag, src_irods_fname, dst_irods_fname))
+    icmdpath = ('/usr/local/share/applications/irods3.3.1/iRODS/clients'
+                '/icommands/bin')
+    try:
+        subprocess.check_output([os.path.join(icmdpath, 'imkdir'),
+                                 '-p',
+                                 os.path.dirname(dst_irods_fname)])
+        subprocess.check_output([os.path.join(icmdpath, 'imv'),
+                                 src_irods_fname, dst_irods_fname],
+                                stderr=subprocess.DEVNULL )
+    except subprocess.CalledProcessError as ex:
+        logging.debug('did not do {}: {}; {}'
+                      .format(tag, ex, ex.output.decode('utf-8')))
+        return False
+    return True
 
 def irods_remove331(irods_fname):
     "Remove irods_fname from irods"

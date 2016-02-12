@@ -104,7 +104,7 @@ opt="$optprms "
 status=`basename $file`.status
 findout=find-`basename $file`.out
 cleanStart  > /dev/null
-testCommand tada2_1 "tada-submit $opt $prms $file 2>&1" "^\#" n
+testCommand tada2_1 "tada-submit $opt $prms $file 2>&1" "^\#" y
 awk '{ sub(".*/","",$3); print $2, $3, $5 } ' < $MANIFEST > $status.clean
 testOutput tada2_2 $status.clean '^\#' n
 testCommand tada2_3 "dqout 2>&1" "^\#" n
@@ -170,6 +170,10 @@ fi
 
 # Don't move or remove! 
 cd $origdir
-#exit $return_code
-return $return_code
-
+#exit $return_code          #if EXECUTED
+#return $return_code        #if SOURCED
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+    return $return_code
+else
+    exit $return_code
+fi

@@ -11,7 +11,7 @@ function fsub () {
 	    pers="$pers -p $ppath/$p/$p.yaml"
     done
     #~msg=`fits_submit -p smoke $pers $ffile 2>&1 `
-    msg=`direct_submit -p $ppath/ops/smoke.yaml $pers $ffile 2>&1 `
+    msg=`direct_submit --loglevel DEBUG -p $ppath/ops/smoke.yaml $pers $ffile 2>&1 `
     status=$?
     msg=`echo $msg | perl -pe "s|$tdata||"`
     #echo "msg=$msg"

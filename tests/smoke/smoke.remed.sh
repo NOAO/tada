@@ -1,10 +1,9 @@
 #!/bin/bash
 # AUTHORS:    S. Pothier
-# PURPOSE:    Wrapper for smoke test
-#   Use mountain dropbox to ingest set files files. Run from Valley.
-#
-#   The "dropbox" is a directory that is monitored for fits files appearing
-#   in it. Any that appear are submitted for ingest.  
+# PURPOSE:    Test remediation work-flow.
+#   1. Add missing fields (file NOT previously ingested, on Inactive queue)
+#   2. change propid (file prev ingested with WRONG propid)
+
 
 cmd=`basename $0`
 SCRIPT=$(readlink -e $0)     #Absolute path to this script

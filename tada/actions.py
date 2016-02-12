@@ -12,6 +12,7 @@ from pathlib import PurePath
 #! from . import irods_utils as iu
 from . import submit as ts
 from . import diag
+from . import fits_utils as fu
 from . import exceptions as tex
 import dataq.dqutils as du
 import dataq.red_utils as ru
@@ -162,9 +163,10 @@ def network_move(rec, qname, **kwargs):
     return True
 
 
-def logsubmit(submitlog, src, dest, comment, fail=False):
+def logsubmit(src, dest, comment, fail=False,
+              submitlog='/var/log/tada/submit.manifest'):
     with open(submitlog, mode='a') as f:
-        print('{timestamp} {status} {srcfname} {destfname} {msg}'
+        print('{timestamp}\t{status}\t{srcfname}\t{destfname}\t{msg}'
               .format(timestamp=datetime.now().strftime('%m/%d/%y_%H:%M:%S'),
                       status = 'FAILURE' if fail else 'SUCCESS',
                       srcfname=src,
@@ -185,7 +187,7 @@ configuration field: maximum_errors_per_record)
 
     noarc_root =  '/var/tada/anticache'   # qcfg[qname]['noarchive_dir']
     mirror_root = '/var/tada/cache'       # qcfg[qname]['mirror_dir']
-    submitlog =  qcfg[qname]['submitlog']
+    #submitlog =  '/var/log/tada/submit.manifest' # qcfg[qname]['submitlog']
 
     # eg. /tempZone/mountain_mirror/other/vagrant/16/text/plain/fubar.txt
     ifname = rec['filename']            # absolute path (mountain_mirror)
@@ -204,35 +206,39 @@ configuration field: maximum_errors_per_record)
     destfname = None
     if 'FITS' == ftype :  # is FITS
         msg = 'FITS_file'
+        popts, pprms = fu.get_options_dict(ifname) # .yaml or .options
+        origfname = pprms.get('filename',ifname)
         try:
             destfname = ts.submit_to_archive(ifname, checksum, qname, qcfg)
         except Exception as sex:
-            logsubmit(submitlog, ifname, ifname, 'submit_to_archive',
-                      fail=True)
-            raise tex.SubmitException('Failed to submit {}: {}'
-                                      .format(ifname, sex))
+            msg = 'Failed to submit {}: {}'.format(ifname, sex)
+            logsubmit(origfname, ifname, msg, fail=True)
+            logging.error(msg)
+            return False
+            #!raise tex.SubmitException('Failed to submit {}: {}'
+            #!                          .format(ifname, sex))
         else:
-            # HERE!!!
-            logging.debug('SUCCESSFUL fits submit; {} as {}'
-                         .format(ifname, destfname))
+            msg = 'SUCCESSFUL fits submit; {} as {}'.format(ifname, destfname)
+            logging.debug(msg)
             # successfully transfered to Archive
             os.remove(ifname)
             optfname = ifname + ".options"
             logging.debug('Remove possible options file: {}'.format(optfname))
             if os.path.exists(optfname):
                 os.remove(optfname)
-            logsubmit(submitlog, ifname, destfname, msg)
+            logsubmit(origfname, destfname, msg)
     else: # not FITS
         msg = 'non-fits'
         destfname = ifname.replace(mirror_root, noarc_root)
         try:
             os.makedirs(os.path.dirname(destfname), exist_ok=True)
             shutil.move(ifname, destfname)
-        except:
-            logsubmit(submitlog, ifname, ifname,msg, fail=True)
+        except Exception as ex:
+            msg = 'Non-FITS file: {}'.format(ex)
+            logsubmit(origfname, ifname, msg, fail=True)
             logging.warning('Failed to mv non-fits file from mirror on Valley.')
             raise
-        logsubmit(submitlog, ifname, destfname, msg)
+        logsubmit(origfname, destfname, 'Non-FITS file')
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
         logging.info('Non-FITS file put in: {}'.format(destfname))
         
