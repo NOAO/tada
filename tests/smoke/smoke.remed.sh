@@ -24,7 +24,7 @@ export PATH=$tadadir/../tada-cli/scripts:$PATH
 source smoke-lib.sh
 
 return_code=0
-SMOKEOUT="README-smoke-results.dropbox.txt"
+SMOKEOUT="README-smoke-results.remed.txt"
 MANIFEST="$dir/manifest.out"
 rm  $MANIFEST > /dev/null
 touch $MANIFEST
@@ -33,51 +33,54 @@ touch /var/log/tada/archived.manifest
 chgrp tada /var/log/tada/archived.manifest
 
 echo "# "
-echo "# Starting tests in \"smoke.dropbox.sh\" ..."
+echo "# Starting tests in \"smoke.remed.sh\" ..."
 echo "# "
 source tada-smoke-setup.sh
 
 
-function sbox () {
-    mtnhost="mountain.`hostname --domain`"
-    statusdir="$SCRIPTDIR/remote_status"
-    mkdir -p $statusdir
-    rsync -a --password-file ~/.tada/rsync.pwd tada@$mtnhost::statusbox $statusdir
-    find $mydir -type f
-}
-    
-function dbox () {
-    srcdir=$1
-    mtnhost="mountain.`hostname --domain`"
-    for f in `find $srcdir \( -name "*.fits" -o -name "*.fits.fz" \)`; do
-        # Force all fits files to be touched on remote (which creates event)
-        touch $f
-        add_test_personality.sh $f
-        #echo "SUCCESSFUL submit_to_archive; $f" >> $MANIFEST
-        echo "$f" >> $MANIFEST
-    done
-    echo "# List of files submitted is in: $MANIFEST"
-    #rsync -aiz --password-file ~/.tada/rsync.pwd $srcdir tada@$mtnhost::dropbox
-    rsync -az --password-file ~/.tada/rsync.pwd $srcdir tada@$mtnhost::dropbox
-    # INFO     SUCCESSFUL submit; /var/tada/cache/20141224/kp09m-hdi/c7015t0267b00.fits.fz as /noao-tuc-z1/mtn/20141223/kp09m/2014B-0711/k09h_141224_115224_zri_TADASMOKE,.fits.fz,
-    echo -n "#Waiting for $MAXRUNTIME seconds for all files to be submitted..." 
-    sleep $((MAXRUNTIME/2))
-    echo -n "half done..."
-    finished-log.sh -l /var/log/tada/archived.manifest $MANIFEST
-    sleep $((MAXRUNTIME/2))
-    echo "#done waiting"
-    finished-log.sh -l /var/log/tada/archived.manifest $MANIFEST
-}
+#!function sbox () {
+#!    mtnhost="mountain.`hostname --domain`"
+#!    statusdir="$SCRIPTDIR/remote_status"
+#!    mkdir -p $statusdir
+#!    rsync -a --password-file ~/.tada/rsync.pwd tada@$mtnhost::statusbox $statusdir
+#!    find $mydir -type f
+#!}
+#!
+#!function dbox () {
+#!    srcdir=$1
+#!    mtnhost="mountain.`hostname --domain`"
+#!    for f in `find $srcdir \( -name "*.fits" -o -name "*.fits.fz" \)`; do
+#!        # Force all fits files to be touched on remote (which creates event)
+#!        touch $f
+#!        add_test_personality.sh $f
+#!        #echo "SUCCESSFUL submit_to_archive; $f" >> $MANIFEST
+#!        echo "$f" >> $MANIFEST
+#!    done
+#!    echo "# List of files submitted is in: $MANIFEST"
+#!    rsync -az --password-file ~/.tada/rsync.pwd $srcdir tada@$mtnhost::dropbox
+#!
+#!    # Failed to submit /var/tada/cache/20160203/kp/kptest.fits.fz
+#!
+#!    #!echo -n "#Waiting for $MAXRUNTIME seconds for all files to be submitted..." 
+#!    #!sleep $((MAXRUNTIME/2))
+#!    #!echo -n "half done..."
+#!    #!finished-log.sh -l /var/log/tada/archived.manifest $MANIFEST
+#!    #!sleep $((MAXRUNTIME/2))
+#!    #!echo "#done waiting"
+#!    #!finished-log.sh -l /var/log/tada/archived.manifest $MANIFEST
+#!}
 
 ##############################################################################
 
 # <date>/<instrument>/.../*.fits.fz
-testCommand db1_1 "dbox $tdata/scrape/" "^\#" y
 
-# Directory structure is wrong! (one too deep)
-# scrape/<date>/<instrument>/.../*.fits.fz
-#! testCommand db2_1 "dbox $tdata/scrape" "^\#" n
-#! testCommand db2_2 "sbox" "^\#" n
+# "missing required metadata fields (PROCTYPE, PRODTYPE)"
+testCommand dart1_1 "fsub $tdata/broken/20160203/kp/kptest.fits.fz" "^\#" n 1
+
+fits=$tdata/broken/20160203/kp4m-newfirm/nhs_1.fits.fz
+personalities="-p $tdata/broken/20160203/kp4m-newfirm/nhs_1.fits.fz.yaml\
+  -p /opt/tada-cli/personalities/ops/smoke.yaml"
+testCommand dart2_1 "direct_submit --loglevel DEBUG $personalities $fits" "^\#" y 1
 
 
 

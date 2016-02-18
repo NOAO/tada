@@ -689,29 +689,44 @@ def fits_compliant(fits_file_list,
     bad_files = set()
     exception_cnt = 0
     if required:
-        print('These fields MUST be in raw fits header (or provided by '
+        print()
+        print('## RAW_REQUIRED_FIELDS:\n'
+              'These fields MUST be in raw fits header (or provided by '
               'options at submit time). If not, field calculation will not '
-              'be attempted, and ingest will be aborted: \n\t{}'
-              .format( '\n\t'.join(sorted(RAW_REQUIRED_FIELDS))))
-
-        print('These fields MUST be in hdr to be able to calculate standard '
+              'be attempted, and ingest will be aborted: \n\n1.\t{}'
+              .format( '\n1.\t'.join(sorted(RAW_REQUIRED_FIELDS))))
+        print()
+        print('## FILENAME_REQUIRED_FIELDS:\n'
+              'These fields MUST be in hdr to be able to calculate standard '
               'Archive filename and path. They may '
               'be calculated from raw fits fields and options provided '
               'at submit time. If any of these fields are not in hdr after '
-              'calculation, ingest will be aborted: \n\t{}'
-              .format( '\n\t'.join(sorted(FILENAME_REQUIRED_FIELDS))))
-
-        print('These fields MUST be in hdr given to Ingest. They may '
+              'calculation, ingest will be aborted: \n\n1.\t{}'
+              .format( '\n1.\t'.join(sorted(FILENAME_REQUIRED_FIELDS))))
+        print()
+        print('##INGEST_REQUIRED_FIELDS:\n'
+              'These fields MUST be in hdr given to Ingest. They may '
               'be calculated from raw fits fields and options provided '
               'at submit time. If any of these fields are not in hdr after '
-              'calculation, ingest will be aborted: \n\t{}'
-              .format( '\n\t'.join(sorted(INGEST_REQUIRED_FIELDS))))
-
-        print('These fields SHOULD be in hdr given to Ingest. They may '
+              'calculation, ingest will be aborted: \n\n1.\t{}'
+              .format( '\n1.\t'.join(sorted(INGEST_REQUIRED_FIELDS))))
+        print()
+        print('## SUPPORT_FIELDS:\n'
+              'These fields are used by hdr_cacl_funcs.py '
+              '(aka Mapping functions) or Pipeline. '
+              'They are likely required, but it depends on the personality '
+              'and pipeline uses.'
+              '\n\n1.\t{}'
+              .format( '\n1.\t'.join(sorted(SUPPORT_FIELDS))))
+        print()
+        print('## INGEST_RECOMMENDED_FIELDS:\n'
+              'These fields SHOULD be in hdr given to Ingest. They may '
               'be calculated from raw fits fields and options provided '
               'at submit time. If any of these fields are not in hdr after '
-              'calculation, portal queries may lack features: \n\t{}'
-              .format( '\n\t'.join(sorted(INGEST_RECOMMENDED_FIELDS))))
+              'calculation, portal queries may lack features: \n\n1.\t{}'
+              .format( '\n1.\t'.join(sorted(INGEST_RECOMMENDED_FIELDS))))
+        print()
+
 
     
     all_missing_raw = set()
@@ -819,7 +834,7 @@ def fits_compliant(fits_file_list,
         if (len(all_missing_raw) + len(all_missing_cooked)+ recom_cnt) > 0:
             print('Fields missing from at least one file:\n'
                   '   Raw:         {}\n'
-                  '   Cooked:      {}\n'          
+                  '   Cooked:      {}\n'
                   '   Recommended: {}\n'
                   '   Exceptions:  {}\n'
                   '   (Cooked & Recommended exclude files that have missing '
