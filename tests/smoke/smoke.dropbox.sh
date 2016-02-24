@@ -27,11 +27,13 @@ source smoke-lib.sh
 return_code=0
 SMOKEOUT="README-smoke-results.dropbox.txt"
 MANIFEST="$dir/manifest.out"
+ARCHLOG="/var/log/tada/archived.manifest"
 rm  $MANIFEST > /dev/null
 touch $MANIFEST
 MAXRUNTIME=210  # max seconds to wait for all files to be submitted
-touch /var/log/tada/archived.manifest
-chgrp tada /var/log/tada/archived.manifest
+date > $ARCHLOG
+chgrp tada $ARCHLOG
+
 
 echo "# "
 echo "# Starting tests in \"smoke.dropbox.sh\" ..."
@@ -64,10 +66,10 @@ function dbox () {
     echo -n "#Waiting for $MAXRUNTIME seconds for all files to be submitted..." 
     sleep $((MAXRUNTIME/2))
     echo -n "half done..."
-    finished-log.sh -l /var/log/tada/archived.manifest $MANIFEST
+    finished-log.sh -l $ARCHLOG $MANIFEST
     sleep $((MAXRUNTIME/2))
     echo "#done waiting"
-    finished-log.sh -l /var/log/tada/archived.manifest $MANIFEST
+    finished-log.sh -l $ARCHLOG $MANIFEST
 }
 
 ##############################################################################
