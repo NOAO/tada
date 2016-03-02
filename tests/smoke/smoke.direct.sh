@@ -33,6 +33,7 @@ echo "# Starting tests in \"smoke.direct.sh\" ..."
 echo "# "
 source tada-smoke-setup.sh
 
+
 ##############################################################################
 
 ## bad DATE-OBS content

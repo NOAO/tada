@@ -32,9 +32,13 @@ rm  $MANIFEST > /dev/null
 touch $MANIFEST
 MAXRUNTIME=210  # max seconds to wait for all files to be submitted
 date > $ARCHLOG
-chgrp tada $ARCHLOG
+chgrp tada $ARCHLOG 
 
 
+
+rm /var/log/tada/pop*.log
+touch /var/log/tada/pop.log /var/log/tada/pop-detail.log
+chgrp tada /var/log/tada/pop*.log
 echo "# "
 echo "# Starting tests in \"smoke.dropbox.sh\" ..."
 echo "# "
@@ -63,13 +67,19 @@ function dbox () {
     #rsync -aiz --password-file ~/.tada/rsync.pwd $srcdir tada@$mtnhost::dropbox
     rsync -az --password-file ~/.tada/rsync.pwd $srcdir tada@$mtnhost::dropbox
     # INFO     SUCCESSFUL submit; /var/tada/cache/20141224/kp09m-hdi/c7015t0267b00.fits.fz as /noao-tuc-z1/mtn/20141223/kp09m/2014B-0711/k09h_141224_115224_zri_TADASMOKE,.fits.fz,
-    echo -n "#Waiting for $MAXRUNTIME seconds for all files to be submitted..." 
-    sleep $((MAXRUNTIME/2))
-    echo -n "half done..."
-    finished-log.sh -l $ARCHLOG $MANIFEST
-    sleep $((MAXRUNTIME/2))
-    echo "#done waiting"
-    finished-log.sh -l $ARCHLOG $MANIFEST
+    echo -n "# Waiting up to $MAXRUNTIME secs for all files to be submitted..." 
+    #! sleep $((MAXRUNTIME))
+    finished-log.sh -t $MAXRUNTIME -l $ARCHLOG $MANIFEST
+
+    #!sleep $((MAXRUNTIME/3))
+    #!echo -n "one third done..."
+    #!finished-log.sh -l $ARCHLOG $MANIFEST
+    #!sleep $((MAXRUNTIME/3))
+    #!echo "#two thirds done..."
+    #!finished-log.sh -l $ARCHLOG $MANIFEST
+    #!sleep $((MAXRUNTIME/3))
+    #!echo "#done waiting"
+    #!finished-log.sh -l $ARCHLOG $MANIFEST
 }
 
 ##############################################################################
