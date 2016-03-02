@@ -126,12 +126,51 @@ def new_fits(orig_fitspath, changes, moddir=None):
 
     return modfilepath
 
+#!def BAD_gen_hdr_file(fitsfilepath, new_basename):
+#!    """Generate a text .hdr file.  Directory containing fitsfilepath must be
+#!    writable.  That is where the hdr file will be written."""
+#!    # Print without blank cards or trailing whitespace
+#!    fitshdr = pyfits.getheader(fitsfilepath)
+#!    hdrstr = fitshdr.tostring(sep='\n', padding=False)
+#!    md5 = subprocess.check_output("md5sum -b {} | cut -f1 -d' '"
+#!                                  .format(fitsfilepath),
+#!                                  shell=True)
+#!    md5sum=md5.decode().strip()
+#!    filesize=os.path.getsize(fitsfilepath)
+#!    logging.debug('DBG: md5sum={}, filesize={}, base={}'
+#!                  .format(md5sum, filesize,new_basename))
+#!
+#!    # Archive requires extra fields prepended to hdr txt! :-<
+#!    hdrfilepath = str(PurePath(fitsfilepath).parent
+#!                      / fn.get_hdr_fname(new_basename))
+#!    with open(hdrfilepath, mode='w') as f:
+#!        ingesthdr = ('#filename = {filename}\n'
+#!                     '#reference = {filename}\n'
+#!                     '#filetype = TILED_FITS\n'
+#!                     '#filesize = {filesize} bytes\n'
+#!                     '#file_md5 = {checksum}\n\n'
+#!                 )
+#!        print(ingesthdr.format(filename=new_basename,
+#!                               filesize=filesize,
+#!                               checksum=md5sum),
+#!              file=f)
+#!        print(*[s.rstrip() for s in hdrstr.splitlines()
+#!                if s.strip() != ''],
+#!              sep='\n',
+#!              file=f, flush=True)
+#!    # END open
+#!    return hdrfilepath
+
 def gen_hdr_file(fitsfilepath, new_basename):
     """Generate a text .hdr file.  Directory containing fitsfilepath must be
     writable.  That is where the hdr file will be written."""
     # Print without blank cards or trailing whitespace
     fitshdr = pyfits.getheader(fitsfilepath)
     hdrstr = fitshdr.tostring(sep='\n', padding=False)
+    # Archive cannot handle CONITNUE, turn multiple CARDS into one
+    # (with length longer than standard allows)
+    hdrstr = hdrstr.replace("&\'\nCONTINUE  \'","")
+    
     md5 = subprocess.check_output("md5sum -b {} | cut -f1 -d' '"
                                   .format(fitsfilepath),
                                   shell=True)
