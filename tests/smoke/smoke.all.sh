@@ -13,6 +13,11 @@ mastertotalcnt=0
 SCRIPT=$(readlink -e $0)     #Absolute path to this script
 SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script is in
 
+rm /var/log/tada/pop*.log
+touch /var/log/tada/pop.log /var/log/tada/pop-detail.log
+chgrp tada /var/log/tada/pop*.log
+
+
 function tally () {
     mastertotalcnt=$((totalcnt + mastertotalcnt))
     masterfailcnt=$((failcnt + masterfailcnt))

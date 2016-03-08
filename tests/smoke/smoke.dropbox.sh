@@ -36,9 +36,6 @@ chgrp tada $ARCHLOG
 
 
 
-rm /var/log/tada/pop*.log
-touch /var/log/tada/pop.log /var/log/tada/pop-detail.log
-chgrp tada /var/log/tada/pop*.log
 echo "# "
 echo "# Starting tests in \"smoke.dropbox.sh\" ..."
 echo "# "
