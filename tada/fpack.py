@@ -16,11 +16,12 @@ def fpack_to(fitsfile, outfile=None, personality=None):
     tag='fpack_to'
     cmdpath = '/usr/local/bin'
     logging.debug('{}({},{})'.format(tag, fitsfile, outfile))
+
     logging.warning('Not enforcing lossless compression in "fpack_to"')
     
     try:
         with open(outfile, 'w') as file:
-            subprocess.call([os.path.join(cmdpath, 'fpack'), fitsfile],
+            subprocess.call([os.path.join(cmdpath, 'fpack'), '-S', fitsfile],
                            stdout=file)
     except subprocess.CalledProcessError as ex:
         logging.error('FAILED {}: {}; {}'
