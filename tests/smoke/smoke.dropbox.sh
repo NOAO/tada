@@ -81,8 +81,12 @@ function dbox () {
 
 ##############################################################################
 
+tic=`date +'%s'`
 # <date>/<instrument>/.../*.fits.fz
 testCommand db1_1 "dbox $tdata/scrape/" "^\#" y
+emins=$((`date +'%s'` - tic))
+echo "# Completed dropbox test: " `date` " in $emins seconds"
+
 
 # Directory structure is wrong! (one too deep)
 # scrape/<date>/<instrument>/.../*.fits.fz
@@ -108,8 +112,7 @@ else
     echo "Smoke FAILED $failcnt/$totalcnt (no $SMOKEOUT produced)"
 fi
 
-
-
+##############################################################################
 # Don't move or remove! 
 cd $origdir
 #exit $return_code

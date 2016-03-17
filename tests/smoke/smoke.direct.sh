@@ -71,6 +71,7 @@ testCommand fs5_1 "fsub $tdata/basic/obj_355.fits.fz wiyn-whirc" "^\#" n
 ## non-compliant FITS, missing RAW (ingest failure)
 testCommand fs6_1 "fsub $tdata/basic/kptest.fits" "^\#" n 1
 
+# New instrument <2016-03-17 Thu>
 testCommand fs7_1 "fsub $tdata/scrape/20160315/ct4m-arcoiris_spec/SPEC_Eng0246.fits ct4m-arcoiris_spec" "^\#" n
 
 
