@@ -85,6 +85,7 @@ tic=`date +'%s'`
 # <date>/<instrument>/.../*.fits.fz
 testCommand db1_1 "dbox $tdata/scrape/" "^\#" y
 emins=$((`date +'%s'` - tic))
+# expect about 168 seconds
 echo "# Completed dropbox test: " `date` " in $emins seconds"
 
 
