@@ -238,7 +238,7 @@ configuration field: maximum_errors_per_record)
             logsubmit(origfname, ifname, msg, fail=True)
             logging.warning('Failed to mv non-fits file from mirror on Valley.')
             raise
-        logsubmit(origfname, destfname, 'Non-FITS file')
+        logsubmit(ifname, destfname, 'Non-FITS file')
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
         logging.info('Non-FITS file put in: {}'.format(destfname))
         
