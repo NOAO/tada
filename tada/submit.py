@@ -92,7 +92,10 @@ RETURN: (statusBool, message, operatorMessage)"""
             response = f.read().decode('utf-8')
         logging.debug('ARCH server response: {}'.format(response))
     except:
-        raise
+        raise tex.ArchiveWebserviceProblem(
+            'Problem in opening or reading connection to: '
+            .format(archserver_url))
+
     success, operator_msg = idec.decodeIngest(response)
     logging.debug('ARCH server: success={}, msg={}'
                   .format(success, operator_msg))
@@ -251,8 +254,9 @@ RETURN: irods location of hdr file.
             fname_fields = fu.fix_hdr(hdr, mirror_fname,
                                       options, opt_params, **kwargs)
         except Exception as err:
-            raise tex.CannotModifyHeader('Could not update FITS header; '
-                                         '{}'.format(err))
+            raise tex.CannotModifyHeader(
+                'Could not update FITS header of "{}"; {}'
+                .format(orig_fullname, err))
         fu.validate_cooked_hdr(hdr, orig_fullname)
         if opt_params.get('VERBOSE', False):
             fu.validate_recommended_hdr(hdr, orig_fullname)

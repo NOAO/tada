@@ -63,10 +63,11 @@ stiLUT = {
     ('ct', 'ct4m', 'decam'):     'c4d',  
     ('ct', 'ct4m', 'cosmos'):    'c4c', 
     ('ct', 'ct4m', 'ispi'):      'c4i',  
-    ('ct', 'ct4m', 'arcon'):     'c4a',  
+   #('ct', 'ct4m', 'arcon'):     'c4a',   # removed <2016-03-17 Thu>
     ('ct', 'ct4m', 'mosaic'):    'c4m',  
     ('ct', 'ct4m', 'newfirm'):   'c4n',  
-    ('ct', 'ct4m', 'triplespec'): 'c4t',  
+   #('ct', 'ct4m', 'triplespec'):'c4t', 
+    ('ct', 'ct4m', 'arcoiris'):  'c4ai',  # added <2016-03-17 Thu>
     ('ct', 'ct15m', 'chiron'):   'c15e',  
     ('ct', 'ct15m', 'echelle'):  'c15e',  # added
     ('ct', 'ct15m', 'arcon'):    'c15s',  
@@ -82,7 +83,7 @@ stiLUT = {
     ('kp', 'kp4m', 'ice'):       'k4i',  
     ('kp', 'kp4m', 'wildfire'):  'k4w',  
     ('kp', 'kp4m', 'flamingos'): 'k4f',  
-    ('kp', 'kp35m', 'whirc'):     'kww',  
+    ('kp', 'kp35m', 'whirc'):    'kww',  
     ('kp', 'wiyn', 'whirc'):     'kww',  # added
     ('kp', 'kp35m', 'bench'):     'kwb',  
     ('kp', 'kp35m', 'minimo/ice'):'kwi',  

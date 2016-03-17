@@ -21,6 +21,14 @@ from dateutil import tz
 import datetime as dt
 from . import hdr_calc_utils as ut
 
+calc_func_source_fields = set([
+    'UTSHUT', 'INSTRUM', 'INSTRUME',
+    'DATE-OBS', 'DATE', 'TIME-OBS',
+    'IMAGETYP',
+    #'OBSTYPE',
+    #'OBSID',
+])
+
 ##############################################################################
 
 def ws_lookup_propid(date, telescope, **kwargs):
@@ -46,9 +54,12 @@ def ws_lookup_propid(date, telescope, **kwargs):
 
 def fixTriplespec(orig, **kwargs):
     new = {'DATE-OBS': orig['UTSHUT'],
-           'INSTRUME': orig['INSTRUM'],  }
-    logging.debug('fixTriplespec: fields DATE-OBS ({}), INSTRUME ({})'
-                  .format(new['DATE-OBS'], new['INSTRUME']))
+           #'INSTRUME': orig['INSTRUM'],
+    }
+    logging.debug('fixTriplespec: fields DATE-OBS ({})'
+                  #', INSTRUME ({})'
+                  #.format(new['DATE-OBS'], new['INSTRUME']))
+                  .format(new['DATE-OBS']))
     return  new
     
 def trustHdrPropid(orig, **kwargs):

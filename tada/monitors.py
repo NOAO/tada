@@ -1,4 +1,4 @@
-""""Monitor file additions to directorys and do something when then
+"""Monitor file additions to directorys and do something when then
 happen.  On Linux 2.6 this uses inotify.  (Other platforms use
 different underlying mechanisms which may be muc less efficient.)
 """
@@ -19,6 +19,7 @@ import watchdog.events
 import watchdog.observers
 
 from . import submit as ts
+from . import fpack as fp
 
 
 #!##############################################################################
@@ -150,17 +151,26 @@ to ANTICACHE."""
         pp = PurePath(ifname).relative_to(PurePath(self.dropdir))
         if pp.suffix == '.fz' or pp.suffix == '.fits':
             logging.debug('push monitor got new file:{}'.format(ifname))
+            pdict = self.options_from_yamls(ifname)
             try:
                 cachename = ifname.replace(self.dropdir, self.cachedir)
                 anticachename = ifname.replace(self.dropdir, self.anticachedir)
                 statusname = ifname.replace(self.dropdir,
                                             self.statusdir)+'.status'
-                logging.debug('DBG-2: Copy drop to cache={}'.format(cachename))
                 os.makedirs(os.path.dirname(cachename), exist_ok=True)
-                shutil.copy(ifname, cachename)
+                if pp.suffix == '.fz':
+                    logging.debug('DBG-2: Copy drop to cache={}'
+                                  .format(cachename))
+                    shutil.copy(ifname, cachename)
+                else:
+                    cachename += '.fz'
+                    logging.debug('DBG-2: Fpack drop to cache={}'
+                                  .format(cachename))
+                    fp.fpack_to(ifname, outfile=cachename, personality=pdict)
 
                 # validate directory structure sent to dropbox
-                day,inst,*d = PurePath(ifname).relative_to(PurePath(self.dropdir)).parts
+                logging.debug('DBG-3: parts={}'.format(pp.parts))
+                day,inst,*d = pp.parts
                 if not self.date_re.match(day):
                     logging.error('File in dropbox has invalid date ({}) in'
                                   ' path. Path must start with'
@@ -170,9 +180,8 @@ to ANTICACHE."""
                     return None
                 
                 # Combine all personalities into one and send that to valley.,
-                pdict = self.options_from_yamls(ifname)
                 with open(cachename + '.yaml', 'w') as yf:
-                    yaml.safe_dump(pdict, yf, width=50, indent=4)
+                    yaml.safe_dump(pdict, yf, default_flow_style=False)
 
                 try:
                     self.pushfile(cachename)

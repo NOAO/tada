@@ -515,9 +515,9 @@ Include fields in hdr needed to construct new filename that fullfills standards.
     
     if hdr.get('DTPROPID') == 'BADSCRUB' or hdr.get('DTPROPID') == 'NOSCHED': 
         raise tex.SubmitException(
-            'Could not create good DTPROPID from PROPID ({}) or schedule '
+            'Could not create good DTPROPID from PROPID ({}) or from schedule '
             'lookup for header of: {}'
-            .format(hdr.get('PROPID'), orig_fullname))
+            .format(hdr.get('PROPID', 'NA'), orig_fullname))
         
 
     #!old_return = (hdr.get('DTSITE', 'na'),
@@ -638,7 +638,7 @@ def get_hdr_as_dict(fitsfile):
 
     hdict = dict()
     hdulist = pyfits.open(fitsfile)
-    for field in USED_FIELDS:
+    for field in USED_FIELDS | hf.calc_func_source_fields:
         if field in hdulist[0].header:
             # use existing Primary HDU field
             hdict[field] = hdulist[0].header[field]

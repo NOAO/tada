@@ -1,0 +1,11 @@
+
+
+* 0.2.10 <2016-03-17 Thu 14:37>
+
+- prefix table name change (triplespec -> arcoiris) and new prefix (c4ai)
+- add mapping_function source fields to list of "USED_FIELDS" that may
+  be updated
+- add on the fly fpack for dropbox (NOT ADEQUATELY TESTED)
+- improved format of YAML output from personaltiy(bash)-to-yaml
+- more smoke tests (uncompressed mosaic3, arcoiris)
+- removed legacy mosaic_1_1 smoke

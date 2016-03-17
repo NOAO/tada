@@ -11,8 +11,8 @@ def pers2yaml(pers_fname, yaml_fname):
     #!    pp['calchdr'] = pp['calchdr'].split(',')
     data = dict(options=po, params=pp)
     with open(yaml_fname, 'w') as yf:
-        yaml.safe_dump(data, yf, indent=4, width=20)
-
+        #yaml.safe_dump(data, yf, indent=4, width=20)
+        yaml.safe_dump(data, yf, default_flow_style=False)
 
 
 ##############################################################################

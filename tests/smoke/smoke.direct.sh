@@ -36,11 +36,16 @@ source tada-smoke-setup.sh
 
 ##############################################################################
 
+
 ## bad DATE-OBS content
 testCommand fc1_1 "fcom $tdata/basic/kp109391.fits.fz" "^\#" n 1
 
 # compliant
 testCommand fc2_1 "fcom $tdata/basic/kptest.fits" "^\#" n
+
+# fpack on the fly
+unpacked="$tdata/scrape/20160314/kp4m-mosaic3/mos3.75675.fits  kp4m-mosaic3"
+testCommand fs0_1 "fsub $unpacked" "^\#" n
 
 ## non-FITS; (reject, not try to ingest)
 testCommand fs1_1 "fsub $tdata/basic/uofa-mandle.jpg" "^\#" n 1
@@ -65,6 +70,9 @@ testCommand fs5_1 "fsub $tdata/basic/obj_355.fits.fz wiyn-whirc" "^\#" n
 
 ## non-compliant FITS, missing RAW (ingest failure)
 testCommand fs6_1 "fsub $tdata/basic/kptest.fits" "^\#" n 1
+
+testCommand fs7_1 "fsub $tdata/scrape/20160315/ct4m-arcoiris_spec/SPEC_Eng0246.fits ct4m-arcoiris_spec" "^\#" n
+
 
 ###########################################
 ### pipeline_submit

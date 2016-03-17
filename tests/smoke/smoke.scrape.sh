@@ -37,7 +37,8 @@ testCommand sc4_1  "fsub $tdata/20150705/ct4m-cosmos/n3.25523.fits.fz ct4m-cosmo
 testCommand sc5_1  "fsub $tdata/20151007/ct4m-decam/DECam_00482540.fits.fz ct4m-decam " "^\#" n
 testCommand sc6_1  "fsub $tdata/20141224/kp09m-hdi/c7015t0267b00.fits.fz kp09m-hdi" "^\#" n
 testCommand sc13_1 "fsub $tdata/20150929/kp4m-kosmos/a.20153.fits.fz kp4m-kosmos" "^\#" n
-testCommand sc7_1  "fsub $tdata/20141215/kp4m-mosaic_1_1/spw54553.fits.fz kp4m-mosaic_1_1" "^\#" n
+#!testCommand sc7_1  "fsub $tdata/20141215/kp4m-mosaic_1_1/spw54553.fits.fz kp4m-mosaic_1_1" "^\#" n
+testCommand sc7_1  "fsub $tdata/20160314/kp4m-mosaic3/mos3.75870.fits.fz  kp4m-mosaic3" "^\#" n
 testCommand sc8_1  "fsub $tdata/20141215/kp4m-newfirm/nhs_2015_n04_319685.fits.fz kp4m-newfirm" "^\#" n
 testCommand sc9_1  "fsub $tdata/20110101/soar-goodman/0079.spec_flat.fits.fz soar-goodman" "^\#" n
 #soar-osiris  # scrape has no "passable" files for this instrument
@@ -46,14 +47,12 @@ testCommand sc14_1 "fsub $tdata/20141127/soar-soi/test.027.fits.fz soar-soi" "^\
 testCommand sc10_1 "fsub $tdata/20110101/soar-spartan/011-6365d0.fits.fz soar-spartan" "^\#" n
 testCommand sc11_1 "fsub $tdata/20110101/wiyn-bench/24dec_2014.061.fits.fz wiyn-bench" "^\#" n
 testCommand sc12_1 "fsub $tdata/20110101/wiyn-whirc/obj_355.fits.fz wiyn-whirc" "^\#" n
-
-
+testCommand sc15_1 "fsub $tdata/20160315/ct4m-arcoiris_spec/SPEC_Eng0241.fits ct4m-arcoiris_spec" "^\#" n
 
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"
 #!exit $return_code
 ###########################################a
-
 
 ##############################################################################
 

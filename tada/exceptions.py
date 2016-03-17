@@ -7,6 +7,10 @@ class InvalidHeader(SubmitException):
     "Exception when FITS header doesn't contains everything we need."
     pass
 
+class ArchiveWebserviceProblem(SubmitException):
+    "Exception on opening or reading Archive URL."
+    pass
+
 class CannotModifyHeader(SubmitException):
     "Exception when untrapped part of updating FITS header fails."
     pass
