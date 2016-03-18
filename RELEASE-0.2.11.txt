@@ -1,0 +1,7 @@
+
+* 0.2.11 <2016-03-18 Fri 12:28>
+- Create HDR from concatenation of all HDUs (in order)
+  Previously used only Primary.  For some cases of fpacked files
+  this resulted in the HDR file not containing RA & DEC (etc.)
+
+

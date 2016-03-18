@@ -165,11 +165,19 @@ def new_fits(orig_fitspath, changes, moddir=None):
 #!    return hdrfilepath
 
 def gen_hdr_file(fitsfilepath, new_basename):
-    """Generate a text .hdr file.  Directory containing fitsfilepath must be
-    writable.  That is where the hdr file will be written."""
-    # Print without blank cards or trailing whitespace
-    fitshdr = pyfits.getheader(fitsfilepath)
-    hdrstr = fitshdr.tostring(sep='\n', padding=False)
+    """Generate a text .hdr file.  Directory containing fitsfilepath must
+    be writable.  That is where the hdr file will be written. Must
+    write all HDUs because things like RA, DEC may get pushed to
+    extension upon fpack.
+    """
+    hdrstr = ''
+    # Print without blank cards or trailing whitespace.
+    # Concatenate ALL HDUs into one string
+    for hdu in pyfits.open(fitsfilepath):
+        hdrstr += hdu.header.tostring(sep='\n', padding=False, endcard=False)
+        hdrstr += '\n'
+    hdrstr += 'END\n'
+
     # Archive cannot handle CONITNUE, turn multiple CARDS into one
     # (with length longer than standard allows)
     hdrstr = hdrstr.replace("&\'\nCONTINUE  \'","")
