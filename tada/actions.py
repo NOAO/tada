@@ -180,7 +180,7 @@ def submit(rec, qname, **kwargs):
 more than N times, move the queue entry to Inactive. (where N is the 
 configuration field: maximum_errors_per_record)
 """
-    logging.debug('submit({},{})'.format(rec, qname))
+    logging.debug('submit({})'.format(rec.get('filename','NA')))
     qcfg = du.get_keyword('qcfg', kwargs)
     dq_host = qcfg[qname]['dq_host']
     dq_port = qcfg[qname]['dq_port']

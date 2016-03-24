@@ -3,28 +3,58 @@ result in lossy compression. Use FITS header info to choose options to
 insure lossless compression in all cases.
 """
 
-import astropy.io.fits as pyfits
 import logging
 import subprocess
 import os.path
+import shutil
+from pathlib import PurePath, Path
 
-# for floating point
-# $FPACK -Y -g -q 0 ${BASEFILE}.fits
+import astropy.io.fits as pyfits
 
-def fpack_to(fitsfile, outfile=None, personality=None):
-    # /usr/local/bin/fpack -v $fitsfile > $outfile
-    tag='fpack_to'
-    cmdpath = '/usr/local/bin'
-    logging.debug('{}({},{})'.format(tag, fitsfile, outfile))
+from . import fits_utils as fu
 
-    logging.warning('Not enforcing lossless compression in "fpack_to"')
-    
+
+def remove_if_exists(filename):
     try:
-        with open(outfile, 'w') as file:
-            subprocess.call([os.path.join(cmdpath, 'fpack'), '-S', fitsfile],
-                           stdout=file)
+        os.remove(filename)
+    except:
+        pass
+
+def fpack_to(fitsfile, outfile, personality=None, force=False):
+    """Fpack FITSFILE into OUTFILE (or copy if already fpacked).
+    If OUTFILE (.fz) already exists, overwrite IFF force=True.
+    RETURN: True IFF fpack was run on this invocation.
+    """
+    # for floating point
+    # $FPACK -Y -g -q 0 ${BASEFILE}.fits
+    tag='fpack_to'
+    fpackcmd = '/usr/local/bin/fpack'
+    logging.debug('{}({},{})'.format(tag, fitsfile, outfile))
+    assert outfile[-3:] == '.fz'
+
+    if force==False and os.path.exists(outfile):
+        return False
+    if fitsfile[-3:] == '.fz':
+        shutil.copy(fitsfile, outfile)
+        return False
+
+    #ELSE compress on the fly
+
+    hdr = fu.get_hdr_as_dict(fitsfile)
+    try:
+        remove_if_exists(outfile)
+        with open(outfile, 'wb') as file:
+            # -S :: Output compressed FITS files to STDOUT.
+            if hdr.get('BITPIX',None) == -32 or hdr.get('BITPIX',None) == -64:
+                # is floating point image
+                # Default options are lossy. Use lossless options instead.
+                subprocess.call([fpackcmd, '-S', '-g', '-q', 0, fitsfile],
+                                stdout=file)
+            else:
+                subprocess.call([fpackcmd, '-S', fitsfile], stdout=file)
     except subprocess.CalledProcessError as ex:
         logging.error('FAILED {}: {}; {}'
                       .format(tag, ex, ex.output.decode('utf-8')))
         raise
+    return outfile
 

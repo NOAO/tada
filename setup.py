@@ -8,7 +8,7 @@ from os import path
 from glob import glob
 
 here = path.abspath(path.dirname(__file__))
-print('here={}'.format(here))
+#!print('here={}'.format(here))
 
 # Get the long description from the relevant file
 
@@ -107,9 +107,11 @@ setup(
             'fits_compliant=tada.fits_utils:main',
             'extract_fits_header=tada.fits_utils:extract_header',
             'direct_submit=tada.submit:main',
-            'watch_valley=tada.watch_valley:main',
-            'watch_mountain=tada.watch_mountain:main',
+            #!'watch_valley=tada.watch_valley:main',
+            #!'watch_mountain=tada.watch_mountain:main',
+            'watch_drops=tada.watch_drops:main',
             'pers2yaml=tada.personality2yaml:main',
+            'cleanyaml=tada.reformat_yaml:main',
             'remediate=tada.remediate:main',
         ],
     },

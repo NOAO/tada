@@ -758,7 +758,7 @@ def fits_compliant(fits_file_list,
             hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname, here to pass validate
             #! hdr['DTACQNAM'] = ffile
 
-            if opt_params.get('OPS_PREAPPLY_UPDATE','NO') == 'YES': #!!!
+            if opt_params.get('OPS_PREAPPLY_UPDATE','no') == 'yes': #!!!
                 apply_options(options, hdr)
             if show_header:
                 print('Post modify:')

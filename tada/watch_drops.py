@@ -54,8 +54,8 @@ def main():
     qcfg, dirs = config.get_config(None,
                                    validate=False,
                                    json_filename=args.config)
-    logging.info('watch_mountain: logdict={}'.format(logdict))
-    logging.info('watch_mountain: started: {}'
+    logging.info('watch_drops: logdict={}'.format(logdict))
+    logging.info('watch_drops: started: {}'
                  .format(datetime.now().isoformat()))
 
     push_drops(qcfg)

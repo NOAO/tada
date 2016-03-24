@@ -28,11 +28,13 @@ return_code=0
 SMOKEOUT="README-smoke-results.dropbox.txt"
 MANIFEST="$dir/manifest.out"
 ARCHLOG="/var/log/tada/archived.manifest"
-rm  $MANIFEST > /dev/null
-touch $MANIFEST
-MAXRUNTIME=210  # max seconds to wait for all files to be submitted
-date > $ARCHLOG
-chgrp tada $ARCHLOG 
+
+function clean_manifest () {
+    rm  $MANIFEST > /dev/null
+    touch $MANIFEST
+    date > $ARCHLOG
+    chgrp tada $ARCHLOG
+}
 
 
 
@@ -49,41 +51,60 @@ function sbox () {
     rsync -a --password-file ~/.tada/rsync.pwd tada@$mtnhost::statusbox $statusdir
     find $mydir -type f
 }
-    
-function dbox () {
+
+# Mountain Drop BOX
+function mdbox () {
+    clean_manifest
     srcdir=$1
-    mtnhost="mountain.`hostname --domain`"
+    MAXRUNTIME=240  # max seconds to wait for all files to be submitted
+    boxhost="mountain.`hostname --domain`"
     for f in `find $srcdir \( -name "*.fits" -o -name "*.fits.fz" \)`; do
         # Force all fits files to be touched on remote (which creates event)
-        touch $f
         add_test_personality.sh $f
+        touch $f
         #echo "SUCCESSFUL submit_to_archive; $f" >> $MANIFEST
         echo "$f" >> $MANIFEST
     done
     echo "# List of files submitted is in: $MANIFEST"
-    #rsync -aiz --password-file ~/.tada/rsync.pwd $srcdir tada@$mtnhost::dropbox
-    rsync -az --password-file ~/.tada/rsync.pwd $srcdir tada@$mtnhost::dropbox
+    #rsync -aiz --password-file ~/.tada/rsync.pwd $srcdir tada@$boxhost::dropbox
+    rsync -az  --password-file ~/.tada/rsync.pwd $srcdir tada@$boxhost::dropbox
     # INFO     SUCCESSFUL submit; /var/tada/cache/20141224/kp09m-hdi/c7015t0267b00.fits.fz as /noao-tuc-z1/mtn/20141223/kp09m/2014B-0711/k09h_141224_115224_zri_TADASMOKE,.fits.fz,
     echo -n "# Waiting up to $MAXRUNTIME secs for all files to be submitted..." 
-    #! sleep $((MAXRUNTIME))
     finished-log.sh -t $MAXRUNTIME -l $ARCHLOG $MANIFEST
+}
 
-    #!sleep $((MAXRUNTIME/3))
-    #!echo -n "one third done..."
-    #!finished-log.sh -l $ARCHLOG $MANIFEST
-    #!sleep $((MAXRUNTIME/3))
-    #!echo "#two thirds done..."
-    #!finished-log.sh -l $ARCHLOG $MANIFEST
-    #!sleep $((MAXRUNTIME/3))
-    #!echo "#done waiting"
-    #!finished-log.sh -l $ARCHLOG $MANIFEST
+# Valley Drop BOX
+function vdbox () {
+    clean_manifest
+    srcdir=$1
+    MAXRUNTIME=90  # max seconds to wait for all files to be submitted
+    boxhost="valley.`hostname --domain`"
+    for f in `find $srcdir \( -name "*.fits" -o -name "*.fits.fz" \)`; do
+        # Force all fits files to be touched on remote (which creates event)
+        add_test_personality.sh $f
+        touch $f
+        #echo "SUCCESSFUL submit_to_archive; $f" >> $MANIFEST
+        echo "$f" >> $MANIFEST
+    done
+    echo "# List of files submitted is in: $MANIFEST"
+    rsync -az --password-file ~/.tada/rsync.pwd $srcdir tada@$boxhost::dropbox
+    echo -n "# Waiting up to $MAXRUNTIME secs for all files to be submitted..." 
+    finished-log.sh -t $MAXRUNTIME -l $ARCHLOG $MANIFEST
 }
 
 ##############################################################################
 
 tic=`date +'%s'`
+
+# - Fail gracefully with bad directory format
+# - OTF lossless fpack (even with floating point images)
+testCommand db3_1 "vdbox $tdata/short-drop/" "^\#" n 1
+
+mars_stuff
+mars_rollback
+
 # <date>/<instrument>/.../*.fits.fz
-testCommand db1_1 "dbox $tdata/scrape/" "^\#" y
+testCommand db1_1 "mdbox $tdata/scrape/" "^\#" y
 emins=$((`date +'%s'` - tic))
 # expect about 168 seconds
 echo "# Completed dropbox test: " `date` " in $emins seconds"
@@ -91,7 +112,7 @@ echo "# Completed dropbox test: " `date` " in $emins seconds"
 
 # Directory structure is wrong! (one too deep)
 # scrape/<date>/<instrument>/.../*.fits.fz
-#! testCommand db2_1 "dbox $tdata/scrape" "^\#" n
+#! testCommand db2_1 "mdbox $tdata/scrape" "^\#" n
 #! testCommand db2_2 "sbox" "^\#" n
 
 

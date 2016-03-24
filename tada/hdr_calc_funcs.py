@@ -61,6 +61,7 @@ def fixTriplespec(orig, **kwargs):
                   #.format(new['DATE-OBS'], new['INSTRUME']))
                   .format(new['DATE-OBS']))
     return  new
+
     
 def trustHdrPropid(orig, **kwargs):
     propid = orig.get('DTPROPID')
@@ -103,23 +104,7 @@ But if not found in schedule, use field AAPROPID from header'''
     else:
         return {'DTPROPID': pid}
 
-def lookupPROPID(orig, **kwargs):
-    '''Only lookup if DTPROPID not present. 
-Depends on: DTCALDAT, DTTELESC, (DTPROPID)'''
 
-    if 'DTPROPID' in orig:
-        return dict()
-
-    new = {'DTPROPID': ws_lookup_propid(orig.get('DTCALDAT'),
-                                        orig.get('DTTELESC'),
-                                        **kwargs)}
-    return new
-
-def tsepDATEOBS(orig, **kwargs):
-    if 'ODATEOBS' in orig:
-        logging.warning('Overwriting existing ODATEOBS!')
-    return {'ODATEOBS': orig['DATE-OBS'],            # save original
-            'DATE-OBS': orig['DATE-OBS'].replace(' ','T')  }
     
 def addTimeToDATEOBS(orig, **kwargs):
     'Use TIME-OBS for time portion of DATEOBS. Depends on: DATE-OBS, TIME-OBS'
@@ -171,10 +156,6 @@ def DTCALDATfromDATEOBSchile(orig, **kwargs):
                   .format(localdt, orig['DATE-OBS'], caldate))
     new = {'DTCALDAT': caldate.isoformat()}
     return new
-
-def PROPIDtoDT(orig, **kwargs):
-    'Depends on: PROPID'
-    return {'DTPROPID': orig.get('PROPID','NA') }
 
 def PROPIDplusCentury(orig, **kwargs):
     'Depends on: PROPID. Add missing century'

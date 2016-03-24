@@ -62,6 +62,7 @@ testCommand fs3_1 "fsub $tdata/basic/kp109391.fits.fz" "^\#"  n 1
 
 ## FITS made compliant via passed personality options; compress on-the-fly
 ## (ingest success)
+# DATE-OBS= '2014-12-20T13:01:38.0' 
 testCommand fs4_1 "fsub $tdata/basic/obj_355.fits wiyn-whirc" "^\#" n
 
 ## FITS made compliant via passed personality options; multi-extensions

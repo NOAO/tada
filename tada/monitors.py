@@ -22,83 +22,9 @@ from . import submit as ts
 from . import fpack as fp
 
 
-#!##############################################################################
-#!### Valley Monitor
-#!###
-#!
-#!'''
-#!Expected directory structures:
-#!/.../dropbox/
-#!  instrument1/...
-#!  instrument2/...
-#!  ...
-#!
-#!/.../valley-stash/
-#!  ingested/instrument1/...
-#!  rejected/instrument1/...
-#!
-#!To submit a batch (e.g. for pipeline or new instrument):
-#!  rsync -az ~/myfiles/newinstrument /.../dropbox/newinstrument
-#!
-#!If YAML files are found, they will be used for personalities.  
-#!
-#!'''
-#!
-#!
-#!class SubmitEventHandler(watchdog.events.FileSystemEventHandler):
-#!    def __init__(self, watched_dir, rejected_dir, moddir, qcfg):
-#!        self.watched_path = PurePath(watched_dir)
-#!        self.rejected_path = PurePath(rejected_dir)
-#!        self.moddir = moddir
-#!        self.qcfg = qcfg
-#!        super(watchdog.events.FileSystemEventHandler).__init__()
-#!
-#!    def on_created(self, event):
-#!        self.new_file(event.src_path)
-#!
-#!    def on_moved(self, event):
-#!        # for rsync: moved from tmp file to final filename
-#!        self.new_file(event.dest_path)
-#!
-#!    def new_file(self, ifname):
-#!        pp = PurePath(ifname).relative_to(self.watched_path)
-#!        if pp.suffix == '.fz' or pp.suffix == '.fits':
-#!            logging.debug('Got FITS: {}'.format(ifname))
-#!            pdict = options_from_yamls(str(self.watched_path), ifname)
-#!
-#!            try:
-#!                destfname = ts.protected_direct_submit(ifname, self.moddir,
-#!                                                       personality=pdict,
-#!                                                       qcfg=self.qcfg,
-#!                                                       trace=True)
-#!            except Exception as sex:
-#!                # FAILURE: stash it
-#!                logging.info('Ingest FAILED: stash into: {}; {}'
-#!                             .format(destfname, sex))
-#!                os.makedirs(os.path.dirname(destfname), exist_ok=True)
-#!                shutil.move(ifname, destfname)
-#!            else:
-#!                # SUCCESS: remove it
-#!                logging.info('Ingest SUCCEEDED: remove: {}'.format(ifname))
-#!                os.remove(ifname)
-#!
-#!def ingest_drops(watched_dir, rejected_dir, moddir, qcfg):
-#!    """Ingest all files from dropbox into Archive"""
-#!    handler = SubmitEventHandler(watched_dir, rejected_dir, moddir, qcfg)
-#!    observer = watchdog.observers.Observer()
-#!    logging.info('Watching directory: {}'.format(watched_dir))
-#!    observer.schedule(handler, watched_dir, recursive=True)
-#!    logging.debug('dbg: starting')
-#!    observer.start()
-#!    logging.debug('dbg: Started')
-#!    try:
-#!        while True:
-#!            time.sleep(1)
-#!    except KeyboardInterrupt:
-#!        observer.stop()
 
 ##############################################################################
-### Mountain Monitor
+### Monitor
 ###
 ### Monitor directory structure of watched_dir/<day>/<instrument>
 ### Where <day> is of form: YYYYMMDD
@@ -118,89 +44,120 @@ class PushEventHandler(watchdog.events.FileSystemEventHandler):
 to ANTICACHE."""
     qname = get_qname()
     
-    def __init__(self, drop_dir, status_dir, qcfg):
+    def __init__(self, drop_dir, status_dir):
         self.dropdir = drop_dir
         self.statusdir = status_dir
         self.cachedir= '/var/tada/cache'
         self.personalitydir= '/var/tada/personalities'
         self.anticachedir= '/var/tada/anticache'
         self.date_re=re.compile(r"^20\d{6}$")
+        logging.info('init PushEventHandler({}, {})'
+                     .format(drop_dir, status_dir))
         super(watchdog.events.FileSystemEventHandler).__init__()
 
     def pushfile(self, fullfname):
-        cmdstr = ("md5sum {} | dqcli -q {} --push  -"
-                  .format(fullfname, self.qname))
-        logging.debug('EXECUTING: {}'.format(cmdstr))
+        logging.debug('DBG-0; pushfile({})'.format(fullfname))
         try:
+            cmdstr = ('dqcli --pushfile "{}"'.format(fullfname))
+            logging.debug('EXECUTING: {}'.format(cmdstr))
             subprocess.check_call(cmdstr, shell=True)
         except Exception as err:
             logging.error('Could not push file. {}'.format(err))
 
     def on_created(self, event):
+        if isinstance(event, watchdog.events.DirCreatedEvent):
+            return None
+        logging.debug('DBG-0: on_created: {}'.format(event))
         self.new_file(event.src_path)
 
     def on_moved(self, event):
+        if isinstance(event, watchdog.events.DirMovedEvent):
+            return None
+        logging.debug('DBG-0: on_moved: {}'.format(event))
         # for rsync: moved from tmp file to final filename
         self.new_file(event.dest_path)
 
     def on_modified(self, event):
+        if isinstance(event, watchdog.events.DirModifiedEvent):
+            return None
+        logging.debug('DBG-0: on_modified: {}'.format(event))
         # So we can trigger event with "touch"
         self.new_file(event.src_path)
 
-    def new_file(self, ifname):
+        
+    def valid_dir(self, ifname):
+        """Validate directory structure sent to dropbox."""
+        logging.debug('DBG-1: valid_dir={}'.format(ifname))
         pp = PurePath(ifname).relative_to(PurePath(self.dropdir))
-        if pp.suffix == '.fz' or pp.suffix == '.fits':
-            logging.debug('push monitor got new file:{}'.format(ifname))
-            pdict = self.options_from_yamls(ifname)
+        logging.debug('DBG-3: parts={}'.format(pp.parts))
+        if len(pp.parts) < 3:
+            logging.error('File in dropbox has invalid parts.'
+                          ' Path must start with "20YYMMDD/<instrum>/..."'
+                          ' Got: {}'.format(str(pp)))
+            return False
+        day,inst,*d = pp.parts
+        if not self.date_re.match(day):
+            logging.error('File in dropbox has invalid date ({}) in'
+                          ' path. Path must start with'
+                          ' "20YYMMDD/<instrum>/"'
+                          ' Got: {}'
+                          .format(day, ifname))
+            return False
+
+        return True
+
+    def new_file(self, ifname):
+        #######
+        ## Ignore: non-fits, invalid directory
+        pp = PurePath(ifname).relative_to(PurePath(self.dropdir))
+        if pp.suffix not in ['.fz', '.fits']:
+            return None
+        if not self.valid_dir(ifname):
+            logging.error('Not submitting file: {}'.format(ifname))
+            return None
+        ##
+        ########
+
+        logging.debug('DBG: monitors.py:new_file({})'.format(ifname))
+        pdict = self.options_from_yamls(ifname)
+        logging.debug('Got pdict from yamls:{}'.format(pdict))
+        try:
+            cachename = ifname.replace(self.dropdir, self.cachedir)
+            anticachename = ifname.replace(self.dropdir, self.anticachedir)
+            statusname = ifname.replace(self.dropdir,
+                                        self.statusdir)+'.status'
+            os.makedirs(os.path.dirname(cachename), exist_ok=True)
+
+            if ifname[-5:] == '.fits': # dropped file is not compressed
+                cachename += '.fz'
+                anticachename += '.fz'
+            
+            fp.fpack_to(ifname, cachename, personality=pdict)
+            logging.debug('DBG-2: Copy drop to cache={}'.format(cachename))
+
+
+            # Combine all personalities into one and send that to valley.,
+            with open(cachename + '.yaml', 'w') as yf:
+                yaml.safe_dump(pdict, yf, default_flow_style=False)
+
             try:
-                cachename = ifname.replace(self.dropdir, self.cachedir)
-                anticachename = ifname.replace(self.dropdir, self.anticachedir)
-                statusname = ifname.replace(self.dropdir,
-                                            self.statusdir)+'.status'
-                os.makedirs(os.path.dirname(cachename), exist_ok=True)
-                if pp.suffix == '.fz':
-                    logging.debug('DBG-2: Copy drop to cache={}'
-                                  .format(cachename))
-                    shutil.copy(ifname, cachename)
-                else:
-                    cachename += '.fz'
-                    logging.debug('DBG-2: Fpack drop to cache={}'
-                                  .format(cachename))
-                    fp.fpack_to(ifname, outfile=cachename, personality=pdict)
-
-                # validate directory structure sent to dropbox
-                logging.debug('DBG-3: parts={}'.format(pp.parts))
-                day,inst,*d = pp.parts
-                if not self.date_re.match(day):
-                    logging.error('File in dropbox has invalid date ({}) in'
-                                  ' path. Path must start with'
-                                  ' 20YYMMDD/<instrum>/'
-                                  ' NOT SUBMITTING file: {}'
-                                  .format(day, ifname))
-                    return None
-                
-                # Combine all personalities into one and send that to valley.,
-                with open(cachename + '.yaml', 'w') as yf:
-                    yaml.safe_dump(pdict, yf, default_flow_style=False)
-
-                try:
-                    self.pushfile(cachename)
-                    logging.info('Pushed {} to cache: {}'
-                                 .format(ifname, cachename))
-                    os.makedirs(os.path.dirname(statusname), exist_ok=True)
-                    Path(statusname).touch(exist_ok=True)
-                except Exception as ex:
-                    # Push to dataq failed (file not put into TADA processing)
-                    logging.error('Push FAILED with {}; {}'.format(ifname, ex))
-                    logging.error(traceback.format_exc())
-                    os.makedirs(os.path.dirname(anticachename), exist_ok=True)
-                    shutil.move(cachename, anticachename)
+                self.pushfile(cachename)
+                logging.info('Pushed {} to cache: {}'
+                             .format(ifname, cachename))
+                os.makedirs(os.path.dirname(statusname), exist_ok=True)
+                Path(statusname).touch(exist_ok=True)
             except Exception as ex:
-                # Something unexpected failed (makedirs, copy, yaml read/write)
-                logging.error('PushEventHandler.new_file FAILED with {}; {}'
-                              .format(ifname, ex))
+                # Push to dataq failed (file not put into TADA processing)
+                logging.error('Push FAILED with {}; {}'.format(ifname, ex))
                 logging.error(traceback.format_exc())
-            logging.debug('DBG-3: {}'.format(ifname))
+                os.makedirs(os.path.dirname(anticachename), exist_ok=True)
+                shutil.move(fzname, anticachename)
+        except Exception as ex:
+            # Something unexpected failed (makedirs, copy, yaml read/write)
+            logging.error('PushEventHandler.new_file FAILED with {}; {}'
+                          .format(ifname, ex))
+            logging.error(traceback.format_exc())
+        logging.debug('DBG-3: {}'.format(ifname))
 
     def options_from_yamls(self, ifname):
         """Returned combined options and parameters as single dict formed by 
@@ -209,6 +166,7 @@ to ANTICACHE."""
       2. <dropbox/<instrument>/*.yaml           (can be multiple)
       3. <ifname>.yaml                          (just one)
      """
+        logging.debug('DBG: options_from_yamls:{}'.format(ifname))
         day,inst,*d = PurePath(ifname).relative_to(PurePath(self.dropdir)).parts
         logging.debug('DBG: file={}, day={}, inst={}'.format(ifname, day, inst))
 
@@ -248,20 +206,19 @@ to ANTICACHE."""
                 pdict['params'].update(yd.get('params', {}))
                 pdict['options'].update(yd.get('options', {}))
 
-
         logging.debug('DBG: pdict={}'.format(pdict))
-
         return pdict 
             
 
 def push_drops(qcfg):
+    logging.debug('DBG-0: push_drops()')
     watched_dir = '/var/tada/dropbox'
     os.makedirs(watched_dir, exist_ok=True)
     status_dir = '/var/tada/statusbox'
     os.makedirs(status_dir, exist_ok=True)
     logging.info('Watching directory: {}'.format(watched_dir))
 
-    handler = PushEventHandler(watched_dir, status_dir, qcfg)
+    handler = PushEventHandler(watched_dir, status_dir)
     observer = watchdog.observers.Observer()
     observer.schedule(handler, watched_dir, recursive=True)
     observer.start()

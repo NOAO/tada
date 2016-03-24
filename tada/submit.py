@@ -46,6 +46,7 @@ def audit_svc(source_pathname, archive_filename, status, metadatadict,
     req = urllib.request.Request(url)
     req.add_header('Content-Type', 'application/json')
     try:
+        # INSTEAD, use: https://requests.readthedocs.org/        
         with urllib.request.urlopen(req, data=data, timeout=svc_timeout) as f:
             response = f.read().decode('utf-8')
             #!logging.debug('MARS: server response="{}"'.format(response))
@@ -251,7 +252,7 @@ RETURN: irods location of hdr file.
         #! hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
         #! hdr = hdulist[0].header # use only first in list.
         hdr = fu.get_hdr_as_dict(mirror_fname)
-        if opt_params.get('OPS_PREAPPLY_UPDATE','NO') == 'YES': #!!!
+        if opt_params.get('OPS_PREAPPLY_UPDATE','no') == 'yes': #!!!
             fu.apply_options(options, hdr)
         if 'DTACQNAM' not in hdr:
             hdr['DTACQNAM'] = orig_fullname
@@ -298,7 +299,7 @@ RETURN: irods location of hdr file.
         new_ihdr = new_ifname.replace(ext,'hdr')
         logging.debug('new_ifname={},new_ihdr={}'.format(new_ifname, new_ihdr))
 
-        if opt_params.get('dry_run','0') == '1':
+        if opt_params.get('dry_run','no') == 'yes':
             logging.debug('Doing dry_run (no ingest)')
             msg= ('SUCCESS: DRY-RUN of ingest {} as {}'
                   .format(mirror_fname, new_ifname))
