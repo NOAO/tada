@@ -47,7 +47,7 @@ testCommand sc14_1 "fsub $tdata/20141127/soar-soi/test.027.fits.fz soar-soi" "^\
 testCommand sc10_1 "fsub $tdata/20110101/soar-spartan/011-6365d0.fits.fz soar-spartan" "^\#" n
 testCommand sc11_1 "fsub $tdata/20110101/wiyn-bench/24dec_2014.061.fits.fz wiyn-bench" "^\#" n
 testCommand sc12_1 "fsub $tdata/20110101/wiyn-whirc/obj_355.fits.fz wiyn-whirc" "^\#" n
-testCommand sc15_1 "fsub $tdata/20160315/ct4m-arcoiris_spec/SPEC_Eng0246.fits ct4m-arcoiris_spec" "^\#" n
+testCommand sc15_1 "fsub $tdata/20160315/ct4m-arcoiris/SV_f0064.fits ct4m-arcoiris" "^\#" n
 
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"

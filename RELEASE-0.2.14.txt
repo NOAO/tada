@@ -1,0 +1,18 @@
+
+* 0.2.13 <2016-03-24 Thu 14:49>
+- TADA
+  + lossless on-the-fly fpack for floating point images
+    - If two indentical file names put in dropbox except one has fz,
+      fz is submited, other ignored.
+    - If one fz file put in dropbox, is submitted as is (no recompress)
+    - If one non-fiz file put in dropbox, compressed lossless, submitted
+  + reform all YAML files (better human readibility) 
+  + regen personality table from YAMLs
+  + drop fail gracefully on bad directory format
+  + drop working to Mtn and Valley; name changes to reflect ("watch_drop")
+
+- dataque
+  + added function for direct programatic push of file
+  + added configurable logging
+
+

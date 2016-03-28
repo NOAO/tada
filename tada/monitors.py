@@ -39,10 +39,12 @@ def get_qname():
     return valstr[:-1]
 
 
-class PushEventHandler(watchdog.events.FileSystemEventHandler):
+#class PushEventHandler(watchdog.events.FileSystemEventHandler):
+class PushEventHandler(watchdog.events.PatternMatchingEventHandler):
     """Copy new FITS file to CACHE and push to DQ.  If can't push, move 
 to ANTICACHE."""
     qname = get_qname()
+    patterns = ['**/*.fits', '**/*.fz']
     
     def __init__(self, drop_dir, status_dir):
         self.dropdir = drop_dir
@@ -53,7 +55,8 @@ to ANTICACHE."""
         self.date_re=re.compile(r"^20\d{6}$")
         logging.info('init PushEventHandler({}, {})'
                      .format(drop_dir, status_dir))
-        super(watchdog.events.FileSystemEventHandler).__init__()
+        #super(watchdog.events.FileSystemEventHandler).__init__()
+        super().__init__(patterns=self.patterns)
 
     def pushfile(self, fullfname):
         logging.debug('DBG-0; pushfile({})'.format(fullfname))
@@ -67,20 +70,18 @@ to ANTICACHE."""
     def on_created(self, event):
         if isinstance(event, watchdog.events.DirCreatedEvent):
             return None
-        logging.debug('DBG-0: on_created: {}'.format(event))
         self.new_file(event.src_path)
 
     def on_moved(self, event):
         if isinstance(event, watchdog.events.DirMovedEvent):
             return None
-        logging.debug('DBG-0: on_moved: {}'.format(event))
         # for rsync: moved from tmp file to final filename
         self.new_file(event.dest_path)
 
     def on_modified(self, event):
         if isinstance(event, watchdog.events.DirModifiedEvent):
             return None
-        logging.debug('DBG-0: on_modified: {}'.format(event))
+        logging.debug('DBG-0: on_modified; {}'.format(event.src_path))
         # So we can trigger event with "touch"
         self.new_file(event.src_path)
 
@@ -89,7 +90,7 @@ to ANTICACHE."""
         """Validate directory structure sent to dropbox."""
         logging.debug('DBG-1: valid_dir={}'.format(ifname))
         pp = PurePath(ifname).relative_to(PurePath(self.dropdir))
-        logging.debug('DBG-3: parts={}'.format(pp.parts))
+        #logging.debug('DBG-3: parts={}'.format(pp.parts))
         if len(pp.parts) < 3:
             logging.error('File in dropbox has invalid parts.'
                           ' Path must start with "20YYMMDD/<instrum>/..."'
