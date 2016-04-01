@@ -100,11 +100,18 @@ tic=`date +'%s'`
 # - OTF lossless fpack (even with floating point images)
 testCommand db3_1 "vdbox $tdata/short-drop/" "^\#" n 1
 
-mars_stuff
-mars_rollback
 
+#############
+## WARNING: combining multiple dropbox tests can result in filename collisions
+#! mars_stuff
+#! mars_rollback
+#
+# (even between "different" names such as myfile.fits and myfile.fits.fz)
+# The result will depend on timing!  So avoid collisions across tests!
 # <date>/<instrument>/.../*.fits.fz
-testCommand db1_1 "mdbox $tdata/scrape/" "^\#" y
+#! testCommand db1_1 "mdbox $tdata/scrape/" "^\#" y
+
+
 emins=$((`date +'%s'` - tic))
 # expect about 168 seconds
 echo "# Completed dropbox test: " `date` " in $emins seconds"
