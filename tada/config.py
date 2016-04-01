@@ -1,7 +1,8 @@
 """Read, parse, and validate configuration file.
 """
-import json
-
+#import json
+import yaml
+import logging
 
 Q_REQUIRED_FIELDS = {'name', 'type', 'dq_host', 'dq_port',
                      'action_name',
@@ -65,20 +66,28 @@ def validate_config(cfg, fname=None, qnames=None):
                             ', '.join(qnames),
                         ))
 
-def get_config(queue_names, json_filename='/etc/tada/tada.conf', validate=True):
-    """Read multi-queue config from json_filename.  Validate its
+def get_config(queue_names,
+               yaml_filename='/etc/tada/tada.conf',
+               hiera_filename='/etc/tada/hiera.yaml',
+               validate=False):
+    """Read multi-queue config from yaml_filename.  Validate its
 contents. Insure queue_names are all in the list of named queues."""
 
     try:
-        cfg = json.load(open(json_filename))
+        cfg = yaml.load(open(yaml_filename))
     except:
-        raise Exception('ERROR: Could not read dataqueue config file "{}"'
-                        .format(json_filename))
+        raise Exception('ERROR: Could not read data-queue config file "{}"'
+                        .format(yaml_filename))
+    try:
+        cfg.update(yaml.load(open(hiera_filename)))
+    except Exception as err:
+        raise Exception('ERROR: Could not read data-queue config file "{}"; {}'
+                        .format(hiera_filename, str(err)))
     if validate:
-        validate_config(cfg, qnames=queue_names, fname=json_filename)
-    
-    lut = get_config_lut(cfg)
-
+        validate_config(cfg, qnames=queue_names, fname=yaml_filename)
+    #!lut = get_config_lut(cfg)
+    #return dict([[q['name'], q] for q in config['queues']])
+    lut = cfg
     if validate:
         missing = set(queue_names) - set(lut.keys())
     else:
@@ -86,6 +95,8 @@ contents. Insure queue_names are all in the list of named queues."""
     if len(missing) > 0:
         raise Exception(
             'ERROR: Config file "{}" does not contain named queues: {}'
-            .format(json_filename, missing))
-    return lut, cfg['dirs']
+            .format(yaml_filename, missing))
+    #return lut, cfg['dirs']
+    logging.debug('get_config got: {}'.format(lut))
+    return lut, dict()
 

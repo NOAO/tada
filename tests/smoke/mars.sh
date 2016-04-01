@@ -11,7 +11,8 @@ function mars_rollback () {
     then
         echo "# REMOVED all provisional files before starting."
     else
-        echo "# COULD NOT remove all provisional files before starting."    
+        echo "# COULD NOT remove all provisional files before starting."
+	echo "Tried using: curl $copts $marsurl/provisional/rollback/"
     fi
 }
 
@@ -21,6 +22,7 @@ function mars_stuff () {
         echo "# STUFFed files matching 'TADA' into provisional files."
     else
         echo "# COULD NOT stuff."    
+	echo "Tried using: curl $copts $marsurl/provisional/stuff/"
     fi
 }
 

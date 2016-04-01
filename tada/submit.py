@@ -68,25 +68,15 @@ RETURN: (statusBool, message, operatorMessage)"""
                   .format(hdr_ipath, qname))
 
     # extract from qcfg ealier and pass dict (see prep_for_ingest)!!!
-    arch_host = qcfg[qname]['arch_host']
-    arch_port = qcfg[qname]['arch_port']
-    irods_host = qcfg[qname]['arch_irods_host']
-    irods_port = qcfg[qname]['arch_irods_port']
-    prob_fail = qcfg[qname]['action_fail_probability']
+    arch_host = qcfg['arch_host']
+    arch_port = qcfg['arch_port']
+    irods_host = qcfg['arch_irods_host']
+    irods_port = qcfg['arch_irods_port']
 
     archserver_url = ('http://{}:{}/?hdrUri={}'
                      .format(arch_host, arch_port, hdr_ipath))
     logging.debug('archserver_url = {}'.format(archserver_url))
 
-    #!if qcfg[qname].get('disable_archive_svc',0) > 0:
-    #!    logging.warning('Ingest DISABLED. '
-    #!                    'http_archive_ingest() using prob_fail= {}'
-    #!                    .format(prob_fail))
-    #!    if random.random() <= prob_fail:
-    #!        raise tex.SubmitException(
-    #!            'Killed by cosmic ray with probability {}'
-    #!            .format(prob_fail))
-    #!else:
     response = ''
     try:
         with urllib.request.urlopen(archserver_url) as f:
@@ -398,10 +388,9 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     logging.debug('submit_to_archive({},{})'.format(ifname, qname))
 
     
-    cfgprms = dict(#mirror_dir =  qcfg[qname]['mirror_dir'],
-                   archive331 =  qcfg[qname]['archive_irods331'],
-                   mars_host  =  qcfg[qname].get('mars_host'),
-                   mars_port  =  qcfg[qname].get('mars_port'),
+    cfgprms = dict(archive331 =  qcfg['archive_irods331'],
+                   mars_host  =  qcfg.get('mars_host'),
+                   mars_port  =  qcfg.get('mars_port'),
                    )
     saved_hdr = None
 
@@ -472,10 +461,9 @@ So, caller should not have to put this function in try/except."""
         logging.error(msg)
         return (False, msg)
 
-    cfgprms = dict(mirror_dir =  qcfg[qname].get('mirror_dir'),
-                   archive331 =  qcfg[qname].get('archive_irods331'),
-                   mars_host  =  qcfg[qname].get('mars_host'),
-                   mars_port  =  qcfg[qname].get('mars_port'),
+    cfgprms = dict(archive331 =  qcfg['archive_irods331'],
+                   mars_host  =  qcfg.get('mars_host'),
+                   mars_port  =  qcfg.get('mars_port'),
                    )
 
     if personality == None:
@@ -538,9 +526,9 @@ def direct_submit(fitsfile, moddir,
     statuscode = 0    # for sys.exit(statuscode)
     statusmsg = 'NA'
     cfgprms = dict(#mirror_dir =  qcfg[qname]['mirror_dir'],
-                   archive331 =  qcfg[qname]['archive_irods331'],
-                   mars_host  =  qcfg[qname].get('mars_host'),
-                   mars_port  =  qcfg[qname].get('mars_port'),
+                   archive331 =  qcfg['archive_irods331'],
+                   mars_host  =  qcfg.get('mars_host'),
+                   mars_port  =  qcfg.get('mars_port'),
                    )
     saved_hdr = None
 
@@ -669,7 +657,7 @@ def main():
     qname = 'submit'
     qcfg, dirs = config.get_config(None,
                                    validate=False,
-                                   json_filename=args.config)
+                                   yaml_filename=args.config)
 
     # out=`sudo -u tada sh -c "direct_submit --loglevel=DEBUG /data/bok/20150706/d7210.0008.fits.fz -p /sandbox/tada-cli/personalities/bok.personality 2>&1"`
     # out=`fits_submit -p bok /data/bok/20150706/d7210.0008.fits.fz `

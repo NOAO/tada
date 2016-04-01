@@ -666,10 +666,9 @@ def fits_compliant(fits_file_list,
                    trace=False):
     """Check FITS file for complaince with Archive Ingest."""
     import warnings
-    cfgprms = dict(#mirror_dir =  qcfg[qname]['mirror_dir'],
-                   archive331 =  qcfg[qname]['archive_irods331'],
-                   mars_host  =  qcfg[qname].get('mars_host'),
-                   mars_port  =  qcfg[qname].get('mars_port'),
+    cfgprms = dict(#archive331 =  qcfg[qname]['archive_irods331'],
+                   mars_host  =  qcfg.get('mars_host'),
+                   mars_port  =  qcfg.get('mars_port'),
                    )
 
     logging.debug('EXECUTING fits_compliant({}, personalities={}, '
@@ -918,7 +917,7 @@ def main():
     qname = 'submit'
     qcfg, dirs = config.get_config(None,
                                    validate=False,
-                                   json_filename=args.config)
+                                   yaml_filename=args.config)
 
 
     # fits_compliant /data/raw/nhs_2014_n14_299403.fits
