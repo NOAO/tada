@@ -666,8 +666,7 @@ def fits_compliant(fits_file_list,
                    trace=False):
     """Check FITS file for complaince with Archive Ingest."""
     import warnings
-    cfgprms = dict(#archive331 =  qcfg[qname]['archive_irods331'],
-                   mars_host  =  qcfg.get('mars_host'),
+    cfgprms = dict(mars_host  =  qcfg.get('mars_host'),
                    mars_port  =  qcfg.get('mars_port'),
                    )
 
@@ -935,4 +934,5 @@ def main():
 if __name__ == '__main__':
 
     main()
+
  
