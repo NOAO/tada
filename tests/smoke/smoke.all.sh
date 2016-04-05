@@ -37,8 +37,9 @@ source $SCRIPTDIR/smoke.dropbox.sh; tally
 #! $SCRIPTDIR/smoke.fits_compliant.sh; tally
 #! $SCRIPTDIR/smoke.fits_submit.sh; tally
 #! $SCRIPTDIR/smoke.pipeline_submit.sh; tally
-source $SCRIPTDIR/smoke.direct.sh; tally
-source $SCRIPTDIR/smoke.scrape.sh; tally
+
+#!source $SCRIPTDIR/smoke.direct.sh; tally  
+source $SCRIPTDIR/smoke.scrape.sh; tally  # uses direct_submit
 
 echo "Multi-test score: passed=$(($mastertotalcnt-$masterfailcnt))/$mastertotalcnt"
 echo "Remember to:"

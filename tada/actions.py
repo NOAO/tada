@@ -46,15 +46,17 @@ def network_move(rec, qname, **kwargs):
     dirs=kwargs['dirs']
     logging.debug('dirs={}'.format(dirs))
 
-    nextq = qcfg[qname]['next_queue']
-    dq_host = qcfg[nextq]['dq_host']
-    dq_port = qcfg[nextq]['dq_port']
-    redis_port = qcfg[nextq]['redis_port']
+    nextq = qcfg['transfer']['next_queue']
+    #dq_host = qcfg['dq_host']
+    dq_port = qcfg['dq_port']
+    valley_host = qcfg['valley_host']
+    redis_port = qcfg['redis_port']
 
-    source_root = '/var/tada/cache' # qcfg[qname]['cache_dir']
-    pre_action = qcfg[qname].get('pre_action',None)
-    sync_root =  qcfg[qname]['mirror_dir']
-    valley_root = '/var/tada/cache' # qcfg[nextq]['mirror_dir']
+    source_root = '/var/tada/cache' 
+    pre_action = qcfg.get('pre_action',None)
+    #sync_root =  qcfg[qname]['mirror_dir']
+    sync_root =  'rsync://tada@{}/cache'.format(qcfg['valley_host'])
+    valley_root = '/var/tada/cache'
     fname = rec['filename']            # absolute path
 
     logging.debug('source_root={}, fname={}'.format(source_root, fname))
@@ -151,13 +153,12 @@ def network_move(rec, qname, **kwargs):
                                 os.path.relpath(newfname, source_root))
     try:
         # What if QUEUE is down?!!!
-        #!du.push_to_q(dq_host, dq_port, mirror_fname, rec['checksum'])
-        ru.push_direct(dq_host, redis_port,
+        ru.push_direct(valley_host, redis_port,
                        mirror_fname, rec['checksum'],
-                       qcfg[nextq])
+                       max_queue_size=qcfg.get('maximum_queue_size',999))
     except Exception as ex:
         logging.error('Failed to push to queue on {}:{}; {}'
-                        .format(dq_host, dq_port, ex ))
+                        .format(valley_host, dq_port, ex ))
         logging.error('push_to_q stack: {}'.format(du.trace_str()))
         raise
     return True
@@ -182,12 +183,12 @@ configuration field: maximum_errors_per_record)
 """
     logging.debug('submit({})'.format(rec.get('filename','NA')))
     qcfg = du.get_keyword('qcfg', kwargs)
-    dq_host = qcfg[qname]['dq_host']
-    dq_port = qcfg[qname]['dq_port']
+    dq_host = qcfg['dq_host']
+    dq_port = qcfg['dq_port']
 
-    noarc_root =  '/var/tada/anticache'   # qcfg[qname]['noarchive_dir']
-    mirror_root = '/var/tada/cache'       # qcfg[qname]['mirror_dir']
-    #submitlog =  '/var/log/tada/submit.manifest' # qcfg[qname]['submitlog']
+    noarc_root =  '/var/tada/anticache'
+    mirror_root = '/var/tada/cache'    
+    #submitlog =  '/var/log/tada/submit.manifest'
 
     # eg. /tempZone/mountain_mirror/other/vagrant/16/text/plain/fubar.txt
     ifname = rec['filename']            # absolute path (mountain_mirror)

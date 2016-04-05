@@ -916,7 +916,7 @@ def main():
     qname = 'submit'
     qcfg, dirs = config.get_config(None,
                                    validate=False,
-                                   json_filename=args.config)
+                                   yaml_filename=args.config)
 
 
     # fits_compliant /data/raw/nhs_2014_n14_299403.fits
