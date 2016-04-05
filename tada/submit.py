@@ -120,40 +120,6 @@ def new_fits(orig_fitspath, changes, moddir=None):
 
     return modfilepath
 
-#!def BAD_gen_hdr_file(fitsfilepath, new_basename):
-#!    """Generate a text .hdr file.  Directory containing fitsfilepath must be
-#!    writable.  That is where the hdr file will be written."""
-#!    # Print without blank cards or trailing whitespace
-#!    fitshdr = pyfits.getheader(fitsfilepath)
-#!    hdrstr = fitshdr.tostring(sep='\n', padding=False)
-#!    md5 = subprocess.check_output("md5sum -b {} | cut -f1 -d' '"
-#!                                  .format(fitsfilepath),
-#!                                  shell=True)
-#!    md5sum=md5.decode().strip()
-#!    filesize=os.path.getsize(fitsfilepath)
-#!    logging.debug('DBG: md5sum={}, filesize={}, base={}'
-#!                  .format(md5sum, filesize,new_basename))
-#!
-#!    # Archive requires extra fields prepended to hdr txt! :-<
-#!    hdrfilepath = str(PurePath(fitsfilepath).parent
-#!                      / fn.get_hdr_fname(new_basename))
-#!    with open(hdrfilepath, mode='w') as f:
-#!        ingesthdr = ('#filename = {filename}\n'
-#!                     '#reference = {filename}\n'
-#!                     '#filetype = TILED_FITS\n'
-#!                     '#filesize = {filesize} bytes\n'
-#!                     '#file_md5 = {checksum}\n\n'
-#!                 )
-#!        print(ingesthdr.format(filename=new_basename,
-#!                               filesize=filesize,
-#!                               checksum=md5sum),
-#!              file=f)
-#!        print(*[s.rstrip() for s in hdrstr.splitlines()
-#!                if s.strip() != ''],
-#!              sep='\n',
-#!              file=f, flush=True)
-#!    # END open
-#!    return hdrfilepath
 
 def gen_hdr_file(fitsfilepath, new_basename):
     """Generate a text .hdr file.  Directory containing fitsfilepath must
@@ -178,8 +144,6 @@ def gen_hdr_file(fitsfilepath, new_basename):
                                   shell=True)
     md5sum=md5.decode().strip()
     filesize=os.path.getsize(fitsfilepath)
-    logging.debug('DBG: md5sum={}, filesize={}, base={}'
-                  .format(md5sum, filesize,new_basename))
 
     # Archive requires extra fields prepended to hdr txt! :-<
     hdrfilepath = str(PurePath(fitsfilepath).parent
@@ -424,13 +388,13 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
         logging.debug(msg)
         if moddir != None:
             os.remove(modfits)
-            logging.debug('DBG: Removed modfits={}'.format(modfits))
+            #!logging.debug('DBG: Removed modfits={}'.format(modfits))
         raise tex.SubmitException(ops_msg)
 
     iu.irods_put331(modfits, destfname) # iput renamed FITS
     if moddir != None:
         os.remove(modfits)
-        logging.debug('DBG: Removed modfits={}'.format(modfits))
+        #!logging.debug('DBG: Removed modfits={}'.format(modfits))
     logging.info('SUCCESSFUL submit_to_archive; {} as {}'
                  .format(origfname, destfname))
     manifest = '/var/log/tada/archived.manifest'
@@ -496,14 +460,14 @@ So, caller should not have to put this function in try/except."""
     if not success:
         if moddir != None:
             os.remove(modfits)
-            logging.debug('DBG: Removed modfits={}'.format(modfits))
+            #!logging.debug('DBG: Removed modfits={}'.format(modfits))
         return(False, 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg))
     else:
         # iput renamed, modified FITS
         iu.irods_put331(modfits, destfname) # iput renamed FITS
         if moddir != None:
             os.remove(modfits)
-            logging.debug('DBG: Removed modfits={}'.format(modfits))
+            #!logging.debug('DBG: Removed modfits={}'.format(modfits))
         return(True, 'SUCCESS: archived {} as {}'.format(fitsfile, destfname))
     return (ok, statusmsg)
     # END: protected_direct_submit()
@@ -580,7 +544,7 @@ def direct_submit(fitsfile, moddir,
     print(statusmsg, file=sys.stderr)
     if moddir != None:
         os.remove(modfits)
-        logging.debug('DBG: Removed modfits={}'.format(modfits))
+        #!logging.debug('DBG: Removed modfits={}'.format(modfits))
     sys.exit(statuscode)
  
 def main():
