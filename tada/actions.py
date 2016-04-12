@@ -4,6 +4,7 @@ import os
 import os.path
 import subprocess
 import magic
+import socket
 import shutil
 import time
 from datetime import datetime
@@ -13,7 +14,6 @@ from pathlib import PurePath
 from . import submit as ts
 from . import diag
 from . import fits_utils as fu
-from . import exceptions as tex
 import dataq.dqutils as du
 import dataq.red_utils as ru
 
@@ -46,8 +46,8 @@ def network_move(rec, qname, **kwargs):
     dirs=kwargs['dirs']
     logging.debug('dirs={}'.format(dirs))
 
-    nextq = qcfg['transfer']['next_queue']
-    #dq_host = qcfg['dq_host']
+    # nextq = qcfg['transfer']['next_queue']
+    # dq_host = qcfg['dq_host']
     dq_port = qcfg['dq_port']
     valley_host = qcfg['valley_host']
     redis_port = qcfg['redis_port']
@@ -58,14 +58,20 @@ def network_move(rec, qname, **kwargs):
     sync_root =  'rsync://tada@{}/cache'.format(qcfg['valley_host'])
     valley_root = '/var/tada/cache'
     fname = rec['filename']            # absolute path
+    thishost = socket.getfqdn()
+    if thishost == qcfg.get('valley_host',None):
+        logging.error(('Current host ({}) is same as "valley_host" ({}). '
+                      'Not moving file!').format(thishost,
+                                                 qcfg.get('valley_host')))
+        return None
 
     logging.debug('source_root={}, fname={}'.format(source_root, fname))
     if fname.find(source_root) == -1:
         raise Exception('Filename "{}" does not start with "{}"'
                         .format(fname, source_root))
 
-    ifname = os.path.join(sync_root, os.path.relpath(fname, source_root))
-    optfname = ifname + ".options"    
+    # ifname = os.path.join(sync_root, os.path.relpath(fname, source_root))
+    # optfname = ifname + ".options"
     newfname = fname
     logging.debug('pre_action={}'.format(pre_action))
     if pre_action:
@@ -183,8 +189,8 @@ configuration field: maximum_errors_per_record)
 """
     logging.debug('submit({})'.format(rec.get('filename','NA')))
     qcfg = du.get_keyword('qcfg', kwargs)
-    dq_host = qcfg['dq_host']
-    dq_port = qcfg['dq_port']
+    # dq_host = qcfg['dq_host']
+    # dq_port = qcfg['dq_port']
 
     noarc_root =  '/var/tada/anticache'
     mirror_root = '/var/tada/cache'    
