@@ -95,6 +95,8 @@ setup(
     #!data_files=[('/usr/local/bin', ['tada_support/scripts/postproc',]),
     #!            ('/var/tada/personalities', personalities),
     #!            ],
+    data_files=[('/etc/tada', glob('RELEASE-*.txt')),
+    ],
                     
 
     # To provide executable scripts, use entry points in preference to the

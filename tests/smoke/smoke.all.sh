@@ -47,12 +47,14 @@ echo "  1. try Portal to prove stated files can be retrieved!"
 echo "  2. verify Archive filenames look ok: http://localhost:8000/provisional/"
 
 emins=$(((`date +'%s'` - tic)/60))
-cat <<EOF | mail -s "Smoke.all completed! ($emins)" pothier@email.noao.edu
+passed=$(($mastertotalcnt-$masterfailcnt))/$mastertotalcnt
+cat <<EOF | mail -s "Smoke.all completed! (passed=$passed)" pothier@email.noao.edu
 Script:   $SCRIPT
 Started:  $sdate
 Finished: `date`
 
-Multi-test score: passed=$(($mastertotalcnt-$masterfailcnt))/$mastertotalcnt
+Multi-test score: passed=$passed
+elapsed minutes:  $emins
 
 Remember to:
   1. try Portal to prove stated files can be retrieved!
