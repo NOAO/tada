@@ -2,11 +2,12 @@
 import logging
 import urllib.request
 
-# propid=`curl 'http://127.0.0.1:8000/schedule/prop/ct13m/2014-12-25/'`
-def http_get_propid_from_schedule(telescope, date, host=None, port=8000):
+# propid=`curl 'http://127.0.0.1:8000/schedule/propid/kp4m/kosmos/2016-02-01/'`
+def http_get_propid_from_schedule(telescope, instrument, date,
+                                  host=None, port=8000):
     'Use MARS web-service to get PROPID given: Telescope, Date of observation.'
-    url = ('http://{}:{}/schedule/propid/{}/{}/'
-           .format(host, port, telescope, date))
+    url = ('http://{}:{}/schedule/propid/{}/{}/{}/'
+           .format(host, port, telescope, instrument, date))
     logging.debug('MARS: get PROPID from schedule; url = {}'.format(url))
     propid = None
     try:

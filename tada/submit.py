@@ -235,7 +235,8 @@ RETURN: irods location of hdr file.
                             .total_seconds()*100))
             tag = jobid if tag == '' else (jobid + '_' + tag)
 
-        ext = fn.fits_extension(orig_fullname)
+        #ext = fn.fits_extension(orig_fullname)
+        ext = fn.fits_extension(mirror_fname)
         if source == 'pipeline':
             new_basename = hdr['PLDSID'] + ".fits.fz"
             logging.debug('Source=pipeline so using basename:{}'

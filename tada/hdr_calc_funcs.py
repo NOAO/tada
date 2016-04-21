@@ -31,7 +31,7 @@ calc_func_source_fields = set([
 
 ##############################################################################
 
-def ws_lookup_propid(date, telescope, **kwargs):
+def ws_lookup_propid(date, telescope, instrument, **kwargs):
     """Return propid from schedule 
 -OR- None if cannot reach service
 -OR- 'NA' if service reachable but lookup fails."""
@@ -43,10 +43,11 @@ def ws_lookup_propid(date, telescope, **kwargs):
                       .format(host,port))
         return None
 
-    # telescope, date = ('ct13m', '2014-12-25')
-    logging.debug('WS schedule lookup; DTCALDAT="{}", DTTELESC="{}"'
-                  .format(date,telescope))
-    propid = ut.http_get_propid_from_schedule(telescope, date,
+    # telescope, instrument, date = ('kp4m', 'kosmos', '2016-02-01')
+    logging.debug('WS schedule lookup; '
+                  'DTCALDAT="{}", DTTELESC="{}", DTINSTRU="{}"'
+                  .format(date, telescope, instrument))
+    propid = ut.http_get_propid_from_schedule(telescope, instrument, date,
                                               host=host, port=port)
     return propid
     
@@ -67,7 +68,10 @@ def trustHdrPropid(orig, **kwargs):
     propid = orig.get('DTPROPID')
     if propid == 'BADSCRUB':
         # fallback
-        propid = ws_lookup_propid(orig.get('DTCALDAT'), orig.get('DTTELESC'),
+
+        propid = ws_lookup_propid(orig.get('DTCALDAT'),
+                                  orig.get('DTTELESC'),
+                                  orig.get('DTINSTRU'),
                                   **kwargs)
         if propid == None:
             return {}
@@ -80,7 +84,9 @@ def trustHdrPropid(orig, **kwargs):
 def trustSchedPropid(orig, **kwargs):
     '''Propid from schedule trumps header.  
 But if not found in schedule, use header'''
-    pid = ws_lookup_propid(orig.get('DTCALDAT'), orig.get('DTTELESC'),
+    pid = ws_lookup_propid(orig.get('DTCALDAT'),
+                           orig.get('DTTELESC'),
+                           orig.get('DTINSTRU'),
                            **kwargs)
     #!if pid != orig.get('DTPROPID'):
     #!    logging.warning('PROPIID values from header ({}) and schedule ({}) '
@@ -96,7 +102,10 @@ But if not found in schedule, use header'''
 def trustSchedOrAAPropid(orig, **kwargs):
     '''Propid from schedule trumps header.  
 But if not found in schedule, use field AAPROPID from header'''
-    pid = ws_lookup_propid(orig.get('DTCALDAT'), orig.get('DTTELESC'), **kwargs)
+    pid = ws_lookup_propid(orig.get('DTCALDAT'),
+                           orig.get('DTTELESC'),
+                           orig.get('DTINSTRU'),
+                           **kwargs)
     if pid == None:
         return {'DTPROPID': 'NOSCHED'}
     elif pid == 'NA':
