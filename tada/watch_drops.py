@@ -4,6 +4,7 @@ wrapped into a service."""
 
 import argparse
 import logging
+import logging.config
 import os.path
 from datetime import datetime
 

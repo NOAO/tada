@@ -172,7 +172,10 @@ def PROPIDplusCentury(orig, **kwargs):
 
 def INSTRUMEtoDT(orig, **kwargs):
     'Depends on: INSTRUME'
-    return {'DTINSTRU': orig['INSTRUME'] }
+    if 'DTINSTRU' in orig:
+        return {'DTINSTRU': orig['DTINSTRU'] }
+    else:
+        return {'DTINSTRU': orig['INSTRUME'] }
 
 
 def IMAGTYPEtoOBSTYPE(orig, **kwargs):
