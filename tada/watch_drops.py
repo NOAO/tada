@@ -23,11 +23,19 @@ def main():
         )
     dflt_config = '/etc/tada/tada.conf'
     logconf='/etc/tada/watch.yaml'
+    dflt_watchdir = '/var/tada/dropbox'
+
     parser.add_argument('--logconf',
                         help='Logging configuration file (YAML format).'
                         '[Default={}]'.format(logconf),
                         default=logconf,
                         type=argparse.FileType('r'))
+    parser.add_argument('-w', '--watchdir',
+                        help=('Watch for filesystem changes under at this'
+                              'directory level and deeper.'
+                              'DEFAULT: {}').format(dflt_watchdir),
+                        default=dflt_watchdir,
+                        )
     parser.add_argument('-c', '--config',
                         help='Config file. [default={}]'.format(dflt_config),
                         default=dflt_config,
@@ -58,7 +66,7 @@ def main():
     logging.info('watch_drops: started: {}'
                  .format(datetime.now().isoformat()))
 
-    push_drops(qcfg)
+    push_drops(watch_dir=os.path.realpath(args.watchdir))
 
 if __name__ == '__main__':
     main()

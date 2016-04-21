@@ -18,7 +18,7 @@ import yaml
 import watchdog.events
 import watchdog.observers
 
-from . import submit as ts
+#from . import submit as ts
 from . import fpack as fp
 
 
@@ -75,15 +75,23 @@ to ANTICACHE."""
     def on_moved(self, event):
         if isinstance(event, watchdog.events.DirMovedEvent):
             return None
-        # for rsync: moved from tmp file to final filename
-        self.new_file(event.dest_path)
+        logging.debug('DBG-0: on_moved; {}'.format(event.dest_path))
+        if os.path.exists(event.dest_path):
+            # for rsync: moved from tmp file to final filename
+            self.new_file(event.dest_path)
+        else:
+            logging.debug('file gone: on_moved; {}'.format(event.dest_path))
 
     def on_modified(self, event):
         if isinstance(event, watchdog.events.DirModifiedEvent):
             return None
         logging.debug('DBG-0: on_modified; {}'.format(event.src_path))
         # So we can trigger event with "touch"
-        self.new_file(event.src_path)
+        if os.path.exists(event.src_path):
+            self.new_file(event.src_path)
+        else:
+            logging.debug('file gone: on_modified; {}; Ignoring event.'
+                          .format(event.src_path))
 
         
     def valid_dir(self, ifname):
@@ -152,7 +160,7 @@ to ANTICACHE."""
                 logging.error('Push FAILED with {}; {}'.format(ifname, ex))
                 logging.error(traceback.format_exc())
                 os.makedirs(os.path.dirname(anticachename), exist_ok=True)
-                shutil.move(fzname, anticachename)
+                shutil.move(cachename, anticachename)
         except Exception as ex:
             # Something unexpected failed (makedirs, copy, yaml read/write)
             logging.error('PushEventHandler.new_file FAILED with {}; {}'
@@ -211,17 +219,16 @@ to ANTICACHE."""
         return pdict 
             
 
-def push_drops(qcfg):
+def push_drops(watch_dir = '/var/tada/dropbox',
+               status_dir = '/var/tada/statusbox'):
     logging.debug('DBG-0: push_drops()')
-    watched_dir = '/var/tada/dropbox'
-    os.makedirs(watched_dir, exist_ok=True)
-    status_dir = '/var/tada/statusbox'
+    os.makedirs(watch_dir, exist_ok=True)
     os.makedirs(status_dir, exist_ok=True)
-    logging.info('Watching directory: {}'.format(watched_dir))
+    logging.info('Watching directory: {}'.format(watch_dir))
 
-    handler = PushEventHandler(watched_dir, status_dir)
+    handler = PushEventHandler(watch_dir, status_dir)
     observer = watchdog.observers.Observer()
-    observer.schedule(handler, watched_dir, recursive=True)
+    observer.schedule(handler, watch_dir, recursive=True)
     observer.start()
     try:
         while True:

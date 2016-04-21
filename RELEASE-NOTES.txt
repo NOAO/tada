@@ -1,0 +1,168 @@
+* Release 2.4.0 <2016-04-14 Thu 07:50>
+This updates the version numbers to match Major.Minor version of TADA puppet
+code. Previous RPM version was 0.2.17
+
+Config now read from TWO files.  One of them (/etc/tada/hiera.yaml) is
+generated from puppet.  This allows hiera to be used to specify host
+specific values such as the Valley that a Mountain should transfer
+files to.
+
+* Release 0.2.13 <2016-03-24 Thu 14:49>
+- TADA
+  + lossless on-the-fly fpack for floating point images
+    - If two indentical file names put in dropbox except one has fz,
+      fz is submited, other ignored.
+    - If one fz file put in dropbox, is submitted as is (no recompress)
+    - If one non-fiz file put in dropbox, compressed lossless, submitted
+  + reform all YAML files (better human readibility) 
+  + regen personality table from YAMLs
+  + drop fail gracefully on bad directory format
+  + drop working to Mtn and Valley; name changes to reflect ("watch_drop")
+
+- dataque
+  + added function for direct programatic push of file
+  + added configurable logging
+
+
+* Release 0.2.13 <2016-03-24 Thu 14:49>
+- TADA
+  + lossless on-the-fly fpack for floating point images
+    - If two indentical file names put in dropbox except one has fz,
+      fz is submited, other ignored.
+    - If one fz file put in dropbox, is submitted as is (no recompress)
+    - If one non-fiz file put in dropbox, compressed lossless, submitted
+  + reform all YAML files (better human readibility) 
+  + regen personality table from YAMLs
+  + drop fail gracefully on bad directory format
+  + drop working to Mtn and Valley; name changes to reflect ("watch_drop")
+
+- dataque
+  + added function for direct programatic push of file
+  + added configurable logging
+
+
+* Release 0.2.11 <2016-03-18 Fri 12:28>
+- Create HDR from concatenation of all HDUs (in order)
+  Previously used only Primary.  For some cases of fpacked files
+  this resulted in the HDR file not containing RA & DEC (etc.)
+
+* Release 0.2.10 <2016-03-17 Thu 14:37>
+
+- prefix table name change (triplespec -> arcoiris) and new prefix (c4ai)
+- add mapping_function source fields to list of "USED_FIELDS" that may
+  be updated
+- add on the fly fpack for dropbox (NOT ADEQUATELY TESTED)
+- improved format of YAML output from personaltiy(bash)-to-yaml
+- more smoke tests (uncompressed mosaic3, arcoiris)
+- removed legacy mosaic_1_1 smoke
+
+* Release 0.2.4 <2016-02-03 Wed 07:50>
+Don't modify DTACQNAM if it already has a value.
+
+Includes replacement for LPR front-end to TADA.  Now you can submit a set
+of files to TADA (on the mountain host) from anywhere with something like:
+
+  rsync -avz --password-file ~/rsync.pwd $srcdir tada@$mtnhost::dropbox
+
+In the above, the rsync.pwd file should have the same contents as
+mtnhost:/etc/tada/rsync.pwd, should be owned by you, and should have
+permissions of 0400.  Your $srcdir directory structure should match:
+
+   <YYYYMMDD>/<instrument>/.../myfile.fits.fz
+   
+Where YYYYMMDD is the observation day (DTCALDAT) corressponding to the
+FITS files underneath.  And <instrument> is currently one of:
+  bok23m-90prime
+  ct13m-andicam
+  ct15m-echelle
+  ct4m-cosmos
+  ct4m-decam
+  kp09m-hdi
+  kp4m-kosmos
+  kp4m-mosaic_1_1
+  kp4m-mosaic3
+  kp4m-newfirm
+  soar-goodman
+  soar-osiris
+  soar-sami
+  soar-soi
+  soar-spartan
+  wiyn-bench
+  wiyn-whirc
+
+You can tell if your files have been successfully submitted (to the
+mountain TADA queue) with:
+
+  rsync -a --password-file ~/.tada/rsync.pwd tada@$mtnhost::statusbox $mydir 
+  find $mydir -type f
+  
+* Release 0.2.2 <2016-01-27 Wed 07:50>
+Includes replacement for LPR front-end to TADA.  Now you can submit a set
+of files to TADA (on the mountain host) from anywhere with something like:
+
+  rsync -avz --password-file ~/rsync.pwd $srcdir tada@$mtnhost::dropbox
+
+In the above, the rsync.pwd file should have the same contents as
+mtnhost:/etc/tada/rsync.pwd, should be owned by you, and should have
+permissions of 0400.  Your $srcdir directory structure should match:
+
+   <YYYYMMDD>/<instrument>/.../myfile.fits.fz
+   
+Where YYYYMMDD is the observation day (DTCALDAT) corressponding to the
+FITS files underneath.  And <instrument> is currently one of:
+  bok23m-90prime
+  ct13m-andicam
+  ct15m-echelle
+  ct4m-cosmos
+  ct4m-decam
+  kp09m-hdi
+  kp4m-kosmos
+  kp4m-mosaic_1_1
+  kp4m-mosaic3
+  kp4m-newfirm
+  soar-goodman
+  soar-osiris
+  soar-sami
+  soar-soi
+  soar-spartan
+  wiyn-bench
+  wiyn-whirc
+
+You can tell if your files have been successfully submitted (to the
+mountain TADA queue) with:
+
+  rsync -a --password-file ~/.tada/rsync.pwd tada@$mtnhost::statusbox $mydir 
+  find $mydir -type f
+  
+* Release 0.1.29 <2016-01-20 Wed 14:37>
+Added service that watches for any FITS files added below
+mountain:/var/tada/dropbox/.  Submits an new (or modified) files to
+TADA and adds a corresponding entry in /var/tada/statusbox/ if the
+submit succeeded. Currently that info isn't used but could be used to
+determine which files under /var/tada/dropbox should be touch to cause
+them to be submitting again.
+
+Provisioning changes made to make Mountain and Valley machines more
+nearly identical in terms of provisioning.
+* Release 0.1.25 <2016-01-08 Fri 14:37>
+- Obstype entry added for mosaic3
+- smoke overhaul
+* Release 0.1.22 <2015-12-17 Thu 14:37>
+- Support dry-run (no ingest) using direct_submit; Use "  -o
+  __dry_run=1" in personality
+
+- Fix to temporary file copy on direct_submit. Previously, would be non-writable
+  under some circumstances.
+
+* Release 0.1.21 <2015-12-16 Wed 14:37>
+Hotfix in support of BOK batch ingests.
+
+- Abort ingest if *.hdr file exists under iRODS. To disable abort (but
+  still warn), add "__test_resubmit=1" to personality.
+- Fixed duplicate EXTNAME in bok data
+- All header mods now done to PrimaryHDU and include only fields in
+  defined list (try: "fitsheader baz.fits.fz | grep MODIFIED:")
+
+* Release 0.1.18 <2015-12-07 Mon 14:37>
+nothing here
+

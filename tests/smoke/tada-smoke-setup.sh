@@ -4,8 +4,8 @@
 #
 
 #! echo "# Common setup for TADA smoke tests"
-source mars.sh
 source fsub.sh
+source mars.sh
 mars_stuff
 mars_rollback
 

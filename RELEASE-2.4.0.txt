@@ -1,0 +1,13 @@
+* 2.4.0 <2016-04-14 Thu 07:50>
+
+This updates the version numbers to match Major.Minor version of TADA puppet
+code. Previous RPM version was 0.2.17
+
+Config now read from TWO files.  One of them (/etc/tada/hiera.yaml) is
+generated from puppet.  This allows hiera to be used to specify host
+specific values such as the Valley that a Mountain should transfer
+files to.
+
+
+
+
