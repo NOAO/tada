@@ -1,6 +1,4 @@
-# List of files submitted is in: /sandbox/tada/tests/smoke/manifest.out
-# Waiting up to 210 secs for all files to be submitted...
-# Aborted after 210 seconds: "/sandbox/tada/tests/smoke/tada-test-data/short-drop/bad-date/wiyn-whirc/obj_355a.fits.fz" NOT FOUND
-Not Found: /sandbox/tada/tests/smoke/tada-test-data/short-drop/bad-date/wiyn-whirc/obj_355a.fits.fz
-Not Found: /sandbox/tada/tests/smoke/tada-test-data/short-drop/20160909/bad-instrum/obj_355b.fits.fz
-Found 2/4 items
+# List of files submitted is in: /var/log/tada/audit.db
+# Waiting up to 120 secs for all files to be submitted...
+# Aborted after 120 seconds
+# Not serviced: /sandbox/tada/tests/smoke/tada-test-data/short-drop/bad-date/wiyn-whirc/obj_355a.fits.fz

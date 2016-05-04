@@ -28,6 +28,7 @@ return_code=0
 SMOKEOUT="README-smoke-results.dropbox.txt"
 MANIFEST="$dir/manifest.out"
 ARCHLOG="/var/log/tada/archived.manifest"
+AUDITDB="/var/log/tada/audit.db"
 
 function clean_manifest () {
     rm  $MANIFEST > /dev/null
@@ -43,7 +44,18 @@ echo "# Starting tests in \"smoke.dropbox.sh\" ..."
 echo "# "
 source tada-smoke-setup.sh
 
+SRCFILES=""
 
+function insertsrc () {
+    srcpath=$1
+    SRCFILES="$SRCFILES $srcpath"
+    tele='unknown'
+    inst='unknown'
+    echo "INSERT OR REPLACE INTO audit (srcpath,telescope,instrument) VALUES ('$srcpath','$tele','$inst');" | sqlite3 $AUDITDB
+}
+
+
+    
 function sbox () {
     mtnhost="mountain.`hostname --domain`"
     statusdir="$SCRIPTDIR/remote_status"
@@ -56,21 +68,22 @@ function sbox () {
 function mdbox () {
     clean_manifest
     srcdir=$1
-    MAXRUNTIME=240  # max seconds to wait for all files to be submitted
+    MAXRUNTIME=120  # max seconds to wait for all files to be submitted
     boxhost="mountain.`hostname --domain`"
     for f in `find $srcdir \( -name "*.fits" -o -name "*.fits.fz" \)`; do
         # Force all fits files to be touched on remote (which creates event)
         add_test_personality.sh $f
         touch $f
-        #echo "SUCCESSFUL submit_to_archive; $f" >> $MANIFEST
-        echo "$f" >> $MANIFEST
+        #! echo "$f" >> $MANIFEST
+	    insertsrc $f
     done
-    echo "# List of files submitted is in: $MANIFEST"
+    echo "# List of files submitted is in: $AUDITDB"
     #rsync -aiz --password-file ~/.tada/rsync.pwd $srcdir tada@$boxhost::dropbox
     rsync -az  --password-file ~/.tada/rsync.pwd $srcdir tada@$boxhost::dropbox
     # INFO     SUCCESSFUL submit; /var/tada/cache/20141224/kp09m-hdi/c7015t0267b00.fits.fz as /noao-tuc-z1/mtn/20141223/kp09m/2014B-0711/k09h_141224_115224_zri_TADASMOKE,.fits.fz,
     echo -n "# Waiting up to $MAXRUNTIME secs for all files to be submitted..." 
-    finished-log.sh -t $MAXRUNTIME -l $ARCHLOG $MANIFEST
+    #!finished-log.sh -t $MAXRUNTIME -l $ARCHLOG $MANIFEST
+    finished-db.sh -t $MAXRUNTIME $SRCFILES
 }
 
 # Valley Drop BOX
@@ -83,13 +96,14 @@ function vdbox () {
         # Force all fits files to be touched on remote (which creates event)
         add_test_personality.sh $f
         touch $f
-        #echo "SUCCESSFUL submit_to_archive; $f" >> $MANIFEST
-        echo "$f" >> $MANIFEST
+        #!echo "$f" >> $MANIFEST
+	insertsrc $f
     done
     echo "# List of files submitted is in: $MANIFEST"
     rsync -az --password-file ~/.tada/rsync.pwd $srcdir tada@$boxhost::dropbox
     echo -n "# Waiting up to $MAXRUNTIME secs for all files to be submitted..." 
-    finished-log.sh -t $MAXRUNTIME -l $ARCHLOG $MANIFEST
+    #!finished-log.sh -t $MAXRUNTIME -l $ARCHLOG $MANIFEST
+    finished-db.sh -t $MAXRUNTIME $SRCFILES
 }
 
 ##############################################################################
@@ -98,7 +112,7 @@ tic=`date +'%s'`
 
 # - Fail gracefully with bad directory format
 # - OTF lossless fpack (even with floating point images)
-testCommand db3_1 "vdbox $tdata/short-drop/" "^\#" n 1
+testCommand db3_1 "mdbox $tdata/short-drop/" "^\#" n 1
 
 
 #############
@@ -109,7 +123,7 @@ testCommand db3_1 "vdbox $tdata/short-drop/" "^\#" n 1
 # (even between "different" names such as myfile.fits and myfile.fits.fz)
 # The result will depend on timing!  So avoid collisions across tests!
 # <date>/<instrument>/.../*.fits.fz
-#! testCommand db1_1 "mdbox $tdata/scrape/" "^\#" y
+#testCommand db1_1 "mdbox $tdata/scrape/" "^\#" y
 
 
 emins=$((`date +'%s'` - tic))
@@ -145,4 +159,4 @@ fi
 # Don't move or remove! 
 cd $origdir
 #exit $return_code
-return $return_code
+return $return_cod

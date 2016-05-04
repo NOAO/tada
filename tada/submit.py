@@ -8,9 +8,9 @@ import astropy.io.fits as pyfits
 import os
 import os.path
 from pathlib import PurePath
-import socket
+#!import socket
 import traceback
-import tempfile
+#!import tempfile
 import pathlib
 import urllib.request
 import datetime
@@ -18,8 +18,9 @@ import subprocess
 import shutil
 import magic
 import yaml
-from copy import copy
+#!from copy import copy
 import json
+import sqlite3
 
 from . import fits_utils as fu
 from . import file_naming as fn
@@ -28,12 +29,13 @@ from . import irods331 as iu
 from . import ingest_decoder as idec
 from . import config
 
+
 def audit_svc(source_pathname, archive_filename, status, metadatadict,
               ws_host='mars.sdm.noao.edu', ws_port=8000, svc_timeout=1):
     """Add audit record to svc."""
     if ws_host == None or ws_port == None:
         logging.error('Missing AUDIT host ({}) or port ({}).'
-                      .format(host,port))
+                      .format(ws_host,ws_port))
         return False
     logging.debug('Adding audit record')
     url = 'http://{}:{}/audit/add'.format(ws_host, ws_port)
@@ -70,8 +72,8 @@ RETURN: (statusBool, message, operatorMessage)"""
     # extract from qcfg ealier and pass dict (see prep_for_ingest)!!!
     arch_host = qcfg['arch_host']
     arch_port = qcfg['arch_port']
-    irods_host = qcfg['arch_irods_host']
-    irods_port = qcfg['arch_irods_port']
+    #! irods_host = qcfg['arch_irods_host']
+    #! irods_port = qcfg['arch_irods_port']
 
     archserver_url = ('http://{}:{}/?hdrUri={}'
                      .format(arch_host, arch_port, hdr_ipath))
@@ -200,7 +202,7 @@ RETURN: irods location of hdr file.
     # avoid it. So we use the only fname available: mirror_fname.
     orig_fullname = opt_params.get('filename',mirror_fname)
 
-    hdr_ifname = "None"
+    #! hdr_ifname = "None"
     try:
         # augment hdr (add fields demanded of downstream process)
         #! hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
@@ -216,6 +218,7 @@ RETURN: irods location of hdr file.
         try:
             fname_fields = fu.fix_hdr(hdr, mirror_fname,
                                       options, opt_params, **kwargs)
+            logging.debug('fix_hdr fname_fields={}'.format(fname_fields))
         except Exception as err:
             raise tex.CannotModifyHeader(
                 'Could not update FITS header of "{}"; {}'
@@ -247,7 +250,7 @@ RETURN: irods location of hdr file.
                                              orig=mirror_fname)
         hdr['DTNSANAM'] = new_basename
         new_ipath = fn.generate_archive_path(hdr, source=source) / new_basename
-        ext = fn.fits_extension(new_basename)
+        #ext = fn.fits_extension(new_basename)
         logging.debug('orig_fullname={}, new_basename={}, ext={}'
                       .format(orig_fullname, new_basename, ext))
         new_ifname = str(new_ipath)
@@ -306,6 +309,44 @@ RETURN: irods location of hdr file.
     return new_ihdr, new_ifname, hdr, newfits
     # END prep_for_ingest()
 
+# FIRST: sqlite3 audit.db < sql/audit-schema.sql
+if not os.path.exists('/var/log/tada/audit.db'):
+    con = sqlite3.connect('/var/log/tada/audit.db')
+    con.execute('''CREATE TABLE audit(
+	telescope not null,
+	instrument not null,
+	srcpath not null,
+        recorded,
+	submitted,
+	success,
+	archerr,
+	archfile
+	);''')
+    con.commit()
+else:
+    con = sqlite3.connect('/var/log/tada/audit.db')
+
+def log_audit(origfname, success, archfile, archerr, hdr,
+              do_audit=False):
+    logging.debug('log_audit({},{},{},{},{})'
+                  .format(origfname, success, archfile, archerr, hdr))
+    now = datetime.datetime.now()
+    # replace the non-primary key values with new values.
+    con.execute('INSERT OR REPLACE INTO audit VALUES (?,?,?,?,?,?,?,?)',
+                (hdr.get('DTTELESC','unknown'), # telescope
+                 hdr.get('DTINSTRU','unknown'), # instrument
+                 origfname,
+                 now, # recorded
+                 now, # submitted
+                 success,
+                 archerr,
+                 archfile
+                ))
+    con.commit()
+    #if pprms.get('do_audit',False):
+    if do_audit:
+        audit_svc(origfname, archfile, archerr, hdr)
+
 ##########
 # (-sp-) GRIM DETAILS: The Archive Ingest process is ugly and the
 # interface is not documented (AT ALL, as far as I can tell). It
@@ -357,7 +398,6 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
                    mars_host  =  qcfg.get('mars_host'),
                    mars_port  =  qcfg.get('mars_port'),
                    )
-    saved_hdr = None
 
     #!popts, pprms = fu.get_options_dict(ifname + ".options")
     popts, pprms = fu.get_options_dict(ifname) # .yaml or .options
@@ -377,15 +417,16 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     
     (success, msg, ops_msg) = http_archive_ingest(new_ihdr, qname,
                                                  qcfg=qcfg, origfname=origfname)
-    if pprms.get('do_audit',False):
-        audit_svc(origfname, destfname, ops_msg, popts)
+    log_audit(origfname, success, destfname,  ops_msg, popts,
+              do_audit=pprms.get('do_audit',False))
+
     if not success:
-        rejected = '/var/log/tada/rejected.manifest'
-        if os.path.exists(rejected):
-            with open(rejected, mode='a') as mf:
-                print('{}\t{}\t{}'
-                      .format(datetime.datetime.now(), origfname, destfname),
-                      file=mf)
+        #!rejected = '/var/log/tada/rejected.manifest'
+        #!if os.path.exists(rejected):
+        #!    with open(rejected, mode='a') as mf:
+        #!        print('{}\t{}\t{}'
+        #!              .format(datetime.datetime.now(), origfname, destfname),
+        #!              file=mf)
         logging.debug(msg)
         if moddir != None:
             os.remove(modfits)
@@ -398,12 +439,12 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
         #!logging.debug('DBG: Removed modfits={}'.format(modfits))
     logging.info('SUCCESSFUL submit_to_archive; {} as {}'
                  .format(origfname, destfname))
-    manifest = '/var/log/tada/archived.manifest'
-    if os.path.exists(manifest):
-        with open(manifest, mode='a') as mf:
-            print('{}\t{}\t{}'
-                  .format(datetime.datetime.now(), origfname, destfname),
-                  file=mf)
+    #!manifest = '/var/log/tada/archived.manifest'
+    #!if os.path.exists(manifest):
+    #!    with open(manifest, mode='a') as mf:
+    #!        print('{}\t{}\t{}'
+    #!              .format(datetime.datetime.now(), origfname, destfname),
+    #!              file=mf)
     return destfname
 
 
@@ -456,8 +497,8 @@ So, caller should not have to put this function in try/except."""
 
     success, m1, ops_msg = http_archive_ingest(new_ihdr, qname,
                                                qcfg=qcfg, origfname=origfname)
-    if pprms.get('do_audit', '0') == '1':
-        audit_svc(origfname, destfname, ops_msg, popts)
+    log_audit(origfname, success, destfname,  ops_msg, popts,
+              do_audit=pprms.get('do_audit',False))
     if not success:
         if moddir != None:
             os.remove(modfits)
@@ -495,7 +536,6 @@ def direct_submit(fitsfile, moddir,
                    mars_host  =  qcfg.get('mars_host'),
                    mars_port  =  qcfg.get('mars_port'),
                    )
-    saved_hdr = None
 
     popts = dict()
     pprms = dict()
@@ -529,8 +569,8 @@ def direct_submit(fitsfile, moddir,
         
     success,m1,ops_msg = http_archive_ingest(new_ihdr, qname,
                                          qcfg=qcfg, origfname=origfname)
-    if pprms.get('do_audit','0') == '1':
-        audit_svc(origfname, destfname, ops_msg, popts)
+    log_audit(origfname, success, destfname,  ops_msg, popts,
+              do_audit=pprms.get('do_audit',False))
     if not success:
         statusmsg = 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg)
         statuscode = 2
@@ -619,7 +659,6 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    qname = 'submit'
     qcfg, dirs = config.get_config(None,
                                    validate=False,
                                    yaml_filename=args.config)
