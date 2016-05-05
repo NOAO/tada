@@ -309,22 +309,32 @@ RETURN: irods location of hdr file.
     return new_ihdr, new_ifname, hdr, newfits
     # END prep_for_ingest()
 
+# 
 # FIRST: sqlite3 audit.db < sql/audit-schema.sql
-if not os.path.exists('/var/log/tada/audit.db'):
-    con = sqlite3.connect('/var/log/tada/audit.db')
-    con.execute('''CREATE TABLE audit(
-	telescope not null,
-	instrument not null,
-	srcpath not null,
-        recorded,
-	submitted,
-	success,
-	archerr,
-	archfile
-	);''')
-    con.commit()
-else:
-    con = sqlite3.connect('/var/log/tada/audit.db')
+# This is temporary code until the equivalent is done in Puppet everywhere.
+# Doing this here allows new TADA rpm to be installed without puppet changes.
+#!auditdb='/var/log/tada/audit.db'
+#!if not os.path.exists(auditdb):
+#!    con = sqlite3.connect(auditdb)
+#!    con.execute('''CREATE TABLE audit(
+#!	telescope not null,
+#!	instrument not null,
+#!	srcpath not null,
+#!        recorded,
+#!	submitted,
+#!	success,
+#!	archerr,
+#!	archfile,
+#!	PRIMARY KEY (telescope, instrument, srcpath)
+#!	);''')
+#!    con.commit()
+#!    con.close()
+#!    os.chmod(auditdb, 0o666)
+#!    con = sqlite3.connect('/var/log/tada/audit.db')
+#!else:
+#!    con = sqlite3.connect('/var/log/tada/audit.db')
+con = sqlite3.connect('/var/log/tada/audit.db')
+
 
 def log_audit(origfname, success, archfile, archerr, hdr,
               do_audit=False):
