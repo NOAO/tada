@@ -1,5 +1,13 @@
 #! /usr/bin/env python3
 """This file is ONLY as an aid to testing.  Not used in production TADA.
+
+The files generated will be valid FITS, but not valid to Archive
+Ingest. They should go through TADA, but fail on submit.
+
+Each file is 5760 bytes.  
+Took  14 seconds to create  10,000 files (on chimp16).
+Took 148 seconds to create 100,000 files (on chimp16).
+
 """
 
 import sys

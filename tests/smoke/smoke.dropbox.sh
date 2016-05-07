@@ -98,7 +98,7 @@ tic=`date +'%s'`
 
 # - Fail gracefully with bad directory format
 # - OTF lossless fpack (even with floating point images)
-testCommand db3_1 "vdbox $tdata/short-drop/" "^\#" n 1
+testCommand db3_1 "mdbox $tdata/short-drop/" "^\#" n 1
 
 
 #############
