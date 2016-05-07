@@ -7,7 +7,6 @@ import magic
 import socket
 import shutil
 import time
-from datetime import datetime
 from pathlib import PurePath
 
 #! from . import irods_utils as iu
@@ -170,16 +169,16 @@ def network_move(rec, qname, **kwargs):
     return True
 
 
-def logsubmit(src, dest, comment, fail=False,
-              submitlog='/var/log/tada/submit.manifest'):
-    with open(submitlog, mode='a') as f:
-        print('{timestamp}\t{status}\t{srcfname}\t{destfname}\t{msg}'
-              .format(timestamp=datetime.now().strftime('%m/%d/%y_%H:%M:%S'),
-                      status = 'FAILURE' if fail else 'SUCCESS',
-                      srcfname=src,
-                      destfname=dest,
-                      msg=comment),
-              file=f)
+#!def logsubmit(src, dest, comment, fail=False,
+#!              submitlog='/var/log/tada/submit.manifest'):
+#!    with open(submitlog, mode='a') as f:
+#!        print('{timestamp}\t{status}\t{srcfname}\t{destfname}\t{msg}'
+#!              .format(timestamp=datetime.now().strftime('%m/%d/%y_%H:%M:%S'),
+#!                      status = 'FAILURE' if fail else 'SUCCESS',
+#!                      srcfname=src,
+#!                      destfname=dest,
+#!                      msg=comment),
+#!              file=f)
 
     
 def submit(rec, qname, **kwargs):
@@ -194,7 +193,6 @@ configuration field: maximum_errors_per_record)
 
     noarc_root =  '/var/tada/anticache'
     mirror_root = '/var/tada/cache'    
-    #submitlog =  '/var/log/tada/submit.manifest'
 
     # eg. /tempZone/mountain_mirror/other/vagrant/16/text/plain/fubar.txt
     ifname = rec['filename']            # absolute path (mountain_mirror)
@@ -214,12 +212,12 @@ configuration field: maximum_errors_per_record)
     if 'FITS' == ftype :  # is FITS
         msg = 'FITS_file'
         popts, pprms = fu.get_options_dict(ifname) # .yaml or .options
-        origfname = pprms.get('filename',ifname)
+        #! origfname = pprms.get('filename',ifname)
         try:
             destfname = ts.submit_to_archive(ifname, checksum, qname, qcfg)
         except Exception as sex:
             msg = 'Failed to submit {}: {}'.format(ifname, sex)
-            logsubmit(origfname, ifname, msg, fail=True)
+            #! logsubmit(origfname, ifname, msg, fail=True)
             logging.error(msg)
             return False
             #!raise tex.SubmitException('Failed to submit {}: {}'
@@ -233,7 +231,7 @@ configuration field: maximum_errors_per_record)
             logging.debug('Remove possible options file: {}'.format(optfname))
             if os.path.exists(optfname):
                 os.remove(optfname)
-            logsubmit(origfname, destfname, msg)
+            #! logsubmit(origfname, destfname, msg)
     else: # not FITS
         msg = 'non-fits'
         destfname = ifname.replace(mirror_root, noarc_root)
@@ -242,10 +240,10 @@ configuration field: maximum_errors_per_record)
             shutil.move(ifname, destfname)
         except Exception as ex:
             msg = 'Non-FITS file: {}'.format(ex)
-            logsubmit(origfname, ifname, msg, fail=True)
+            #! logsubmit(origfname, ifname, msg, fail=True)
             logging.warning('Failed to mv non-fits file from mirror on Valley.')
             raise
-        logsubmit(ifname, destfname, 'Non-FITS file')
+        #! logsubmit(ifname, destfname, 'Non-FITS file')
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
         logging.info('Non-FITS file put in: {}'.format(destfname))
         
