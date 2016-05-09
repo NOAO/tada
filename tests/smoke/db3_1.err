@@ -1,0 +1,31 @@
+./smoke.dropbox.sh: line 35: /var/log/tada/archived.manifest: No such file or directory
+chgrp: cannot access `/var/log/tada/archived.manifest': No such file or directory
+hostname: Unknown host
+rsync: getaddrinfo: valley. 873: Name or service not known
+rsync error: error in socket IO (code 10) at clientserver.c(124) [sender=3.0.6]
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
+grep: /var/log/tada/archived.manifest: No such file or directory
