@@ -8,9 +8,7 @@ import astropy.io.fits as pyfits
 import os
 import os.path
 from pathlib import PurePath
-#!import socket
 import traceback
-#!import tempfile
 import pathlib
 import urllib.request
 import datetime
@@ -18,9 +16,7 @@ import subprocess
 import shutil
 import magic
 import yaml
-#!from copy import copy
-import json
-import sqlite3
+
 
 from . import fits_utils as fu
 from . import file_naming as fn
@@ -28,36 +24,7 @@ from . import exceptions as tex
 from . import irods331 as iu
 from . import ingest_decoder as idec
 from . import config
-
-
-def audit_svc(source_pathname, archive_filename, status, metadatadict,
-              ws_host='mars.sdm.noao.edu', ws_port=8000, svc_timeout=1):
-    """Add audit record to svc."""
-    if ws_host == None or ws_port == None:
-        logging.error('Missing AUDIT host ({}) or port ({}).'
-                      .format(ws_host,ws_port))
-        return False
-    logging.debug('Adding audit record')
-    url = 'http://{}:{}/audit/add'.format(ws_host, ws_port)
-    ddict = dict(source = source_pathname,
-                 archive = archive_filename,
-                 status = status,
-                 metadata = metadatadict,  #updated metadata fields
-                 )
-    data = bytes(json.dumps(ddict), 'utf-8')
-    req = urllib.request.Request(url)
-    req.add_header('Content-Type', 'application/json')
-    try:
-        # INSTEAD, use: https://requests.readthedocs.org/        
-        with urllib.request.urlopen(req, data=data, timeout=svc_timeout) as f:
-            response = f.read().decode('utf-8')
-            #!logging.debug('MARS: server response="{}"'.format(response))
-            return response
-    except  Exception as err:
-        logging.error('AUDIT: Error contacting service via "{}"; {}'
-                      .format(url, str(err)))
-        return False
-    return True
+from . import audit
 
 
 def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
@@ -309,53 +276,7 @@ RETURN: irods location of hdr file.
     return new_ihdr, new_ifname, hdr, newfits
     # END prep_for_ingest()
 
-# 
-# FIRST: sqlite3 audit.db < sql/audit-schema.sql
-# This is temporary code until the equivalent is done in Puppet everywhere.
-# Doing this here allows new TADA rpm to be installed without puppet changes.
-#!auditdb='/var/log/tada/audit.db'
-#!if not os.path.exists(auditdb):
-#!    con = sqlite3.connect(auditdb)
-#!    con.execute('''CREATE TABLE audit(
-#!	telescope not null,
-#!	instrument not null,
-#!	srcpath not null,
-#!        recorded,
-#!	submitted,
-#!	success,
-#!	archerr,
-#!	archfile,
-#!	PRIMARY KEY (telescope, instrument, srcpath)
-#!	);''')
-#!    con.commit()
-#!    con.close()
-#!    os.chmod(auditdb, 0o666)
-#!    con = sqlite3.connect('/var/log/tada/audit.db')
-#!else:
-#!    con = sqlite3.connect('/var/log/tada/audit.db')
-con = sqlite3.connect('/var/log/tada/audit.db')
 
-
-def log_audit(origfname, success, archfile, archerr, hdr,
-              do_audit=False):
-    logging.debug('log_audit({},{},{},{},{})'
-                  .format(origfname, success, archfile, archerr, hdr))
-    now = datetime.datetime.now()
-    # replace the non-primary key values with new values.
-    con.execute('INSERT OR REPLACE INTO audit VALUES (?,?,?,?,?,?,?,?)',
-                (hdr.get('DTTELESC','unknown'), # telescope
-                 hdr.get('DTINSTRU','unknown'), # instrument
-                 origfname,
-                 now, # recorded
-                 now, # submitted
-                 success,
-                 archerr,
-                 archfile
-                ))
-    con.commit()
-    #if pprms.get('do_audit',False):
-    if do_audit:
-        audit_svc(origfname, archfile, archerr, hdr)
 
 ##########
 # (-sp-) GRIM DETAILS: The Archive Ingest process is ugly and the
@@ -405,7 +326,7 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 
     
     cfgprms = dict(archive331 =  qcfg['archive_irods331'],
-                   mars_host  =  qcfg.get('mars_host'),
+                   mars_host  =  qcfg.get('mars_host'),  
                    mars_port  =  qcfg.get('mars_port'),
                    )
 
@@ -427,8 +348,8 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     
     (success, msg, ops_msg) = http_archive_ingest(new_ihdr, qname,
                                                  qcfg=qcfg, origfname=origfname)
-    log_audit(origfname, success, destfname,  ops_msg, popts,
-              do_audit=pprms.get('do_audit',False))
+    audit.log_audit(origfname, success, destfname,  ops_msg, popts,
+                    do_audit=pprms.get('do_audit',False))
 
     if not success:
         #!rejected = '/var/log/tada/rejected.manifest'
@@ -507,7 +428,7 @@ So, caller should not have to put this function in try/except."""
 
     success, m1, ops_msg = http_archive_ingest(new_ihdr, qname,
                                                qcfg=qcfg, origfname=origfname)
-    log_audit(origfname, success, destfname,  ops_msg, popts,
+    audit.log_audit(origfname, success, destfname,  ops_msg, popts,
               do_audit=pprms.get('do_audit',False))
     if not success:
         if moddir != None:
@@ -579,7 +500,7 @@ def direct_submit(fitsfile, moddir,
         
     success,m1,ops_msg = http_archive_ingest(new_ihdr, qname,
                                          qcfg=qcfg, origfname=origfname)
-    log_audit(origfname, success, destfname,  ops_msg, popts,
+    audit.log_audit(origfname, success, destfname,  ops_msg, popts,
               do_audit=pprms.get('do_audit',False))
     if not success:
         statusmsg = 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg)
@@ -631,10 +552,6 @@ def main():
                         default=dflt_config,
                         help='Config file. [default={}]'.format(dflt_config),
                         )
-    #!parser.add_argument('-t', '--timeout',
-    #!                    type=int,
-    #!                    help='Seconds to wait for Archive to respond',
-    #!                    )
     parser.add_argument('--trace',
                         action='store_true',
                         help='Produce stack trace on error')

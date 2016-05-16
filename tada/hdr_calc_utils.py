@@ -11,7 +11,7 @@ def http_get_propid_from_schedule(telescope, instrument, date,
     logging.debug('MARS: get PROPID from schedule; url = {}'.format(url))
     propid = None
     try:
-        with urllib.request.urlopen(url,timeout=4) as f:
+        with urllib.request.urlopen(url,timeout=6) as f:
             response = f.read().decode('utf-8')
             logging.debug('MARS: server response="{}"'.format(response))
             return response
