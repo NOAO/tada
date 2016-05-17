@@ -7,9 +7,11 @@ composite of all domes and valleys).
 import logging
 import sqlite3
 import datetime
-import urllib.request
-import json
+#import urllib.request
+#import json
 import hashlib
+import requests
+import os.path
 
 def md5(fname):
     hash_md5 = hashlib.md5()
@@ -20,63 +22,74 @@ def md5(fname):
 
 # FIRST something like: sqlite3 audit.db < sql/audit-schema.sql
 con = sqlite3.connect('/var/log/tada/audit.db')
-
-def audit_svc(source_pathname, archive_filename, status, errmsg, metadatadict,
-              ws_host='mars.sdm.noao.edu', ws_port=8000, svc_timeout=6):
+def audit_local(fields):
+    "Add audit record to local sqlite DB. (in case service is down)"
+    fnames = ['md5sum',
+              'obsday', 'telescope', 'instrument',
+              'srcpath', 'recorded', 'submitted',
+              'success',  'archerr', 'archfile',
+              ]
+    values = [fields[k] for k in fnames]
+    # replace the non-primary key values with new values.
+    con.execute('INSERT OR REPLACE INTO audit ({}) VALUES ({})'
+                .format(','.join(fnames),  ('?,' * len(fnames))[:-1]),
+                values)
+    con.commit()
+    
+def audit_svc(fields,
+              #ws_host='payson.tuc.noao.edu',
+              ws_host='valley.sdm.noao.edu',
+              ws_port=8000, svc_timeout=6):
     """Add audit record to svc."""
     if ws_host == None or ws_port == None:
         logging.error('Missing AUDIT host ({}) or port ({}).'
-                      .format(ws_host,ws_port))
+                      .format(ws_host, ws_port))
         return False
-    logging.debug('Adding audit record')
-    url = 'http://{}:{}/audit/update'.format(ws_host, ws_port)
-    ddict = dict(md5sum = md5(source_pathname),
-                 telescope = metadatadict.get('DTTELESC','unknown'),
-                 instrument = metadatadict.get('DTINSTRU','unknown'),
-                 srcpath = source_pathname,
-                 submitted = datetime.datetime.now(),
-                 success = status,
-                 archerr = errmsg,
-                 archfile = archive_filename,
-                 metadata = metadatadict,  #updated metadata fields
-                 )
-    data = bytes(json.dumps(ddict), 'utf-8')
-    req = urllib.request.Request(url)
-    req.add_header('Content-Type', 'application/json')
+    uri = 'http://{}:{}/audit/update/'.format(ws_host, ws_port)
+    fnames = ['md5sum',
+              'obsday', 'telescope', 'instrument',
+              'srcpath', 'recorded', 'submitted',
+              'success', 'archerr', 'archfile',
+              'metadata',
+              ]
+    ddict = dict()
+    for k in fnames:
+        ddict[k] = fields[k]
+    logging.debug('Adding audit record via {}; json={}'.format(uri, ddict))
     try:
-        # INSTEAD, use: https://requests.readthedocs.org/        
-        with urllib.request.urlopen(req, data=data, timeout=svc_timeout) as f:
-            response = f.read().decode('utf-8')
-            #!logging.debug('MARS: server response="{}"'.format(response))
-            return response
+        req = requests.post(uri, json=ddict)
+        return req.text
     except  Exception as err:
         logging.error('AUDIT: Error contacting service via "{}"; {}'
-                      .format(url, str(err)))
+                      .format(uri, str(err)))
         return False
     return True
 
 
-def log_audit(origfname, success, archfile, archerr, hdr,
-              do_audit=True):
+
+def log_audit(origfname, success, archfile, archerr, hdr):
+    do_audit=True #if pprms.get('do_audit',False):
     logging.debug('log_audit({},{},{},{},{}, do_audit={})'
                   .format(origfname, success, archfile, archerr, hdr,do_audit))
-    now = datetime.datetime.now()
-    # replace the non-primary key values with new values.
-    con.execute('INSERT OR REPLACE INTO audit VALUES (?,?,?,?,?,?,?,?)',
-                (hdr.get('DTTELESC','unknown'), # telescope
-                 hdr.get('DTINSTRU','unknown'), # instrument
-                 origfname,
-                 now, # recorded
-                 now, # submitted
-                 success,
-                 archerr,
-                 archfile
-                ))
-    con.commit()
-    #if pprms.get('do_audit',False):
+    now = str(datetime.datetime.now())
+    fields=dict(md5sum=md5(origfname),
+	        obsday=hdr.get('DTCALDAT'),
+	        telescope=hdr.get('DTTELESC','unknown'),
+	        instrument=hdr.get('DTINSTRU','unknown'),
+	        srcpath=origfname,
+	        recorded=now, # should match be when DOME created record
+	        submitted=now,
+	        success=success,
+	        archerr=archerr,
+	        archfile=os.path.basename(archfile),
+                metadata=hdr,
+                )
+
+    audit_local(fields)
+
     if do_audit:
         logging.debug('Update audit via service')
-        audit_svc(origfname, archfile, success, archerr, hdr)
+        audit_svc(fields)
     else:
         logging.debug('Did not update via audit service')
         

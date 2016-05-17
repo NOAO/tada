@@ -31,16 +31,12 @@ def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
 Archive Ingest via REST-like interface. 
 RETURN: (statusBool, message, operatorMessage)"""
-    #!import random # for stubbing random failures (not for production)
-
     logging.debug('EXECUTING: http_archive_ingest({}, {})'
                   .format(hdr_ipath, qname))
 
     # extract from qcfg ealier and pass dict (see prep_for_ingest)!!!
     arch_host = qcfg['arch_host']
     arch_port = qcfg['arch_port']
-    #! irods_host = qcfg['arch_irods_host']
-    #! irods_port = qcfg['arch_irods_port']
 
     archserver_url = ('http://{}:{}/?hdrUri={}'
                      .format(arch_host, arch_port, hdr_ipath))
@@ -348,8 +344,7 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     
     (success, msg, ops_msg) = http_archive_ingest(new_ihdr, qname,
                                                  qcfg=qcfg, origfname=origfname)
-    audit.log_audit(origfname, success, destfname,  ops_msg, popts,
-                    do_audit=pprms.get('do_audit',False))
+    audit.log_audit(origfname, success, destfname,  ops_msg, popts)
 
     if not success:
         #!rejected = '/var/log/tada/rejected.manifest'
@@ -428,8 +423,7 @@ So, caller should not have to put this function in try/except."""
 
     success, m1, ops_msg = http_archive_ingest(new_ihdr, qname,
                                                qcfg=qcfg, origfname=origfname)
-    audit.log_audit(origfname, success, destfname,  ops_msg, popts,
-              do_audit=pprms.get('do_audit',False))
+    audit.log_audit(origfname, success, destfname,  ops_msg, popts)
     if not success:
         if moddir != None:
             os.remove(modfits)
@@ -500,8 +494,7 @@ def direct_submit(fitsfile, moddir,
         
     success,m1,ops_msg = http_archive_ingest(new_ihdr, qname,
                                          qcfg=qcfg, origfname=origfname)
-    audit.log_audit(origfname, success, destfname,  ops_msg, popts,
-              do_audit=pprms.get('do_audit',False))
+    audit.log_audit(origfname, success, destfname,  ops_msg, popts)
     if not success:
         statusmsg = 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg)
         statuscode = 2

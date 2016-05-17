@@ -1,4 +1,12 @@
 
+class SubmitRejection(Exception):
+    """File could not be ingested into archive. (We might not even attempt to
+ingest if file is known to be invalid before hand)."""
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return repr(self.msg)
+
 class SubmitException(Exception):
     "Something went wrong with submit to archive"
     pass
