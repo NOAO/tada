@@ -20,3 +20,14 @@ else
 fi
 source $tadadir/../tada-tools/dev-scripts/irods_init.sh
 echo "#"
+
+function insertsrc () {
+    srcpath=$1
+    SRCFILES="$SRCFILES $srcpath"
+    tele='unknown'
+    inst='unknown'
+    echo "INSERT OR REPLACE INTO audit (srcpath,telescope,instrument) VALUES ('$srcpath','$tele','$inst');" | sqlite3 $AUDITDB
+    
+    gen-audit-records.sh -t $tele -i $inst -n valley.sdm.noao.edu $f  > /dev/null
+}
+

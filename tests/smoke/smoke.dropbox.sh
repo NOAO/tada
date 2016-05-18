@@ -38,21 +38,12 @@ function clean_manifest () {
 }
 
 
-
 echo "# "
 echo "# Starting tests in \"smoke.dropbox.sh\" ..."
 echo "# "
 source tada-smoke-setup.sh
 
 SRCFILES=""
-
-function insertsrc () {
-    srcpath=$1
-    SRCFILES="$SRCFILES $srcpath"
-    tele='unknown'
-    inst='unknown'
-    echo "INSERT OR REPLACE INTO audit (srcpath,telescope,instrument) VALUES ('$srcpath','$tele','$inst');" | sqlite3 $AUDITDB
-}
 
 
     
@@ -75,7 +66,7 @@ function mdbox () {
         add_test_personality.sh $f
         touch $f
         #! echo "$f" >> $MANIFEST
-	    insertsrc $f
+	insertsrc $f
     done
     echo "# List of files submitted is in: $AUDITDB"
     #rsync -aiz --password-file ~/.tada/rsync.pwd $srcdir tada@$boxhost::dropbox

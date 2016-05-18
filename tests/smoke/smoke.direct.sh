@@ -43,9 +43,9 @@ testCommand fc1_1 "fcom $tdata/basic/kp109391.fits.fz" "^\#" n 1
 # compliant
 testCommand fc2_1 "fcom $tdata/basic/kptest.fits" "^\#" n
 
-# fpack on the fly
-unpacked="$tdata/scrape/20160314/kp4m-mosaic3/mos3.75675.fits  kp4m-mosaic3"
-testCommand fs0_1 "fsub $unpacked" "^\#" n
+#!# fpack on the fly
+#!unpacked="$tdata/scrape/20160314/kp4m-mosaic3/mos3.75675.fits  kp4m-mosaic3"
+#!testCommand fs0_1 "fsub $unpacked" "^\#" n
 
 ## non-FITS; (reject, not try to ingest)
 testCommand fs1_1 "fsub $tdata/basic/uofa-mandle.jpg" "^\#" n 1

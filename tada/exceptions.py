@@ -1,11 +1,16 @@
+from . import audit
 
-class SubmitRejection(Exception):
+
+class IngestRejection(Exception):
     """File could not be ingested into archive. (We might not even attempt to
 ingest if file is known to be invalid before hand)."""
-    def __init__(self, msg):
-        self.msg = msg
+    def __init__(self, srcpath, errmsg, newhdr):
+        self.srcpath = srcpath
+        self.errmsg = errmsg
+        self.newhdr = newhdr # dict of new FITS metadata
+        audit.log_audit(srcpath, False, '',  errmsg, dict(), newhdr)
     def __str__(self):
-        return repr(self.msg)
+        return repr(self.errmsg)
 
 class SubmitException(Exception):
     "Something went wrong with submit to archive"

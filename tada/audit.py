@@ -67,15 +67,20 @@ def audit_svc(fields,
 
 
 
-def log_audit(origfname, success, archfile, archerr, hdr):
+def log_audit(origfname, success, archfile, archerr, hdr, newhdr):
     do_audit=True #if pprms.get('do_audit',False):
-    logging.debug('log_audit({},{},{},{},{}, do_audit={})'
-                  .format(origfname, success, archfile, archerr, hdr,do_audit))
+    logging.debug('log_audit({},{},{},{},{},{} do_audit={})'
+                  .format(origfname, success, archfile, archerr, hdr, newhdr,
+                          do_audit))
     now = str(datetime.datetime.now())
     fields=dict(md5sum=md5(origfname),
-	        obsday=hdr.get('DTCALDAT'),
-	        telescope=hdr.get('DTTELESC','unknown'),
-	        instrument=hdr.get('DTINSTRU','unknown'),
+                # obsday,telescope,instrument; provided by dome
+                #    unless dome never created audit record, OR
+                #    prep error prevented creating new header
+	        obsday=newhdr.get('DTCALDAT'),
+	        telescope=newhdr.get('DTTELESC','unknown'),
+	        instrument=newhdr.get('DTINSTRU','unknown'),
+                #
 	        srcpath=origfname,
 	        recorded=now, # should match be when DOME created record
 	        submitted=now,
@@ -84,7 +89,6 @@ def log_audit(origfname, success, archfile, archerr, hdr):
 	        archfile=os.path.basename(archfile),
                 metadata=hdr,
                 )
-
     audit_local(fields)
 
     if do_audit:
