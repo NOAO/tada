@@ -27,6 +27,14 @@ from . import config
 from . import audit
 
 
+qcfg, dirs = config.get_config(None,
+                               validate=False,
+                               yaml_filename='/etc/tada/tada.conf')
+auditor = audit.Auditor(qcfg.get('mars_host'),
+                        qcfg.get('mars_port'),
+                        qcfg.get('do_audit',True))
+
+
 def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
 Archive Ingest via REST-like interface. 
@@ -360,7 +368,7 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
         #raise tex.SubmitException(ops_msg)
         raise tex.IngestRejection(origfname, ops_msg, popts)
     else:
-        audit.log_audit(origfname, success, destfname,  ops_msg, popts, changed)
+        auditor.log_audit(origfname, success, destfname,  ops_msg, popts, changed)
 
     iu.irods_put331(modfits, destfname) # iput renamed FITS
     if moddir != None:
@@ -394,7 +402,7 @@ So, caller should not have to put this function in try/except."""
     if 'FITS image data' not in str(magic.from_file(fitsfile)):
         errmsg = 'Cannot ingest non-FITS file: {}'.format(fitsfile)
         logging.error(errmsg)
-        audit.log_audit(fitsfile, False, '',  errmsg, dict(), dict())
+        auditor.log_audit(fitsfile, False, '',  errmsg, dict(), dict())
         return (False, errmsg)
 
     cfgprms = dict(archive331 =  qcfg['archive_irods331'],
@@ -424,12 +432,12 @@ So, caller should not have to put this function in try/except."""
             traceback.print_exc()
         msg = str(err)
         logging.error(msg)
-        audit.log_audit(fitsfile, False, '',  str(err), dict(), popts)
+        auditor.log_audit(fitsfile, False, '',  str(err), dict(), popts)
         return (False, msg)
 
     success, m1, ops_msg = http_archive_ingest(new_ihdr, qname,
                                                qcfg=qcfg, origfname=origfname)
-    audit.log_audit(origfname, success, destfname,  ops_msg, popts, changed)
+    auditor.log_audit(origfname, success, destfname,  ops_msg, popts, changed)
     if not success:
         if moddir != None:
             os.remove(modfits)
@@ -456,9 +464,9 @@ def direct_submit(fitsfile, moddir,
                   'moddir={})'
                   .format(fitsfile, personality, personality_files, moddir))
     if 'FITS image data' not in str(magic.from_file(fitsfile)):
-        errmsg='Cannot ingest non-FITS file: {}'.format(fitsfile)
+        errmsg = 'Cannot ingest non-FITS file: {}'.format(fitsfile)
         logging.error(errmsg)
-        audit.log_audit(fitsfile, False, '',  errmsg, dict(), dict())
+        auditor.log_audit(fitsfile, False, '',  errmsg, dict(), dict())
         sys.exit(errmsg)
         
     success = True
@@ -502,7 +510,7 @@ def direct_submit(fitsfile, moddir,
         
     success,m1,ops_msg = http_archive_ingest(new_ihdr, qname,
                                          qcfg=qcfg, origfname=origfname)
-    audit.log_audit(origfname, success, destfname,  ops_msg, popts, changed)
+    auditor.log_audit(origfname, success, destfname,  ops_msg, popts, changed)
     if not success:
         statusmsg = 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg)
         statuscode = 2
@@ -586,7 +594,6 @@ def main():
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
-
     qcfg, dirs = config.get_config(None,
                                    validate=False,
                                    yaml_filename=args.config)

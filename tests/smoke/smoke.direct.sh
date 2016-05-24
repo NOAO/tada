@@ -75,6 +75,8 @@ testCommand fs6_1 "fsub $tdata/basic/kptest.fits" "^\#" n 1
 # New instrument <2016-03-17 Thu>
 testCommand fs7_1 "fsub $tdata/scrape/20160315/ct4m-arcoiris/SV_f0064.fits ct4m-arcoiris" "^\#" n
 
+# Bad propid
+#! testCommand fs8_1"fsub $tdata/basic/badpropid.fits" "^\#" n 1
 
 ###########################################
 ### pipeline_submit
