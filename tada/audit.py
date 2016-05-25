@@ -38,7 +38,8 @@ class Auditor():
         now = datetime.datetime.now().isoformat()
         today = datetime.date.today().isoformat()
         if 'DTCALDAT' not in newhdr:
-            logging.error('Could not find DTCALDAT in header, using TODAY')
+            logging.error('Could not find DTCALDAT in hdr of {}, using TODAY'
+                          .format(origfname))
         fields=dict(md5sum=md5(origfname),
                     # obsday,telescope,instrument; provided by dome
                     #    unless dome never created audit record, OR

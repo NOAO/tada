@@ -1,0 +1,2 @@
+EXECUTED: direct_submit -p /opt/tada-cli/personalities/ops/smoke.yaml  /DATA/broken/20160203/kp4m-newfirm/nhs_1.fits.fz
+FAILED: /broken/20160203/kp4m-newfirm/nhs_1.fits.fz not archived; Could not find the proposal:[2000B-0236] in the database.

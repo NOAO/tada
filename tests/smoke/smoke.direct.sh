@@ -15,7 +15,6 @@ tadadir=$(dirname $testdir)
 #tdata=$SCRIPTDIR/data
 tdata=$SCRIPTDIR/tada-test-data
 # tdata=/sandbox/tada/tests/smoke/tada-test-data
-
 # echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
 
 dir=$SCRIPTDIR
@@ -76,7 +75,7 @@ testCommand fs6_1 "fsub $tdata/basic/kptest.fits" "^\#" n 1
 testCommand fs7_1 "fsub $tdata/scrape/20160315/ct4m-arcoiris/SV_f0064.fits ct4m-arcoiris" "^\#" n
 
 # Bad propid
-#! testCommand fs8_1"fsub $tdata/basic/badpropid.fits" "^\#" n 1
+testCommand fs8_1 "fsub $tdata/broken/20160203/kp4m-newfirm/nhs_1.fits.fz" "^\#" n 2
 
 ###########################################
 ### pipeline_submit
