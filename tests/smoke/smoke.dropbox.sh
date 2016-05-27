@@ -46,7 +46,7 @@ source tada-smoke-setup.sh
 SRCFILES=""
 
 
-    
+# Get drop status from Mountain    
 function sbox () {
     mtnhost="mountain.`hostname --domain`"
     statusdir="$SCRIPTDIR/remote_status"
@@ -55,7 +55,7 @@ function sbox () {
     find $mydir -type f
 }
 
-# Mountain Drop BOX
+# drop directory to Mountain Drop BOX
 function mdbox () {
     clean_manifest
     srcdir=$1
@@ -77,7 +77,7 @@ function mdbox () {
     finished-db.sh -t $MAXRUNTIME $SRCFILES
 }
 
-# Valley Drop BOX
+# drop directory to Valley Drop BOX
 function vdbox () {
     clean_manifest
     srcdir=$1

@@ -366,20 +366,18 @@ def validate_raw_hdr(hdr, orig_fullname):
     missing = missing_in_raw_hdr(hdr)
     #!logging.debug('EXECUTE fu.validate_raw_hdr(); missing={}'.format(missing))
     if len(missing) > 0:
-        raise tex.InsufficientRawHeader(
-            'Raw FITS header is missing required metadata fields ({}) '
-            'in file {}'
-            .format(', '.join(sorted(missing)), orig_fullname))
+        msg = ('Raw FITS header is missing required metadata fields ({}) '
+               'in file {}').format(', '.join(sorted(missing)), orig_fullname)
+        raise tex.IngestRejection(orig_fullname, msg, hdr)
     
     return True    
 
 def validate_cooked_hdr(hdr, orig_fullname):
     missing = missing_in_archive_hdr(hdr)  | missing_in_filename_hdr(hdr)
     if len(missing) > 0:
-        raise tex.InsufficientArchiveHeader(
-            'Modified FITS header is missing required metadata fields ({}) '
-            'in file {}'
-            .format(', '.join(sorted(missing)), orig_fullname))
+        msg = ('Modified FITS hdr is missing required metadata fields ({}) '
+               'in file {}').format(', '.join(sorted(missing)), orig_fullname)
+        raise tex.IngestRejection(orig_fullname, msg, hdr)
     return True
 
 def validate_recommended_hdr(hdr, orig_fullname):

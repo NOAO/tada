@@ -77,6 +77,10 @@ testCommand fs7_1 "fsub $tdata/scrape/20160315/ct4m-arcoiris/SV_f0064.fits ct4m-
 # Bad propid
 testCommand fs8_1 "fsub $tdata/broken/20160203/kp4m-newfirm/nhs_1.fits.fz" "^\#" n 2
 
+# FITS header is missing required metadata fields (PROCTYPE, PRODTYPE)
+testCommand fs9_1 "fsub $tdata/broken/20160203/kp/kptest.fits.fz" "^\#" n 1
+
+
 ###########################################
 ### pipeline_submit
 ###

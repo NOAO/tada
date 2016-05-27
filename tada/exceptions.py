@@ -1,4 +1,13 @@
+from . import config
 from . import audit
+
+qcfg, dirs = config.get_config(None,
+                               validate=False,
+                               yaml_filename='/etc/tada/tada.conf')
+auditor = audit.Auditor(qcfg.get('mars_host'),
+                        qcfg.get('mars_port'),
+                        qcfg.get('do_audit',True))
+
 
 
 class IngestRejection(Exception):
@@ -8,7 +17,7 @@ ingest if file is known to be invalid before hand)."""
         self.srcpath = srcpath
         self.errmsg = errmsg
         self.newhdr = newhdr # dict of new FITS metadata
-        audit.log_audit(srcpath, False, '',  errmsg, dict(), newhdr)
+        auditor.log_audit(srcpath, False, '',  errmsg, dict(), newhdr)
     def __str__(self):
         return repr(self.errmsg)
 
