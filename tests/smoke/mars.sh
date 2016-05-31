@@ -2,7 +2,9 @@
 # PURPOSE:    Make it easy to do some MARS web services from bash
 #
 
-marsurl="http://mars.sdm.noao.edu:8000"
+#marshost=mars.sdm.noao.edu
+marshost=valley.sdm.noao.edu
+marsurl="http://$marshost:8000"
 copts="--connect-timeout 10 --max-time 600 -s -S"
 
 function mars_rollback () {

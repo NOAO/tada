@@ -75,10 +75,17 @@ testCommand fs6_1 "fsub $tdata/basic/kptest.fits" "^\#" n 1
 testCommand fs7_1 "fsub $tdata/scrape/20160315/ct4m-arcoiris/SV_f0064.fits ct4m-arcoiris" "^\#" n
 
 # Bad propid
-testCommand fs8_1 "fsub $tdata/broken/20160203/kp4m-newfirm/nhs_1.fits.fz" "^\#" n 2
+testCommand fs8_1 "fsub $tdata/broken/20160203/kp4m-newfirm/nhs_1.fits.fz" "^\#"e n 2
 
 # FITS header is missing required metadata fields (PROCTYPE, PRODTYPE)
-testCommand fs9_1 "fsub $tdata/broken/20160203/kp/kptest.fits.fz" "^\#" n 1
+testCommand fs9_1 "fsub $tdata/broken/20160203/kp/kptest.fits.fz" "^\#" y 1
+
+
+###########################################
+#echo "WARNING: ignoring remainder of tests"
+#exit $return_code
+###########################################a
+
 
 
 ###########################################
@@ -95,10 +102,6 @@ function psubmit () {
 #!testCommand ps2_1 "psubmit $tdata/basic/c4d_130901_031805_oow_g_d2.fits.fz" "^\#" n
 
 
-###########################################
-#!echo "WARNING: ignoring remainder of tests"
-#!exit $return_code
-###########################################a
 
 
 ##############################################################################

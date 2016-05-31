@@ -28,6 +28,6 @@ function insertsrc () {
     inst='unknown'
     echo "INSERT OR REPLACE INTO audit (srcpath,telescope,instrument) VALUES ('$srcpath','$tele','$inst');" | sqlite3 $AUDITDB
     
-    gen-audit-records.sh -t $tele -i $inst -n valley.sdm.noao.edu $f  > /dev/null
+    gen-audit-records.sh -t $tele -i $inst -n $marshost $f  > /dev/null
 }
 

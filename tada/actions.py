@@ -15,6 +15,17 @@ from . import diag
 from . import fits_utils as fu
 import dataq.dqutils as du
 import dataq.red_utils as ru
+from . import config
+from . import audit
+from . import exceptions as tex
+
+qcfg, dirs = config.get_config(None,
+                               validate=False,
+                               yaml_filename='/etc/tada/tada.conf')
+auditor = audit.Auditor(qcfg.get('mars_host'),
+                        qcfg.get('mars_port'),
+                        qcfg.get('do_audit',True))
+
 
 
 # +++ Add code here if TADA needs to handle additional types of files!!!
@@ -31,6 +42,12 @@ def file_type(filename):
     
 
 ##############################################################################
+### Actions
+###
+###   Form: func(queue_entry_dict[filename,checksum], queuename)
+###   RETURN: True iff successful
+###           False or exception on error
+###
 
 def network_move(rec, qname, **kwargs):
     "Transfer from Mountain to Valley"
@@ -180,7 +197,8 @@ def network_move(rec, qname, **kwargs):
 #!                      msg=comment),
 #!              file=f)
 
-    
+
+# Done against each record popped from data-queue
 def submit(rec, qname, **kwargs):
     """Try to modify headers and submit FITS to archive. If anything fails 
 more than N times, move the queue entry to Inactive. (where N is the 
@@ -199,15 +217,12 @@ configuration field: maximum_errors_per_record)
     checksum = rec['checksum']          
 
     try:
-        #! ftype = iu.irods_file_type(ifname)
         ftype = file_type(ifname)
     except Exception as ex:
-        logging.error('Execution failed: {}; ifname={}'
-                      .format(ex, ifname))
-        raise
+        logging.error('Execution failed: {}; ifname={}'.format(ex, ifname))
+        raise tex.IngestRejection(ifname, ex, popts)
         
-    logging.debug('File type for "{}" is "{}".'
-                  .format(ifname, ftype))
+    #! logging.debug('File type for "{}" is "{}".'.format(ifname, ftype))
     destfname = None
     if 'FITS' == ftype :  # is FITS
         msg = 'FITS_file'
@@ -218,10 +233,12 @@ configuration field: maximum_errors_per_record)
         except Exception as sex:
             msg = 'Failed to submit {}: {}'.format(ifname, sex)
             #! logsubmit(origfname, ifname, msg, fail=True)
-            logging.error(msg)
-            return False
+            #!logging.error(msg)
+            #!auditor.log_audit(ifname, False, destfname,  msg, popts, dict())
+            #!return False
             #!raise tex.SubmitException('Failed to submit {}: {}'
             #!                          .format(ifname, sex))
+            raise tex.IngestRejection(ifname, sex, popts)
         else:
             msg = 'SUCCESSFUL fits submit; {} as {}'.format(ifname, destfname)
             logging.debug(msg)
@@ -242,8 +259,9 @@ configuration field: maximum_errors_per_record)
             msg = 'Non-FITS file: {}'.format(ex)
             #! logsubmit(origfname, ifname, msg, fail=True)
             logging.warning('Failed to mv non-fits file from mirror on Valley.')
-            raise
-        #! logsubmit(ifname, destfname, 'Non-FITS file')
+            raise tex.IngestRejection(ifname, ex, dict())
+        auditor.log_audit(ifname, False, destfname, 'Non-FITS file',
+                          dict(), dict())
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
         logging.info('Non-FITS file put in: {}'.format(destfname))
         

@@ -35,6 +35,8 @@ class Auditor():
         logging.debug('log_audit({},{},{},{},{},{} do_svc={})'
                       .format(origfname, success, archfile, archerr,
                               hdr, newhdr, self.do_svc))
+        logging.error(archerr)
+
         now = datetime.datetime.now().isoformat()
         today = datetime.date.today().isoformat()
         if 'DTCALDAT' not in newhdr:
@@ -73,6 +75,7 @@ class Auditor():
                   'success',  'archerr', 'archfile',
         ]
         values = [fields[k] for k in fnames]
+        logging.debug('update_local ({}) = {}'.format(fnames,values))
         # replace the non-primary key values with new values.
         self.con.execute('INSERT OR REPLACE INTO audit ({}) VALUES ({})'
                          .format(','.join(fnames),  ('?,' * len(fnames))[:-1]),

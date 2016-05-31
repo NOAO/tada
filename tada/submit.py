@@ -174,6 +174,7 @@ RETURN: irods location of hdr file.
     orig_fullname = opt_params.get('filename',mirror_fname)
 
     #! hdr_ifname = "None"
+    hdr=dict()
     try:
         # augment hdr (add fields demanded of downstream process)
         #! hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
@@ -263,12 +264,12 @@ RETURN: irods location of hdr file.
         hdrfile = gen_hdr_file(newfits, new_basename)
         iu.irods_put331(hdrfile, new_ihdr)
         os.remove(hdrfile)        
-    except:
+    except Exception as err:
         #!traceback.print_exc()
-        raise
+        #! raise
         #! raise tex.SubmitException('Bad header content in file {}'
         #!                           .format(orig_fullname))
-
+        raise tex.IngestRejection(orig_fullname, str(err), hdr)
 
         
     #! iu.irods_put331(mirror_fname, new_ifname) # iput renamed FITS
@@ -347,10 +348,11 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
             moddir=None,
             **cfgprms)
     except Exception as err:
-        raise tex.IngestRejection(origfname, str(err), popts)
+        #raise tex.IngestRejection(origfname, str(err), popts)
+        #raise tex.IngestRejection(origfname, err, popts)
+        raise
         #! traceback.print_exc()
         #audit.log_audit(origfname, False, None,  ops_msg, None, None)
-    
     (success, msg, ops_msg) = http_archive_ingest(new_ihdr, qname,
                                                  qcfg=qcfg, origfname=origfname)
 
@@ -503,6 +505,7 @@ def direct_submit(fitsfile, moddir,
         if trace:
             traceback.print_exc()
         statusmsg = str(err)
+        #statusmsg = err.errmsg
         success = False
         statuscode = 1
         sys.exit(statusmsg)
@@ -530,6 +533,7 @@ def direct_submit(fitsfile, moddir,
  
 def main():
     'Direct access to TADA submit-to-archive, without using queue.'
+    #print('EXECUTING: {}\n\n'.format(' '.join(sys.argv)))
     parser = argparse.ArgumentParser(
         description='Submit file to Noao Science Archive',
         epilog='EXAMPLE: %(prog)s myfile.fits'
@@ -586,7 +590,7 @@ def main():
     logDict = yaml.load(args.logconf)
     logging.config.dictConfig(logDict)
     logging.getLogger().setLevel(log_level)
-    #logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
+    logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
 
     ############################################################################
@@ -598,8 +602,6 @@ def main():
                                    validate=False,
                                    yaml_filename=args.config)
 
-    # out=`sudo -u tada sh -c "direct_submit --loglevel=DEBUG /data/bok/20150706/d7210.0008.fits.fz -p /sandbox/tada-cli/personalities/bok.personality 2>&1"`
-    # out=`fits_submit -p bok /data/bok/20150706/d7210.0008.fits.fz `
     direct_submit(args.fitsfile, args.moddir,
                   personality_files=pers_list,
                   trace=args.trace,
