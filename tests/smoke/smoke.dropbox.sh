@@ -101,6 +101,15 @@ function vdbox () {
 
 tic=`date +'%s'`
 
+#!echo "Drop a bunch of big files to mtn"
+#!testCommand db4_1 "mdbox /data/big-drop/drop1/" "^\#" y
+#!testCommand db5_1 "mdbox /data/big-drop/drop2/" "^\#" y
+#!testCommand db6_1 "mdbox /data/big-drop/drop3/" "^\#" y
+#!
+#!echo "WARNING: ignoring remainder of tests"
+#!exit $return_code
+#!
+
 # - Fail gracefully with bad directory format
 # - OTF lossless fpack (even with floating point images)
 testCommand db3_1 "mdbox $tdata/short-drop/" "^\#" n 1

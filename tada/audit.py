@@ -27,8 +27,6 @@ class Auditor():
         self.con = sqlite3.connect('/var/log/tada/audit.db')
         self.mars_port = mars_port
         self.mars_host = mars_host
-        #mars_host='payson.tuc.noao.edu',
-        #mars_host='valley.sdm.noao.edu',
         self.do_svc = use_service #if pprms.get('do_audit',False):
 
     def log_audit(self, origfname, success, archfile, archerr, hdr, newhdr):
