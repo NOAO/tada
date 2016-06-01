@@ -429,7 +429,6 @@ So, caller should not have to put this function in try/except."""
                                                        moddir=moddir,
                                                        **cfgprms)
     except Exception as err:
-
         if trace:
             traceback.print_exc()
         msg = str(err)

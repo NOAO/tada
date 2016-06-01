@@ -29,7 +29,8 @@ class Auditor():
         self.mars_host = mars_host
         self.do_svc = use_service #if pprms.get('do_audit',False):
 
-    def log_audit(self, origfname, success, archfile, archerr, hdr, newhdr):
+    def log_audit(self, origfname, success, archfile, err, hdr, newhdr):
+        archerr = str(err)
         logging.debug('log_audit({},{},{},{},{},{} do_svc={})'
                       .format(origfname, success, archfile, archerr,
                               hdr, newhdr, self.do_svc))
@@ -56,11 +57,17 @@ class Auditor():
 	            archerr=archerr,
 	            archfile=os.path.basename(archfile),
                     metadata=hdr )
-        self.update_local(fields)
+        try:
+            self.update_local(fields)
+        except:
+            logging.error('Cound not update local audit.db')
 
         if self.do_svc:
             logging.debug('Update audit via service')
-            self.update_svc(fields)
+            try:
+                self.update_svc(fields)
+            except:
+                logging.error('Cound not update remote audit record')
         else:
             logging.debug('Did not update via audit service')
         
