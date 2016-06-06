@@ -31,47 +31,50 @@ class Auditor():
 
     def log_audit(self, localfits, origfname, success, archfile,
                   err, hdr, newhdr):
-        archerr = str(err)
-        logging.debug('log_audit({},{},{},{},{},{} do_svc={})'
-                      .format(origfname, success, archfile, archerr,
-                              hdr, newhdr, self.do_svc))
-        logging.error(archerr)
-
-        now = datetime.datetime.now().isoformat()
-        today = datetime.date.today().isoformat()
-        if 'DTCALDAT' not in newhdr:
-            logging.error('Could not find DTCALDAT in hdr of {}, using TODAY'
-                          .format(origfname))
-        fields=dict(md5sum=md5(localfits),
-                    # obsday,telescope,instrument; provided by dome
-                    #    unless dome never created audit record, OR
-                    #    prep error prevented creating new header
-	            obsday=newhdr.get('DTCALDAT',today),
-	            telescope=newhdr.get('DTTELESC','unknown'),
-	            instrument=newhdr.get('DTINSTRU','unknown'),
-                    #
-	            srcpath=origfname,
-	            recorded=now, # should match be when DOME created record
-                    #
-	            submitted=now,
-	            success=success,
-	            archerr=archerr,
-	            archfile=os.path.basename(archfile),
-                    metadata=hdr )
         try:
-            self.update_local(fields)
-        except:
-            logging.error('Cound not update local audit.db')
+            archerr = str(err)
+            logging.debug('log_audit({},{},{},{},{},{} do_svc={})'
+                          .format(origfname, success, archfile, archerr,
+                                  hdr, newhdr, self.do_svc))
+            logging.error(archerr)
 
-        if self.do_svc:
-            logging.debug('Update audit via service')
+            now = datetime.datetime.now().isoformat()
+            today = datetime.date.today().isoformat()
+            if 'DTCALDAT' not in newhdr:
+                logging.error('Could not find DTCALDAT in hdr of {}, using TODAY'
+                              .format(origfname))
+            fields=dict(md5sum=md5(localfits),
+                        # obsday,telescope,instrument; provided by dome
+                        #    unless dome never created audit record, OR
+                        #    prep error prevented creating new header
+                        obsday=newhdr.get('DTCALDAT',today),
+                        telescope=newhdr.get('DTTELESC','unknown'),
+                        instrument=newhdr.get('DTINSTRU','unknown'),
+                        #
+                        srcpath=origfname,
+                        recorded=now, # should match be when DOME created record
+                        #
+                        submitted=now,
+                        success=success,
+                        archerr=archerr,
+                        archfile=os.path.basename(archfile),
+                        metadata=hdr )
             try:
-                self.update_svc(fields)
+                self.update_local(fields)
             except:
-                logging.error('Cound not update remote audit record')
-        else:
-            logging.debug('Did not update via audit service')
-        
+                logging.error('Cound not update local audit.db')
+
+            if self.do_svc:
+                logging.debug('Update audit via service')
+                try:
+                    self.update_svc(fields)
+                except:
+                    logging.error('Cound not update remote audit record')
+            else:
+                logging.debug('Did not update via audit service')
+        except Exception as ex:
+            logging.error('auditor.log_audit() failed: {}'.format(ex))
+
     # FIRST something like: sqlite3 audit.db < sql/audit-schema.sql
     def update_local(self, fields):
         "Add audit record to local sqlite DB. (in case service is down)"
