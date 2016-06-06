@@ -269,7 +269,7 @@ RETURN: irods location of hdr file.
         #! raise
         #! raise tex.SubmitException('Bad header content in file {}'
         #!                           .format(orig_fullname))
-        raise tex.IngestRejection(orig_fullname, str(err), hdr)
+        raise tex.IngestRejection(mirror_fname, orig_fullname, str(err), hdr)
 
         
     #! iu.irods_put331(mirror_fname, new_ifname) # iput renamed FITS
@@ -347,9 +347,7 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
             persona_params=pprms,
             moddir=None,
             **cfgprms)
-    except Exception as err:
-        #raise tex.IngestRejection(origfname, str(err), popts)
-        #raise tex.IngestRejection(origfname, err, popts)
+    except: # Exception as err:
         raise
         #! traceback.print_exc()
         #audit.log_audit(origfname, False, None,  ops_msg, None, None)
@@ -368,9 +366,10 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
             os.remove(modfits)
             #!logging.debug('DBG: Removed modfits={}'.format(modfits))
         #raise tex.SubmitException(ops_msg)
-        raise tex.IngestRejection(origfname, ops_msg, popts)
+        raise tex.IngestRejection(ifname, origfname, ops_msg, popts)
     else:
-        auditor.log_audit(origfname, success, destfname,  ops_msg, popts, changed)
+        auditor.log_audit(ifname, origfname, success, destfname,
+                          ops_msg, popts, changed)
 
     iu.irods_put331(modfits, destfname) # iput renamed FITS
     if moddir != None:
@@ -404,7 +403,8 @@ So, caller should not have to put this function in try/except."""
     if 'FITS image data' not in str(magic.from_file(fitsfile)):
         errmsg = 'Cannot ingest non-FITS file: {}'.format(fitsfile)
         logging.error(errmsg)
-        auditor.log_audit(fitsfile, False, '',  errmsg, dict(), dict())
+        auditor.log_audit(fitsfile, fitsfile, False, '',
+                          errmsg, dict(), dict())
         return (False, errmsg)
 
     cfgprms = dict(archive331 =  qcfg['archive_irods331'],
@@ -433,12 +433,14 @@ So, caller should not have to put this function in try/except."""
             traceback.print_exc()
         msg = str(err)
         logging.error(msg)
-        auditor.log_audit(fitsfile, False, '',  str(err), dict(), popts)
+        auditor.log_audit(fitsfile,fitsfile, False, '',
+                          str(err), dict(), popts)
         return (False, msg)
 
     success, m1, ops_msg = http_archive_ingest(new_ihdr, qname,
                                                qcfg=qcfg, origfname=origfname)
-    auditor.log_audit(origfname, success, destfname,  ops_msg, popts, changed)
+    auditor.log_audit(fitsfile, origfname, success, destfname,
+                      ops_msg, popts, changed)
     if not success:
         if moddir != None:
             os.remove(modfits)
@@ -467,7 +469,7 @@ def direct_submit(fitsfile, moddir,
     if 'FITS image data' not in str(magic.from_file(fitsfile)):
         errmsg = 'Cannot ingest non-FITS file: {}'.format(fitsfile)
         logging.error(errmsg)
-        auditor.log_audit(fitsfile, False, '',  errmsg, dict(), dict())
+        auditor.log_audit(fitsfile, fitsfile, False, '', errmsg, dict(), dict())
         sys.exit(errmsg)
         
     success = True
@@ -512,7 +514,8 @@ def direct_submit(fitsfile, moddir,
         
     success,m1,ops_msg = http_archive_ingest(new_ihdr, qname,
                                          qcfg=qcfg, origfname=origfname)
-    auditor.log_audit(origfname, success, destfname,  ops_msg, popts, changed)
+    auditor.log_audit(fitsfile, origfname, success, destfname,
+                      ops_msg, popts, changed)
     if not success:
         statusmsg = 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg)
         statuscode = 2

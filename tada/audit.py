@@ -29,7 +29,8 @@ class Auditor():
         self.mars_host = mars_host
         self.do_svc = use_service #if pprms.get('do_audit',False):
 
-    def log_audit(self, origfname, success, archfile, err, hdr, newhdr):
+    def log_audit(self, localfits, origfname, success, archfile,
+                  err, hdr, newhdr):
         archerr = str(err)
         logging.debug('log_audit({},{},{},{},{},{} do_svc={})'
                       .format(origfname, success, archfile, archerr,
@@ -41,7 +42,7 @@ class Auditor():
         if 'DTCALDAT' not in newhdr:
             logging.error('Could not find DTCALDAT in hdr of {}, using TODAY'
                           .format(origfname))
-        fields=dict(md5sum=md5(origfname),
+        fields=dict(md5sum=md5(localfits),
                     # obsday,telescope,instrument; provided by dome
                     #    unless dome never created audit record, OR
                     #    prep error prevented creating new header
@@ -84,7 +85,7 @@ class Auditor():
         # replace the non-primary key values with new values.
         self.con.execute('INSERT OR REPLACE INTO audit ({}) VALUES ({})'
                          .format(','.join(fnames),  ('?,' * len(fnames))[:-1]),
-                         values)
+                         *values)
         self.con.commit()
     
     def update_svc(self, fields):

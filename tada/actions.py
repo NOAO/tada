@@ -220,7 +220,7 @@ configuration field: maximum_errors_per_record)
         ftype = file_type(ifname)
     except Exception as ex:
         logging.error('Execution failed: {}; ifname={}'.format(ex, ifname))
-        raise tex.IngestRejection(ifname, ex, popts)
+        raise tex.IngestRejection(ifname, ifname, ex, dict())
         
     #! logging.debug('File type for "{}" is "{}".'.format(ifname, ftype))
     destfname = None
@@ -238,7 +238,7 @@ configuration field: maximum_errors_per_record)
             #!return False
             #!raise tex.SubmitException('Failed to submit {}: {}'
             #!                          .format(ifname, sex))
-            raise tex.IngestRejection(ifname, sex, popts)
+            raise tex.IngestRejection(ifname, ifname, sex, popts)
         else:
             msg = 'SUCCESSFUL fits submit; {} as {}'.format(ifname, destfname)
             logging.debug(msg)
@@ -259,8 +259,8 @@ configuration field: maximum_errors_per_record)
             msg = 'Non-FITS file: {}'.format(ex)
             #! logsubmit(origfname, ifname, msg, fail=True)
             logging.warning('Failed to mv non-fits file from mirror on Valley.')
-            raise tex.IngestRejection(ifname, ex, dict())
-        auditor.log_audit(ifname, False, destfname, 'Non-FITS file',
+            raise tex.IngestRejection(ifname, ifname, ex, dict())
+        auditor.log_audit(ifname, ifname, False, destfname, 'Non-FITS file',
                           dict(), dict())
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
         logging.info('Non-FITS file put in: {}'.format(destfname))
