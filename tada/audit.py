@@ -8,17 +8,10 @@ import sqlite3
 import datetime
 #import urllib.request
 #import json
-import hashlib
 import requests
 import os.path
 
 
-def md5(fname):
-    hash_md5 = hashlib.md5()
-    with open(fname, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
 
 class Auditor():
     "Maintain audit records both locally (valley) and via MARS service"
@@ -29,47 +22,62 @@ class Auditor():
         self.mars_host = mars_host
         self.do_svc = use_service #if pprms.get('do_audit',False):
 
-    def log_audit(self, localfits, origfname, success, archfile,
-                  err, hdr, newhdr):
+#    def log_audit(self, localfits, origfname, success, archfile, err, hdr, newhdr):
+    def log_audit(self, prms, success, archfile, err, hdr, newhdr):
+        """Log audit record to MARS.
+        prms:: dict[filename]:: absolute dome filename
+               dict[md5sum]:: checksum of dome file
+        success:: bool; True iff ingest succeeded
+        archfile:: base filename of file in archive (if ingested)
+        hdr:: dict; orginal FITS header field/values
+        newhdr:: dict; modified FITS header field/values
+        """
         try:
+            origfname = prms.get('filename','<"filename" not provided in yaml file>')
+            md5sum = prms.get('md5sum','<"md5sum" not provided in yaml file>')
             archerr = str(err)
             logging.debug('log_audit({},{},{},{},{},{} do_svc={})'
                           .format(origfname, success, archfile, archerr,
                                   hdr, newhdr, self.do_svc))
-            logging.error(archerr)
+            logging.error('log_audit; archive ingest error: '.format(archerr))
 
             now = datetime.datetime.now().isoformat()
             today = datetime.date.today().isoformat()
-            if 'DTCALDAT' not in newhdr:
-                logging.error('Could not find DTCALDAT in hdr of {}, using TODAY'
+
+            obsday = newhdr.get('DTCALDAT',hdr.get('DTCALDAT', today))
+            if ('DTCALDAT' not in newhdr) and ('DTCALDAT' not in hdr):
+                logging.error('Could not find DTCALDAT in hdr {}, using TODAY'
                               .format(origfname))
-            fields=dict(md5sum=md5(localfits),
-                        # obsday,telescope,instrument; provided by dome
-                        #    unless dome never created audit record, OR
-                        #    prep error prevented creating new header
-                        obsday=newhdr.get('DTCALDAT',today),
-                        telescope=newhdr.get('DTTELESC','unknown'),
-                        instrument=newhdr.get('DTINSTRU','unknown'),
-                        #
-                        srcpath=origfname,
-                        recorded=now, # should match be when DOME created record
-                        #
-                        submitted=now,
-                        success=success,
-                        archerr=archerr,
-                        archfile=os.path.basename(archfile),
-                        metadata=hdr )
+            tele = newhdr.get('DTTELESC',hdr.get('DTTELESC', 'unknown'))
+            instrum = newhdr.get('DTINSTRU',hdr.get('DTINSTRU', 'unknown'))
+            fields = dict(md5sum=md5sum,
+                          # obsday,telescope,instrument; provided by dome
+                          #    unless dome never created audit record, OR
+                          #    prep error prevented creating new header
+                          obsday=obsday,
+                          telescope=tele,
+                          instrument=instrum,
+                          #
+                          srcpath=origfname,
+                          recorded=now, # should match be when DOME created record
+                          #
+                          submitted=now,
+                          success=success,
+                          archerr=archerr,
+                          archfile=os.path.basename(archfile),
+                          metadata=hdr)
+            logging.debug('log_audit: fields={}'.format(fields))
             try:
                 self.update_local(fields)
-            except:
-                logging.error('Cound not update local audit.db')
+            except Exception as ex:
+                logging.error('Could not update local audit.db; {}'.format(ex))
 
             if self.do_svc:
                 logging.debug('Update audit via service')
                 try:
                     self.update_svc(fields)
-                except:
-                    logging.error('Cound not update remote audit record')
+                except Exception as ex:
+                    logging.error('Could not update remote audit record; {}'.format(ex))
             else:
                 logging.debug('Did not update via audit service')
         except Exception as ex:
@@ -78,6 +86,7 @@ class Auditor():
     # FIRST something like: sqlite3 audit.db < sql/audit-schema.sql
     def update_local(self, fields):
         "Add audit record to local sqlite DB. (in case service is down)"
+        logging.debug('update_local ({})'.format(fields))
         fnames = ['md5sum',
                   'obsday', 'telescope', 'instrument',
                   'srcpath', 'recorded', 'submitted',
@@ -111,7 +120,7 @@ class Auditor():
                           .format(uri, ddict))
         try:
             req = requests.post(uri, json=ddict)
-            logging.debug('auditor.update_svc: response={}'.format(req.text))
+            #logging.debug('auditor.update_svc: response={}'.format(req.text))
             return req.text
         except  Exception as err:
             logging.error('AUDIT: Error contacting service via "{}"; {}'

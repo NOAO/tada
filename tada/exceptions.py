@@ -12,13 +12,13 @@ auditor = audit.Auditor(qcfg.get('mars_host'),
 class IngestRejection(Exception):
     """File could not be ingested into archive. (We might not even attempt to
 ingest if file is known to be invalid before hand)."""
-    def __init__(self, localfits, srcpath, errmsg, newhdr):
-        self.srcpath = srcpath
+    #def __init__(self, localfits, srcpath, errmsg, newhdr):
+    def __init__(self, prms, errmsg, newhdr):
+        self.prms = prms
         self.errmsg = errmsg
         self.newhdr = newhdr # dict of new FITS metadata
         #print('DBG: IngestRejection; errmsg={}'.format(errmsg))
-        auditor.log_audit(localfits, srcpath, False, '',  errmsg,
-                          dict(), newhdr)
+        auditor.log_audit(prms, False, '', errmsg, dict(), newhdr)
         
     def __str__(self):
         return str(self.errmsg)

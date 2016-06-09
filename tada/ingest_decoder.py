@@ -30,7 +30,7 @@ def decodeIngest(response):
     
     root = ET.fromstring(response)
     itype = root.get('type')
-    dpuri = root.get('dataProductUri')
+    #dpuri = root.get('dataProductUri')
     success = ((itype == 'SUCCESS') or (itype == 'SUCCESS_WITH_WARNING'))
     msg = '' if success else root.find('./message/user').text 
     #return success,'Operator:: ' + msg
@@ -63,3 +63,19 @@ def decodeIngest_240(response):
 
     return 'Operator:: ' + msg
 
+ERRORCODES = dict(
+    duplicate = 'already_exists',
+    badpropid = 'bad_propid',
+    collision = 'dup_prop_dat',
+    unknown   = 'unknown_err',
+)
+def errcode(response):
+    if exists_re.search(response):
+        return ERRORCODES['duplicate']
+    elif nonunique_propid_re.search(response):
+        return ERRORCODES['badpropid']
+    elif dup_obs_prop_re.search(response):
+        return ERRORCODES['collision']
+    else:
+        return ERRORCODES['unknown']
+    

@@ -1,12 +1,15 @@
 #!/bin/bash
 
+export PATH=/sandbox/tada-cli/scripts:$PATH
+
 ###########################################
 ### fits_submit
 ###
 function fsub () {
     ffile=$1; shift
+    add_test_personality.sh $ffile
+    pers="-p ${ffile}.yaml"
     ppath="/opt/tada-cli/personalities"
-    pers=""
     for p; do
 	    pers="$pers -p $ppath/$p/$p.yaml"
     done

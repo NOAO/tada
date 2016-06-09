@@ -7,9 +7,6 @@ import logging
 import subprocess
 import os.path
 import shutil
-from pathlib import PurePath, Path
-
-import astropy.io.fits as pyfits
 
 from . import fits_utils as fu
 
@@ -48,10 +45,10 @@ def fpack_to(fitsfile, outfile, personality=None, force=False):
             if hdr.get('BITPIX',None) == -32 or hdr.get('BITPIX',None) == -64:
                 # is floating point image
                 # Default options are lossy. Use lossless options instead.
-                subprocess.call([fpackcmd, '-S', '-g', '-q', 0, fitsfile],
+                subprocess.call([fpackcmd, '-C', '-S', '-g', '-q', 0, fitsfile],
                                 stdout=file)
             else:
-                subprocess.call([fpackcmd, '-S', fitsfile], stdout=file)
+                subprocess.call([fpackcmd, '-C', '-S', fitsfile], stdout=file)
     except subprocess.CalledProcessError as ex:
         logging.error('FAILED {}: {}; {}'
                       .format(tag, ex, ex.output.decode('utf-8')))
