@@ -19,6 +19,12 @@ else
     tar xf fits-test-data.tgz
 fi
 source $tadadir/../tada-tools/dev-scripts/irods_init.sh
+echo "# TADA packages installed:"
+yum list installed | grep tada
+yum list installed | grep dataq
+echo "# Hosts used:"
+grep _host /etc/tada/hiera.yaml
+grep _host /etc/tada/hiera.yaml
 echo "#"
 
 function insertsrc () {
