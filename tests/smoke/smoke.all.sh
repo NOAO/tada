@@ -41,6 +41,9 @@ source $SCRIPTDIR/smoke.dropbox.sh; tally
 source $SCRIPTDIR/smoke.direct.sh; tally  # test error conditions
 source $SCRIPTDIR/smoke.scrape.sh; tally  # uses direct_submit
 
+echo "tada config params used:"
+grep  "get_config got:" /var/log/tada/pop-detail.log | tail -1
+echo 
 echo "Multi-test score: passed=$(($mastertotalcnt-$masterfailcnt))/$mastertotalcnt"
 echo "Remember to:"
 echo "  1. try Portal to prove stated files can be retrieved!"

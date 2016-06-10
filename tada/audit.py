@@ -10,7 +10,7 @@ import datetime
 #import json
 import requests
 import os.path
-
+from . import ingest_decoder as dec
 
 
 class Auditor():
@@ -64,6 +64,7 @@ class Auditor():
                           submitted=now,
                           success=success,
                           archerr=archerr,
+                          errcode=dec.errcode(archerr),
                           archfile=os.path.basename(archfile),
                           metadata=hdr)
             logging.debug('log_audit: fields={}'.format(fields))
