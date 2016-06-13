@@ -23,7 +23,7 @@ echo "# TADA packages installed:"
 yum list installed | grep tada
 yum list installed | grep dataq
 echo "# Hosts used:"
-grep _host /etc/tada/* | grep -v \#
+grep _host /etc/tada/*.conf /etc/tada/hiera.yaml | grep -v \#
 echo "#"
 
 function insertsrc () {

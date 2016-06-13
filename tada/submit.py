@@ -70,17 +70,16 @@ RETURN: (statusBool, message, operatorMessage)"""
             'Problem in opening or reading connection to: '
             .format(archserver_url))
 
-    success, operator_msg = idec.decodeIngest(response)
+    success, operator_msg, itype = idec.decodeIngest(response)
     logging.debug('ARCH server: success={}, msg={}'
                   .format(success, operator_msg))
     message = operator_msg
     if not success:
-        #! operator_msg = idec.decodeIngest(response)
         message = ('HTTP response from NSA server for file {}: "{}"; {}'
                    .format(origfname, response, operator_msg))
         #raise tex.SubmitException(message)
 
-    return (success, message, operator_msg)
+    return (success, message, operator_msg, itype)
 
 
 def new_fits(orig_fitspath, changes, moddir=None):
@@ -204,10 +203,9 @@ RETURN: irods location of hdr file.
                                       options, opt_params, **kwargs)
             logging.debug('fix_hdr fname_fields={}'.format(fname_fields))
         except Exception as err:
-            raise tex.IngestRejection(opt_params,
-                                      'Could not update FITS header of "{}"; {}'
-                                      .format(orig_fullname, err),
-                                      hdr)
+            oldmsg = ('Could not update FITS header of "{}"; {}'
+                      .format(orig_fullname, err))
+            raise tex.IngestRejection(opt_params, err, hdr)
         fu.validate_cooked_hdr(hdr, orig_fullname)
         if opt_params.get('VERBOSE', False):
             fu.validate_recommended_hdr(hdr, orig_fullname)
@@ -363,7 +361,7 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     except: # Exception as err:
         raise
         #! traceback.print_exc()
-    (success, msg, ops_msg) = http_archive_ingest(new_ihdr, qname,
+    (success, msg, ops_msg, itype) = http_archive_ingest(new_ihdr, qname,
                                                  qcfg=qcfg, origfname=origfname)
 
     if not success:
@@ -447,7 +445,7 @@ So, caller should not have to put this function in try/except."""
         auditor.log_audit(pprms, False, '', str(err), popts, dict())
         return (False, msg)
 
-    success, m1, ops_msg = http_archive_ingest(new_ihdr, qname,
+    success, m1, ops_msg, itype = http_archive_ingest(new_ihdr, qname,
                                                qcfg=qcfg, origfname=origfname)
     auditor.log_audit(pprms, success, destfname, ops_msg, popts, changed)
     if not success:
@@ -522,7 +520,7 @@ def direct_submit(fitsfile, moddir,
         sys.exit(statusmsg)
 
         
-    success,m1,ops_msg = http_archive_ingest(new_ihdr, qname,
+    success,m1,ops_msg,itype = http_archive_ingest(new_ihdr, qname,
                                          qcfg=qcfg, origfname=origfname)
     auditor.log_audit(pprms, success, destfname, ops_msg, popts, changed)
     if not success:

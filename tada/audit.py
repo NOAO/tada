@@ -10,6 +10,7 @@ import datetime
 #import json
 import requests
 import os.path
+from django.utils.timezone import make_aware, now
 from . import ingest_decoder as dec
 
 
@@ -33,15 +34,15 @@ class Auditor():
         newhdr:: dict; modified FITS header field/values
         """
         try:
-            origfname = prms.get('filename','<"filename" not provided in yaml file>')
-            md5sum = prms.get('md5sum','<"md5sum" not provided in yaml file>')
+            origfname = prms.get('filename','NA-in-yaml') # "filename" not provided in yaml file
+            md5sum = prms.get('md5sum', 'NA-in-yaml') # "md5sum" not provided in yaml file
             archerr = str(err)
             logging.debug('log_audit({},{},{},{},{},{} do_svc={})'
                           .format(origfname, success, archfile, archerr,
                                   hdr, newhdr, self.do_svc))
             logging.error('log_audit; archive ingest error: '.format(archerr))
 
-            now = datetime.datetime.now().isoformat()
+            now = datetime.now().isoformat()
             today = datetime.date.today().isoformat()
 
             obsday = newhdr.get('DTCALDAT',hdr.get('DTCALDAT', today))
@@ -50,7 +51,7 @@ class Auditor():
                               .format(origfname))
             tele = newhdr.get('DTTELESC',hdr.get('DTTELESC', 'unknown'))
             instrum = newhdr.get('DTINSTRU',hdr.get('DTINSTRU', 'unknown'))
-            fields = dict(md5sum=md5sum,
+            recdic = dict(md5sum=md5sum,
                           # obsday,telescope,instrument; provided by dome
                           #    unless dome never created audit record, OR
                           #    prep error prevented creating new header
@@ -59,7 +60,7 @@ class Auditor():
                           instrument=instrum,
                           #
                           srcpath=origfname,
-                          recorded=now, # should match be when DOME created record
+                          recorded=now, # should be when DOME created record
                           #
                           submitted=now,
                           success=success,
@@ -67,16 +68,16 @@ class Auditor():
                           errcode=dec.errcode(archerr),
                           archfile=os.path.basename(archfile),
                           metadata=hdr)
-            logging.debug('log_audit: fields={}'.format(fields))
+            logging.debug('log_audit: recdic={}'.format(recdic))
             try:
-                self.update_local(fields)
+                self.update_local(recdic)
             except Exception as ex:
                 logging.error('Could not update local audit.db; {}'.format(ex))
 
             if self.do_svc:
                 logging.debug('Update audit via service')
                 try:
-                    self.update_svc(fields)
+                    self.update_svc(recdic)
                 except Exception as ex:
                     logging.error('Could not update remote audit record; {}'.format(ex))
             else:
@@ -85,15 +86,15 @@ class Auditor():
             logging.error('auditor.log_audit() failed: {}'.format(ex))
 
     # FIRST something like: sqlite3 audit.db < sql/audit-schema.sql
-    def update_local(self, fields):
+    def update_local(self, recdic):
         "Add audit record to local sqlite DB. (in case service is down)"
-        logging.debug('update_local ({})'.format(fields))
+        logging.debug('update_local ({})'.format(recdic,))
         fnames = ['md5sum',
                   'obsday', 'telescope', 'instrument',
                   'srcpath', 'recorded', 'submitted',
                   'success',  'archerr', 'archfile',
         ]
-        values = [fields[k] for k in fnames]
+        values = [recdic[k] for k in fnames]
         logging.debug('update_local ({}) = {}'.format(fnames,values))
         # replace the non-primary key values with new values.
         self.con.execute('INSERT OR REPLACE INTO audit ({}) VALUES ({})'
@@ -101,7 +102,7 @@ class Auditor():
                          *values)
         self.con.commit()
     
-    def update_svc(self, fields):
+    def update_svc(self, recdic):
         """Add audit record to svc."""
         if self.mars_host == None or self.mars_port == None:
             logging.error('Missing AUDIT host ({}) or port ({}).'
@@ -111,12 +112,12 @@ class Auditor():
         fnames = ['md5sum',
                   'obsday', 'telescope', 'instrument',
                   'srcpath', 'recorded', 'submitted',
-                  'success', 'archerr', 'archfile',
+                  'success', 'archerr', 'errcode', 'archfile',
                   'metadata',
         ]
         ddict = dict()
         for k in fnames:
-            ddict[k] = fields[k]
+            ddict[k] = recdic[k]
             logging.debug('Adding audit record via {}; json={}'
                           .format(uri, ddict))
         try:

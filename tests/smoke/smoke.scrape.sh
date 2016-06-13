@@ -10,7 +10,7 @@ tadadir=$(dirname $testdir)
 # tadadir=/sandbox/tada
 #!tdata=$SCRIPTDIR/data-scrape
 # tdata=/data/scraped/mtn_raw
-# tdata=/sandbox/tada/tests/smoke/data-scrape
+# tdata=/sandbox/tada/tests/smoke/tada-test-data/scrape
 tdata=$SCRIPTDIR/tada-test-data/scrape
 #echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
 ppath=/opt/tada-cli/personalities
@@ -30,7 +30,7 @@ echo "# Starting tests in \"smoke.scrape.sh\" ..."
 echo "# "
 source tada-smoke-setup.sh
 
-echo "Doing 15 tests"    
+echo "Doing 15 tests (using scraped files)"    
 testCommand sc1_1  "fsub $tdata/20150709/bok23m-90prime/d7212.0062.fits.fz bok23m-90prime" "^\#" n
 testCommand sc2_1  "fsub $tdata/20110101/ct13m-andicam/ir141225.0179.fits.fz ct13m-andicam" "^\#" n
 testCommand sc3_1  "fsub $tdata/20110101/ct15m-echelle/chi150724.1000.fits.fz ct15m-echelle" "^\#" n

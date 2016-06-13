@@ -8,7 +8,16 @@ export PATH=/sandbox/tada-cli/scripts:$PATH
 function fsub () {
     ffile=$1; shift
     add_test_personality.sh $ffile
+    #pers=""
     pers="-p ${ffile}.yaml"
+    if [ ! -r ${ffile}.yaml ]; then
+	md5=`md5sum ${ffile}  | cut -d ' ' -f 1`
+	cat > ${ffile}.yaml <<EOF
+params:
+  filename: ${ffile}
+  md5sum: $md5
+EOF
+    fi
     ppath="/opt/tada-cli/personalities"
     for p; do
 	    pers="$pers -p $ppath/$p/$p.yaml"

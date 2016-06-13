@@ -233,12 +233,6 @@ configuration field: maximum_errors_per_record)
             destfname = ts.submit_to_archive(ifname, checksum, qname, qcfg)
         except Exception as sex:
             msg = 'Failed to submit {}: {}'.format(ifname, sex)
-            #! logsubmit(origfname, ifname, msg, fail=True)
-            #!logging.error(msg)
-            #!auditor.log_audit(ifname, False, destfname,  msg, popts, dict())
-            #!return False
-            #!raise tex.SubmitException('Failed to submit {}: {}'
-            #!                          .format(ifname, sex))
             raise tex.IngestRejection(popts, sex, popts)
         else:
             msg = 'SUCCESSFUL fits submit; {} as {}'.format(ifname, destfname)
@@ -249,7 +243,6 @@ configuration field: maximum_errors_per_record)
             logging.debug('Remove possible options file: {}'.format(optfname))
             if os.path.exists(optfname):
                 os.remove(optfname)
-            #! logsubmit(origfname, destfname, msg)
     else: # not FITS
         msg = 'non-fits'
         destfname = ifname.replace(mirror_root, noarc_root)
@@ -258,10 +251,10 @@ configuration field: maximum_errors_per_record)
             shutil.move(ifname, destfname)
         except Exception as ex:
             msg = 'Non-FITS file: {}'.format(ex)
-            #! logsubmit(origfname, ifname, msg, fail=True)
             logging.warning('Failed to mv non-fits file from mirror on Valley.')
             raise tex.IngestRejection(dict(), ex, dict())
-        auditor.log_audit(ifname, ifname, False, destfname, 'Non-FITS file',
+
+        auditor.log_audit(dict(filename=ifname), False, destfname, 'Non-FITS file',
                           dict(), dict())
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
         logging.info('Non-FITS file put in: {}'.format(destfname))

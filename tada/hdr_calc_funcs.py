@@ -31,11 +31,11 @@ calc_func_source_fields = set([
 
 ##############################################################################
 
-def ws_lookup_propid(date, telescope, instrument, **kwargs):
-    """Return propid from schedule 
+def ws_lookup_propids(date, telescope, instrument, **kwargs):
+    """Return propids from schedule (list of one or more)
 -OR- None if cannot reach service
 -OR- 'NA' if service reachable but lookup fails."""
-    logging.debug('ws_lookup_propid; kwargs={}'.format(kwargs))
+    logging.debug('ws_lookup_propids; kwargs={}'.format(kwargs))
     host=kwargs.get('mars_host')
     port=kwargs.get('mars_port')
     if host == None or port == None:
@@ -47,9 +47,9 @@ def ws_lookup_propid(date, telescope, instrument, **kwargs):
     logging.debug('WS schedule lookup; '
                   'DTCALDAT="{}", DTTELESC="{}", DTINSTRU="{}"'
                   .format(date, telescope, instrument))
-    propid = ut.http_get_propid_from_schedule(telescope, instrument, date,
-                                              host=host, port=port)
-    return propid
+    propids = ut.http_get_propids_from_schedule(telescope, instrument, date,
+                                                host=host, port=port)
+    return propids
     
 ##############################################################################
 
@@ -68,15 +68,16 @@ def trustHdrPropid(orig, **kwargs):
     propid = orig.get('DTPROPID')
     if propid == 'BADSCRUB':
         # fallback
-
-        propid = ws_lookup_propid(orig.get('DTCALDAT'),
-                                  orig.get('DTTELESC'),
-                                  orig.get('DTINSTRU'),
-                                  **kwargs)
-        if propid == None:
+        propids = ws_lookup_propids(orig.get('DTCALDAT'),
+                                    orig.get('DTTELESC'),
+                                    orig.get('DTINSTRU'),
+                                    **kwargs)
+        if propids == None:
             return {}
+        elif len(propids) > 1:
+            return {'DTPROPID': 'SPLIT'}
         else:
-            return {'DTPROPID': propid}
+            return {'DTPROPID': propids[0]}
     else:
         return {'DTPROPID': propid}
 
@@ -84,34 +85,35 @@ def trustHdrPropid(orig, **kwargs):
 def trustSchedPropid(orig, **kwargs):
     '''Propid from schedule trumps header.  
 But if not found in schedule, use header'''
-    pid = ws_lookup_propid(orig.get('DTCALDAT'),
-                           orig.get('DTTELESC'),
-                           orig.get('DTINSTRU'),
-                           **kwargs)
-    #!if pid != orig.get('DTPROPID'):
-    #!    logging.warning('PROPIID values from header ({}) and schedule ({}) '
-    #!                    'did not match. Using value from schedule.'
-    #!                    .format(orig.get('DTPROPID'), pid))
-    if pid == None:
+    pids = ws_lookup_propids(orig.get('DTCALDAT'),
+                             orig.get('DTTELESC'),
+                             orig.get('DTINSTRU'),
+                             **kwargs)
+    if pids == None:
         return {'DTPROPID': 'NOSCHED'}
-    elif pid == 'NA':
-        return {'DTPROPID': orig.get('DTPROPID', orig.get('PROPID', 'MISSCHED'))}
+    elif pids == 'NA':
+        return {'DTPROPID': orig.get('DTPROPID',
+                                     orig.get('PROPID', 'MISSCHED'))}
+    elif len(pids) > 1:
+        return {'DTPROPID': 'SPLIT'}
     else:
-        return {'DTPROPID': pid}
+        return {'DTPROPID': pids[0]}
 
 def trustSchedOrAAPropid(orig, **kwargs):
     '''Propid from schedule trumps header.  
 But if not found in schedule, use field AAPROPID from header'''
-    pid = ws_lookup_propid(orig.get('DTCALDAT'),
-                           orig.get('DTTELESC'),
-                           orig.get('DTINSTRU'),
-                           **kwargs)
-    if pid == None:
+    pids = ws_lookup_propids(orig.get('DTCALDAT'),
+                             orig.get('DTTELESC'),
+                             orig.get('DTINSTRU'),
+                             **kwargs)
+    if pids == None:
         return {'DTPROPID': 'NOSCHED'}
-    elif pid == 'NA':
+    elif pids == 'NA':
         return {'DTPROPID': orig.get('AAPROPID', 'na')}
+    elif len(pids) > 1:
+        return {'DTPROPID': 'SPLIT'}
     else:
-        return {'DTPROPID': pid}
+        return {'DTPROPID': pids[0]}
 
 
     
