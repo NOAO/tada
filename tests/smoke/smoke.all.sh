@@ -30,7 +30,6 @@ function tally () {
 # Mountain (dome) or Valley
 #source $SCRIPTDIR/smoke.sh; tally
 #source $SCRIPTDIR/smoke.raw.sh; tally # REMOVED because uses deprecated LP
-#!$SCRIPTDIR/smoke.raw_post.sh; tally
 source $SCRIPTDIR/smoke.dropbox.sh; tally
 
 # Valley
@@ -39,7 +38,8 @@ source $SCRIPTDIR/smoke.dropbox.sh; tally
 #! $SCRIPTDIR/smoke.pipeline_submit.sh; tally
 
 source $SCRIPTDIR/smoke.direct.sh; tally  # test error conditions
-#!source $SCRIPTDIR/smoke.scrape.sh; tally  # uses direct_submit
+#!echo "WARNING: skipping scrape test!!!"
+source $SCRIPTDIR/smoke.scrape.sh; tally  # uses direct_submit
 
 echo "tada config params used:"
 grep  "get_config got:" /var/log/tada/pop-detail.log | tail -1

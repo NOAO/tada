@@ -10,7 +10,6 @@ import datetime
 #import json
 import requests
 import os.path
-from django.utils.timezone import make_aware, now
 from . import ingest_decoder as dec
 
 
@@ -42,7 +41,7 @@ class Auditor():
                                   hdr, newhdr, self.do_svc))
             logging.error('log_audit; archive ingest error: '.format(archerr))
 
-            now = datetime.now().isoformat()
+            now = datetime.datetime.now().isoformat()
             today = datetime.date.today().isoformat()
 
             obsday = newhdr.get('DTCALDAT',hdr.get('DTCALDAT', today))
@@ -95,11 +94,12 @@ class Auditor():
                   'success',  'archerr', 'archfile',
         ]
         values = [recdic[k] for k in fnames]
-        logging.debug('update_local ({}) = {}'.format(fnames,values))
+        #! logging.debug('update_local ({}) = {}'.format(fnames,values))
         # replace the non-primary key values with new values.
-        self.con.execute('INSERT OR REPLACE INTO audit ({}) VALUES ({})'
-                         .format(','.join(fnames),  ('?,' * len(fnames))[:-1]),
-                         *values)
+        sql = ('INSERT OR REPLACE INTO audit ({}) VALUES ({})'
+               .format(','.join(fnames),
+                       (('?,' * len(fnames))[:-1])))
+        self.con.execute(sql, tuple(values))
         self.con.commit()
     
     def update_svc(self, recdic):
@@ -118,8 +118,7 @@ class Auditor():
         ddict = dict()
         for k in fnames:
             ddict[k] = recdic[k]
-            logging.debug('Adding audit record via {}; json={}'
-                          .format(uri, ddict))
+        logging.debug('Adding audit record via {}; json={}'.format(uri, ddict))
         try:
             req = requests.post(uri, json=ddict)
             #logging.debug('auditor.update_svc: response={}'.format(req.text))

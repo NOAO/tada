@@ -16,9 +16,9 @@ def http_get_propids_from_schedule(telescope, instrument, date,
         with urllib.request.urlopen(url,timeout=6) as f:
             response = f.read().decode('utf-8')
             logging.debug('MARS: server response="{}"'.format(response))
-            propids = responses.split(', ')
-    except:
-        logging.error('MARS: Error contacting schedule service via {}'
-                      .format(url))
+            propids = response.split(', ')
+    except Exception as ex:
+        logging.error('MARS: Error contacting schedule service via {}; {}'
+                      .format(url, ex))
         return None
     return propids

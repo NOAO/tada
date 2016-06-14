@@ -17,7 +17,7 @@ from pprint import pprint
 import astropy.io.fits as pyfits
 import os.path
 from pathlib import PurePath
-import datetime as dt
+#!import datetime as dt
 import subprocess
 import yaml
 from astropy.utils.exceptions import AstropyWarning, AstropyUserWarning
@@ -155,11 +155,11 @@ def get_archive_header(fits_file, checksum):
     "Get the 'header' that archive ingest wants to see sent to it over TCP"
     # Only look at first/primary HDU?!!! (Header Data Unit)
     hdu = pyfits.open(fits_file)[0] # can be compressed
-    hdr_keys = set(hdu.header.keys())
+    #hdr_keys = set(hdu.header.keys())
     params = dict(filename=fits_file,
                   filesize=os.path.getsize(fits_file),
                   checksum=checksum,
-                  hdr=dhu.header,
+                  hdr=hdu.header,
               )
     return """\
 #filename = {filename}
@@ -504,19 +504,20 @@ Include fields in hdr needed to construct new filename that fullfills standards.
         new = calcfunc(hdr, **kwargs)
         logging.debug('[{}] new field values={}'.format(calcfunc.__name__, new))
         hdr.update(new)
-    try:
-        dateobs = dt.datetime.strptime(hdr['DATE-OBS'],'%Y-%m-%dT%H:%M:%S.%f')
-    except:
-        raise tex.SubmitException(
-            'Could not parse DATE-OBS field ({}) in header of: {}'
-            .format(hdr['DATE-OBS'], orig_fullname))
+    #!try:
+    #!    dateobs = dt.datetime.strptime(hdr['DATE-OBS'],'%Y-%m-%dT%H:%M:%S.%f')
+    #!except:
+    #!    raise tex.SubmitException(
+    #!        'Could not parse DATE-OBS field ({}) in header of: {}'
+    #!        .format(hdr['DATE-OBS'], orig_fullname))
     #!validate_dateobs_content(dateobs, hdr['DATE-OBS'])
     
     if hdr.get('DTPROPID') == 'BADSCRUB' or hdr.get('DTPROPID') == 'NOSCHED': 
         raise tex.SubmitException(
             'Could not create good DTPROPID from PROPID ({}) or from schedule '
-            'lookup for header of: {}'
-            .format(hdr.get('PROPID', 'NA'), orig_fullname))
+            'lookup for header of: {} (DTPROPID={})'
+            .format(hdr.get('PROPID', 'NA'), orig_fullname,
+                    hdr.get('DTPROPID')))
         
 
     #!old_return = (hdr.get('DTSITE', 'na'),
@@ -912,7 +913,7 @@ def main():
                         datefmt='%m-%d %H:%M')
     logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
-    qname = 'submit'
+    #!qname = 'submit'
     qcfg, dirs = config.get_config(None,
                                    validate=False,
                                    yaml_filename=args.config)

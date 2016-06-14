@@ -20,6 +20,7 @@ import logging
 from dateutil import tz
 import datetime as dt
 from . import hdr_calc_utils as ut
+from . import exceptions as tex
 
 calc_func_source_fields = set([
     'UTSHUT', 'INSTRUM', 'INSTRUME',
@@ -50,6 +51,9 @@ def ws_lookup_propids(date, telescope, instrument, **kwargs):
     propids = ut.http_get_propids_from_schedule(telescope, instrument, date,
                                                 host=host, port=port)
     return propids
+
+def deprecate(funcname):
+    logging.warning('Using deprecated hdr_calc_func: {}'.format(funcname))
     
 ##############################################################################
 
@@ -65,6 +69,9 @@ def fixTriplespec(orig, **kwargs):
 
     
 def trustHdrPropid(orig, **kwargs):
+    #!deprecate('trustHdrPropid')
+    #!return {}
+
     propid = orig.get('DTPROPID')
     if propid == 'BADSCRUB':
         # fallback
@@ -81,10 +88,24 @@ def trustHdrPropid(orig, **kwargs):
     else:
         return {'DTPROPID': propid}
 
+def get_propid(orig, **kwargs):
+    pids = ws_lookup_propids(orig.get('DTCALDAT'),
+                             orig.get('DTTELESC'),
+                             orig.get('DTINSTRU'),
+                             **kwargs)
+    hdrpid = orig.get('DTCALDAT', orig.get('PROPID', None))
+    if (len(pids) > 1) and (hdrpid not in pids):
+        err = ('Propid from hdr ({}) not in scheduled list of Propids {}'.
+               format(hdrpid, pids))
+        raise tex.IngestRejection(orig, err, orig)
+    return pids
 
 def trustSchedPropid(orig, **kwargs):
     '''Propid from schedule trumps header.  
 But if not found in schedule, use header'''
+    #!deprecate('trustSchedPropid')
+    #!return {}
+
     pids = ws_lookup_propids(orig.get('DTCALDAT'),
                              orig.get('DTTELESC'),
                              orig.get('DTINSTRU'),
@@ -102,18 +123,20 @@ But if not found in schedule, use header'''
 def trustSchedOrAAPropid(orig, **kwargs):
     '''Propid from schedule trumps header.  
 But if not found in schedule, use field AAPROPID from header'''
-    pids = ws_lookup_propids(orig.get('DTCALDAT'),
-                             orig.get('DTTELESC'),
-                             orig.get('DTINSTRU'),
-                             **kwargs)
-    if pids == None:
-        return {'DTPROPID': 'NOSCHED'}
-    elif pids == 'NA':
-        return {'DTPROPID': orig.get('AAPROPID', 'na')}
-    elif len(pids) > 1:
-        return {'DTPROPID': 'SPLIT'}
-    else:
-        return {'DTPROPID': pids[0]}
+    deprecate('trustSchedorAAPPropid')
+    return {}
+    #!pids = ws_lookup_propids(orig.get('DTCALDAT'),
+    #!                         orig.get('DTTELESC'),
+    #!                         orig.get('DTINSTRU'),
+    #!                         **kwargs)
+    #!if pids == None:
+    #!    return {'DTPROPID': 'NOSCHED'}
+    #!elif pids == 'NA':
+    #!    return {'DTPROPID': orig.get('AAPROPID', 'na')}
+    #!elif len(pids) > 1:
+    #!    return {'DTPROPID': 'SPLIT'}
+    #!else:
+    #!    return {'DTPROPID': pids[0]}
 
 
     
