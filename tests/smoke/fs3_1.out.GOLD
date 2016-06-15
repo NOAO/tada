@@ -1,2 +1,2 @@
 EXECUTED: direct_submit -p /opt/tada-cli/personalities/ops/smoke.yaml -p /sandbox/tada/tests/smoke/tada-test-data/basic/kp109391.fits.fz.yaml /DATA/basic/kp109391.fits.fz
-Could not parse DATE-OBS field (2004-12-16) in header of: /basic/kp109391.fits.fz
+Could not create good DTPROPID from PROPID (04b-0455) or from schedule lookup for header of: /basic/kp109391.fits.fz (DTPROPID=BADSCRUB)

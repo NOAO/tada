@@ -18,10 +18,20 @@ see:
   </message>
 </ingest>
 
+ <ingest type="SUCCESS_WITH_WARNING" dataProductUri="/noao-tuc-z1/mtn/20141126/soar/soar/psi_141127_002219_ori_TADASMOKE.hdr">
+  <message type="DP_NON_CRITICAL_KEYWORD_BAD_VALUE">
+    <user>ETL failed to parse bad keyword value. keyword:[EQUINOX] value:[unavail] Storing null value for keyword instead. ETL exception msg was:
+For input string: &quot;unavail&quot;</user>
+  </message>
+</ingest>
+
+
 '''
 
 def decodeIngest(response):
     'response:: XML-string http-response from nsaarchive'
+    mtype = ''
+    msg = ''
 
 #!    # Handle old style response (from NSA version 2.4.0)
 #!    if response[0] != "<":
@@ -33,9 +43,12 @@ def decodeIngest(response):
     itype = root.get('type')
     #dpuri = root.get('dataProductUri')
     success = ((itype == 'SUCCESS') or (itype == 'SUCCESS_WITH_WARNING'))
-    msg = '' if success else root.find('./message/user').text 
+    #msg = '' if success else root.find('./message/user').text 
+    if not success:
+        msg = root.find('./message/user').text
+        mtype = root.find('./message').get('type')
     #return success,'Operator:: ' + msg
-    return success, msg, itype
+    return success, msg, mtype
 
 ###############################################################################
 

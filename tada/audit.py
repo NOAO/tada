@@ -39,7 +39,9 @@ class Auditor():
             logging.debug('log_audit({},{},{},{},{},{} do_svc={})'
                           .format(origfname, success, archfile, archerr,
                                   hdr, newhdr, self.do_svc))
-            logging.error('log_audit; archive ingest error: '.format(archerr))
+            if not success:
+                logging.error('log_audit; archive ingest error: '
+                              .format(archerr))
 
             now = datetime.datetime.now().isoformat()
             today = datetime.date.today().isoformat()
