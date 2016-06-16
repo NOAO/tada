@@ -57,8 +57,8 @@ class Auditor():
                           #    unless dome never created audit record, OR
                           #    prep error prevented creating new header
                           obsday=obsday,
-                          telescope=tele,
-                          instrument=instrum,
+                          telescope=tele.lower(),
+                          instrument=instrum.lower(),
                           #
                           srcpath=origfname,
                           recorded=now, # should be when DOME created record

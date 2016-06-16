@@ -501,7 +501,12 @@ Include fields in hdr needed to construct new filename that fullfills standards.
                                 .format(funcname))
     logging.debug('calc_funcs={}'.format([f.__name__ for f in calc_funcs]))
     for calcfunc in calc_funcs:
-        new = calcfunc(hdr, **kwargs)
+        try:
+            new = calcfunc(hdr, **kwargs)
+        except Exception as ex:
+            raise tex.InvalidHeader(
+                'Could not apply hdr_calc_funcs ({}) to {}; {}'
+                .format(funcname, orig_fullname, ex))
         logging.debug('[{}] new field values={}'.format(calcfunc.__name__, new))
         hdr.update(new)
     #!try:

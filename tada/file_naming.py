@@ -206,8 +206,8 @@ e.g. k4k_140923_024819_uri.fits.fz"""
     # Do NOT allow any "u" parts to the generated filename
     if require_known:
         if (site, telescope, instrument) not in stiLUT:
-            msg=('Unknown combination of SITE({}), TELESCOPE({}), '
-                 'and INSTRUMENT({}) in stiLUT (for {})'
+            msg=('Unknown combination for stiLUT: SITE({}), TELESCOPE({}), '
+                 'and INSTRUMENT({}) (in {})'
                  .format(site, telescope, instrument,  orig))
             raise tex.NotInLut(msg)
         if proctype not in procLUT:

@@ -93,43 +93,57 @@ missingreqRE = re.compile(r"header is missing required metadata fields")
 baddateRE = re.compile(r"Could not parse DATE-OBS field")
 '''Could not parse DATE-OBS field (2004-12-16) in header of: /sandbox/tada/tests/smoke/tada-test-data/basic/kp109391.fits.fz'''
 
+stilutRE = re.compile(r"Unknown combination for stiLUT:")
+'''Unknown combination for stiLUT: SITE(ct), TELESCOPE(ct09m), and
+INSTRUMENT(biw) (in /var/tada/cache/20160616/ct09m-biw/f177.fits.fz)'''
+
+
 # these must be searched in order. First MatchFunc to return True wins.
 ERRMAP = [
-    # ERRCODE,  MatchFunc, ShortDesc
-    ('DUPFITS', existsRE.search,      'Already stored in Archive'),
-    ('BADPROP', dup_propRE.search,    'Unique propid not found' ),
-    ('COLLIDE', dup_obspropRE.search, 'Multi-files match date + propid'),
-    ('NOPROP',  prop_not_foundRE.search, 'Propid not in Archive DB'),
-    ('MISSREQ', missingreqRE.search,   'Missing required metadata'),
-    ('BADDATE', baddateRE.search,     'DATE-OBS bad format'),
-    ('NOTFITS', nonfitsRE.search,     'Cannot ingest non-FITS file'),
-    ('none',    None,                 'No error'),
-    ('UNKNOWN', None,                 'Unknown error'),
+    # ERRCODE,  MatchREGEX,       ShortDesc
+    ('DUPFITS', existsRE,         'Already stored in Archive'),
+    ('BADPROP', dup_propRE,       'Unique propid not found' ),
+    ('COLLIDE', dup_obspropRE,    'Multi-files match date + propid'),
+    ('NOPROP',  prop_not_foundRE, 'Propid not in Archive DB'),
+    ('MISSREQ', missingreqRE,     'Missing required metadata'),
+    ('BADDATE', baddateRE,        'DATE-OBS bad format'),
+    ('NOTFITS', nonfitsRE,        'Cannot ingest non-FITS file'),
+    ('STILUT',  stilutRE,         'Prefix table missing entry'),
+    ('none',    None,             'No error'),
+    ('UNKNOWN', None,             'Unknown error'),
 ]
 
-
 def errcode(response):
-    if existsRE.search(response):
-        return 'DUPFITS'
-    elif dup_propRE.search(response):
-        return 'BADPROP'
-    elif dup_obspropRE.search(response):
-        return 'COLLIDE'
-    elif prop_not_foundRE.search(response):
-        return 'NOPROP'
-    elif missingreqRE.search(response):
-        return 'MISSREQ'
-    elif baddateRE.search(response):
-        return 'BADDATE'
-    elif nonfitsRE.search(response):
-        return 'NOTFITS',
-    elif len(response.strip()) == 0:
-        return 'none'
-    else:
-        logging.error('errcode cannot code for error message: {}'
-                      .format(response))
-        return 'UNKNOWN'
-    
+    for name, regex, desc in ERRMAP:
+        if regex == None:
+            return name
+        if regex.search(response):
+            return name
+    logging.error('errcode cannot code for error message: {}'.format(response))
+    return 'UNKNOWN'
+
+#!def OLD_errcode(response):
+#!    if existsRE.search(response):
+#!        return 'DUPFITS'
+#!    elif dup_propRE.search(response):
+#!        return 'BADPROP'
+#!    elif dup_obspropRE.search(response):
+#!        return 'COLLIDE'
+#!    elif prop_not_foundRE.search(response):
+#!        return 'NOPROP'
+#!    elif missingreqRE.search(response):
+#!        return 'MISSREQ'
+#!    elif baddateRE.search(response):
+#!        return 'BADDATE'
+#!    elif nonfitsRE.search(response):
+#!        return 'NOTFITS',
+#!    elif len(response.strip()) == 0:
+#!        return 'none'
+#!    else:
+#!        logging.error('errcode cannot code for error message: {}'
+#!                      .format(response))
+#!        return 'UNKNOWN'
+#!    
 
 
 

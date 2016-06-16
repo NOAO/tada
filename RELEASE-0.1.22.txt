@@ -1,8 +1,0 @@
-12/17/2015
-
-- Support dry-run (no ingest) using direct_submit; Use "  -o
-  __dry_run=1" in personality
-
-- Fix to temporary file copy on direct_submit. Previously, would be non-writable
-  under some circumstances.
-
