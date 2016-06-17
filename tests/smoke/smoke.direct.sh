@@ -74,8 +74,8 @@ testCommand fs6_1 "fsub $tdata/basic/kptest.fits" "^\#" n 1
 # New instrument <2016-03-17 Thu>
 testCommand fs7_1 "fsub $tdata/scrape/20160315/ct4m-arcoiris/SV_f0064.fits ct4m-arcoiris" "^\#" n
 
-# Bad propid
-testCommand fs8_1 "fsub $tdata/broken/20160203/kp4m-newfirm/nhs_1.fits.fz" "^\#"e n 2
+# WAS Bad propid; Now Schedule trumps on non-split so is ok.
+testCommand fs8_1 "fsub $tdata/broken/20160203/kp4m-newfirm/nhs_1.fits.fz" "^\#"e n
 
 # FITS header is missing required metadata fields (PROCTYPE, PRODTYPE)
 testCommand fs9_1 "fsub $tdata/broken/20160203/kp/kptest.fits.fz" "^\#" n 1

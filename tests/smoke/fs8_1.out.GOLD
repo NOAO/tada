@@ -1,2 +1,3 @@
-EXECUTED: direct_submit -p /opt/tada-cli/personalities/ops/smoke.yaml -p /sandbox/tada/tests/smoke/tada-test-data/broken/20160203/kp4m-newfirm/nhs_1.fits.fz.yaml /DATA/broken/20160203/kp4m-newfirm/nhs_1.fits.fz
-FAILED: /broken/20160203/kp4m-newfirm/nhs_1.fits.fz not archived; Could not find the proposal:[2000B-0236] in the database.
+SUCCESS: archived /broken/20160203/kp4m-newfirm/nhs_1.fits.fz 
+# Added provisional name for k4n_151005_023255_ori_TADASMOKE.fits.fz
+

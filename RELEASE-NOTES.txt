@@ -1,3 +1,23 @@
+* Release 2.5.0 <2016-06-17 Fri>
+Always trust schedule. After gaining experience using the TAC
+schedule, we have come to believe it should be trusted more than the
+FITS header for Propid.  However, when the schedule indicates a split
+night (multiple proposals in one observing night) the schedule
+necessary but not sufficient.  For split nights, we use the Propid
+from the header as long is it is in the schedule for the night.  We've
+added a "default" for each instrument to the schedule so that every
+day does not have be entered for every instrument.  All "*trust*"
+functions used in personalities ("calchdr" section) are deprecated
+(they do nothing except emit warning).
+
+Because of the strong reliance on the TAC schedule for Propid, this
+release is tightly tied to the MARS schedule service. We no longer
+view that service as optional.  If the schedule service is down,
+Archive Ingest will be rejected.  Changes to the MARS schedule service
+were made to support this release.
+
+
+
 * Release 2.4.0 <2016-04-14 Thu 07:50>
 This updates the version numbers to match Major.Minor version of TADA puppet
 code. Previous RPM version was 0.2.17

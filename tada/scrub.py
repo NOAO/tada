@@ -26,6 +26,7 @@ from . import exceptions as tex
 #  2015B-0115
 # BAD EXAMPLES
 #  15B-0115
+#  04b-0115
 
 
 valid_dtpropids = set(['wiyn','noao','soar','smarts', 'tspec', 'BADSCRUB'])
@@ -38,12 +39,11 @@ def scrub_propid(value, hdr):
         return value
 
     if '20' != value[:2] and len(value) == 8:
-        new = '20'+value
+        new = '20'+value.upper()
         if propidRE.match(new):
             return new
-    # For Propid, we MAY do schedule lookup downstream. Always 
-    # do lookup if DTPROPID=BADSCRUB.
-    return 'BADSCRUB'
+    # (Before ingest attempt, Propid must be in list returned by schedule)
+    return 'BADSCRUB.{}'.format(value)
 
 
 

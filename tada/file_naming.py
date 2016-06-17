@@ -85,7 +85,7 @@ stiLUT = {
     ('kp', 'kp4m', 'flamingos'): 'k4f',  
     ('kp', 'kp35m', 'whirc'):    'kww',  
     ('kp', 'wiyn', 'whirc'):     'kww',  # added
-    ('kp', 'kp35m', 'bench'):     'kwb',  
+    ('kp', 'wiyn', 'bench'):     'kwb',  # changed tele (kp35m) <2016-06-17 Fri>
     ('kp', 'kp35m', 'minimo/ice'):'kwi',  
     ('kp', 'kp35m', '(p)odi'):    'kwo',  
     ('kp', 'kp21m', 'mop/ice'):   'k21i',  

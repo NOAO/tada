@@ -17,6 +17,7 @@ expanded to spaces to handle the command line argument limitation.
 '''
 
 import logging
+import urllib.request
 from dateutil import tz
 import datetime as dt
 from . import hdr_calc_utils as ut
@@ -32,6 +33,28 @@ calc_func_source_fields = set([
 
 ##############################################################################
 
+# propid=`curl 'http://127.0.0.1:8000/schedule/propid/kp4m/kosmos/2016-02-01/'`
+def http_get_propids_from_schedule(telescope, instrument, date,
+                                  host=None, port=8000):
+    '''Use MARS web-service to get PROPIDs given: Telescope, Instrument,
+    Date of observation.  There will be multiple propids listed on split nights.
+    '''
+    url = ('http://{}:{}/schedule/propid/{}/{}/{}/'
+           .format(host, port, telescope, instrument, date))
+    logging.debug('MARS: get PROPID from schedule; url = {}'.format(url))
+    propids = []
+    try:
+        with urllib.request.urlopen(url,timeout=6) as f:
+            response = f.read().decode('utf-8')
+            logging.debug('MARS: server response="{}"'.format(response))
+            propids = [pid.strip() for pid in response.split(',')]
+            return propids
+    except Exception as ex:
+        logging.error('MARS: Error contacting schedule service via {}; {}'
+                      .format(url, ex))
+        return []
+    return propids # Should never happen
+
 def ws_lookup_propids(date, telescope, instrument, **kwargs):
     """Return propids from schedule (list of one or more)
 -OR- None if cannot reach service
@@ -40,20 +63,20 @@ def ws_lookup_propids(date, telescope, instrument, **kwargs):
     host=kwargs.get('mars_host')
     port=kwargs.get('mars_port')
     if host == None or port == None:
-        logging.error('Missing MARS host ({}) or port ({}).'
-                      .format(host,port))
-        return None
+        logging.error('Missing MARS host ({}) or port ({}).'.format(host,port))
+        return []
 
     # telescope, instrument, date = ('kp4m', 'kosmos', '2016-02-01')
     logging.debug('WS schedule lookup; '
                   'DTCALDAT="{}", DTTELESC="{}", DTINSTRU="{}"'
                   .format(date, telescope, instrument))
-    propids = ut.http_get_propids_from_schedule(telescope, instrument, date,
-                                                host=host, port=port)
+    propids = http_get_propids_from_schedule(telescope, instrument, date,
+                                             host=host, port=port)
     return propids
 
-def deprecate(funcname):
-    logging.warning('Using deprecated hdr_calc_func: {}'.format(funcname))
+def deprecate(funcname, *msg):
+    logging.warning('Using deprecated hdr_calc_func: {}'
+                    .format(funcname, msg))
     
 ##############################################################################
 
@@ -69,56 +92,73 @@ def fixTriplespec(orig, **kwargs):
 
     
 def trustHdrPropid(orig, **kwargs):
-    #!deprecate('trustHdrPropid')
-    #!return {}
+    deprecate('trustHdrPropid', 'Now we ALWAYS trust schedule.')
+    return {}
 
-    propid = orig.get('DTPROPID')
-    if propid == 'BADSCRUB':
-        # fallback
-        propids = ws_lookup_propids(orig.get('DTCALDAT'),
-                                    orig.get('DTTELESC'),
-                                    orig.get('DTINSTRU'),
-                                    **kwargs)
-        if propids == None:
-            return {}
-        elif len(propids) > 1:
-            return {'DTPROPID': 'SPLIT'}
-        else:
-            return {'DTPROPID': propids[0]}
-    else:
-        return {'DTPROPID': propid}
+#!    propid = orig.get('DTPROPID')
+#!    if propid == 'BADSCRUB':
+#!        # fallback
+#!        propids = ws_lookup_propids(orig.get('DTCALDAT'),
+#!                                    orig.get('DTTELESC'),
+#!                                    orig.get('DTINSTRU'),
+#!                                    **kwargs)
+#!        if propids == None:
+#!            return {}
+#!        elif len(propids) > 1:
+#!            return {'DTPROPID': 'SPLIT'}
+#!        else:
+#!            return {'DTPROPID': propids[0]}
+#!    else:
+#!        return {'DTPROPID': propid}
 
-def get_propid(orig, **kwargs):
+def set_dtpropid(orig, **kwargs):
     pids = ws_lookup_propids(orig.get('DTCALDAT'),
                              orig.get('DTTELESC'),
                              orig.get('DTINSTRU'),
                              **kwargs)
-    hdrpid = orig.get('DTCALDAT', orig.get('PROPID', None))
-    if (len(pids) > 1) and (hdrpid not in pids):
-        err = ('Propid from hdr ({}) not in scheduled list of Propids {}'.
-               format(hdrpid, pids))
-        raise tex.IngestRejection(orig, err, orig)
-    return pids
+    if len(pids) == 0:
+        return {'DTPROPID': 'NONE'} # no svc connect?
+    logging.debug('Schedule propids ({}, {}, {}) = {}'
+                  .format(orig.get('DTCALDAT'),
+                          orig.get('DTTELESC'),
+                          orig.get('DTINSTRU'),
+                          pids))
+
+    hdrpid = orig.get('DTPROPID', orig.get('PROPID', None))
+    if hdrpid in pids:
+        return {'DTPROPID': hdrpid}
+    else:
+        if len(pids) > 1: # split night
+            err = ('Propid from hdr ({}) not in scheduled list of Propids {}'.
+                   format(hdrpid, pids))
+            raise tex.IngestRejection(orig, err, orig)
+        else: # not split, hdr doesn't match schedule
+            logging.warning(
+            'Ignoring header propid {} that does not match schedule. Using {}.'
+                .format(hdrpid, pids[0]))
+            return {'DTPROPID': pids[0]}
+    return {'DTPROPID': 'NONE'} # this should never happen!
+
 
 def trustSchedPropid(orig, **kwargs):
     '''Propid from schedule trumps header.  
 But if not found in schedule, use header'''
-    #!deprecate('trustSchedPropid')
-    #!return {}
-
-    pids = ws_lookup_propids(orig.get('DTCALDAT'),
-                             orig.get('DTTELESC'),
-                             orig.get('DTINSTRU'),
-                             **kwargs)
-    if pids == None:
-        return {'DTPROPID': 'NOSCHED'}
-    elif pids == 'NA':
-        return {'DTPROPID': orig.get('DTPROPID',
-                                     orig.get('PROPID', 'MISSCHED'))}
-    elif len(pids) > 1:
-        return {'DTPROPID': 'SPLIT'}
-    else:
-        return {'DTPROPID': pids[0]}
+    deprecate('trustSchedPropid')
+    return {}
+#!
+#!    pids = ws_lookup_propids(orig.get('DTCALDAT'),
+#!                             orig.get('DTTELESC'),
+#!                             orig.get('DTINSTRU'),
+#!                             **kwargs)
+#!    if pids == None:
+#!        return {'DTPROPID': 'NOSCHED'}
+#!    elif pids == 'NA':
+#!        return {'DTPROPID': orig.get('DTPROPID',
+#!                                     orig.get('PROPID', 'MISSCHED'))}
+#!    elif len(pids) > 1:
+#!        return {'DTPROPID': 'SPLIT'}
+#!    else:
+#!        return {'DTPROPID': pids[0]}
 
 def trustSchedOrAAPropid(orig, **kwargs):
     '''Propid from schedule trumps header.  

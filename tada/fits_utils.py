@@ -509,13 +509,11 @@ Include fields in hdr needed to construct new filename that fullfills standards.
                 .format(funcname, orig_fullname, ex))
         logging.debug('[{}] new field values={}'.format(calcfunc.__name__, new))
         hdr.update(new)
-    #!try:
-    #!    dateobs = dt.datetime.strptime(hdr['DATE-OBS'],'%Y-%m-%dT%H:%M:%S.%f')
-    #!except:
-    #!    raise tex.SubmitException(
-    #!        'Could not parse DATE-OBS field ({}) in header of: {}'
-    #!        .format(hdr['DATE-OBS'], orig_fullname))
-    #!validate_dateobs_content(dateobs, hdr['DATE-OBS'])
+    new = hf.set_dtpropid(hdr, **kwargs)
+    logging.debug('Updating DTPROPID from {} => {}'
+                  .format(hdr.get('DTPROPID'),
+                          new.get('DTPROPID')))
+    hdr.update(new)
     
     if hdr.get('DTPROPID') == 'BADSCRUB' or hdr.get('DTPROPID') == 'NOSCHED': 
         raise tex.SubmitException(
