@@ -79,7 +79,7 @@ testCommand dart1_1 "fsub $tdata/broken/20160203/kp/kptest.fits.fz" "^\#" n 1
 
 fits=$tdata/broken/20160203/kp4m-newfirm/nhs_1.fits.fz
 personalities="-p $tdata/broken/20160203/kp4m-newfirm/nhs_1.fits.fz.yaml\
-  -p /opt/tada-cli/personalities/ops/smoke.yaml"
+  -p /var/tada/personalities/ops/smoke.yaml"
 testCommand dart2_1 "direct_submit --loglevel DEBUG $personalities $fits" "^\#" y 1
 
 

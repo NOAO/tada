@@ -214,12 +214,22 @@ RETURN: irods location of hdr file.
         if jidt == 'plain':
             jobid = pathlib.PurePath(mirror_fname).parts[-2]
             tag = jobid
+        elif jidt == 'obsmicro':
+            # use microseconds from DATE-OBS
+            logging.debug('Using microseconds from DATE-OBS: {} of {}'
+                          .format(hdr['DATE-OBS'], mirror_fname))
+            parts = hdr['DATE-OBS'].split('.')
+            jobid = '0' if len(parts) < 2 else parts[1]
+            tag = jobid if tag == '' else (jobid + '_' + tag)
         elif jidt == 'seconds': 
             # hundredths of a second since 1/1/2015
             jobid = str(int((datetime.datetime.now()
                              - datetime.datetime(2015,1,1)) 
                             .total_seconds()*100))
             tag = jobid if tag == '' else (jobid + '_' + tag)
+        else:
+            logging.warning('Got got unexpect value {} for "jobid_type" in personality file.'
+                            .format(jidt))
 
         #ext = fn.fits_extension(orig_fullname)
         ext = fn.fits_extension(mirror_fname)

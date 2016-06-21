@@ -1,2 +1,2 @@
-EXECUTED: direct_submit -p /opt/tada-cli/personalities/ops/smoke.yaml -p /sandbox/tada/tests/smoke/tada-test-data/broken/20160203/kp/kptest.fits.fz.yaml /DATA/broken/20160203/kp/kptest.fits.fz
+EXECUTED: direct_submit -p /var/tada/personalities/ops/smoke.yaml -p /sandbox/tada/tests/smoke/tada-test-data/broken/20160203/kp/kptest.fits.fz.yaml /DATA/broken/20160203/kp/kptest.fits.fz
 Modified FITS header is missing required metadata fields (PROCTYPE, PRODTYPE) in file /broken/20160203/kp/kptest.fits.fz

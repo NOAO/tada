@@ -18,7 +18,7 @@ params:
   md5sum: $md5
 EOF
     fi
-    ppath="/opt/tada-cli/personalities"
+    ppath="/var/tada/personalities"
     for p; do
 	    pers="$pers -p $ppath/$p/$p.yaml"
     done

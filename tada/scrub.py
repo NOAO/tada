@@ -7,7 +7,7 @@ SIDE-EFFECT; hdr may be modified
 '''
 import re
 import datetime as dt
-import time as tt
+#import time as tt
 import logging
 import collections
 
@@ -70,7 +70,7 @@ def scrub_propid(value, hdr):
 dateobsRE = re.compile(r'''
   (?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})  # date
   ((T|[ ])                     # date/time separator; "T" or space
-   (?P<hour>\d{2}):(?P<min>\d{2}):(?P<sec>\d{2})(?P<nano>\.\d+)? # time
+   (?P<hour>\d{2}):(?P<min>\d{2}):(?P<sec>\d{2})(?P<micro>\.\d+)? # time
   )?                           # time is optional
 ''', flags=re.VERBOSE)
 
@@ -83,21 +83,12 @@ def parse_dateobs(dtstr, timestr=None):
         return None
 
     md = m.groupdict()    
-    # "UTC epoch"
-    #!if 'T' in hdr['DATE-OBS']: 
-    #!    fmt = '%Y-%m-%dT%H:%M:%S.%f' 
-    #!    dateobs = datetime.datetime.strptime(hdr['DATE-OBS'],fmt)
-    #!elif ' ' in hdr['DATE-OBS']:
-    #!    fmt = '%Y-%m-%d %H:%M:%S.%f' 
-    #!    dateobs = datetime.datetime.strptime(hdr['DATE-OBS'],fmt)
-    #!else:
-    #!    fmt = '%Y-%m-%d'
-    #!    dateobs = datetime.datetime.strptime(hdr['DATE-OBS'][:10],fmt)
     
     date = dt.date(int(md['year']), int(md['month']), int(md['day']))
     if md['hour']:
-        nano = float(md['nano']) if md['nano'] else 0
-        time = dt.time(int(md['hour']), int(md['min']), int(md['sec']), 0)
+        
+        micro = int(float(md['micro'])*1000000) if md['micro'] else 0
+        time = dt.time(int(md['hour']), int(md['min']), int(md['sec']), micro)
         return dt.datetime.combine(date,time)
     elif timestr != None:
         if len(timestr) > 8:
@@ -152,15 +143,19 @@ yyyy-mm-ddThh:mm:ss.nnnnnnnnn'''
     #!                                               hdr['TIME-OBS']))
     #!else:
     dateobs = parse_dateobs(hdr['DATE-OBS'], timestr=hdr.get('TIME-OBS'))
+    logging.debug('DBG-1: {}'.format(dateobs))
 
     #!dtstr = (dateobs+dt.timedelta(microseconds=1)).isoformat()
     dtstr = dateobs.isoformat()
+    logging.debug('DBG-2: {}'.format(dtstr))
     logging.debug('SCRUB: normalize_dateobs; dtstr = {}'.format(dtstr))
     if dateobs.microsecond == 0:
         dtstr += '.0' # make parsing easier
     # dtstr => e.g. '2002-12-25T00:00:00.000001'
+    logging.debug('DBG-3: {}'.format(dtstr))
     validate_dateobs_content(dateobs, dtstr)
     hdr['DATE-OBS'] = dtstr   # save normalized version
+    logging.debug('normalize_dateobs({}) => {}'.format(hdr['ODATEOBS'],dtstr))
     #!return dateobs
     return dtstr
 

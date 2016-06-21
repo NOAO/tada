@@ -37,7 +37,7 @@ source tada-smoke-setup.sh
 
 
 ## bad DATE-OBS content
-testCommand fc1_1 "fcom $tdata/basic/kp109391.fits.fz" "^\#" n 1
+testCommand fc1_1 "fcom $tdata/basic/kp109391.fits.fz" "^\#" n 0
 
 # compliant
 testCommand fc2_1 "fcom $tdata/basic/kptest.fits" "^\#" n

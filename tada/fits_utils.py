@@ -785,11 +785,14 @@ def fits_compliant(fits_file_list,
         all_missing_recommended.update(missing_recommended)
         if (len(missing_raw) + len(missing_cooked)) > 0:
             valid = False
-
+        new_basename = 'NA'
         if show_stdfname:
-            new_basename = fn.generate_fname(hdr, fn.fits_extension(ffile),
-                                             orig=ffile,
-                                             require_known=False)
+            try:
+                new_basename = fn.generate_fname(hdr, fn.fits_extension(ffile),
+                                                 orig=ffile,
+                                                 require_known=False)
+            except Exception as ex:
+                logging.warning('Could not generate archive fname; {}'.format(ex))
             if not quiet:
                 print('{} produced from {}'.format(new_basename, ffile))
         if show_values:
