@@ -45,7 +45,7 @@ def md5(fname):
     return hash_md5.hexdigest()
 
 
-def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA'):
+def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA', ipfx='irods://'):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
 Archive Ingest via REST-like interface. 
 RETURN: (statusBool, message, operatorMessage)"""
@@ -56,8 +56,8 @@ RETURN: (statusBool, message, operatorMessage)"""
     arch_host = qcfg['arch_host']
     arch_port = qcfg['arch_port']
 
-    archserver_url = ('http://{}:{}/?hdrUri={}'
-                     .format(arch_host, arch_port, hdr_ipath))
+    archserver_url = ('http://{}:{}/?hdrUri={}{}'
+                     .format(arch_host, arch_port, ipfx, hdr_ipath))
     logging.debug('archserver_url = {}'.format(archserver_url))
 
     response = ''
