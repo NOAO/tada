@@ -285,19 +285,23 @@ this function.'''
     #logging.debug('DBG: generate_archive_path({},source={}'.format(hdr,source))
     if source == 'raw':
         return PurePath('/noao-tuc-z1/mtn',
-                         hdr['DTCALDAT'].replace('-',''),
-                         hdr['DTTELESC'],
-                         hdr['DTPROPID'])
+                        hdr['DTCALDAT'].replace('-',''),
+                        hdr['DTTELESC'],
+                        hdr['DTPROPID'])
     elif source == 'dome':
         return PurePath('/noao-tuc-z1/mtn',
-                         hdr['DTCALDAT'].replace('-',''),
-                         hdr['DTTELESC'],
-                         hdr['DTPROPID'])
+                        hdr['DTCALDAT'].replace('-',''),
+                        hdr['DTTELESC'],
+                        hdr['DTPROPID'])
     elif source == 'pipeline':
-        return PurePath('/noao-tuc-z1/pipeline',
-                        hdr['DTSUBMIT'],
-                        hdr['PLQUEUE'],
-                        hdr['PLQNAME'])
+        #!return PurePath('/noao-tuc-z1/pipeline',
+        #!                hdr['DTSUBMIT'],
+        #!                hdr['PLQUEUE'],
+        #!                hdr['PLQNAME'])
+        return PurePath('/noao-tuc-z1/pipe',
+                        hdr['DTCALDAT'].replace('-',''),
+                        hdr['DTTELESC'],
+                        hdr['DTPROPID'])
     else:
         raise Exception('Unrecognized source type: "{}"'.format(source))
     # END
