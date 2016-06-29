@@ -17,7 +17,7 @@ SCRIPT=$(readlink -e $0)     #Absolute path to this script
 SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script is in
 testdir=$(dirname $SCRIPTDIR)
 tadadir=$(dirname $testdir)
-tdata=$SCRIPTDIR/data
+tdata=$SCRIPTDIR/tada-test-data
 # tdata=/sandbox/tada/tests/smoke/data
 
 dir=$SCRIPTDIR
@@ -31,23 +31,18 @@ return_code=0
 SMOKEOUT="README-smoke-results.pipeline_submit.txt"
 
 echo ""
-echo "Starting tests in \"$dir\" ..."
+echo "Starting tests in \"smoke.pipeline_submit.sh\" ..."
 echo ""
 echo ""
+source tada-smoke-setup.sh
 
-function ingest () {
-    ffile=$1; shift
-    pipeline_submit $ffile 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
-}
-
-
-testCommand ps1_1 "ingest $tdata/uofa-mandle.jpg" "^\#" n
-testCommand ps2_1 "ingest $tdata/c4d_130901_031805_oow_g_d2.fits.fz" "^\#" n
+testCommand ps1_1 "fsub $tdata/basic/uofa-mandle.jpg pipeline-mosaic3" "^\#" n 1
+testCommand ps2_1 "fsub $tdata/basic/obj_355_VR_v1.fits.fz pipeline-mosaic3" "^\#" n
 
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"
 #!exit $return_code
-###########################################a
+###########################################
 
 
 ##############################################################################

@@ -235,7 +235,7 @@ RETURN: irods location of hdr file.
         ext = fn.fits_extension(mirror_fname)
         if source == 'pipeline':
             #new_basename = hdr.get('PLDSID','no_PLDSID_given') + ".fits.fz"
-            new_basename = orig_fullname
+            new_basename = os.path.basename(orig_fullname)
             logging.debug('Source=pipeline so using basename:{}'
                           .format(new_basename))
         else:
