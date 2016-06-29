@@ -34,7 +34,7 @@ function tally () {
 # Valley
 #! $SCRIPTDIR/smoke.fits_compliant.sh; tally
 #! $SCRIPTDIR/smoke.fits_submit.sh; tally
-#! $SCRIPTDIR/smoke.pipeline_submit.sh; tally
+$SCRIPTDIR/smoke.pipeline_submit.sh; tally
 
 source $SCRIPTDIR/smoke.direct.sh; tally  # test error conditions
 #!echo "WARNING: skipping scrape test!!!"

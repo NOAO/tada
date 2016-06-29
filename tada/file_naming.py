@@ -144,7 +144,9 @@ prodLUT = {
     'expmap':              'e',   
     'graphics (size)':     'gn',   
     'weight':              'w',   
-    'nota':                'u',   
+    'nota':                'u',
+    'wtmap':               '-',  # Found in pipeline, not used for name
+    'resampled':           '-',  # Found in pipeline, not used for name
     }
 
 def fits_extension(fname):

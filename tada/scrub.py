@@ -143,16 +143,13 @@ yyyy-mm-ddThh:mm:ss.nnnnnnnnn'''
     #!                                               hdr['TIME-OBS']))
     #!else:
     dateobs = parse_dateobs(hdr['DATE-OBS'], timestr=hdr.get('TIME-OBS'))
-    logging.debug('DBG-1: {}'.format(dateobs))
 
     #!dtstr = (dateobs+dt.timedelta(microseconds=1)).isoformat()
     dtstr = dateobs.isoformat()
-    logging.debug('DBG-2: {}'.format(dtstr))
     logging.debug('SCRUB: normalize_dateobs; dtstr = {}'.format(dtstr))
     if dateobs.microsecond == 0:
         dtstr += '.0' # make parsing easier
     # dtstr => e.g. '2002-12-25T00:00:00.000001'
-    logging.debug('DBG-3: {}'.format(dtstr))
     validate_dateobs_content(dateobs, dtstr)
     hdr['DATE-OBS'] = dtstr   # save normalized version
     logging.debug('normalize_dateobs({}) => {}'.format(hdr['ODATEOBS'],dtstr))

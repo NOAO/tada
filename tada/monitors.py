@@ -59,7 +59,7 @@ to ANTICACHE."""
         super().__init__(patterns=self.patterns)
 
     def pushfile(self, fullfname):
-        logging.debug('DBG-0; pushfile({})'.format(fullfname))
+        logging.debug('Monitor: pushfile({})'.format(fullfname))
         try:
             cmdstr = ('dqcli --pushfile "{}"'.format(fullfname))
             logging.debug('EXECUTING: {}'.format(cmdstr))
@@ -75,7 +75,7 @@ to ANTICACHE."""
     def on_moved(self, event):
         if isinstance(event, watchdog.events.DirMovedEvent):
             return None
-        logging.debug('DBG-0: on_moved; {}'.format(event.dest_path))
+        #logging.debug('DBG-0: on_moved; {}'.format(event.dest_path))
         if os.path.exists(event.dest_path):
             # for rsync: moved from tmp file to final filename
             self.new_file(event.dest_path)
@@ -85,7 +85,7 @@ to ANTICACHE."""
     def on_modified(self, event):
         if isinstance(event, watchdog.events.DirModifiedEvent):
             return None
-        logging.debug('DBG-0: on_modified; {}'.format(event.src_path))
+        #logging.debug('DBG-0: on_modified; {}'.format(event.src_path))
         # So we can trigger event with "touch"
         if os.path.exists(event.src_path):
             self.new_file(event.src_path)
@@ -96,9 +96,7 @@ to ANTICACHE."""
         
     def valid_dir(self, ifname):
         """Validate directory structure sent to dropbox."""
-        logging.debug('DBG-1: valid_dir={}'.format(ifname))
         pp = PurePath(ifname).relative_to(PurePath(self.dropdir))
-        #logging.debug('DBG-3: parts={}'.format(pp.parts))
         if len(pp.parts) < 3:
             logging.error('File in dropbox has invalid parts.'
                           ' Path must start with "20YYMMDD/<instrum>/..."'
@@ -142,7 +140,6 @@ to ANTICACHE."""
                 anticachename += '.fz'
             
             fp.fpack_to(ifname, cachename, personality=pdict)
-            logging.debug('DBG-2: Copy drop to cache={}'.format(cachename))
 
 
             # Combine all personalities into one and send that to valley.,
@@ -166,7 +163,6 @@ to ANTICACHE."""
             logging.error('PushEventHandler.new_file FAILED with {}; {}'
                           .format(ifname, ex))
             logging.error(traceback.format_exc())
-        logging.debug('DBG-3: {}'.format(ifname))
 
     def options_from_yamls(self, ifname):
         """Returned combined options and parameters as single dict formed by 
@@ -221,7 +217,7 @@ to ANTICACHE."""
 
 def push_drops(watch_dir = '/var/tada/dropbox',
                status_dir = '/var/tada/statusbox'):
-    logging.debug('DBG-0: push_drops()')
+    #logging.debug('DBG-0: push_drops()')
     os.makedirs(watch_dir, exist_ok=True)
     os.makedirs(status_dir, exist_ok=True)
     logging.info('Watching directory: {}'.format(watch_dir))

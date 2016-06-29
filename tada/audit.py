@@ -33,14 +33,14 @@ class Auditor():
         newhdr:: dict; modified FITS header field/values
         """
         try:
-            origfname = prms.get('filename','NA-in-yaml') # "filename" not provided in yaml file
-            md5sum = prms.get('md5sum', 'NA-in-yaml') # "md5sum" not provided in yaml file
+            origfname = prms.get('filename','filename-NA-in-yaml') 
+            md5sum = prms.get('md5sum', 'md5sum-NA-in-yaml')
             archerr = str(err)
             logging.debug('log_audit({},{},{},{},{},{} do_svc={})'
                           .format(origfname, success, archfile, archerr,
                                   hdr, newhdr, self.do_svc))
             if not success:
-                logging.error('log_audit; archive ingest error: '
+                logging.error('log_audit; archive ingest error: {}'
                               .format(archerr))
 
             now = datetime.datetime.now().isoformat()
