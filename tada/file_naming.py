@@ -73,7 +73,8 @@ stiLUT = {
     ('ct', 'ct15m', 'arcon'):    'c15s',  
     ('ct', 'ct13m', 'andicam'):  'c13a',  
     ('ct', 'ct1m', 'y4kcam'):    'c1i',  
-    ('ct', 'ct09m', 'arcon'):    'c09i',  
+    #('ct', 'ct09m', 'arcon'):    'c09i',  
+    ('ct', 'ct09m', 'ccd_imager'): 'c09i', # renamed from arcon
     ('ct', 'ctlab', 'cosmos'):   'clc',  
     ('kp', 'kp4m', 'mosaic'):    'k4m',  
     ('kp', 'kp4m', 'mosaic3'):   'k4m',  # added
