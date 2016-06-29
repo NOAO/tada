@@ -1,9 +1,10 @@
-* Release 2.5.7 <2016-06-29 Wed>
+* Release 2.5.8 <2016-06-29 Wed>
 - Add instrument: ccd_imager
 - change personality location to /var/tada
 - add jobid_type=obsmicro for additional field in Archive filename
   using DATE-OBS microseconds (for arcoiris)
 - add IRODS prefix to HDR path for call to Archive Ingest service
+
 * Release 2.5.0 <2016-06-17 Fri>
 Always trust schedule. After gaining experience using the TAC
 schedule, we have come to believe it should be trusted more than the
