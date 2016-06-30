@@ -20,7 +20,7 @@ import logging
 import urllib.request
 from dateutil import tz
 import datetime as dt
-from . import hdr_calc_utils as ut
+#from . import hdr_calc_utils as ut
 from . import exceptions as tex
 
 calc_func_source_fields = set([
@@ -91,9 +91,9 @@ def fixTriplespec(orig, **kwargs):
     return  new
 
     
-def trustHdrPropid(orig, **kwargs):
-    deprecate('trustHdrPropid', 'Now we ALWAYS trust schedule.')
-    return {}
+#!def trustHdrPropid(orig, **kwargs):
+#!    deprecate('trustHdrPropid', 'Now we ALWAYS trust schedule.')
+#!    return {}
 
 #!    propid = orig.get('DTPROPID')
 #!    if propid == 'BADSCRUB':
@@ -140,11 +140,11 @@ def set_dtpropid(orig, **kwargs):
     return {'DTPROPID': 'NONE'} # this should never happen!
 
 
-def trustSchedPropid(orig, **kwargs):
-    '''Propid from schedule trumps header.  
-But if not found in schedule, use header'''
-    deprecate('trustSchedPropid')
-    return {}
+#!def trustSchedPropid(orig, **kwargs):
+#!    '''Propid from schedule trumps header.  
+#!But if not found in schedule, use header'''
+#!    deprecate('trustSchedPropid')
+#!    return {}
 #!
 #!    pids = ws_lookup_propids(orig.get('DTCALDAT'),
 #!                             orig.get('DTTELESC'),

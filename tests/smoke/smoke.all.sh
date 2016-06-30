@@ -31,6 +31,8 @@ function tally () {
 #source $SCRIPTDIR/smoke.sh; tally
 #source $SCRIPTDIR/smoke.raw.sh; tally # REMOVED because uses deprecated LP
 
+source $SCRIPTDIR/smoke.dropbox.sh; tally
+
 # Valley
 #! $SCRIPTDIR/smoke.fits_compliant.sh; tally
 #! $SCRIPTDIR/smoke.fits_submit.sh; tally
@@ -40,7 +42,6 @@ source $SCRIPTDIR/smoke.scrape.sh; tally  # uses direct_submit
 source $SCRIPTDIR/smoke.pipeline_submit.sh; tally
 
 
-source $SCRIPTDIR/smoke.dropbox.sh; tally
 
 echo "tada config params used:"
 grep  "get_config got:" /var/log/tada/pop-detail.log | tail -1

@@ -18,8 +18,6 @@ import magic
 import yaml
 import hashlib
 
-
-
 from . import fits_utils as fu
 from . import file_naming as fn
 from . import exceptions as tex
@@ -228,8 +226,9 @@ RETURN: irods location of hdr file.
                             .total_seconds()*100))
             tag = jobid if tag == '' else (jobid + '_' + tag)
         else:
-            logging.warning('Got got unexpect value {} for "jobid_type" in personality file.'
-                            .format(jidt))
+            logging.warning(('Got unexpected value {} for "jobid_type"'
+                             ' in personality file.'
+                             .format(jidt)))
 
         #ext = fn.fits_extension(orig_fullname)
         ext = fn.fits_extension(mirror_fname)

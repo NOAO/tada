@@ -6,11 +6,20 @@ composite of all domes and valleys).
 import logging
 import sqlite3
 import datetime
+import hashlib
 #import urllib.request
 #import json
 import requests
 import os.path
 from . import ingest_decoder as dec
+
+def md5(fname):
+    hash_md5 = hashlib.md5()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
 
 
 class Auditor():
@@ -21,20 +30,63 @@ class Auditor():
         self.mars_port = mars_port
         self.mars_host = mars_host
         self.do_svc = use_service #if pprms.get('do_audit',False):
+        self.fstops = set(['dome',
+                           'mountain:dropbox',
+                           'mountain:queue',
+                           'mountain:cache',
+                           'mountain:anticache',
+                           'valley:dropbox',
+                           'valley:queue',
+                           'valley:cache',
+                           'valley:anticache',
+                           'archive'])
+
+    def set_fstop(self, md5sum, fstop, dome_host=None, mtn_host=None, val_host=None):
+        """Update audit service with hhe most downstream stop of FITS file"""
+        logging.debug('AUDIT.set_fstop({}, {})'.format(md5sum, fstop))
+        uri = 'http://{}:{}/audit/update/'.format(self.mars_host, self.mars_port)
+        if fstop not in self.fstops:
+            logging.error('AUDIT: unknown fstop value ({}). Should be one of:{}'
+                          .format(fstop, self.fstops))
+            return False
+
+        ddict = dict(md5sum=md5sum, fstop=fstop)
+        machine = fstop.split(':')[0]
+        if machine == 'dome':
+            ddict['dome_host'] = dome_host
+        elif machine == 'mountain':
+            ddict['mountain_host'] = mtn_host
+        elif machine == 'valley':
+            ddict['valley_host'] = val_host
+
+        try:
+            logging.debug('DBG-1: uri={}, ddict={}'.format(uri,ddict))
+            response = requests.post(uri, json=ddict)
+            logging.debug('DBG-2: uri={}, response={}'.format(uri,response))
+            return response.text
+        except  Exception as err:
+            logging.error('AUDIT: Error contacting service via "{}"; {}'
+                          .format(uri, str(err)))
+            return False
+        return True
 
 #    def log_audit(self, localfits, origfname, success, archfile, err, hdr, newhdr):
     def log_audit(self, prms, success, archfile, err, hdr, newhdr):
         """Log audit record to MARS.
         prms:: dict[filename]:: absolute dome filename
                dict[md5sum]:: checksum of dome file
-        success:: bool; True iff ingest succeeded
+        success:: True, False, None; True iff ingest succeeded
         archfile:: base filename of file in archive (if ingested)
         hdr:: dict; orginal FITS header field/values
         newhdr:: dict; modified FITS header field/values
         """
         try:
-            origfname = prms.get('filename','filename-NA-in-yaml') 
+            origfname = prms.get('filename','filename-NA-in-yaml')
             md5sum = prms.get('md5sum', 'md5sum-NA-in-yaml')
+            if ('filename' in prms) and ('md5sum' not in prms):
+                # We have a file but no md5sum
+                md5sum = md5(prms['filename'])
+
             archerr = str(err)
             logging.debug('log_audit({},{},{},{},{},{} do_svc={})'
                           .format(origfname, success, archfile, archerr,

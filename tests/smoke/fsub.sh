@@ -11,8 +11,8 @@ function fsub () {
     #pers=""
     pers="-p ${ffile}.yaml"
     if [ ! -r ${ffile}.yaml ]; then
-	md5=`md5sum ${ffile}  | cut -d ' ' -f 1`
-	cat > ${ffile}.yaml <<EOF
+	    md5=`md5sum ${ffile}  | cut -d ' ' -f 1`
+	    cat > ${ffile}.yaml <<EOF
 params:
   filename: ${ffile}
   md5sum: $md5

@@ -9,6 +9,7 @@ import socket
 import shutil
 import time
 from pathlib import PurePath
+import hashlib
 
 #! from . import irods_utils as iu
 from . import submit as ts
@@ -27,6 +28,13 @@ auditor = audit.Auditor(qcfg.get('mars_host'),
                         qcfg.get('mars_port'),
                         qcfg.get('do_audit',True))
 
+
+def md5(fname):
+    hash_md5 = hashlib.md5()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
 
 
 # +++ Add code here if TADA needs to handle additional types of files!!!
@@ -53,6 +61,9 @@ def file_type(filename):
 def network_move(rec, qname, **kwargs):
     "Transfer from Mountain to Valley"
     logging.debug('EXECUTING network_move()')
+    thishost = socket.getfqdn()
+    md5sum = md5(rec['filename'])
+    auditor.set_fstop(md5sum, 'mountain:cache', mtn_host=thishost)
     for p in ['qcfg', 'dirs']:
         if p not in kwargs:
             raise Exception(
@@ -75,12 +86,13 @@ def network_move(rec, qname, **kwargs):
     sync_root =  'rsync://tada@{}/cache'.format(qcfg['valley_host'])
     valley_root = '/var/tada/cache'
     fname = rec['filename']            # absolute path
-    thishost = socket.getfqdn()
+    popts, pprms = fu.get_options_dict(fname) # .yaml or .options
     if thishost == qcfg.get('valley_host',None):
         logging.error(('Current host ({}) is same as "valley_host" ({}). '
                       'Not moving file!').format(thishost,
                                                  qcfg.get('valley_host')))
         return None
+
 
     logging.debug('source_root={}, fname={}'.format(source_root, fname))
     if fname.find(source_root) == -1:
@@ -169,6 +181,7 @@ def network_move(rec, qname, **kwargs):
         return False
 
     # successfully transfered to Valley
+    auditor.set_fstop(md5sum, 'valley:cache', val_host=qcfg.get('valley_host'))
     logging.debug('rsync output:{}'.format(out))
     logging.info('Successfully moved file from {} to {}'
                  .format(newfname, sync_root))
@@ -184,6 +197,7 @@ def network_move(rec, qname, **kwargs):
                         .format(valley_host, dq_port, ex ))
         logging.error('push_to_q stack: {}'.format(du.trace_str()))
         raise
+    auditor.set_fstop(md5sum, 'valley:queue')
     return True
 
 
@@ -205,7 +219,10 @@ def submit(rec, qname, **kwargs):
 more than N times, move the queue entry to Inactive. (where N is the 
 configuration field: maximum_errors_per_record)
 """
-    logging.debug('submit({})'.format(rec.get('filename','NA')))
+    logging.debug('EXECUTING submit({})'.format(rec.get('filename','NA')))
+    md5sum = md5(rec['filename'])
+    auditor.set_fstop(md5sum, 'valley:cache', mtn_host=socket.getfqdn())
+
     qcfg = du.get_keyword('qcfg', kwargs)
     # dq_host = qcfg['dq_host']
     # dq_port = qcfg['dq_port']
@@ -233,6 +250,7 @@ configuration field: maximum_errors_per_record)
             destfname = ts.submit_to_archive(ifname, checksum, qname, qcfg)
         except Exception as sex:
             msg = 'Failed to submit {}: {}'.format(ifname, sex)
+            auditor.set_fstop(md5sum, 'valley:cache', val_host=socket.getfqdn())
             raise tex.IngestRejection(popts, sex, popts)
         else:
             msg = 'SUCCESSFUL fits submit; {} as {}'.format(ifname, destfname)
@@ -249,6 +267,7 @@ configuration field: maximum_errors_per_record)
         try:
             os.makedirs(os.path.dirname(destfname), exist_ok=True)
             shutil.move(ifname, destfname)
+            auditor.set_fstop(md5sum, 'valley:anticache', val_host=socket.getfqdn())
         except Exception as ex:
             msg = 'Non-FITS file: {}'.format(ex)
             logging.warning('Failed to mv non-fits file from mirror on Valley.')
@@ -259,5 +278,6 @@ configuration field: maximum_errors_per_record)
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
         logging.info('Non-FITS file put in: {}'.format(destfname))
         
+    auditor.set_fstop(md5sum,'archive')
     return True
 # END submit() action
