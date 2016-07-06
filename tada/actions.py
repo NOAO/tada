@@ -63,7 +63,7 @@ def network_move(rec, qname, **kwargs):
     logging.debug('EXECUTING network_move()')
     thishost = socket.getfqdn()
     md5sum = md5(rec['filename'])
-    auditor.set_fstop(md5sum, 'mountain:cache', mtn_host=thishost)
+    auditor.set_fstop(md5sum, 'mountain:cache', host=thishost)
     for p in ['qcfg', 'dirs']:
         if p not in kwargs:
             raise Exception(
@@ -181,7 +181,7 @@ def network_move(rec, qname, **kwargs):
         return False
 
     # successfully transfered to Valley
-    auditor.set_fstop(md5sum, 'valley:cache', val_host=qcfg.get('valley_host'))
+    auditor.set_fstop(md5sum, 'valley:cache', host=qcfg.get('valley_host'))
     logging.debug('rsync output:{}'.format(out))
     logging.info('Successfully moved file from {} to {}'
                  .format(newfname, sync_root))
@@ -221,7 +221,7 @@ configuration field: maximum_errors_per_record)
 """
     logging.debug('EXECUTING submit({})'.format(rec.get('filename','NA')))
     md5sum = md5(rec['filename'])
-    auditor.set_fstop(md5sum, 'valley:cache', mtn_host=socket.getfqdn())
+    auditor.set_fstop(md5sum, 'valley:cache', host=socket.getfqdn())
 
     qcfg = du.get_keyword('qcfg', kwargs)
     # dq_host = qcfg['dq_host']
@@ -250,7 +250,7 @@ configuration field: maximum_errors_per_record)
             destfname = ts.submit_to_archive(ifname, checksum, qname, qcfg)
         except Exception as sex:
             msg = 'Failed to submit {}: {}'.format(ifname, sex)
-            auditor.set_fstop(md5sum, 'valley:cache', val_host=socket.getfqdn())
+            auditor.set_fstop(md5sum, 'valley:cache', host=socket.getfqdn())
             raise tex.IngestRejection(popts, sex, popts)
         else:
             msg = 'SUCCESSFUL fits submit; {} as {}'.format(ifname, destfname)
@@ -267,7 +267,7 @@ configuration field: maximum_errors_per_record)
         try:
             os.makedirs(os.path.dirname(destfname), exist_ok=True)
             shutil.move(ifname, destfname)
-            auditor.set_fstop(md5sum, 'valley:anticache', val_host=socket.getfqdn())
+            auditor.set_fstop(md5sum, 'valley:anticache', host=socket.getfqdn())
         except Exception as ex:
             msg = 'Non-FITS file: {}'.format(ex)
             logging.warning('Failed to mv non-fits file from mirror on Valley.')

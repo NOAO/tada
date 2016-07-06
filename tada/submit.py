@@ -209,6 +209,11 @@ RETURN: irods location of hdr file.
             fu.validate_recommended_hdr(hdr, orig_fullname)
         # Generate standards conforming filename
         # EXCEPT: add field when JOBID_TYPE and/or JOB_TAG given.
+        jtypes=set(['plain', 'obsmicro', 'seconds'])
+        if jidt != None and jidt not in jtypes:
+            logging.warning(('Got unexpected value {} for "jobid_type"'
+                             ' in personality file. (allowed={})'
+                             .format(jidt, jtypes)))
         if jidt == 'plain':
             jobid = pathlib.PurePath(mirror_fname).parts[-2]
             tag = jobid
@@ -225,10 +230,6 @@ RETURN: irods location of hdr file.
                              - datetime.datetime(2015,1,1)) 
                             .total_seconds()*100))
             tag = jobid if tag == '' else (jobid + '_' + tag)
-        else:
-            logging.warning(('Got unexpected value {} for "jobid_type"'
-                             ' in personality file.'
-                             .format(jidt)))
 
         #ext = fn.fits_extension(orig_fullname)
         ext = fn.fits_extension(mirror_fname)
@@ -509,11 +510,10 @@ def direct_submit(fitsfile, moddir,
     if personality:
         pprms.update(personality['params'])
         popts.update(personality['options'])
-    logging.debug('direct_submit(params={},options={})'.format(pprms, popts))
-
     logging.debug('direct_submit: popts={}'.format(popts))
     logging.debug('direct_submit: pprms={}'.format(pprms))
     origfname = fitsfile
+    changed = dict()
     try:
         new_ihdr,destfname,changed,modfits = prep_for_ingest(fitsfile,
                                                      persona_options=popts,
@@ -521,6 +521,7 @@ def direct_submit(fitsfile, moddir,
                                                      moddir=moddir,
                                                      **cfgprms)
     except Exception as err:
+        auditor.log_audit(pprms, False, '', str(err), popts, changed)
         if trace:
             traceback.print_exc()
         statusmsg = str(err)

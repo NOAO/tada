@@ -44,13 +44,14 @@ class Auditor():
     def set_fstop(self, md5sum, fstop, host=None):
         """Update audit service with hhe most downstream stop of FITS file"""
         logging.debug('AUDIT.set_fstop({}, {})'.format(md5sum, fstop))
-        uri = ('http://{}:{}/audit/set_fstop/{}/{}/'
-               .format(self.mars_host, self.mars_port, md5sum, fstop))
-        #!if fstop not in self.fstops:
-        #!    logging.error('AUDIT: unknown fstop value ({}). Should be one of:{}'
-        #!                  .format(fstop, self.fstops))
-        #!    return False
-        #!
+        if host == None:
+            uri = ('http://{}:{}/audit/fstop/{}/{}/'
+                   .format(self.mars_host, self.mars_port, md5sum, fstop))
+        else:
+            uri = ('http://{}:{}/audit/fstop/{}/{}/{}/'
+                   .format(self.mars_host, self.mars_port, md5sum, fstop, host))
+
+        logging.debug('DBG-0: fstop uri={}'.format(uri))
         #!ddict = dict(md5sum=md5sum, fstop=fstop)
         #!machine = fstop.split(':')[0]
         #!if machine == 'dome':
@@ -60,12 +61,11 @@ class Auditor():
         #!elif machine == 'valley':
         #!    ddict['valley_host'] = val_host
         try:
-            #logging.debug('DBG-1: uri={}, ddict={}'.format(uri, ddict))
             response = requests.post(uri)
             logging.debug('DBG-2: uri={}, response={}'.format(uri,response))
             return response.text
         except  Exception as err:
-            logging.error('AUDIT: Error contacting service via "{}"; {}'
+            logging.error('AUDIT: fstop Error contacting service via "{}"; {}'
                           .format(uri, str(err)))
             return False
         return True
