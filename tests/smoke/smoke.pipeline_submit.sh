@@ -11,14 +11,13 @@
 #
 
 cmd=`basename $0`
-
-
 SCRIPT=$(readlink -e $0)     #Absolute path to this script
 SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script is in
 testdir=$(dirname $SCRIPTDIR)
 tadadir=$(dirname $testdir)
 tdata=$SCRIPTDIR/tada-test-data
-# tdata=/sandbox/tada/tests/smoke/data
+# tdata=/sandbox/tada/tests/smoke/tada-test-data
+ppath=/var/tada/personalities
 
 dir=$SCRIPTDIR
 origdir=`pwd`
@@ -59,5 +58,5 @@ fi
 
 # Don't move or remove! 
 cd $origdir
-exit $return_code
-
+#exit $return_code
+return $return_code
