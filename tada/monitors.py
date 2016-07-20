@@ -14,6 +14,9 @@ import subprocess
 import traceback
 import re
 
+from . import config
+from . import audit
+
 import yaml
 import watchdog.events
 import watchdog.observers
@@ -33,6 +36,11 @@ from . import fpack as fp
 ### that's harder.  So, for now, recursively watch "watched_dir".
 ###
 
+qcfg, dirs = config.get_config(None,
+                               validate=False,
+                               yaml_filename='/etc/tada/tada.conf')
+auditor = audit.Auditor(qcfg.get('mars_host'), qcfg.get('mars_port'))
+
 def get_qname():
     cmd = 'source /etc/tada/dqd.conf; echo $qname'
     valstr = subprocess.check_output(['bash', '-c', cmd ]).decode()
@@ -42,8 +50,11 @@ def get_qname():
 #class PushEventHandler(watchdog.events.FileSystemEventHandler):
 class PushEventHandler(watchdog.events.PatternMatchingEventHandler):
     """Copy new FITS file to CACHE and push to DQ.  If can't push, move 
-to ANTICACHE."""
-    qname = get_qname()
+to ANTICACHE. 
+After this, normal TADA takes over; pop record, perform q-action(transfer)
+YAML file will be transfered with FITS because its in same directory..
+"""
+    #qname = get_qname()
     patterns = ['**/*.fits', '**/*.fz']
     
     def __init__(self, drop_dir, status_dir):
@@ -128,35 +139,34 @@ to ANTICACHE."""
         logging.debug('DBG: monitors.py:new_file({})'.format(ifname))
         pdict = self.options_from_yamls(ifname)
         logging.debug('Got pdict from yamls:{}'.format(pdict))
+        auditor.set_fstop(pdict.get('md5sum',os.path.basename(ifname)), 'watch')
         try:
             cachename = ifname.replace(self.dropdir, self.cachedir)
-            anticachename = ifname.replace(self.dropdir, self.anticachedir)
-            statusname = ifname.replace(self.dropdir,
-                                        self.statusdir)+'.status'
             os.makedirs(os.path.dirname(cachename), exist_ok=True)
+            anticachename = ifname.replace(self.dropdir, self.anticachedir)
+            os.makedirs(os.path.dirname(anticachename), exist_ok=True)
+            statusname = ifname.replace(self.dropdir, self.statusdir)+'.status'
+            os.makedirs(os.path.dirname(statusname), exist_ok=True)
 
             if ifname[-5:] == '.fits': # dropped file is not compressed
                 cachename += '.fz'
                 anticachename += '.fz'
+            yamlname = cachename + '.yaml'
             
-            fp.fpack_to(ifname, cachename, personality=pdict)
-
+            fp.fpack_to(ifname, cachename)
 
             # Combine all personalities into one and send that to valley.,
-            with open(cachename + '.yaml', 'w') as yf:
+            with open(yamlname, 'w') as yf:
                 yaml.safe_dump(pdict, yf, default_flow_style=False)
 
             try:
                 self.pushfile(cachename)
-                logging.info('Pushed {} to cache: {}'
-                             .format(ifname, cachename))
-                os.makedirs(os.path.dirname(statusname), exist_ok=True)
+                logging.info('Pushed {} to cache: {}'.format(ifname, cachename))
                 Path(statusname).touch(exist_ok=True)
             except Exception as ex:
                 # Push to dataq failed (file not put into TADA processing)
                 logging.error('Push FAILED with {}; {}'.format(ifname, ex))
                 logging.error(traceback.format_exc())
-                os.makedirs(os.path.dirname(anticachename), exist_ok=True)
                 shutil.move(cachename, anticachename)
         except Exception as ex:
             # Something unexpected failed (makedirs, copy, yaml read/write)
@@ -171,9 +181,9 @@ to ANTICACHE."""
       2. <dropbox/<instrument>/*.yaml           (can be multiple)
       3. <ifname>.yaml                          (just one)
      """
-        logging.debug('DBG: options_from_yamls:{}'.format(ifname))
+        #logging.debug('DBG: options_from_yamls:{}'.format(ifname))
         day,inst,*d = PurePath(ifname).relative_to(PurePath(self.dropdir)).parts
-        logging.debug('DBG: file={}, day={}, inst={}'.format(ifname, day, inst))
+        #logging.debug('DBG: file={}, day={}, inst={}'.format(ifname, day, inst))
 
         pdict = dict(options={}, params={})
         pdict['params']['filename'] = ifname # default 

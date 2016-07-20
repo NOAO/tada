@@ -17,12 +17,12 @@ def remove_if_exists(filename):
     except:
         pass
 
-def fpack_to(fitsfile, outfile, personality=None, force=False):
+def fpack_to(fitsfile, outfile, force=False):
     """Fpack FITSFILE into OUTFILE (or copy if already fpacked).
     If OUTFILE (.fz) already exists, overwrite IFF force=True.
     RETURN: True IFF fpack was run on this invocation.
     """
-    # for floating point
+    # for floating point 
     # $FPACK -Y -g -q 0 ${BASEFILE}.fits
     tag='fpack_to'
     fpackcmd = '/usr/local/bin/fpack'
@@ -30,15 +30,18 @@ def fpack_to(fitsfile, outfile, personality=None, force=False):
     assert outfile[-3:] == '.fz'
 
     if force==False and os.path.exists(outfile):
+        logging.warning('{}: Outfile already exists. Doing nothing.'.
+                        format(tag))
         return False
     if fitsfile[-3:] == '.fz':
+        logging.debug('{}: FITSfile already *.fz. Copying.'.format(tag))
         shutil.copy(fitsfile, outfile)
         return False
 
     #ELSE compress on the fly
 
-    hdr = fu.get_hdr_as_dict(fitsfile)
     try:
+        hdr = fu.get_hdr_as_dict(fitsfile)
         remove_if_exists(outfile)
         with open(outfile, 'wb') as file:
             # -S :: Output compressed FITS files to STDOUT.
@@ -53,5 +56,6 @@ def fpack_to(fitsfile, outfile, personality=None, force=False):
         logging.error('FAILED {}: {}; {}'
                       .format(tag, ex, ex.output.decode('utf-8')))
         raise
+    logging.debug('DONE: {}({},{})'.format(tag, fitsfile, outfile))
     return outfile
 
