@@ -9,7 +9,6 @@ testdir=$(dirname $SCRIPTDIR)
 tadadir=$(dirname $testdir)
 # tadadir=/sandbox/tada
 #!tdata=$SCRIPTDIR/data-scrape
-# tdata=/data/scraped/mtn_raw
 # tdata=/sandbox/tada/tests/smoke/tada-test-data/scrape
 tdata=$SCRIPTDIR/tada-test-data/scrape
 #echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
