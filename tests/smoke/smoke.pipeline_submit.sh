@@ -36,7 +36,7 @@ echo ""
 source tada-smoke-setup.sh
 
 testCommand ps1_1 "fsub $tdata/basic/uofa-mandle.jpg pipeline-mosaic3" "^\#" n 1
-testCommand ps2_1 "fsub $tdata/basic/obj_355_VR_v1.fits.fz pipeline-mosaic3" "^\#" n
+testCommand ps2_1 "fsub $tdata/basic/obj_355_VR_v1_TADAPIPE.fits.fz pipeline-mosaic3" "^\#" n
 
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"
