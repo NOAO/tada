@@ -147,15 +147,15 @@ YAML file will be transfered with FITS because its in same directory..
             os.makedirs(os.path.dirname(anticachename), exist_ok=True)
             statusname = ifname.replace(self.dropdir, self.statusdir)+'.status'
             os.makedirs(os.path.dirname(statusname), exist_ok=True)
-
-            if ifname[-5:] == '.fits': # dropped file is not compressed
+            if ifname[-5:] == '.fits': # dropped file is not yet compressed
                 cachename += '.fz'
                 anticachename += '.fz'
             yamlname = cachename + '.yaml'
             
             fp.fpack_to(ifname, cachename)
 
-            # Combine all personalities into one and send that to valley.,
+            # Combine all personalities into one and put in cache next to fits.
+            # It will be sent to valley along with fits.
             with open(yamlname, 'w') as yf:
                 yaml.safe_dump(pdict, yf, default_flow_style=False)
 
