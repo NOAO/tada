@@ -563,7 +563,7 @@ def get_options_dict(fits_filename):
             if 'calchdr' in opt_params:
                 opt_params['calchdr'] = opt_params['calchdr'].split(',')
     else:
-        logging.warning('Options file not found for: {}'.format(fits_filename))
+        logging.error('Options file not found for: {}'.format(fits_filename))
         return dict(), dict()
 
     return options, opt_params

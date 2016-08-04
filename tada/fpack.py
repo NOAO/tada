@@ -24,38 +24,42 @@ def fpack_to(fitsfile, outfile, force=False):
     """
     # for floating point 
     # $FPACK -Y -g -q 0 ${BASEFILE}.fits
-    tag='fpack_to'
     fpackcmd = '/usr/local/bin/fpack'
-    logging.debug('{}({},{})'.format(tag, fitsfile, outfile))
-    assert outfile[-3:] == '.fz'
+    logging.debug('fpack_to({}, {})'.format(fitsfile, outfile))
+
+    #tmpfile = outfile.replace('/cache/','/cache/.tempcache/')
+    #os.makedirs(os.path.dirname(tmpfile), exist_ok=True)
 
     if force==False and os.path.exists(outfile):
-        logging.warning('{}: Outfile already exists. Doing nothing.'.
-                        format(tag))
+        logging.warning('fpack_to: Outfile already exists. Doing nothing. {}'
+                        .format(outfile))
         return False
     if fitsfile[-3:] == '.fz':
-        logging.debug('{}: FITSfile already *.fz. Copying.'.format(tag))
+        logging.debug('fpack_to: FITSfile already *.fz. Copying to: {}'
+                      .format(outfile))
         shutil.copy(fitsfile, outfile)
-        return False
-
-    #ELSE compress on the fly
-
-    try:
-        hdr = fu.get_hdr_as_dict(fitsfile)
-        remove_if_exists(outfile)
-        with open(outfile, 'wb') as file:
-            # -S :: Output compressed FITS files to STDOUT.
-            if hdr.get('BITPIX',None) == -32 or hdr.get('BITPIX',None) == -64:
-                # is floating point image
-                # Default options are lossy. Use lossless options instead.
-                subprocess.call([fpackcmd, '-C', '-S', '-g', '-q', 0, fitsfile],
-                                stdout=file)
-            else:
-                subprocess.call([fpackcmd, '-C', '-S', fitsfile], stdout=file)
-    except subprocess.CalledProcessError as ex:
-        logging.error('FAILED {}: {}; {}'
-                      .format(tag, ex, ex.output.decode('utf-8')))
-        raise
-    logging.debug('DONE: {}({},{})'.format(tag, fitsfile, outfile))
+    else: # compress on the fly
+        try:
+            hdr = fu.get_hdr_as_dict(fitsfile)
+            remove_if_exists(outfile)
+            with open(outfile, 'wb') as file:
+                # -S :: Output compressed FITS files to STDOUT.
+                if (hdr.get('BITPIX',None) == -32
+                    or hdr.get('BITPIX',None) == -64):
+                    # is floating point image
+                    # Default options are lossy. Use lossless options instead.
+                    subprocess.call([fpackcmd, '-C', '-S', '-g', '-q',
+                                     0, fitsfile],
+                                    stdout=file)
+                else:
+                    subprocess.call([fpackcmd, '-C', '-S', fitsfile],
+                                    stdout=file)
+        except subprocess.CalledProcessError as ex:
+            logging.error('FAILED fpack_to: {}; {}'
+                          .format(ex, ex.output.decode('utf-8')))
+            raise
+    #logging.debug('move to cache ({},{})'.format(tmpfile, outfile))
+    #shutil.move(tmpfile, outfile)
+    logging.debug('DONE: fpack_to({}, {})'.format(fitsfile, outfile))
     return outfile
 

@@ -43,6 +43,9 @@ class Auditor():
 
     def set_fstop(self, md5sum, fstop, host=None):
         """Update audit service with hhe most downstream stop of FITS file"""
+        if not self.do_svc:
+            return False
+
         logging.debug('AUDIT.set_fstop({}, {})'.format(md5sum, fstop))
         if host == None:
             uri = ('http://{}:{}/audit/fstop/{}/{}/'

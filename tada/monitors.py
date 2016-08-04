@@ -13,9 +13,13 @@ from glob import glob
 import subprocess
 import traceback
 import re
+import hashlib
+import socket
 
 from . import config
 from . import audit
+import dataq.red_utils as ru
+
 
 import yaml
 import watchdog.events
@@ -23,7 +27,6 @@ import watchdog.observers
 
 #from . import submit as ts
 from . import fpack as fp
-
 
 
 ##############################################################################
@@ -39,12 +42,21 @@ from . import fpack as fp
 qcfg, dirs = config.get_config(None,
                                validate=False,
                                yaml_filename='/etc/tada/tada.conf')
-auditor = audit.Auditor(qcfg.get('mars_host'), qcfg.get('mars_port'))
+auditor = audit.Auditor(qcfg.get('mars_host'),
+                        qcfg.get('mars_port'),
+                        qcfg.get('do_audit',True))
 
 def get_qname():
     cmd = 'source /etc/tada/dqd.conf; echo $qname'
     valstr = subprocess.check_output(['bash', '-c', cmd ]).decode()
     return valstr[:-1]
+
+def md5(fname):
+    hash_md5 = hashlib.md5()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
 
 
 #class PushEventHandler(watchdog.events.FileSystemEventHandler):
@@ -69,12 +81,17 @@ YAML file will be transfered with FITS because its in same directory..
         #super(watchdog.events.FileSystemEventHandler).__init__()
         super().__init__(patterns=self.patterns)
 
-    def pushfile(self, fullfname):
+    def pushfile(self, md5sum, fullfname):
         logging.debug('Monitor: pushfile({})'.format(fullfname))
         try:
-            cmdstr = ('dqcli --pushfile "{}"'.format(fullfname))
-            logging.debug('EXECUTING: {}'.format(cmdstr))
-            subprocess.check_call(cmdstr, shell=True)
+            #!cmdstr = ('dqcli --pushfile "{}"'.format(fullfname))
+            #!logging.debug('EXECUTING: {}'.format(cmdstr))
+            #!subprocess.check_call(cmdstr, shell=True)
+            ru.push_direct(socket.getfqdn(), # this host
+                           qcfg['redis_port'],
+                           fullfname,
+                           md5sum,
+                           max_queue_size=qcfg['maximum_queue_size'])
         except Exception as err:
             logging.error('Could not push file. {}'.format(err))
 
@@ -143,6 +160,8 @@ YAML file will be transfered with FITS because its in same directory..
         try:
             cachename = ifname.replace(self.dropdir, self.cachedir)
             os.makedirs(os.path.dirname(cachename), exist_ok=True)
+            queuename = cachename.replace('/cache/','/cache/.queue/')
+            os.makedirs(os.path.dirname(queuename), exist_ok=True)
             anticachename = ifname.replace(self.dropdir, self.anticachedir)
             os.makedirs(os.path.dirname(anticachename), exist_ok=True)
             statusname = ifname.replace(self.dropdir, self.statusdir)+'.status'
@@ -150,9 +169,16 @@ YAML file will be transfered with FITS because its in same directory..
             if ifname[-5:] == '.fits': # dropped file is not yet compressed
                 cachename += '.fz'
                 anticachename += '.fz'
-            yamlname = cachename + '.yaml'
-            
-            fp.fpack_to(ifname, cachename)
+            #yamlname = cachename + '.yaml'
+            yamlname = queuename + '.yaml'
+
+            try:
+                #fp.fpack_to(ifname, cachename)
+                fp.fpack_to(ifname, queuename)
+            except Exception as ex:
+                logging.error('Failed on: fpack_to({}, {})'
+                              .format(ifname, cachename))
+                return None
 
             # Combine all personalities into one and put in cache next to fits.
             # It will be sent to valley along with fits.
@@ -160,7 +186,7 @@ YAML file will be transfered with FITS because its in same directory..
                 yaml.safe_dump(pdict, yf, default_flow_style=False)
 
             try:
-                self.pushfile(cachename)
+                self.pushfile(md5(ifname), queuename)
                 logging.info('Pushed {} to cache: {}'.format(ifname, cachename))
                 Path(statusname).touch(exist_ok=True)
             except Exception as ex:

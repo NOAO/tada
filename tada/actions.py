@@ -29,9 +29,9 @@ auditor = audit.Auditor(qcfg.get('mars_host'),
                         qcfg.get('do_audit',True))
 
 
-def md5(fname):
+def md5(fitsname):
     hash_md5 = hashlib.md5()
-    with open(fname, "rb") as f:
+    with open(fitsname, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
@@ -62,7 +62,12 @@ def network_move(rec, qname, **kwargs):
     "Transfer from Mountain to Valley"
     logging.debug('EXECUTING network_move()')
     thishost = socket.getfqdn()
-    md5sum = md5(rec['filename'])
+    md5sum = rec['checksum']
+    tempfname = rec['filename']  # absolute path (in temp cache)
+    fname = tempfname.replace('/cache/.queue/', '/cache/')
+    shutil.move(tempfname,fname) # from temp (non-rsync) dir to rsync dir
+    shutil.move(tempfname+'.yaml', fname+'.yaml')
+
     auditor.set_fstop(md5sum, 'mountain:cache', host=thishost)
     for p in ['qcfg', 'dirs']:
         if p not in kwargs:
@@ -85,7 +90,6 @@ def network_move(rec, qname, **kwargs):
     #sync_root =  qcfg[qname]['mirror_dir']
     sync_root =  'rsync://tada@{}/cache'.format(qcfg['valley_host'])
     valley_root = '/var/tada/cache'
-    fname = rec['filename']            # absolute path
     popts, pprms = fu.get_options_dict(fname) # .yaml or .options
     if thishost == qcfg.get('valley_host',None):
         logging.error(('Current host ({}) is same as "valley_host" ({}). '
@@ -101,7 +105,7 @@ def network_move(rec, qname, **kwargs):
 
     # ifname = os.path.join(sync_root, os.path.relpath(fname, source_root))
     # optfname = ifname + ".options"
-    newfname = fname
+    newfname = fname # temp dir, not rsync
     logging.debug('pre_action={}'.format(pre_action))
     if pre_action:
         # pre_action is full path to shell script to run.
@@ -130,6 +134,7 @@ def network_move(rec, qname, **kwargs):
         
     out = None
     try:
+
         # Use feature of rsync 2.6.7 and later that limits path info
         # sent as implied directories.  The "./" marker in the path
         # means "append path after this to destination prefix to get
@@ -154,7 +159,8 @@ def network_move(rec, qname, **kwargs):
                    '--password-file', '/etc/tada/rsync.pwd',
                    '--recursive',
                    '--relative',
-                   '--remove-source-files',
+                   '--exclude=".*"',
+                   '--remove-source-files', 
                    #sender removes synchronized files (non-dir)
                    '--timeout=40', # seconds
                    #! '--verbose',
@@ -190,7 +196,7 @@ def network_move(rec, qname, **kwargs):
     try:
         # What if QUEUE is down?!!!
         ru.push_direct(valley_host, redis_port,
-                       mirror_fname, rec['checksum'],
+                       mirror_fname, md5sum,
                        max_queue_size=qcfg.get('maximum_queue_size',999))
     except Exception as ex:
         logging.error('Failed to push to queue on {}:{}; {}'
@@ -247,7 +253,7 @@ configuration field: maximum_errors_per_record)
         popts, pprms = fu.get_options_dict(ifname) # .yaml or .options
         #! origfname = pprms.get('filename',ifname)
         try:
-            destfname = ts.submit_to_archive(ifname, checksum, qname, qcfg)
+            destfname = ts.submit_to_archive(ifname, checksum, qname, qcfg=qcfg)
         except Exception as sex:
             msg = 'Failed to submit {}: {}'.format(ifname, sex)
             auditor.set_fstop(md5sum, 'valley:cache', host=socket.getfqdn())
@@ -256,7 +262,10 @@ configuration field: maximum_errors_per_record)
             msg = 'SUCCESSFUL fits submit; {} as {}'.format(ifname, destfname)
             logging.debug(msg)
             # successfully transfered to Archive
-            os.remove(ifname)
+
+            logging.warning('DISABLED remove of cache file: {}'.format(ifname))
+            #! os.remove(ifname)
+
             optfname = ifname + ".options"
             logging.debug('Remove possible options file: {}'.format(optfname))
             if os.path.exists(optfname):

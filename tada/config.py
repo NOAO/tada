@@ -7,7 +7,7 @@ import logging
 Q_REQUIRED_FIELDS = {'name', 'type', 'dq_host', 'dq_port',
                      'action_name',
                      'maximum_errors_per_record',
-                     'maxium_queue_size',
+                     'maximum_queue_size',
                  }
 
 TYPE_SPECIFIC_REQ_FIELDS = dict(

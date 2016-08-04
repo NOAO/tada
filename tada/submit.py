@@ -273,7 +273,7 @@ RETURN: irods location of hdr file.
             msg = ('iRODS FITS file already exists at {} on submit of {}.'
                    .format(new_ifname, orig_fullname))
             if resubmit == 1:
-                logging.error(msg + ' Trying to ingest anyhow.')
+                logging.error(msg + ' Trying to igest anyhow.')
             elif resubmit > 1:
                 pass
             else:
