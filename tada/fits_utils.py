@@ -117,9 +117,9 @@ SUPPORT_FIELDS = set([
     'TIME-OBS',
     'DATE',
     'PROPID',
-    'PLDSID',
-    'PLQUEUE',
-    'PLQNAME',
+    #!'PLDSID',
+    #!'PLQUEUE',
+    #!'PLQNAME',
     ])
 
 USED_FIELDS = (RAW_REQUIRED_FIELDS

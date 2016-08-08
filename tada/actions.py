@@ -263,8 +263,8 @@ configuration field: maximum_errors_per_record)
             logging.debug(msg)
             # successfully transfered to Archive
 
-            logging.warning('DISABLED remove of cache file: {}'.format(ifname))
-            #! os.remove(ifname)
+            #logging.warning('DISABLED remove of cache file: {}'.format(ifname))
+            os.remove(ifname)
 
             optfname = ifname + ".options"
             logging.debug('Remove possible options file: {}'.format(optfname))
