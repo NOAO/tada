@@ -5,6 +5,7 @@ smoke-2.status
 rpms-to-repo.sh
 
 data/
+SAVE-tada-test-data/
 
 OBSOLETE/
 bok/
