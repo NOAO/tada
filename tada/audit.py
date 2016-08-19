@@ -116,7 +116,7 @@ class Auditor():
                           instrument=instrum.lower(),
                           #
                           srcpath=origfname,
-                          recorded=now, # should be when DOME created record
+                          updated=now, # was "recorded"
                           #
                           submitted=now,
                           success=success,
@@ -147,10 +147,14 @@ class Auditor():
         logging.debug('update_local ({})'.format(recdic,))
         fnames = ['md5sum',
                   'obsday', 'telescope', 'instrument',
-                  'srcpath', 'recorded', 'submitted',
-                  'success',  'archerr', 'archfile',
-        ]
+                  'srcpath',
+                  'updated', #'recorded',
+                  'submitted',
+                  'success',  'archerr', 'archfile',   ]
         values = [recdic[k] for k in fnames]
+        lut = dict(updated='recorded') # rename fields
+        fnames = [lut.get(k,k) for k in fnames]
+        
         #! logging.debug('update_local ({}) = {}'.format(fnames,values))
         # replace the non-primary key values with new values.
         sql = ('INSERT OR REPLACE INTO audit ({}) VALUES ({})'
@@ -168,7 +172,7 @@ class Auditor():
         uri = 'http://{}:{}/audit/update/'.format(self.mars_host, self.mars_port)
         fnames = ['md5sum',
                   'obsday', 'telescope', 'instrument',
-                  'srcpath', 'recorded', 'submitted',
+                  'srcpath', 'updated', 'submitted',
                   'success', 'archerr', 'errcode', 'archfile',
                   'metadata',
         ]
