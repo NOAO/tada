@@ -1,5 +1,10 @@
 * Release 2.5.16
 - hotfix: On mtn fpack from dropbox rename X.fits to X.fits.fz
+- feature: use fitsverify
+  + mtn (against dropbox)
+  + val (on file to ingest)
+  + REQUIRES PROVISIONING CHANGE
+    - install "fitsverify" into ~/usr/local/bin~
 
 * Release 2.5.15 <2016-08-04 Thu>
 - fix bug causing ingestion of corrupted files
@@ -29,7 +34,6 @@ Archive Ingest will be rejected.  Changes to the MARS schedule service
 were made to support this release.
 
 
-
 * Release 2.4.0 <2016-04-14 Thu 07:50>
 This updates the version numbers to match Major.Minor version of TADA puppet
 code. Previous RPM version was 0.2.17
@@ -55,7 +59,6 @@ files to.
   + added function for direct programatic push of file
   + added configurable logging
 
-
 * Release 0.2.13 <2016-03-24 Thu 14:49>
 - TADA
   + lossless on-the-fly fpack for floating point images
@@ -71,7 +74,6 @@ files to.
 - dataque
   + added function for direct programatic push of file
   + added configurable logging
-
 
 * Release 0.2.11 <2016-03-18 Fri 12:28>
 - Create HDR from concatenation of all HDUs (in order)

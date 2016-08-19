@@ -18,6 +18,7 @@ import socket
 
 from . import config
 from . import audit
+from . import fits_utils as fu
 import dataq.red_utils as ru
 
 
@@ -171,6 +172,13 @@ YAML file will be transfered with FITS because its in same directory..
                 cachename += '.fz'
                 anticachename += '.fz'
             yamlname = queuename + '.yaml'
+
+            try:
+                fu.validate_fits(ifname)
+            except Exception as ex:
+                logging.warning(('Dropbox file ({}) is invalid FITS.'
+                                 ' Trying to continue anyhow. {}')
+                                .format(ifname, ex))
 
             try:
                 fp.fpack_to(ifname, queuename)

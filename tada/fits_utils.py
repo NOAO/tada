@@ -462,6 +462,14 @@ def validate_recommended_hdr(hdr, orig_fullname):
 #!             ext[1:])
 
 
+def validate_fits(fname):
+    '''Validate FITS file. Throw exception on invalid.'''
+    logging.debug('validate_fits({})'.format(fname))
+    fitsverify = '/usr/local/bin/fitsverify'
+    subprocess.check_output([fitsverify, '-e', '-q', fname])
+    logging.debug('{} PASSED validate_fits()'.format(fname))
+    return True
+
 def fix_hdr(hdr, fname, options, opt_params, **kwargs):
     '''
 SIDE-EFFECT: Modify hdr dict in place to suit Archive Ingest. 

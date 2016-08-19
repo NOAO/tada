@@ -98,6 +98,8 @@ def new_fits(orig_fitspath, changes, moddir=None):
     #hdulist.flush()
     hdulist.close(output_verify='ignore')         # now FITS header is MODIFIED
 
+    fu.validate_fits(modfilepath)
+    
     return modfilepath
 
 
