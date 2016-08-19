@@ -167,17 +167,16 @@ YAML file will be transfered with FITS because its in same directory..
             statusname = ifname.replace(self.dropdir, self.statusdir)+'.status'
             os.makedirs(os.path.dirname(statusname), exist_ok=True)
             if ifname[-5:] == '.fits': # dropped file is not yet compressed
+                queuename += '.fz'
                 cachename += '.fz'
                 anticachename += '.fz'
-            #yamlname = cachename + '.yaml'
             yamlname = queuename + '.yaml'
 
             try:
-                #fp.fpack_to(ifname, cachename)
                 fp.fpack_to(ifname, queuename)
             except Exception as ex:
-                logging.error('Failed on: fpack_to({}, {})'
-                              .format(ifname, cachename))
+                logging.error('Failed on: fpack_to({}, {}); {}'
+                              .format(ifname, queuename, ex))
                 return None
 
             # Combine all personalities into one and put in cache next to fits.
@@ -187,7 +186,7 @@ YAML file will be transfered with FITS because its in same directory..
 
             try:
                 self.pushfile(md5(ifname), queuename)
-                logging.info('Pushed {} to cache: {}'.format(ifname, cachename))
+                logging.info('Pushed {} to cache: {}'.format(ifname, queuename))
                 Path(statusname).touch(exist_ok=True)
             except Exception as ex:
                 # Push to dataq failed (file not put into TADA processing)
