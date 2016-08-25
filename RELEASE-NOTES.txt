@@ -1,10 +1,10 @@
 * Release 2.5.16
 - hotfix: On mtn fpack from dropbox rename X.fits to X.fits.fz
-- feature: use fitsverify
+- feature: use fitsverify (MAY CAUSE INGESTS THAT PREVIOUSLY WORKED TO FAIL)
   + mtn (against dropbox)
   + val (on file to ingest)
   + REQUIRES PROVISIONING CHANGE
-    - install "fitsverify" into ~/usr/local/bin~
+    - install "fitsverify" into /usr/local/bin
 
 * Release 2.5.15 <2016-08-04 Thu>
 - fix bug causing ingestion of corrupted files
@@ -32,7 +32,6 @@ release is tightly tied to the MARS schedule service. We no longer
 view that service as optional.  If the schedule service is down,
 Archive Ingest will be rejected.  Changes to the MARS schedule service
 were made to support this release.
-
 
 * Release 2.4.0 <2016-04-14 Thu 07:50>
 This updates the version numbers to match Major.Minor version of TADA puppet

@@ -26,13 +26,5 @@ echo "# Hosts used:"
 grep _host /etc/tada/*.conf /etc/tada/hiera.yaml | grep -v \#
 echo "#"
 
-function insertsrc () {
-    srcpath=$1
-    SRCFILES="$SRCFILES $srcpath"
-    tele='unknown'
-    inst='unknown'
-    echo "INSERT OR REPLACE INTO audit (srcpath,telescope,instrument) VALUES ('$srcpath','$tele','$inst');" | sqlite3 $AUDITDB
-    
-    gen-audit-records.sh -t $tele -i $inst -n $marshost $f  > /dev/null
-}
+
 
