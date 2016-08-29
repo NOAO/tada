@@ -1,0 +1,8 @@
+DBG-SMOKE: cp /sandbox/tada/tests/smoke/tada-test-data/scrape/20160314/kp4m-mosaic3/mos3.75870.fits.fz -> /home/vagrant/.tada/dropcache/20160314/kp4m-mosaic3/mos3.75870.fits.fz
+RECORD_EXPECTED in /home/vagrant/.tada/smoke.db: sql=INSERT INTO expected VALUES ('/sandbox/tada/tests/smoke/tada-test-data/scrape/20160314/kp4m-mosaic3/mos3.75870.fits.fz','kp4m', 'mosaic3', '1');
+DBG-SMOKE: add YAML in /home/vagrant/.tada/dropcache/20160314/kp4m-mosaic3/mos3.75870.fits.fz (/sandbox/tada/tests/smoke/tada-test-data/scrape/20160314/kp4m-mosaic3/mos3.75870.fits.fz)
+DBG-SMOKE: rsynced from /home/vagrant/.tada/dropcache
+DBG-SMOKE: sql=SELECT count(*) FROM audit WHERE success IS NOT NULL  AND srcpath='/sandbox/tada/tests/smoke/tada-test-data/scrape/20160314/kp4m-mosaic3/mos3.75870.fits.fz' AND telescope='kp4m' AND instrument='mosaic3';
+# Waiting up to 15 secs for /sandbox/tada/tests/smoke/tada-test-data/scrape/20160314/kp4m-mosaic3/mos3.75870.fits.fz to be submitted: Found file after 0 seconds.
+DBG-SMOKE wait-n-match: actual=expected
+0

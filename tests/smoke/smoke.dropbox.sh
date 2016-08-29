@@ -2,9 +2,18 @@
 # AUTHORS:    S. Pothier
 # PURPOSE:    Wrapper for smoke test
 #   Use mountain dropbox to ingest set files files. Run from Valley.
+#   The tricky part of tests is need to test for ingest fail conditions.
+#   We want to prove that:
+#     - bad input fails in expected way (including reporting of error/warning)
+#     - good input ingests
 #
-#   The "dropbox" is a directory that is monitored for fits files appearing
-#   in it. Any that appear are submitted for ingest.  
+#   The "dropbox" is a directory that is monitored for fits files
+#   appearing in it. Any that appear and match "*.fits.fz" or "*.fits"
+#   are submitted for ingest.
+#
+# WARNING: combining multiple dropbox tests can result in filename collisions
+# (even between "different" names such as myfile.fits and myfile.fits.fz)
+# The result will depend on timing!  So eliminate filename collisions across tests!
 
 cmd=`basename $0`
 SCRIPT=$(readlink -e $0)     #Absolute path to this script
@@ -23,45 +32,48 @@ export PATH=$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:$PATH
 export PATH=$tadadir/../tada-cli/scripts:$PATH
 
 source smoke-lib.sh
-source dropsub.sh
 
 return_code=0
 SMOKEOUT="README-smoke-results.dropbox.txt"
-MANIFEST="$dir/manifest.out"
-ARCHLOG="/var/log/tada/archived.manifest"
-AUDITDB="/var/log/tada/audit.db"
 
 echo "# "
 echo "# Starting tests in \"smoke.dropbox.sh\" ..."
 echo "# "
 source tada-smoke-setup.sh
+source dropsub.sh
+setup_dropbox_tests
 
 SRCFILES=""
 ##############################################################################
 
 tic=`date +'%s'`
 
-testCommand db7_1 "mdbox $tdata/fitsverify/" "^\#" y 0
+sdrop=$tdata/scrape
+# fail-fail (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
+testCommand db1_1 "faildrop $sdrop/20110101/wiyn-bench/24dec_2014.061.fits.fz 20110101 wiyn-bench" "^\#" y 0
+
+# fail-pass (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
+testCommand db1_2 "passdrop $sdrop/20160314/kp4m-mosaic3/mos3.75870.fits.fz 20160314 kp4m-mosaic3" "^\#" y 0
+
+
+# pass-pass (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
+testCommand db1_3 "passdrop $sdrop/20150709/bok23m-90prime/d7212.0062.fits.fz 20150709 bok23m-90prime" "^\#" y 0
 
 ###########################################
-#!echo "WARNING: ignoring remainder of tests"
-#!exit $return_code
+echo "WARNING: ignoring remainder of tests"
+exit $return_code
 ###########################################a
 
-# - Fail gracefully with bad directory format
-# - On-the-fly lossless fpack (even with floating point images)
-testCommand db3_1 "mdbox $tdata/short-drop/" "^\#" n 1
 
 
-#############
-## WARNING: combining multiple dropbox tests can result in filename collisions
-#! mars_stuff
-#! mars_rollback
-#
-# (even between "different" names such as myfile.fits and myfile.fits.fz)
-# The result will depend on timing!  So avoid collisions across tests!
-# <date>/<instrument>/.../*.fits.fz
-#testCommand db1_1 "mdbox $tdata/scrape/" "^\#" y
+sdrop=$tdata/short-drop
+testCommand db2_1 "faildrop $sdrop/bad-date/wiyn-whirc/obj_355a.fits.fz bad-date wiyn-whirc" "^\#" n 0
+testCommand db2_2 "faildrop $sdrop/20160909/bad-instrum/obj_355b.fits.fz 20160909 bad-instrum" "^\#" n 0
+testCommand db2_3 "passdrop $sdrop/20141220/wiyn-whirc/obj_355.fits.fz 20141220 wiyn-whirc" "^\#" n 0
+testCommand db2_4 "passdrop $sdrop/20160610/kp4m-mosaic3/mos3.94567.fits 20160610 kp4m-mosaic3" "^\#" n 0 
+testCommand db2_5 "faildrop $sdrop/20160610/kp4m-mosaic3/mos3.badprop.fits 20160610 kp4m-mosaic3" "^\#" n 0 
+testCommand db2_6 "passdrop $sdrop/20110101/ct13m-andicam/ir141225.0179.fits 20110101 ct13m-andicam" "^\#" n 0 
+
 
 
 emins=$((`date +'%s'` - tic))

@@ -27,6 +27,7 @@ class Auditor():
     
     def __init__(self, mars_host, mars_port, use_service):
         self.con = sqlite3.connect('/var/log/tada/audit.db')
+        self.timeout = (3.05, 5) # (connect, read) in seconds
         self.mars_port = mars_port
         self.mars_host = mars_host
         self.do_svc = use_service #if pprms.get('do_audit',False):
@@ -64,36 +65,41 @@ class Auditor():
         #!elif machine == 'valley':
         #!    ddict['valley_host'] = val_host
         try:
-            response = requests.post(uri)
+            response = requests.post(uri, timeout=self.timeout)
             logging.debug('DBG-2: uri={}, response={}'.format(uri,response))
-            return response.text
+            #return response.text
         except  Exception as err:
             logging.error('AUDIT: fstop Error contacting service via "{}"; {}'
                           .format(uri, str(err)))
             return False
         return True
 
-#    def log_audit(self, localfits, origfname, success, archfile, err, hdr, newhdr):
-    def log_audit(self, prms, success, archfile, err, hdr, newhdr):
+    def log_audit(self, md5sum, origfname, success, archfile, err,
+                  orighdr=None, newhdr=None):
         """Log audit record to MARS.
-        prms:: dict[filename]:: absolute dome filename
-               dict[md5sum]:: checksum of dome file
+        origfname:: absolute dome filename
+        md5sum]:: checksum of dome file
         success:: True, False, None; True iff ingest succeeded
         archfile:: base filename of file in archive (if ingested)
-        hdr:: dict; orginal FITS header field/values
+        orighdr:: dict; orginal FITS header field/values
         newhdr:: dict; modified FITS header field/values
         """
-        try:
-            origfname = prms.get('filename','filename-NA-in-yaml')
-            md5sum = prms.get('md5sum', 'md5sum-NA-in-yaml')
-            if ('filename' in prms) and ('md5sum' not in prms):
-                # We have a file but no md5sum
-                md5sum = md5(prms['filename'])
 
+        if orighdr == None: orighdr = dict()
+        if newhdr == None: newhdr = dict()
+
+        try:
+            #!origfname = prms.get('filename','filename-NA-in-yaml')
+            #!md5sum = prms.get('md5sum', 'md5sum-NA-in-yaml')
+            #!if ('filename' in prms) and ('md5sum' not in prms):
+            #!    # We have a file but no md5sum
+            #!    md5sum = md5(prms['filename'])
+            #~ if md5sum == None:  md5sum = md5(origfname)
             archerr = str(err)
+
             logging.debug('log_audit({},{},{},{},{},{} do_svc={})'
                           .format(origfname, success, archfile, archerr,
-                                  hdr, newhdr, self.do_svc))
+                                  orighdr, newhdr, self.do_svc))
             if not success:
                 logging.error('log_audit; archive ingest error: {}'
                               .format(archerr))
@@ -101,12 +107,12 @@ class Auditor():
             now = datetime.datetime.now().isoformat()
             today = datetime.date.today().isoformat()
 
-            obsday = newhdr.get('DTCALDAT',hdr.get('DTCALDAT', today))
-            if ('DTCALDAT' not in newhdr) and ('DTCALDAT' not in hdr):
-                logging.error('Could not find DTCALDAT in hdr {}, using TODAY'
+            obsday = newhdr.get('DTCALDAT',orighdr.get('DTCALDAT', today))
+            if ('DTCALDAT' not in newhdr) and ('DTCALDAT' not in orighdr):
+                logging.error('Could not find DTCALDAT in orighdr {}, using TODAY'
                               .format(origfname))
-            tele = newhdr.get('DTTELESC',hdr.get('DTTELESC', 'unknown'))
-            instrum = newhdr.get('DTINSTRU',hdr.get('DTINSTRU', 'unknown'))
+            tele = newhdr.get('DTTELESC',orighdr.get('DTTELESC', 'unknown'))
+            instrum = newhdr.get('DTINSTRU',orighdr.get('DTINSTRU', 'unknown'))
             recdic = dict(md5sum=md5sum,
                           # obsday,telescope,instrument; provided by dome
                           #    unless dome never created audit record, OR
@@ -123,7 +129,7 @@ class Auditor():
                           archerr=archerr,
                           errcode=dec.errcode(archerr),
                           archfile=os.path.basename(archfile),
-                          metadata=hdr)
+                          metadata=orighdr)
             logging.debug('log_audit: recdic={}'.format(recdic))
             try:
                 self.update_local(recdic)
@@ -181,13 +187,14 @@ class Auditor():
             ddict[k] = recdic[k]
         logging.debug('Adding audit record via {}; json={}'.format(uri, ddict))
         try:
-            req = requests.post(uri, json=ddict)
+            req = requests.post(uri, json=ddict, timeout=self.timeout)
             #logging.debug('auditor.update_svc: response={}'.format(req.text))
-            return req.text
+            #return req.text
         except  Exception as err:
             logging.error('AUDIT: Error contacting service via "{}"; {}'
                           .format(uri, str(err)))
             return False
+        logging.debug('DONE: Adding audit record')
         return True
 
 

@@ -90,16 +90,14 @@ def new_fits(orig_fitspath, changes, moddir=None):
         modfilepath = shutil.copy(orig_fitspath, moddir)
         os.chmod(modfilepath, 0o664)
 
-    logging.debug('new_fits modfilepath={}'.format(modfilepath))
+    #!logging.debug('new_fits modfilepath={}'.format(modfilepath))
     # Apply changes to header (MODIFY IN PLACE)
     hdulist = pyfits.open(modfilepath, mode='update') # modify IN PLACE
     fitshdr = hdulist[0].header # use only first in list.
     fitshdr.update(changes)
     #hdulist.flush()
     hdulist.close(output_verify='ignore')         # now FITS header is MODIFIED
-
-    fu.validate_fits(modfilepath)
-    
+    fu.fitsverify(modfilepath)
     return modfilepath
 
 
@@ -178,12 +176,9 @@ RETURN: irods location of hdr file.
     tag = opt_params.get('job_tag','')
     source = opt_params.get('source','raw')   # pipeline | (dome)
     resubmit = int(opt_params.get('test_resubmit', '0')) # GT 0::try even if HDR exists, ==1::also log error
-    logging.debug('resubmit=({})'.format(resubmit))
-    # We want "filename" to always be given an option.
-    # But we also don't want to force setting of options if we can
-    # avoid it. So we use the only fname available: mirror_fname.
-    orig_fullname = opt_params.get('filename', mirror_fname)
 
+    orig_fullname = opt_params['filename']
+    md5sum= opt_params['md5sum']
     #! hdr_ifname = "None"
     hdr=dict()
     try:
@@ -205,7 +200,7 @@ RETURN: irods location of hdr file.
         except Exception as err:
             #!oldmsg = ('Could not update FITS header of "{}"; {}'
             #!          .format(orig_fullname, err))
-            raise tex.IngestRejection(opt_params, err, hdr)
+            raise tex.IngestRejection(md5sum, orig_fullname, err, hdr)
         fu.validate_cooked_hdr(hdr, orig_fullname)
         if opt_params.get('VERBOSE', False):
             fu.validate_recommended_hdr(hdr, orig_fullname)
@@ -284,7 +279,11 @@ RETURN: irods location of hdr file.
                 raise tex.IrodsContentException(msg)
 
         # Create final (modified) FITS
-        newfits = new_fits(mirror_fname, hdr, moddir=moddir)
+        try:
+            newfits = new_fits(mirror_fname, hdr, moddir=moddir)
+        except Exception as err:
+            raise tex.IngestRejection(md5sum, orig_fullname, err, options)    
+
         hdrfile = gen_hdr_file(newfits, new_basename)
         iu.irods_put331(hdrfile, new_ihdr)
         os.remove(hdrfile)        
@@ -293,7 +292,7 @@ RETURN: irods location of hdr file.
         #! raise
         #! raise tex.SubmitException('Bad header content in file {}'
         #!                           .format(orig_fullname))
-        raise tex.IngestRejection(opt_params, str(err), hdr)
+        raise tex.IngestRejection(md5sum, orig_fullname, str(err), hdr)
 
         
     #! iu.irods_put331(mirror_fname, new_ifname) # iput renamed FITS
@@ -362,7 +361,9 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     #!popts, pprms = fu.get_options_dict(ifname + ".options")
     popts, pprms = fu.get_options_dict(ifname) # .yaml or .options
     logging.debug('submit_to_archive(popts={},pprms={})'.format(popts, pprms))
-    origfname = pprms.get('filename', ifname)
+    #!origfname = pprms.get('filename', ifname)
+    origfname = pprms['filename']
+    md5sum = pprms['md5sum']
     try:
         # Following does irods_put331 to new_ihdr if the hdr looks valid
         new_ihdr,destfname,changed,modfits = prep_for_ingest(
@@ -389,9 +390,10 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
             os.remove(modfits)
             #!logging.debug('DBG: Removed modfits={}'.format(modfits))
         #raise tex.SubmitException(ops_msg)
-        raise tex.IngestRejection(pprms, ops_msg, popts)
+        raise tex.IngestRejection(md5sum, origfname, ops_msg, popts)
     else:
-        auditor.log_audit(pprms, success, destfname, ops_msg, popts, changed)
+        auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
+                          orighdr=popts, newhdr=changed)
 
     iu.irods_put331(modfits, destfname) # iput renamed FITS
     if moddir != None:
@@ -425,8 +427,7 @@ So, caller should not have to put this function in try/except."""
     if 'FITS image data' not in str(magic.from_file(fitsfile)):
         errmsg = 'Cannot ingest non-FITS file: {}'.format(fitsfile)
         logging.error(errmsg)
-        pprms = dict(filename = fitsfile,  md5sum = md5(fitsfile))
-        auditor.log_audit(pprms, False, '', errmsg, dict(), dict())
+        auditor.log_audit(md5(fitsfile), fitsfile, False, '', errmsg)
         return (False, errmsg)
 
     cfgprms = dict(archive331 =  qcfg['archive_irods331'],
@@ -441,6 +442,7 @@ So, caller should not have to put this function in try/except."""
 
     pprms = personality['params']
     popts = personality['options']
+    md5sum = pprms['md5sum']
     logging.debug('direct_submit: popts={}'.format(popts))
     logging.debug('direct_submit: pprms={}'.format(pprms))
     origfname = fitsfile
@@ -455,12 +457,13 @@ So, caller should not have to put this function in try/except."""
             traceback.print_exc()
         msg = str(err)
         logging.error(msg)
-        auditor.log_audit(pprms, False, '', str(err), popts, dict())
+        auditor.log_audit(md5sum, origfname, False, '', str(err), newhdr=popts)
         return (False, msg)
 
     success, m1, ops_msg, mtype = http_archive_ingest(new_ihdr, qname,
                                                qcfg=qcfg, origfname=origfname)
-    auditor.log_audit(pprms, success, destfname, ops_msg, popts, changed)
+    auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
+                      orighdr=popts, newhdr=changed)
     if not success:
         if moddir != None:
             os.remove(modfits)
@@ -489,8 +492,7 @@ def direct_submit(fitsfile, moddir,
     if 'FITS image data' not in str(magic.from_file(fitsfile)):
         errmsg = 'Cannot ingest non-FITS file: {}'.format(fitsfile)
         logging.error(errmsg)
-        pprms = dict(filename = fitsfile,  md5sum = md5(fitsfile))
-        auditor.log_audit(pprms, False, '', errmsg, dict(), dict())
+        auditor.log_audit(md5(fitsfile), fitsfile, False, '', errmsg)
         sys.exit(errmsg)
         
     success = True
@@ -515,6 +517,7 @@ def direct_submit(fitsfile, moddir,
     logging.debug('direct_submit: popts={}'.format(popts))
     logging.debug('direct_submit: pprms={}'.format(pprms))
     origfname = fitsfile
+    md5sum = md5(origfname)
     changed = dict()
     try:
         new_ihdr,destfname,changed,modfits = prep_for_ingest(fitsfile,
@@ -523,7 +526,8 @@ def direct_submit(fitsfile, moddir,
                                                      moddir=moddir,
                                                      **cfgprms)
     except Exception as err:
-        auditor.log_audit(pprms, False, '', str(err), popts, changed)
+        auditor.log_audit(md5sum, origfname, False, '', str(err),
+                          orighdr=popts, newhdr=changed)
         if trace:
             traceback.print_exc()
         statusmsg = str(err)
@@ -535,7 +539,8 @@ def direct_submit(fitsfile, moddir,
         
     success,m1,ops_msg,mtype = http_archive_ingest(new_ihdr, qname,
                                          qcfg=qcfg, origfname=origfname)
-    auditor.log_audit(pprms, success, destfname, ops_msg, popts, changed)
+    auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
+                      orighdr=popts, newhdr=changed)
     if not success:
         statusmsg = 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg)
         statuscode = 2

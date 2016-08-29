@@ -131,7 +131,7 @@ def set_dtpropid(orig, **kwargs):
         if len(pids) > 1: # split night
             err = ('Propid from hdr ({}) not in scheduled list of Propids {}'.
                    format(hdrpid, pids))
-            raise tex.IngestRejection(orig, err, orig)
+            raise tex.BadPropid(err)
         else: # not split, hdr doesn't match schedule
             logging.warning(
             'Ignoring header propid {} that does not match schedule. Using {}.'

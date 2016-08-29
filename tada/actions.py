@@ -226,7 +226,12 @@ more than N times, move the queue entry to Inactive. (where N is the
 configuration field: maximum_errors_per_record)
 """
     logging.debug('EXECUTING submit({})'.format(rec.get('filename','NA')))
-    md5sum = md5(rec['filename'])
+    # eg. /tempZone/mountain_mirror/other/vagrant/16/text/plain/fubar.txt
+    ifname = rec['filename']            # absolute path (mountain_mirror)
+    checksum = rec['checksum']          
+
+    #    md5sum = md5(rec['filename'])
+    md5sum = checksum
     auditor.set_fstop(md5sum, 'valley:cache', host=socket.getfqdn())
 
     qcfg = du.get_keyword('qcfg', kwargs)
@@ -236,28 +241,25 @@ configuration field: maximum_errors_per_record)
     noarc_root =  '/var/tada/anticache'
     mirror_root = '/var/tada/cache'    
 
-    # eg. /tempZone/mountain_mirror/other/vagrant/16/text/plain/fubar.txt
-    ifname = rec['filename']            # absolute path (mountain_mirror)
-    checksum = rec['checksum']          
 
     try:
         ftype = file_type(ifname)
     except Exception as ex:
         logging.error('Execution failed: {}; ifname={}'.format(ex, ifname))
-        raise tex.IngestRejection(dict(), ex, dict())
+        raise tex.IngestRejection(md5sum, ifname, ex, dict())
         
     #! logging.debug('File type for "{}" is "{}".'.format(ifname, ftype))
     destfname = None
     if 'FITS' == ftype :  # is FITS
         msg = 'FITS_file'
         popts, pprms = fu.get_options_dict(ifname) # .yaml or .options
-        #! origfname = pprms.get('filename',ifname)
+        origfname = pprms['filename']
         try:
             destfname = ts.submit_to_archive(ifname, checksum, qname, qcfg=qcfg)
         except Exception as sex:
             msg = 'Failed to submit {}: {}'.format(ifname, sex)
             auditor.set_fstop(md5sum, 'valley:cache', host=socket.getfqdn())
-            raise tex.IngestRejection(popts, sex, popts)
+            raise tex.IngestRejection(md5sum, ifname, sex, popts)
         else:
             msg = 'SUCCESSFUL fits submit; {} as {}'.format(ifname, destfname)
             logging.debug(msg)
@@ -280,10 +282,9 @@ configuration field: maximum_errors_per_record)
         except Exception as ex:
             msg = 'Non-FITS file: {}'.format(ex)
             logging.warning('Failed to mv non-fits file from mirror on Valley.')
-            raise tex.IngestRejection(dict(), ex, dict())
+            raise tex.IngestRejection(md5sum, ifname, ex, dict())
 
-        auditor.log_audit(dict(filename=ifname), False, destfname, 'Non-FITS file',
-                          dict(), dict())
+        auditor.log_audit(md5sum, origfname, False, destfname, 'Non-FITS file')
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
         logging.info('Non-FITS file put in: {}'.format(destfname))
         

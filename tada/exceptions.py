@@ -13,12 +13,12 @@ class IngestRejection(Exception):
     """File could not be ingested into archive. (We might not even attempt to
 ingest if file is known to be invalid before hand)."""
     #def __init__(self, localfits, srcpath, errmsg, newhdr):
-    def __init__(self, prms, errmsg, newhdr):
-        self.prms = prms
+    def __init__(self, md5sum, origfilename, errmsg, newhdr):
         self.errmsg = errmsg
         self.newhdr = newhdr # dict of new FITS metadata
         #print('DBG: IngestRejection; errmsg={}'.format(errmsg))
-        auditor.log_audit(prms, False, '', errmsg, dict(), newhdr)
+        auditor.log_audit(md5sum, origfilename, False, '', errmsg,
+                          newhdr=newhdr)
         
     def __str__(self):
         return str(self.errmsg)
@@ -31,6 +31,10 @@ class InvalidHeader(SubmitException):
     "Exception when FITS header doesn't contains everything we need."
     pass
 
+class InvalidFits(SubmitException):
+    "FITS file failed CFITSIO verify test."
+    pass
+
 class ArchiveWebserviceProblem(SubmitException):
     "Exception on opening or reading Archive URL."
     pass
@@ -41,6 +45,10 @@ class CannotModifyHeader(SubmitException):
 
 class HeaderMissingKeys(SubmitException):
     "Exception when FITS header doesn't contains everything we need."
+    pass
+
+class BadPropid(Exception):
+    "Required propid from header is invalid."
     pass
 
 class InsufficientRawHeader(Exception):

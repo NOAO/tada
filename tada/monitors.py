@@ -174,7 +174,7 @@ YAML file will be transfered with FITS because its in same directory..
             yamlname = queuename + '.yaml'
 
             try:
-                fu.validate_fits(ifname)
+                fu.fitsverify(ifname)
             except Exception as ex:
                 logging.warning(('Dropbox file ({}) is invalid FITS.'
                                  ' Trying to continue anyhow. {}')

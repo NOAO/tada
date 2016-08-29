@@ -462,12 +462,16 @@ def validate_recommended_hdr(hdr, orig_fullname):
 #!             ext[1:])
 
 
-def validate_fits(fname):
-    '''Validate FITS file. Throw exception on invalid.'''
-    logging.debug('validate_fits({})'.format(fname))
+def fitsverify(fname):
+    '''Verify FITS file. Throw exception on invalid.'''
+    logging.debug('fitsverify({})'.format(fname))
     fitsverify = '/usr/local/bin/fitsverify'
-    subprocess.check_output([fitsverify, '-e', '-q', fname])
-    logging.debug('{} PASSED validate_fits()'.format(fname))
+    try:
+        subprocess.check_output([fitsverify, '-e', '-q', fname])
+    except Exception as err:
+        raise tex.InvalidFits('Command failed: {}'
+                           .format(' '.join([fitsverify, '-e', '-q', fname])))
+    logging.debug('{} PASSED fitsverify()'.format(fname))
     return True
 
 def fix_hdr(hdr, fname, options, opt_params, **kwargs):
@@ -517,6 +521,7 @@ Include fields in hdr needed to construct new filename that fullfills standards.
                 .format(funcname, orig_fullname, ex))
         logging.debug('[{}] new field values={}'.format(calcfunc.__name__, new))
         hdr.update(new)
+
     new = hf.set_dtpropid(hdr, **kwargs)
     logging.debug('Updating DTPROPID from {} => {}'
                   .format(hdr.get('DTPROPID'),
