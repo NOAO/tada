@@ -48,37 +48,33 @@ SRCFILES=""
 
 tic=`date +'%s'`
 
+MAX_DROP_WAIT_TIME=10  # max seconds from file drop to ingest/reject
+
 sdrop=$tdata/scrape
 # fail-fail (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
-testCommand db1_1 "faildrop $sdrop/20110101/wiyn-bench/24dec_2014.061.fits.fz 20110101 wiyn-bench" "^\#" y 0
+testCommand db1_1 "faildrop $sdrop/20110101/wiyn-bench/24dec_2014.061.fits.fz 20110101 wiyn-bench" "^\#" n 0
 
 # fail-pass (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
-testCommand db1_2 "passdrop $sdrop/20160314/kp4m-mosaic3/mos3.75870.fits.fz 20160314 kp4m-mosaic3" "^\#" y 0
+testCommand db1_2 "passdrop $sdrop/20160314/kp4m-mosaic3/mos3.75870.fits.fz 20160314 kp4m-mosaic3" "^\#" n 0
 
 
 # pass-pass (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
-testCommand db1_3 "passdrop $sdrop/20150709/bok23m-90prime/d7212.0062.fits.fz 20150709 bok23m-90prime" "^\#" y 0
-
-###########################################
-echo "WARNING: ignoring remainder of tests"
-exit $return_code
-###########################################a
-
-
+testCommand db1_3 "passdrop $sdrop/20150709/bok23m-90prime/d7212.0062.fits.fz 20150709 bok23m-90prime" "^\#" n 0
 
 sdrop=$tdata/short-drop
-testCommand db2_1 "faildrop $sdrop/bad-date/wiyn-whirc/obj_355a.fits.fz bad-date wiyn-whirc" "^\#" n 0
-testCommand db2_2 "faildrop $sdrop/20160909/bad-instrum/obj_355b.fits.fz 20160909 bad-instrum" "^\#" n 0
+testCommand db2_1 "faildrop $sdrop/bad-date/wiyn-whirc/obj_355a.fits.fz bad-date wiyn-whirc" "^\#" n 9
+testCommand db2_2 "faildrop $sdrop/20160909/bad-instrum/obj_355b.fits.fz 20160909 bad-instrum" "^\#" n 9
 testCommand db2_3 "passdrop $sdrop/20141220/wiyn-whirc/obj_355.fits.fz 20141220 wiyn-whirc" "^\#" n 0
 testCommand db2_4 "passdrop $sdrop/20160610/kp4m-mosaic3/mos3.94567.fits 20160610 kp4m-mosaic3" "^\#" n 0 
 testCommand db2_5 "faildrop $sdrop/20160610/kp4m-mosaic3/mos3.badprop.fits 20160610 kp4m-mosaic3" "^\#" n 0 
 testCommand db2_6 "passdrop $sdrop/20110101/ct13m-andicam/ir141225.0179.fits 20110101 ct13m-andicam" "^\#" n 0 
 
+echo "MAX_FOUND_TIME=$MAX_FOUND_TIME"
 
 
 emins=$((`date +'%s'` - tic))
 # expect about 168 seconds
-echo "# Completed dropbox test: " `date` " in $emins seconds"a
+echo "# Completed dropbox test: " `date` " in $emins seconds"
 
 
 # Directory structure is wrong! (one too deep)

@@ -1,0 +1,7 @@
+# Waiting up to 15 secs for /sandbox/tada/tests/smoke/tada-test-data/short-drop/20141220/wiyn-whirc/obj_355.fits.fz to be submitted: 
+# ...!
+# Found file after 3 seconds.
+Found file: /sandbox/tada/tests/smoke/tada-test-data/short-drop/20141220/wiyn-whirc/obj_355.fits.fz
+# DBG-SMOKE AUDITDB sql: SELECT success FROM audit WHERE srcpath='/sandbox/tada/tests/smoke/tada-test-data/short-drop/20141220/wiyn-whirc/obj_355.fits.fz' AND telescope='wiyn' AND instrument='whirc';
+# DBG-SMOKE AUDITDB actual=1
+# DBG-SMOKE wait-n-match: actual=expected

@@ -175,7 +175,6 @@ function testCommand () {
   err="${testName}.err"
   GOLD="${actual}.GOLD"
   diff="diff.out"
-  
 
   # This isn't a great solution since it only works with bash, but it gets
   # me by.
@@ -202,8 +201,6 @@ function testCommand () {
   else
     echo "*** $proc PASSED [$testName] ($tn; Command correctly returned status = $expectedStatus***"
   fi
-  
-
 
   ## Make sure we didn't get errors (output to stderr).
   tn="2/3"

@@ -1,0 +1,7 @@
+# Waiting up to 15 secs for /sandbox/tada/tests/smoke/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz to be submitted: 
+# .....!
+# Found file after 5 seconds.
+Found file: /sandbox/tada/tests/smoke/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz
+# DBG-SMOKE AUDITDB sql: SELECT success FROM audit WHERE srcpath='/sandbox/tada/tests/smoke/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz' AND telescope='bok23m' AND instrument='90prime';
+# DBG-SMOKE AUDITDB actual=1
+# DBG-SMOKE wait-n-match: actual=expected

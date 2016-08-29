@@ -3,6 +3,7 @@
 AUDITDB="/var/log/tada/audit.db"
 SMOKEDB="$HOME/.tada/smoke.db"
 DROPCACHE="$HOME/.tada/dropcache"
+MAX_FOUND_TIME=0
 
 
 CREATE_SMOKEDB="CREATE TABLE expected (
@@ -23,6 +24,7 @@ function setup_dropbox_tests () {
     
     rm $SMOKEDB
     sqlite3 $SMOKEDB "$CREATE_SMOKEDB"
+    chmod a+rw $SMOKEDB
 }
 
 function clean_manifest () {
@@ -33,18 +35,17 @@ function clean_manifest () {
 }
 
 function record_expected () {
-    fits=$1 # full path to source FITS file
-    YYYMMDD=$2 # e.g. "20160101"
-    TELE_INST=$3
-    expected=$4
+    local fits=$1 # full path to source FITS file
+    local YYYMMDD=$2 # e.g. "20160101"
+    local TELE_INST=$3
+    local expected=$4
 
-    day="${YYYYMMDD:0:4}-${YYYYMMDD:4:2}-${YYYYMMDD:6:2}"
+    local day="${YYYYMMDD:0:4}-${YYYYMMDD:4:2}-${YYYYMMDD:6:2}"
     IFS='-' read  tele inst <<< "$TELE_INST"
 
-    sql="INSERT INTO expected VALUES ('$fits','$tele', '$inst', '$expected');"
+    local sql="INSERT INTO expected VALUES ('$fits','$tele', '$inst', '$expected');"
     sqlite3 $SMOKEDB "$sql"
     #!echo "RECORD_EXPECTED in $SMOKEDB: sql=$sql"
-
     #gen-audit-records.sh -d $day -t $tele -i $inst -n $marshost $fits>/dev/null
 }
 
@@ -52,58 +53,64 @@ function record_expected () {
 # If timeout, RETURN=9. Else, if EXPECTED=ACTUAL RETURN=0, else RETURN=1
 # MUST match against specific (fits,tele,instrum) record. NOT just fits.
 function wait-n-match () { # (fitsfile, tele_inst) => $STATUS
-    FITS=$1 # full path to source FITS file
-    TELE_INST=$2
+    local FITS=$1 # full path to source FITS file
+    local TELE_INST=$2
     IFS='-' read  tele inst <<< "$TELE_INST"
-    TIMEOUT=15 # seconds
-
-    sql="SELECT count(*) FROM audit \
+    local TIMEOUT=${MAX_DROP_WAIT_TIME:-15} # seconds
+    
+    local sql="SELECT count(*) FROM audit \
 WHERE success IS NOT NULL \
  AND srcpath='$FITS' AND telescope='$tele' AND instrument='$inst';"
-    maxTries=$TIMEOUT
-    tries=0
-    STATUS=0
-    #!echo "DBG-SMOKE: sql=$sql"
+    local maxTries=$TIMEOUT
+    local tries=0
+    local STATUS=0
+    #!echo "# DBG-SMOKE: sql=$sql"
     echo "# Waiting up to $TIMEOUT secs for $FITSFILE to be submitted: " 
+    echo -n "# "
     while [ `sqlite3 $AUDITDB "$sql"` -eq 0 ]; do
-	tries=$((tries+1))
-	if [ "$tries" -gt "$maxTries" ]; then
-	    echo "!"
-	    echo "# Aborted after $maxTries seconds. Not submitted: $FITS"
-	    STATUS=9
-	    return $STATUS
-	fi
-	echo -n "."
-	sleep 1
+        tries=$((tries+1))
+        if [ "$tries" -gt "$maxTries" ]; then
+            echo "!"
+            echo "# Aborted after $maxTries seconds. Not submitted: $FITS"
+            STATUS=9
+            return $STATUS
+        fi
+        echo -n "."
+        sleep 1
     done
     echo "!"
-    echo "Found file after $tries seconds."
-    
+    echo "Found file: $FITS"
+    echo "# Found file after $tries seconds."
+    if [ "$tries" -gt "$MAX_FOUND_TIME" ]; then
+        MAX_FOUND_TIME=$tries
+    fi
     sql="SELECT success FROM audit \
 WHERE srcpath='$FITS' AND telescope='$tele' AND instrument='$inst';"
-    actual=`sqlite3 $AUDITDB "$sql"` 
-
+    local actual=`sqlite3 $AUDITDB "$sql"` 
+    echo "# DBG-SMOKE AUDITDB sql: $sql"
+    echo "# DBG-SMOKE AUDITDB actual=$actual"
+    
     sql="SELECT success FROM expected \
 WHERE fits='$FITS' AND tele='$tele' AND instrum='$inst';"
-    expected=`sqlite3 $SMOKEDB "$sql"`
-
+    local expected=`sqlite3 $SMOKEDB "$sql"`
+    
     if [ "$actual" != "$expected" ]; then
-	echo "DBG-SMOKE wait-n-match: actual($actual)!=expected($expected)"
-	STATUS=1
+        echo "# DBG-SMOKE wait-n-match: actual($actual) != expected($expected)"
+        STATUS=1
     else
-	echo "DBG-SMOKE wait-n-match: actual=expected"
+        echo "# DBG-SMOKE wait-n-match: actual=expected"
     fi
     return $STATUS
 }
 
 # drop one file to mountain dropbox, ingest may Pass or Fail
 function dropfile () {
-    FITSFILE=$1
-    DATE=$2 # e.g. "20160101"
-    TELE_INST=$3
-    expected=$4 # {1=PASS, 0=FAIL}
-    BNAME=`basename $FITSFILE`
-    boxhost="mountain.`hostname --domain`"
+    local FITSFILE=$1
+    local DATE=$2 # e.g. "20160101"
+    local TELE_INST=$3
+    local expected=$4 # {1=PASS, 0=FAIL}
+    local BNAME=`basename $FITSFILE`
+    local boxhost="mountain.`hostname --domain`"
 
     # Drop file to tada:
     #   copy to pre-drop, add personality, record expected, drop to TADA
@@ -114,33 +121,34 @@ function dropfile () {
     cp $FITSFILE $dropfile
     #!chmod -R a+rwX $DROPCACHE
     
-    #!echo "DBG-SMOKE: cp $FITSFILE -> $dropfile"
+    #!echo "# DBG-SMOKE: cp $FITSFILE -> $dropfile"
 
     record_expected $FITSFILE $DATE ${TELE_INST} $expected
 
-    #!echo "DBG-SMOKE: add YAML in $dropfile ($FITSFILE)"
+    #!echo "# DBG-SMOKE: add YAML in $dropfile ($FITSFILE)"
     add_test_personality.sh $FITSFILE $dropfile
     rsync -az --password-file ~/.tada/rsync.pwd \
-	  $DROPCACHE/ tada@$boxhost::dropbox
+      $DROPCACHE/ tada@$boxhost::dropbox
 
     # wait for file to make it through, and capture ingest status
     wait-n-match $FITSFILE ${TELE_INST}
-    echo $STATUS
+    return $?
 }
 
 function passdrop () {
     dropfile $1 $2 $3 1
 }
+
 function faildrop () {
     dropfile $1 $2 $3 0
 }
 
 
 function insertsrc () {
-    srcpath=$1
-    SRCFILES="$SRCFILES $srcpath"
-    tele='unknown'
-    inst='unknown'
+    local srcpath=$1
+    local SRCFILES="$SRCFILES $srcpath"
+    local tele='unknown'
+    local inst='unknown'
     echo "INSERT OR REPLACE INTO audit (srcpath,telescope,instrument) VALUES ('$srcpath','$tele','$inst');" | sqlite3 $AUDITDB
     
     gen-audit-records.sh -t $tele -i $inst -n $marshost $f  > /dev/null
@@ -148,8 +156,8 @@ function insertsrc () {
 
 # Get drop status from Mountain    
 function sbox () {
-    mtnhost="mountain.`hostname --domain`"
-    statusdir="$SCRIPTDIR/remote_status"
+    local mtnhost="mountain.`hostname --domain`"
+    local statusdir="$SCRIPTDIR/remote_status"
     mkdir -p $statusdir
     rsync -a --password-file ~/.tada/rsync.pwd tada@$mtnhost::statusbox $statusdir
     find $mydir -type f
@@ -158,15 +166,15 @@ function sbox () {
 # drop directory to Mountain Drop BOX
 function mdbox () {
     clean_manifest
-    srcdir=$1
-    MAXRUNTIME=120  # max seconds to wait for all files to be submitted
-    boxhost="mountain.`hostname --domain`"
+    local srcdir=$1
+    local MAXRUNTIME=120  # max seconds to wait for all files to be submitted
+    local boxhost="mountain.`hostname --domain`"
     for f in `find $srcdir \( -name "*.fits" -o -name "*.fits.fz" \)`; do
         # Force all fits files to be touched on remote (which creates event)
         add_test_personality.sh $f
         touch $f
         #! echo "$f" >> $MANIFEST
-	insertsrc $f
+    insertsrc $f
     done
     echo "# List of files submitted is in: $AUDITDB"
     #rsync -aiz --password-file ~/.tada/rsync.pwd $srcdir tada@$boxhost::dropbox
@@ -180,15 +188,15 @@ function mdbox () {
 # drop directory to Valley Drop BOX
 function vdbox () {
     clean_manifest
-    srcdir=$1
-    MAXRUNTIME=90  # max seconds to wait for all files to be submitted
-    boxhost="valley.`hostname --domain`"
+    local srcdir=$1
+    local MAXRUNTIME=90  # max seconds to wait for all files to be submitted
+    local boxhost="valley.`hostname --domain`"
     for f in `find $srcdir \( -name "*.fits" -o -name "*.fits.fz" \)`; do
         # Force all fits files to be touched on remote (which creates event)
         add_test_personality.sh $f
         touch $f
         #!echo "$f" >> $MANIFEST
-	insertsrc $f
+    insertsrc $f
     done
     echo "# List of files submitted is in: $MANIFEST"
     rsync -az --password-file ~/.tada/rsync.pwd $srcdir tada@$boxhost::dropbox
