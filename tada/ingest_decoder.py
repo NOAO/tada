@@ -97,6 +97,8 @@ stilutRE = re.compile(r"Unknown combination for stiLUT:")
 '''Unknown combination for stiLUT: SITE(ct), TELESCOPE(ct09m), and
 INSTRUMENT(biw) (in /var/tada/cache/20160616/ct09m-biw/f177.fits.fz)'''
 
+fitsverifyRE = re.compile(r"Command failed: /usr/local/bin/fitsverify")
+'''Command failed: /usr/local/bin/fitsverify -e -q /var/tada/cache/20110101/wiyn-bench/24dec_2014.061.fits.fz'''
 
 # these must be searched in order. First MatchFunc to return True wins.
 ERRMAP = [
@@ -109,16 +111,18 @@ ERRMAP = [
     ('BADDATE', baddateRE,        'DATE-OBS bad format'),
     ('NOTFITS', nonfitsRE,        'Cannot ingest non-FITS file'),
     ('STILUT',  stilutRE,         'Prefix table missing entry'),
+    ('NOVERIFY',fitsverifyRE,     'File fails fitsverify'),
     ('none',    None,             'No error'),
     ('UNKNOWN', None,             'Unknown error'),
 ]
 
 def errcode(response):
     for name, regex, desc in ERRMAP:
-        if regex == None:
-            return name
+        #! if regex == None:  return name
         if regex.search(response):
             return name
+        elif response == '':
+            return 'none'
     logging.error('errcode cannot code for error message: {}'.format(response))
     return 'UNKNOWN'
 

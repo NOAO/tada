@@ -256,6 +256,8 @@ configuration field: maximum_errors_per_record)
         origfname = pprms['filename']
         try:
             destfname = ts.submit_to_archive(ifname, checksum, qname, qcfg=qcfg)
+        except tex.IngestRejection:
+            raise
         except Exception as sex:
             msg = 'Failed to submit {}: {}'.format(ifname, sex)
             auditor.set_fstop(md5sum, 'valley:cache', host=socket.getfqdn())

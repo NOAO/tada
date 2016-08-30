@@ -288,11 +288,7 @@ RETURN: irods location of hdr file.
         iu.irods_put331(hdrfile, new_ihdr)
         os.remove(hdrfile)        
     except Exception as err:
-        #!traceback.print_exc()
-        #! raise
-        #! raise tex.SubmitException('Bad header content in file {}'
-        #!                           .format(orig_fullname))
-        raise tex.IngestRejection(md5sum, orig_fullname, str(err), hdr)
+        raise tex.IngestRejection(md5sum, orig_fullname, err, hdr)
 
         
     #! iu.irods_put331(mirror_fname, new_ifname) # iput renamed FITS
