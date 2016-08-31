@@ -3,7 +3,10 @@
 AUDITDB="/var/log/tada/audit.db"
 SMOKEDB="$HOME/.tada/smoke.db"
 DROPCACHE="$HOME/.tada/dropcache"
-MAX_FOUND_TIME=0
+
+# Maximum seconds waited for a dropped file to show at ingest.
+# (excluding files that NEVER make it to ingest)
+MAX_FOUND_TIME=0 
 
 
 CREATE_SMOKEDB="CREATE TABLE expected (
@@ -45,14 +48,14 @@ function record_expected () {
 
     local sql="INSERT INTO expected VALUES ('$fits','$tele', '$inst', '$expected');"
     sqlite3 $SMOKEDB "$sql"
-    #!echo "RECORD_EXPECTED in $SMOKEDB: sql=$sql"
+    #!echo "# RECORD_EXPECTED in $SMOKEDB: sql=$sql"
     #gen-audit-records.sh -d $day -t $tele -i $inst -n $marshost $fits>/dev/null
 }
 
 # Wait for FITSFILE to appear in AUDITDB.
 # If timeout, RETURN=9. Else, if EXPECTED=ACTUAL RETURN=0, else RETURN=1
 # MUST match against specific (fits,tele,instrum) record. NOT just fits.
-function wait-n-match () { # (fitsfile, tele_inst) => $STATUS
+function wait_for_match () { # (fitsfile, tele_inst) => $STATUS
     local FITS=$1 # full path to source FITS file
     local TELE_INST=$2
     IFS='-' read  tele inst <<< "$TELE_INST"
@@ -64,7 +67,7 @@ WHERE success IS NOT NULL \
     local maxTries=$TIMEOUT
     local tries=0
     local STATUS=0
-    #!echo "# DBG-SMOKE: sql=$sql"
+    echo "# DBG-SMOKE: sql=$sql"
     echo "# Waiting up to $TIMEOUT secs for $FITSFILE to be submitted: " 
     echo -n "# "
     while [ `sqlite3 $AUDITDB "$sql"` -eq 0 ]; do
@@ -73,6 +76,7 @@ WHERE success IS NOT NULL \
             echo "!"
             echo "# Aborted after $maxTries seconds. Not submitted: $FITS"
             STATUS=9
+	    echo "# Timeout exceeded. Aborted wait for $FITS."
             return $STATUS
         fi
         echo -n "."
@@ -95,16 +99,18 @@ WHERE fits='$FITS' AND tele='$tele' AND instrum='$inst';"
     local expected=`sqlite3 $SMOKEDB "$sql"`
     
     if [ "$actual" != "$expected" ]; then
-        echo "# DBG-SMOKE wait-n-match: actual($actual) != expected($expected)"
+        echo "# DBG-SMOKE wait_for_match: actual($actual) != expected($expected)"
         STATUS=1
     else
-        echo "# DBG-SMOKE wait-n-match: actual=expected"
+        echo "# DBG-SMOKE wait_for_match: actual=expected"
     fi
     return $STATUS
 }
 
-# drop one file to mountain dropbox, ingest may Pass or Fail
+# drop one file to mountain dropbox (ingest may Pass or Fail)
+#   copy to pre-drop, add personality, record expected, drop to TADA
 function dropfile () {
+
     local FITSFILE=$1
     local DATE=$2 # e.g. "20160101"
     local TELE_INST=$3
@@ -112,26 +118,21 @@ function dropfile () {
     local BNAME=`basename $FITSFILE`
     local boxhost="mountain.`hostname --domain`"
 
-    # Drop file to tada:
-    #   copy to pre-drop, add personality, record expected, drop to TADA
-
     mkdir -p $DROPCACHE
     dropfile=$DROPCACHE/$DATE/${TELE_INST}/$BNAME
     mkdir -p `dirname $dropfile`
     cp $FITSFILE $dropfile
     #!chmod -R a+rwX $DROPCACHE
-    
-    #!echo "# DBG-SMOKE: cp $FITSFILE -> $dropfile"
 
     record_expected $FITSFILE $DATE ${TELE_INST} $expected
 
-    #!echo "# DBG-SMOKE: add YAML in $dropfile ($FITSFILE)"
+    echo "# DBG-SMOKE: add YAML in $dropfile ($FITSFILE)"
     add_test_personality.sh $FITSFILE $dropfile
     rsync -az --password-file ~/.tada/rsync.pwd \
       $DROPCACHE/ tada@$boxhost::dropbox
 
     # wait for file to make it through, and capture ingest status
-    wait-n-match $FITSFILE ${TELE_INST}
+    wait_for_match $FITSFILE ${TELE_INST}
     return $?
 }
 

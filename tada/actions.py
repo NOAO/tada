@@ -11,7 +11,6 @@ import time
 from pathlib import PurePath
 import hashlib
 
-#! from . import irods_utils as iu
 from . import submit as ts
 from . import diag
 from . import fits_utils as fu
@@ -24,9 +23,7 @@ from . import exceptions as tex
 qcfg, dirs = config.get_config(None,
                                validate=False,
                                yaml_filename='/etc/tada/tada.conf')
-auditor = audit.Auditor(qcfg.get('mars_host'),
-                        qcfg.get('mars_port'),
-                        qcfg.get('do_audit',True))
+auditor = audit.Auditor()
 
 
 def md5(fitsname):
@@ -219,8 +216,8 @@ def network_move(rec, qname, **kwargs):
 #!              file=f)
 
 
-# Done against each record popped from data-queue
-def submit(rec, qname, **kwargs):
+
+def unprotected_submit(rec, qname, **kwargs):
     """Try to modify headers and submit FITS to archive. If anything fails 
 more than N times, move the queue entry to Inactive. (where N is the 
 configuration field: maximum_errors_per_record)
@@ -256,8 +253,8 @@ configuration field: maximum_errors_per_record)
         origfname = pprms['filename']
         try:
             destfname = ts.submit_to_archive(ifname, checksum, qname, qcfg=qcfg)
-        except tex.IngestRejection:
-            raise
+        #!except tex.IngestRejection:
+        #!    raise !!!!
         except Exception as sex:
             msg = 'Failed to submit {}: {}'.format(ifname, sex)
             auditor.set_fstop(md5sum, 'valley:cache', host=socket.getfqdn())
@@ -286,10 +283,22 @@ configuration field: maximum_errors_per_record)
             logging.warning('Failed to mv non-fits file from mirror on Valley.')
             raise tex.IngestRejection(md5sum, ifname, ex, dict())
 
-        auditor.log_audit(md5sum, origfname, False, destfname, 'Non-FITS file')
+        #auditor.log_audit(md5sum, origfname, False, destfname, 'Non-FITS file')
+        auditor.set_fstop(md5sum, 'mountain:anticache', host=socket.getfqdn())
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
         logging.info('Non-FITS file put in: {}'.format(destfname))
         
     auditor.set_fstop(md5sum,'archive')
     return True
-# END submit() action
+# END unprotected_submit() action
+
+# Done against each record popped from data-queue
+def submit(rec, qname, **kwargs):
+    try:
+        unprotected_submit(rec, qname, **kwargs)
+    except Exception as ex:
+        logging.error(('Failed to run action "submit" from dataq.'
+                       ' rec={}; qname={}; {}')
+                      .format(rec, qname, ex))
+        return False
+    return True

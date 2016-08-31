@@ -17,7 +17,8 @@ expanded to spaces to handle the command line argument limitation.
 '''
 
 import logging
-import urllib.request
+#!import urllib.request
+import requests
 from dateutil import tz
 import datetime as dt
 #from . import hdr_calc_utils as ut
@@ -44,11 +45,13 @@ def http_get_propids_from_schedule(telescope, instrument, date,
     logging.debug('MARS: get PROPID from schedule; url = {}'.format(url))
     propids = []
     try:
-        with urllib.request.urlopen(url,timeout=6) as f:
-            response = f.read().decode('utf-8')
-            logging.debug('MARS: server response="{}"'.format(response))
-            propids = [pid.strip() for pid in response.split(',')]
-            return propids
+        #!with urllib.request.urlopen(url,timeout=6) as f:
+        #!    response = f.read().decode('utf-8')
+        r = requests.get(url, timeout=6)
+        response = r.text
+        logging.debug('MARS: server response="{}"'.format(response))
+        propids = [pid.strip() for pid in response.split(',')]
+        return propids
     except Exception as ex:
         logging.error('MARS: Error contacting schedule service via {}; {}'
                       .format(url, ex))

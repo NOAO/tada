@@ -10,7 +10,8 @@ import os.path
 from pathlib import PurePath
 import traceback
 import pathlib
-import urllib.request
+#!import urllib.request
+import requests
 import datetime
 #import subprocess
 import shutil
@@ -25,15 +26,10 @@ from . import irods331 as iu
 from . import ingest_decoder as idec
 from . import config
 from . import audit
+from . import tada_utils as tut
 
-
-qcfg, dirs = config.get_config(None,
-                               validate=False,
-                               yaml_filename='/etc/tada/tada.conf')
-auditor = audit.Auditor(qcfg.get('mars_host'),
-                        qcfg.get('mars_port'),
-                        qcfg.get('do_audit',True))
-
+auditor = audit.Auditor()
+ARCHIVE_SERVICE_TIMEOUT = 10.0 # seconds to wait for an answer from Archive svc
 
 def md5(fname):
     hash_md5 = hashlib.md5()
@@ -54,26 +50,38 @@ RETURN: (statusBool, message, operatorMessage)"""
     arch_host = qcfg['arch_host']
     arch_port = qcfg['arch_port']
 
-    archserver_url = ('http://{}:{}/?hdrUri={}{}'
-                     .format(arch_host, arch_port, ipfx, hdr_ipath))
-    logging.debug('archserver_url = {}'.format(archserver_url))
+    #!archserver_url = ('http://{}:{}/?hdrUri={}{}'
+    #!                 .format(arch_host, arch_port, ipfx, hdr_ipath))
+    archserver_url = ('http://{}:{}/'.format(arch_host, arch_port))
+    payload = dict(hdrUri=ipfx+hdr_ipath)
+    logging.debug('archserver_url={}, prms={}, timeout={}'
+                  .format(archserver_url, payload, ARCHIVE_SERVICE_TIMEOUT))
 
     response = ''
     try:
-        with urllib.request.urlopen(archserver_url) as f:
-            response = f.read().decode('utf-8')
-        logging.debug('ARCH server response: {}'.format(response))
-    except:
+        #!with urllib.request.urlopen(archserver_url) as f:
+        #!    response = f.read().decode('utf-8')
+        #!logging.debug('ARCH server response: {}'.format(response))
+        tut.tic()
+        r = requests.get(archserver_url,
+                         params=payload,
+                         timeout=ARCHIVE_SERVICE_TIMEOUT)
+        response = r.text
+        logging.debug('archserver full url = {}'.format(r.url))
+        elapsed = tut.toc()
+        logging.debug('archserver response({:.2f}): {}'
+                      .format(elapsed, response))
+    except Exception as err:
         raise tex.ArchiveWebserviceProblem(
-            'Problem in opening or reading connection to: '
-            .format(archserver_url))
+            'Problem in opening or reading connection to: {}{}; {}'
+            .format(archserver_url, payload, err))
 
     success, operator_msg, mtype = idec.decodeIngest(response)
     logging.debug('ARCH server: success={}, msg={}, errcode={}'
                   .format(success, operator_msg, mtype))
     message = operator_msg
     if not success:
-        message = ('HTTP response from NSA server for file {}: "{}"; {}'
+        message = ('HTTP response from ARCH server for file {}: "{}"; {}'
                    .format(origfname, response, operator_msg))
         #raise tex.SubmitException(message)
 
@@ -347,7 +355,7 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 
     """
     logging.debug('submit_to_archive({},{})'.format(ifname, qname))
-
+    
     
     cfgprms = dict(archive331 =  qcfg['archive_irods331'],
                    mars_host  =  qcfg.get('mars_host'),  
@@ -360,6 +368,9 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     #!origfname = pprms.get('filename', ifname)
     origfname = pprms['filename']
     md5sum = pprms['md5sum']
+    if 'do_audit' in pprms:
+        auditor.do_svc = pprms['do_audit']
+
     try:
         # Following does irods_put331 to new_ihdr if the hdr looks valid
         new_ihdr,destfname,changed,modfits = prep_for_ingest(
@@ -388,6 +399,7 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
         #raise tex.SubmitException(ops_msg)
         raise tex.IngestRejection(md5sum, origfname, ops_msg, popts)
     else:
+        logging.debug('DBG-1')
         auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
                           orighdr=popts, newhdr=changed)
 
@@ -423,6 +435,7 @@ So, caller should not have to put this function in try/except."""
     if 'FITS image data' not in str(magic.from_file(fitsfile)):
         errmsg = 'Cannot ingest non-FITS file: {}'.format(fitsfile)
         logging.error(errmsg)
+        logging.debug('DBG-2')
         auditor.log_audit(md5(fitsfile), fitsfile, False, '', errmsg)
         return (False, errmsg)
 
@@ -453,11 +466,13 @@ So, caller should not have to put this function in try/except."""
             traceback.print_exc()
         msg = str(err)
         logging.error(msg)
+        logging.debug('DBG-3')
         auditor.log_audit(md5sum, origfname, False, '', str(err), newhdr=popts)
         return (False, msg)
 
     success, m1, ops_msg, mtype = http_archive_ingest(new_ihdr, qname,
                                                qcfg=qcfg, origfname=origfname)
+    logging.debug('DBG-4')
     auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
                       orighdr=popts, newhdr=changed)
     if not success:
@@ -488,6 +503,7 @@ def direct_submit(fitsfile, moddir,
     if 'FITS image data' not in str(magic.from_file(fitsfile)):
         errmsg = 'Cannot ingest non-FITS file: {}'.format(fitsfile)
         logging.error(errmsg)
+        logging.debug('DBG-5')
         auditor.log_audit(md5(fitsfile), fitsfile, False, '', errmsg)
         sys.exit(errmsg)
         
@@ -522,6 +538,7 @@ def direct_submit(fitsfile, moddir,
                                                      moddir=moddir,
                                                      **cfgprms)
     except Exception as err:
+        logging.debug('DBG-6')
         auditor.log_audit(md5sum, origfname, False, '', str(err),
                           orighdr=popts, newhdr=changed)
         if trace:
@@ -535,6 +552,7 @@ def direct_submit(fitsfile, moddir,
         
     success,m1,ops_msg,mtype = http_archive_ingest(new_ihdr, qname,
                                          qcfg=qcfg, origfname=origfname)
+    logging.debug('DBG-7')
     auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
                       orighdr=popts, newhdr=changed)
     if not success:

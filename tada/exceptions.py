@@ -1,12 +1,9 @@
+import logging
+
 from . import config
 from . import audit
 
-qcfg, dirs = config.get_config(None,
-                               validate=False,
-                               yaml_filename='/etc/tada/tada.conf')
-auditor = audit.Auditor(qcfg.get('mars_host'),
-                        qcfg.get('mars_port'),
-                        qcfg.get('do_audit',True))
+auditor = audit.Auditor()
 
 
 class IngestRejection(Exception):
@@ -17,9 +14,11 @@ ingest if file is known to be invalid before hand)."""
         self.errmsg = errmsg
         self.newhdr = newhdr # dict of new FITS metadata
         #print('DBG: IngestRejection; errmsg={}'.format(errmsg))
+        #!logging.error('DISABLED log_audit in exceptions.py')
+        logging.exception('IngestRejection: recorded with log_audit')
         auditor.log_audit(md5sum, origfilename, False, '', errmsg,
                           newhdr=newhdr)
-        
+
     def __str__(self):
         return str(self.errmsg)
 

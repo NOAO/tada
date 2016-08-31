@@ -43,9 +43,7 @@ from . import fpack as fp
 qcfg, dirs = config.get_config(None,
                                validate=False,
                                yaml_filename='/etc/tada/tada.conf')
-auditor = audit.Auditor(qcfg.get('mars_host'),
-                        qcfg.get('mars_port'),
-                        qcfg.get('do_audit',True))
+auditor = audit.Auditor()
 
 def get_qname():
     cmd = 'source /etc/tada/dqd.conf; echo $qname'
@@ -125,21 +123,27 @@ YAML file will be transfered with FITS because its in same directory..
         
     def valid_dir(self, ifname):
         """Validate directory structure sent to dropbox."""
-        pp = PurePath(ifname).relative_to(PurePath(self.dropdir))
-        if len(pp.parts) < 3:
-            logging.error('File in dropbox has invalid parts.'
-                          ' Path must start with "20YYMMDD/<instrum>/..."'
-                          ' Got: {}'.format(str(pp)))
+        try:
+            pp = PurePath(ifname).relative_to(PurePath(self.dropdir))
+            if len(pp.parts) < 3:
+                logging.error('File in dropbox has invalid parts.'
+                              ' Path must start with "20YYMMDD/<instrum>/..."'
+                              ' Got: {}'.format(str(pp)))
+                return False
+            day,inst,*d = pp.parts
+            if not self.date_re.match(day):
+                logging.error('File in dropbox has invalid date ({}) in'
+                              ' path. Path must start with'
+                              ' "20YYMMDD/<instrum>/"'
+                              ' Got: {}'
+                              .format(day, ifname))
+                return False
+        except Exception as ex:
+            logging.error('Failed valid_dir({}); {}'
+                          .format(ifname, ex))
+            logging.error(traceback.format_exc())
             return False
-        day,inst,*d = pp.parts
-        if not self.date_re.match(day):
-            logging.error('File in dropbox has invalid date ({}) in'
-                          ' path. Path must start with'
-                          ' "20YYMMDD/<instrum>/"'
-                          ' Got: {}'
-                          .format(day, ifname))
-            return False
-
+            
         return True
 
     def new_file(self, ifname):
@@ -154,11 +158,20 @@ YAML file will be transfered with FITS because its in same directory..
         ##
         ########
 
-        logging.debug('DBG: monitors.py:new_file({})'.format(ifname))
-        pdict = self.options_from_yamls(ifname)
-        logging.debug('Got pdict from yamls:{}'.format(pdict))
-        auditor.set_fstop(pdict.get('md5sum',os.path.basename(ifname)), 'watch')
+        logging.debug('DBG: new_file({})'.format(ifname))
         try:
+            pdict = self.options_from_yamls(ifname)
+        except Exception as ex:
+            logging.error('Failed to get options_from_yamls({}); {}'
+                          .format(ifname, ex))
+            logging.error(traceback.format_exc())
+            return None
+        else:
+            logging.debug('Got pdict from yamls:{}'.format(pdict))
+
+        try:
+            auditor.set_fstop(pdict.get('md5sum',os.path.basename(ifname)),
+                              'watch')
             cachename = ifname.replace(self.dropdir, self.cachedir)
             os.makedirs(os.path.dirname(cachename), exist_ok=True)
             queuename = cachename.replace('/cache/','/cache/.queue/')

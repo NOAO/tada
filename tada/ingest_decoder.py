@@ -118,7 +118,8 @@ ERRMAP = [
 
 def errcode(response):
     for name, regex, desc in ERRMAP:
-        #! if regex == None:  return name
+        if regex == None:
+            continue # ignore
         if regex.search(response):
             return name
         elif response == '':

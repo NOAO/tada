@@ -1,7 +1,9 @@
-# Waiting up to 15 secs for /sandbox/tada/tests/smoke/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz to be submitted: 
-# .....!
-# Found file after 5 seconds.
-Found file: /sandbox/tada/tests/smoke/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz
-# DBG-SMOKE AUDITDB sql: SELECT success FROM audit WHERE srcpath='/sandbox/tada/tests/smoke/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz' AND telescope='bok23m' AND instrument='90prime';
+# DBG-SMOKE: add YAML in /home/vagrant/.tada/dropcache/20150709/bok23m-90prime/d7212.0062.fits.fz (/data/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz)
+# DBG-SMOKE: sql=SELECT count(*) FROM audit WHERE success IS NOT NULL  AND srcpath='/data/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz' AND telescope='bok23m' AND instrument='90prime';
+# Waiting up to 30 secs for /data/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz to be submitted: 
+# !
+Found file: /data/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz
+# Found file after 0 seconds.
+# DBG-SMOKE AUDITDB sql: SELECT success FROM audit WHERE srcpath='/data/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz' AND telescope='bok23m' AND instrument='90prime';
 # DBG-SMOKE AUDITDB actual=1
 # DBG-SMOKE wait-n-match: actual=expected

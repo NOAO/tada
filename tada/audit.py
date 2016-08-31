@@ -11,7 +11,10 @@ import hashlib
 #import json
 import requests
 import os.path
+import socket
+
 from . import ingest_decoder as dec
+from . import tada_utils as tut
 
 def md5(fname):
     hash_md5 = hashlib.md5()
@@ -25,12 +28,14 @@ def md5(fname):
 class Auditor():
     "Maintain audit records both locally (valley) and via MARS service"
     
-    def __init__(self, mars_host, mars_port, use_service):
+    def __init__(self):
+        cfg = tut.read_hiera_yaml()
         self.con = sqlite3.connect('/var/log/tada/audit.db')
         self.timeout = (3.05, 5) # (connect, read) in seconds
-        self.mars_port = mars_port
-        self.mars_host = mars_host
-        self.do_svc = use_service #if pprms.get('do_audit',False):
+        self.mars_port = cfg['mars_port']
+        self.mars_host = cfg['mars_host']
+        self.do_svc = cfg.get('do_audit',True)
+        
         #!self.fstops = set(['dome',
         #!                   'mountain:dropbox',
         #!                   'mountain:queue',
@@ -46,14 +51,11 @@ class Auditor():
         """Update audit service with hhe most downstream stop of FITS file"""
         if not self.do_svc:
             return False
-
-        logging.debug('AUDIT.set_fstop({}, {})'.format(md5sum, fstop))
         if host == None:
-            uri = ('http://{}:{}/audit/fstop/{}/{}/'
-                   .format(self.mars_host, self.mars_port, md5sum, fstop))
-        else:
-            uri = ('http://{}:{}/audit/fstop/{}/{}/{}/'
-                   .format(self.mars_host, self.mars_port, md5sum, fstop, host))
+            host = socket.getfqdn() # this host
+        logging.debug('AUDIT.set_fstop({}, {}, {})'.format(md5sum, fstop, host))
+        uri = ('http://{}:{}/audit/fstop/{}/{}/{}/'
+               .format(self.mars_host, self.mars_port, md5sum, fstop, host))
 
         logging.debug('DBG-0: fstop uri={}'.format(uri))
         #!ddict = dict(md5sum=md5sum, fstop=fstop)
@@ -146,7 +148,8 @@ class Auditor():
                 logging.debug('Did not update via audit service')
         except Exception as ex:
             logging.error('auditor.log_audit() failed: {}'.format(ex))
-
+        logging.debug('DONE: log_audit')
+        
     # FIRST something like: sqlite3 audit.db < sql/audit-schema.sql
     def update_local(self, recdic):
         "Add audit record to local sqlite DB. (in case service is down)"

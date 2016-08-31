@@ -1,7 +1,9 @@
-# Waiting up to 15 secs for /sandbox/tada/tests/smoke/tada-test-data/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz to be submitted: 
-# ..!
-# Found file after 2 seconds.
-Found file: /sandbox/tada/tests/smoke/tada-test-data/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz
-# DBG-SMOKE AUDITDB sql: SELECT success FROM audit WHERE srcpath='/sandbox/tada/tests/smoke/tada-test-data/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz' AND telescope='wiyn' AND instrument='bench';
+# DBG-SMOKE: add YAML in /home/vagrant/.tada/dropcache/20110101/wiyn-bench/24dec_2014.061.fits.fz (/data/tada-test-data/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz)
+# DBG-SMOKE: sql=SELECT count(*) FROM audit WHERE success IS NOT NULL  AND srcpath='/data/tada-test-data/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz' AND telescope='wiyn' AND instrument='bench';
+# Waiting up to 30 secs for /data/tada-test-data/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz to be submitted: 
+# ...!
+Found file: /data/tada-test-data/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz
+# Found file after 3 seconds.
+# DBG-SMOKE AUDITDB sql: SELECT success FROM audit WHERE srcpath='/data/tada-test-data/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz' AND telescope='wiyn' AND instrument='bench';
 # DBG-SMOKE AUDITDB actual=0
 # DBG-SMOKE wait-n-match: actual=expected

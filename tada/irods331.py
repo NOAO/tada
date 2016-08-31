@@ -6,7 +6,15 @@ import os
 import os.path
 import shutil
 
-    
+from . import tada_utils as tut
+
+'''
+From the icommands documentation:
+The -T option will renew the socket connection between the client and 
+server after 10 minutes of connection. This gets around the problem of
+sockets getting timed out by the server firewall as reported by some users.
+'''
+
 
 def irods_init331():
     "Set irods password."
@@ -60,17 +68,21 @@ def irods_put331(local_fname, irods_fname):
     #!logging.debug('   irods_put331 env:{})'.format(os.environ))
     icmdpath = ('/usr/local/share/applications/irods3.3.1/iRODS/clients'
                 '/icommands/bin')
+    logging.debug('{}({}, {})'.format(tag, local_fname, irods_fname))
+    tut.tic()
     try:
         subprocess.check_output([os.path.join(icmdpath, 'imkdir'),
                                  '-p',
                                  os.path.dirname(irods_fname)])
                                 #! start_new_session=True)
         subprocess.check_output([os.path.join(icmdpath, 'iput'),
-                                 '-f', '-K', local_fname, irods_fname])
+                                 '-f', '-K',
+                                 local_fname, irods_fname])
     except subprocess.CalledProcessError as ex:
         logging.error('FAILED {}: {}; {}'
                       .format(tag, ex, ex.output.decode('utf-8')))
         raise
+    logging.debug('{} completed in {} seconds'.format(tag,tut.toc()))
 
 def irods_get331(irods_fname, local_fname):
     "Copy irods_fname to local_fname."
