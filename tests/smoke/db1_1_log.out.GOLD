@@ -1,0 +1,3 @@
+exceptions.py     ERROR    Command failed: /usr/local/bin/fitsverify -e -q /var/tada/cache/20110101/wiyn-bench/24dec_2014.061.fits.fz
+audit.py          ERROR    Could not find DTCALDAT in orighdr of /data/tada-test-data/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz, using TODAY
+tada_utils.py     ERROR    tada.exceptions.InvalidFits: Command failed: /usr/local/bin/fitsverify -e -q /var/tada/cache/20110101/wiyn-bench/24dec_2014.061.fits.fz
