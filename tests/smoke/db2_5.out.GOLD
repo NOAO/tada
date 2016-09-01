@@ -1,7 +1,9 @@
-# Waiting up to 15 secs for /sandbox/tada/tests/smoke/tada-test-data/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits to be submitted: 
-# .....!
-# Found file after 5 seconds.
-Found file: /sandbox/tada/tests/smoke/tada-test-data/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits
-# DBG-SMOKE AUDITDB sql: SELECT success FROM audit WHERE srcpath='/sandbox/tada/tests/smoke/tada-test-data/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits' AND telescope='kp4m' AND instrument='mosaic3';
+# DBG-SMOKE: add YAML in /home/vagrant/.tada/dropcache/20160610/kp4m-mosaic3/mos3.badprop.fits (/data/tada-test-data/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits)
+# DBG-SMOKE: sql=SELECT count(*) FROM audit WHERE success IS NOT NULL  AND srcpath='/data/tada-test-data/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits' AND telescope='kp4m' AND instrument='mosaic3';
+# Waiting up to 5 secs for /data/tada-test-data/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits to be submitted: 
+# ....!
+Found file: /data/tada-test-data/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits
+# Found file after 4 seconds.
+# DBG-SMOKE AUDITDB sql: SELECT success FROM audit WHERE srcpath='/data/tada-test-data/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits' AND telescope='kp4m' AND instrument='mosaic3';
 # DBG-SMOKE AUDITDB actual=0
-# DBG-SMOKE wait-n-match: actual=expected
+# DBG-SMOKE wait_for_match: actual=expected

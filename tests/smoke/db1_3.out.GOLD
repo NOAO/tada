@@ -1,9 +1,9 @@
-# DBG-SMOKE: add YAML in /home/vagrant/.tada/dropcache/20150709/bok23m-90prime/d7212.0062.fits.fz (/data/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz)
-# DBG-SMOKE: sql=SELECT count(*) FROM audit WHERE success IS NOT NULL  AND srcpath='/data/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz' AND telescope='bok23m' AND instrument='90prime';
-# Waiting up to 30 secs for /data/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz to be submitted: 
-# !
-Found file: /data/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz
-# Found file after 0 seconds.
-# DBG-SMOKE AUDITDB sql: SELECT success FROM audit WHERE srcpath='/data/tada-test-data/scrape/20150709/bok23m-90prime/d7212.0062.fits.fz' AND telescope='bok23m' AND instrument='90prime';
-# DBG-SMOKE AUDITDB actual=1
-# DBG-SMOKE wait-n-match: actual=expected
+# DBG-SMOKE: add YAML in /home/vagrant/.tada/dropcache/20110101/kp4m-kosmos/kp109391.fits.fz (/data/tada-test-data/basic/kp109391.fits.fz)
+# DBG-SMOKE: sql=SELECT count(*) FROM audit WHERE success IS NOT NULL  AND srcpath='/data/tada-test-data/basic/kp109391.fits.fz' AND telescope='kp4m' AND instrument='kosmos';
+# Waiting up to 5 secs for /data/tada-test-data/basic/kp109391.fits.fz to be submitted: 
+# ..!
+Found file: /data/tada-test-data/basic/kp109391.fits.fz
+# Found file after 2 seconds.
+# DBG-SMOKE AUDITDB sql: SELECT success FROM audit WHERE srcpath='/data/tada-test-data/basic/kp109391.fits.fz' AND telescope='kp4m' AND instrument='kosmos';
+# DBG-SMOKE AUDITDB actual=0
+# DBG-SMOKE wait_for_match: actual=expected

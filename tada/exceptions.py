@@ -2,6 +2,7 @@ import logging
 
 from . import config
 from . import audit
+from . import tada_utils as tut
 
 auditor = audit.Auditor()
 
@@ -14,17 +15,18 @@ ingest if file is known to be invalid before hand)."""
         self.errmsg = errmsg
         self.newhdr = newhdr # dict of new FITS metadata
         #print('DBG: IngestRejection; errmsg={}'.format(errmsg))
-        #!logging.error('DISABLED log_audit in exceptions.py')
-        logging.exception('IngestRejection: recorded with log_audit')
         auditor.log_audit(md5sum, origfilename, False, '', errmsg,
                           newhdr=newhdr)
+        #logging.exception('IngestRejection: recorded with log_audit')
+        tut.log_traceback()        
 
     def __str__(self):
         return str(self.errmsg)
 
 class SubmitException(Exception):
     "Something went wrong with submit to archive"
-    pass
+    def __init__(self, errmsg):
+        logging.error(errmsg)
 
 class InvalidHeader(SubmitException):
     "Exception when FITS header doesn't contains everything we need."

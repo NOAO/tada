@@ -11,7 +11,6 @@ import time
 from pathlib import PurePath, Path
 from glob import glob
 import subprocess
-import traceback
 import re
 import hashlib
 import socket
@@ -19,6 +18,7 @@ import socket
 from . import config
 from . import audit
 from . import fits_utils as fu
+from . import tada_utils as tut
 import dataq.red_utils as ru
 
 
@@ -141,7 +141,7 @@ YAML file will be transfered with FITS because its in same directory..
         except Exception as ex:
             logging.error('Failed valid_dir({}); {}'
                           .format(ifname, ex))
-            logging.error(traceback.format_exc())
+            tut.log_traceback()
             return False
             
         return True
@@ -164,7 +164,7 @@ YAML file will be transfered with FITS because its in same directory..
         except Exception as ex:
             logging.error('Failed to get options_from_yamls({}); {}'
                           .format(ifname, ex))
-            logging.error(traceback.format_exc())
+            tut.log_traceback()
             return None
         else:
             logging.debug('Got pdict from yamls:{}'.format(pdict))
@@ -212,13 +212,13 @@ YAML file will be transfered with FITS because its in same directory..
             except Exception as ex:
                 # Push to dataq failed (file not put into TADA processing)
                 logging.error('Push FAILED with {}; {}'.format(ifname, ex))
-                logging.error(traceback.format_exc())
+                tut.log_traceback()
                 shutil.move(cachename, anticachename)
         except Exception as ex:
             # Something unexpected failed (makedirs, copy, yaml read/write)
             logging.error('PushEventHandler.new_file FAILED with {}; {}'
                           .format(ifname, ex))
-            logging.error(traceback.format_exc())
+            tut.log_traceback()
 
     def options_from_yamls(self, ifname):
         """Returned combined options and parameters as single dict formed by 

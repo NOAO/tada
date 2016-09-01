@@ -8,7 +8,6 @@ import astropy.io.fits as pyfits
 import os
 import os.path
 from pathlib import PurePath
-import traceback
 import pathlib
 #!import urllib.request
 import requests
@@ -381,7 +380,6 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
             **cfgprms)
     except: # Exception as err:
         raise
-        #! traceback.print_exc()
     (success, msg, ops_msg, mtype) = http_archive_ingest(new_ihdr, qname,
                                                  qcfg=qcfg, origfname=origfname)
 
@@ -462,8 +460,7 @@ So, caller should not have to put this function in try/except."""
                                                        moddir=moddir,
                                                        **cfgprms)
     except Exception as err:
-        if trace:
-            traceback.print_exc()
+        tut.trace_if(trace)
         msg = str(err)
         logging.error(msg)
         logging.debug('DBG-3')
@@ -541,8 +538,7 @@ def direct_submit(fitsfile, moddir,
         logging.debug('DBG-6')
         auditor.log_audit(md5sum, origfname, False, '', str(err),
                           orighdr=popts, newhdr=changed)
-        if trace:
-            traceback.print_exc()
+        tut.trace_if(trace)
         statusmsg = str(err)
         #statusmsg = err.errmsg
         success = False

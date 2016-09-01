@@ -9,7 +9,6 @@ http://fits.gsfc.nasa.gov/fits_verify.html
 import sys
 import argparse
 import logging
-import traceback
 import magic
 from pprint import pprint
 
@@ -27,6 +26,7 @@ from . import exceptions as tex
 from . import hdr_calc_funcs as hf
 from . import scrub
 from . import config 
+from . import tada_utils as tut
 
 #DOC: vvv
 # All bets are off in the original FITS file does not contain all of these.
@@ -418,7 +418,6 @@ def validate_recommended_hdr(hdr, orig_fullname):
 #!                 func = eval('hf.'+funcname)
 #!                 calc_funcs.append(func)
 #!             except:
-#!                 #!traceback.print_exc()
 #!                 raise Exception('Function name "{}" given in option "calchdr"'
 #!                                 ' does not exist in tada/hdr_calc_funcs.py'
 #!                                 .format(funcname))
@@ -507,7 +506,6 @@ Include fields in hdr needed to construct new filename that fullfills standards.
                 func = eval('hf.'+funcname)
                 calc_funcs.append(func)
             except:
-                #!traceback.print_exc()
                 raise Exception('Function name "{}" given in option "calchdr"'
                                 ' does not exist in tada/hdr_calc_funcs.py'
                                 .format(funcname))
@@ -786,8 +784,7 @@ def fits_compliant(fits_file_list,
         except Exception as err:
             exception_cnt += 1
             print('EXCEPTION in fits_compliant on {}: {}'.format(ffile, err))
-            if trace:
-                traceback.print_exc()            
+            tut.trace_if(trace)
             valid = False
             bad_files.add(ffile)
             bad += 1

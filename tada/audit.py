@@ -102,16 +102,17 @@ class Auditor():
             logging.debug('log_audit({},{},{},{},{},{} do_svc={})'
                           .format(origfname, success, archfile, archerr,
                                   orighdr, newhdr, self.do_svc))
-            if not success:
-                logging.error('log_audit; archive ingest error: {}'
-                              .format(archerr))
+            #!if not success:
+            #!    logging.error('log_audit; archive ingest error: {}'
+            #!                  .format(archerr))
 
             now = datetime.datetime.now().isoformat()
             today = datetime.date.today().isoformat()
 
             obsday = newhdr.get('DTCALDAT',orighdr.get('DTCALDAT', today))
             if ('DTCALDAT' not in newhdr) and ('DTCALDAT' not in orighdr):
-                logging.error('Could not find DTCALDAT in orighdr {}, using TODAY'
+                logging.error(('Could not find DTCALDAT in orighdr of {},'
+                              ' using TODAY')
                               .format(origfname))
             tele = newhdr.get('DTTELESC',orighdr.get('DTTELESC', 'unknown'))
             instrum = newhdr.get('DTINSTRU',orighdr.get('DTINSTRU', 'unknown'))

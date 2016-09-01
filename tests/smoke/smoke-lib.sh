@@ -282,4 +282,49 @@ function testOutput () {
   fi
 }
 
+##
+## Make sure log file contains what we expect
+##
+function testLog () {
+    local testName="$1" # No Spaces; e.g. CCUE
+    local filter="$2"
+    local output="${testName}.out"
+    local GOLD="${output}.GOLD"
+    local proc="testLog"
+    local displayOutputP="y"      # or "n" to save stdout to file only
+    local diff="${output}.diff"
+
+    totalcnt=$((totalcnt + 1))
+
+    if [ ! -f $GOLD ]; then
+	pwd=`pwd`
+	echo "Could not find: $GOLD"
+	echo "To accept current output: cp $output $GOLD"
+	failcnt=$((failcnt + 1))
+	return_code=2
+    fi
+
+    eval "${filter}" > $output
+
+    if ! diff $GOLD $output > $diff;  then
+	if [ "y" = "$displayOutputP" ]; then
+            cat $diff
+	else
+            echo ""
+            echo "[$testName] DIFF between ACTUAL and EXPECTED output is in: "
+            echo "  `pwd`/$diff"
+            echo ""
+	fi
+	pwd=`pwd`
+	echo ""
+	echo "To accept current results: cp $pwd/$output $pwd/$GOLD"
+	echo "*** $proc  FAILED  [$testName] (got UNEXPECTED output in: $output) ***"
+	failcnt=$((failcnt + 1))
+	return_code=1
+    else
+	echo "*** $proc  PASSED [$testName] (got expected output in: $output) ***"
+    fi
+    
+}
+
 ##############################################################################

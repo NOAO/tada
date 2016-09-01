@@ -45,40 +45,59 @@ source dropsub.sh
 setup_dropbox_tests
 
 SRCFILES=""
+
 ##############################################################################
-
+## Transfer of FITS happens only after validation checks.  Better if valid fits
+## are small to keep run-time (due to transfer) of smoke tests low.
+##
 tic=`date +'%s'`
+MAX_DROP_WAIT_TIME=10  # max seconds from file drop to ingest/reject
+#MAX_DROP_WAIT_TIME=600  # max seconds from file drop to ingest/reject
+plog="/var/log/tada/pop.log"
+MARKER="`date '+%Y-%m-%d %H:%M:%S'` START-SMOKE-TEST"
+echo $MARKER >> $plog
+FTO=5 # fail timeout
 
-#MAX_DROP_WAIT_TIME=10  # max seconds from file drop to ingest/reject
-MAX_DROP_WAIT_TIME=600  # max seconds from file drop to ingest/reject
 
-sdrop=$tdata/scrape
+
 # fail-fail (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
-testCommand db1_1 "faildrop $sdrop/20110101/wiyn-bench/24dec_2014.061.fits.fz 20110101 wiyn-bench" "^\#" n 0
+FITS="$tdata/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz"
+testCommand db1_1 "faildrop $FTO $FITS 20110101 wiyn-bench" "^\#" n 0
+testLog db1_1_log  "pylogfilter $plog \"$MARKER\" $FITS"
 
-# fail-pass (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
-testCommand db1_2 "passdrop $sdrop/20160314/kp4m-mosaic3/mos3.75870.fits.fz 20160314 kp4m-mosaic3" "^\#" n 0
-
-# pass-pass (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
-testCommand db1_3 "passdrop $sdrop/20150709/bok23m-90prime/d7212.0062.fits.fz 20150709 bok23m-90prime" "^\#" n 0
+# pass-pass
+#!FITS="$tdata/scrape/20110101/ct13m-andicam/ir141225.0179.fits.fz"
+#!testCommand db1_3 "faildrop $FTO $FITS 20110101 ct13m-andicam" "^\#" n 0
+FITS="$tdata/basic/kp109391.fits.fz"
+testCommand db1_3 "faildrop $FTO $FITS 20110101 kp4m-kosmos" "^\#" n 0
 
 ###########################################
-#!echo "WARNING: ignoring remainder of tests"
-#!exit $return_code
+echo "WARNING: ignoring remainder of tests"
+exit $return_code
 ###########################################a
 
-sdrop=$tdata/short-drop
-testCommand db2_1 "faildrop $sdrop/bad-date/wiyn-whirc/obj_355a.fits.fz bad-date wiyn-whirc" "^\#" n 9
-testCommand db2_2 "faildrop $sdrop/20160909/bad-instrum/obj_355b.fits.fz 20160909 bad-instrum" "^\#" n 9
-testCommand db2_3 "passdrop $sdrop/20141220/wiyn-whirc/obj_355.fits.fz 20141220 wiyn-whirc" "^\#" n 0
-testCommand db2_4 "passdrop $sdrop/20160610/kp4m-mosaic3/mos3.94567.fits 20160610 kp4m-mosaic3" "^\#" n 0 
-testCommand db2_5 "faildrop $sdrop/20160610/kp4m-mosaic3/mos3.badprop.fits 20160610 kp4m-mosaic3" "^\#" n 0 
-testCommand db2_6 "passdrop $sdrop/20110101/ct13m-andicam/ir141225.0179.fits 20110101 ct13m-andicam" "^\#" n 0 
 
-echo "MAX_FOUND_TIME=$MAX_FOUND_TIME"
-emins=$((`date +'%s'` - tic))
-# expect about 168 seconds
-echo "# Completed dropbox test: " `date` " in $emins seconds"
+FITS=$tdata/short-drop/bad-date/wiyn-whirc/obj_355a.fits.fz
+testCommand db2_1 "faildrop $FTO $FITS bad-date wiyn-whirc" "^\#" n 9
+testLog db2_1_log $plog "pylogfilter $MARKER $FITS"
+
+FITS=$tdata/short-drop/20160909/bad-instrum/obj_355b.fits.fz
+testCommand db2_2 "faildrop $FTO $FITS 20160909 bad-instrum" "^\#" n 9
+testLog db2_2_log $plog "pylogfilter $MARKER $FITS"
+
+#!testCommand db2_3 "passdrop $tdata/short-drop/20141220/wiyn-whirc/obj_355.fits.fz 20141220 wiyn-whirc" "^\#" n 0
+#!testCommand db2_4 "passdrop $tdata/short-drop/20160610/kp4m-mosaic3/mos3.94567.fits 20160610 kp4m-mosaic3" "^\#" n 0 
+
+FITS=$tdata/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits
+testCommand db2_5 "faildrop $FTO $FITS  20160610 kp4m-mosaic3" "^\#" n 0 
+testLog db2_5_log $plog "pylogfilter $MARKER $FITS"
+
+#!testCommand db2_6 "passdrop $tdata/short-drop/20110101/ct13m-andicam/ir141225.0179.fits 20110101 ct13m-andicam" "^\#" n 0 
+
+# fail-pass 
+FITS="$tdata/scrape/20160314/kp4m-mosaic3/mos3.75870.fits.fz"
+testCommand db1_2 "passdrop 20 $FITS 20160314 kp4m-mosaic3" "^\#" n 0
+testLog db1_2_log $plog "pylogfilter $MARKER $FITS"
 
 
 # Directory structure is wrong! (one too deep)
@@ -86,7 +105,12 @@ echo "# Completed dropbox test: " `date` " in $emins seconds"
 #! testCommand db2_1 "mdbox $tdata/scrape" "^\#" n
 #! testCommand db2_2 "sbox" "^\#" n
 
+##############################################################################
 
+echo "MAX_FOUND_TIME=$MAX_FOUND_TIME"
+emins=$((`date +'%s'` - tic))
+# expect about 168 seconds
+echo "# Completed dropbox test: " `date` " in $emins seconds"
 
 ###########################################
 #!echo "WARNING: ignoring remainder of tests"

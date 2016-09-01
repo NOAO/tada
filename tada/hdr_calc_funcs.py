@@ -137,7 +137,7 @@ def set_dtpropid(orig, **kwargs):
             raise tex.BadPropid(err)
         else: # not split, hdr doesn't match schedule
             logging.warning(
-            'Ignoring header propid {} that does not match schedule. Using {}.'
+            'Ignoring header propid {} that does not match schedule. Using "{}".'
                 .format(hdrpid, pids[0]))
             return {'DTPROPID': pids[0]}
     return {'DTPROPID': 'NONE'} # this should never happen!

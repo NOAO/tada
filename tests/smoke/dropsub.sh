@@ -56,10 +56,11 @@ function record_expected () {
 # If timeout, RETURN=9. Else, if EXPECTED=ACTUAL RETURN=0, else RETURN=1
 # MUST match against specific (fits,tele,instrum) record. NOT just fits.
 function wait_for_match () { # (fitsfile, tele_inst) => $STATUS
-    local FITS=$1 # full path to source FITS file
-    local TELE_INST=$2
+    local TIMEOUT=$1 # seconds
+    local FITS=$2 # full path to source FITS file
+    local TELE_INST=$3
     IFS='-' read  tele inst <<< "$TELE_INST"
-    local TIMEOUT=${MAX_DROP_WAIT_TIME:-15} # seconds
+    #local TIMEOUT=${MAX_DROP_WAIT_TIME:-15} # seconds
     
     local sql="SELECT count(*) FROM audit \
 WHERE success IS NOT NULL \
@@ -110,11 +111,11 @@ WHERE fits='$FITS' AND tele='$tele' AND instrum='$inst';"
 # drop one file to mountain dropbox (ingest may Pass or Fail)
 #   copy to pre-drop, add personality, record expected, drop to TADA
 function dropfile () {
-
-    local FITSFILE=$1
-    local DATE=$2 # e.g. "20160101"
-    local TELE_INST=$3
-    local expected=$4 # {1=PASS, 0=FAIL}
+    local TIMEOUT=$1 # seconds to wait for file to ingest (includes transfer)
+    local FITSFILE=$2
+    local DATE=$3 # e.g. "20160101"
+    local TELE_INST=$4
+    local expected=$5 # {1=PASS, 0=FAIL}
     local BNAME=`basename $FITSFILE`
     local boxhost="mountain.`hostname --domain`"
 
@@ -132,18 +133,26 @@ function dropfile () {
       $DROPCACHE/ tada@$boxhost::dropbox
 
     # wait for file to make it through, and capture ingest status
-    wait_for_match $FITSFILE ${TELE_INST}
+    wait_for_match $TIMEOUT $FITSFILE ${TELE_INST}
     return $?
 }
 
 function passdrop () {
-    dropfile $1 $2 $3 1
+    dropfile $1 $2 $3 $4 1
 }
 
 function faildrop () {
-    dropfile $1 $2 $3 0
+    dropfile $1 $2 $3 $4 0
 }
 
+function pylogfilter () {
+    local logfile=$1
+    local marker=$2
+    local filename=$3
+
+    csplit --quiet $logfile "%$marker%"+1
+    grep `basename $filename .fz` xx00 | grep -v INFO | cut -d' ' -f3- 
+}
 
 function insertsrc () {
     local srcpath=$1
