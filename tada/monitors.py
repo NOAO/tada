@@ -18,7 +18,8 @@ import socket
 from . import config
 from . import audit
 from . import fits_utils as fu
-from . import tada_utils as tut
+from . import utils as tut
+from . import exceptions as tex
 import dataq.red_utils as ru
 
 
@@ -238,9 +239,11 @@ YAML file will be transfered with FITS because its in same directory..
         globpattern = os.path.join(self.personalitydir, inst, '*.yaml')
         yfiles = glob(globpattern)
         if len(yfiles) == 0:
-            logging.error("Didn't find expected YAML personality file(s) in: {}"
-                          .format(globpattern))
-            return pdict 
+            msg = ("Didn't find expected YAML personality file(s) in: {}"
+                   .format(globpattern))
+            logging.error(msg)
+            raise tex.NoPersonality(msg)
+        
         logging.debug('DBG: read YAML files: {}'.format(yfiles))
         for yfile in sorted(yfiles):
             with open(yfile) as yy:

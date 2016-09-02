@@ -14,7 +14,7 @@ import os.path
 import socket
 
 from . import ingest_decoder as dec
-from . import tada_utils as tut
+from . import utils as tut
 
 def md5(fname):
     hash_md5 = hashlib.md5()
@@ -76,6 +76,7 @@ class Auditor():
             return False
         return True
 
+
     def log_audit(self, md5sum, origfname, success, archfile, err,
                   orighdr=None, newhdr=None):
         """Log audit record to MARS.
@@ -99,8 +100,9 @@ class Auditor():
             #~ if md5sum == None:  md5sum = md5(origfname)
             archerr = str(err)
 
-            logging.debug('log_audit({},{},{},{},{},{} do_svc={})'
-                          .format(origfname, success, archfile, archerr,
+            logging.debug('log_audit({}, {},{},{},{},{},{} do_svc={})'
+                          .format(md5sum, origfname, success,
+                                  archfile, archerr,
                                   orighdr, newhdr, self.do_svc))
             #!if not success:
             #!    logging.error('log_audit; archive ingest error: {}'
@@ -111,9 +113,9 @@ class Auditor():
 
             obsday = newhdr.get('DTCALDAT',orighdr.get('DTCALDAT', today))
             if ('DTCALDAT' not in newhdr) and ('DTCALDAT' not in orighdr):
-                logging.error(('Could not find DTCALDAT in orighdr of {},'
-                              ' using TODAY')
-                              .format(origfname))
+                logging.info(('Could not find DTCALDAT in orighdr of {},'
+                              ' using TODAY as observation day.')
+                             .format(origfname))
             tele = newhdr.get('DTTELESC',orighdr.get('DTTELESC', 'unknown'))
             instrum = newhdr.get('DTINSTRU',orighdr.get('DTINSTRU', 'unknown'))
             recdic = dict(md5sum=md5sum,

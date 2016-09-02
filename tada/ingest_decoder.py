@@ -28,16 +28,10 @@ For input string: &quot;unavail&quot;</user>
 
 '''
 
-def decodeIngest(response):
+def decodeIngestResponse(response):
     'response:: XML-string http-response from nsaarchive'
     mtype = ''
     msg = ''
-
-#!    # Handle old style response (from NSA version 2.4.0)
-#!    if response[0] != "<":
-#!        msg = decodeIngest_240(response)
-#!        success = (response == "Success")
-#!        return success, msg
 
     root = ET.fromstring(response)
     itype = root.get('type')
@@ -45,10 +39,13 @@ def decodeIngest(response):
     success = ((itype == 'SUCCESS') or (itype == 'SUCCESS_WITH_WARNING'))
     #msg = '' if success else root.find('./message/user').text 
     if not success:
-        msg = root.find('./message/user').text
+        msg = root.find('./message/user').text.replace('\n',' ')
+        mtype = root.find('./message').get('type')
+    elif itype == 'SUCCESS_WITH_WARNING':
+        msg = root.find('./message/user').text.replace('\n',' ')
         mtype = root.find('./message').get('type')
     #return success,'Operator:: ' + msg
-    return success, msg, mtype
+    return success, msg, mtype, itype
 
 ###############################################################################
 
@@ -97,8 +94,11 @@ stilutRE = re.compile(r"Unknown combination for stiLUT:")
 '''Unknown combination for stiLUT: SITE(ct), TELESCOPE(ct09m), and
 INSTRUMENT(biw) (in /var/tada/cache/20160616/ct09m-biw/f177.fits.fz)'''
 
-fitsverifyRE = re.compile(r"Command failed: /usr/local/bin/fitsverify")
-'''Command failed: /usr/local/bin/fitsverify -e -q /var/tada/cache/20110101/wiyn-bench/24dec_2014.061.fits.fz'''
+fitsverifyRE = re.compile(r"Verify failed:")
+'''Verify failed: /usr/local/bin/fitsverify -e -q /var/tada/cache/20110101/wiyn-bench/24dec_2014.061.fits.fz'''
+
+notschedRE = re.compile(r"not in scheduled list of Propids")
+''' Propid from hdr (BADSCRUB.BAD-PROPID) not in scheduled list of Propids ['2016A-0189', '2016A-0453']'''
 
 # these must be searched in order. First MatchFunc to return True wins.
 ERRMAP = [
@@ -112,6 +112,7 @@ ERRMAP = [
     ('NOTFITS', nonfitsRE,        'Cannot ingest non-FITS file'),
     ('STILUT',  stilutRE,         'Prefix table missing entry'),
     ('NOVERIFY',fitsverifyRE,     'File fails fitsverify'),
+    ('NOSCHED', notschedRE,       'Header propid not in schedule split list'),
     ('none',    None,             'No error'),
     ('UNKNOWN', None,             'Unknown error'),
 ]
@@ -127,44 +128,3 @@ def errcode(response):
     logging.error('errcode cannot code for error message: {}'.format(response))
     return 'UNKNOWN'
 
-#!def OLD_errcode(response):
-#!    if existsRE.search(response):
-#!        return 'DUPFITS'
-#!    elif dup_propRE.search(response):
-#!        return 'BADPROP'
-#!    elif dup_obspropRE.search(response):
-#!        return 'COLLIDE'
-#!    elif prop_not_foundRE.search(response):
-#!        return 'NOPROP'
-#!    elif missingreqRE.search(response):
-#!        return 'MISSREQ'
-#!    elif baddateRE.search(response):
-#!        return 'BADDATE'
-#!    elif nonfitsRE.search(response):
-#!        return 'NOTFITS',
-#!    elif len(response.strip()) == 0:
-#!        return 'none'
-#!    else:
-#!        logging.error('errcode cannot code for error message: {}'
-#!                      .format(response))
-#!        return 'UNKNOWN'
-#!    
-
-
-
-    
-#!    def decodeIngest_240(response):
-#!        if existsRE.search(response):
-#!            msg = ('Already in DB. To submit this file, '
-#!                   'remove existing from DB and do: "dqcli --redo"')
-#!        elif nonunique_propidRE.search(response):
-#!            msg = ('Bad DTPROPID. To submit this file, '
-#!                   'fix header or resubmit with "-o _DTPROPID=<propid>"')
-#!        elif dup_obs_propRE.search(response):
-#!            msg = ('Duplicate DTPROPID, DTCALDAT combination. '
-#!                   'To submit this file, '
-#!                   'fix header or resubmit with '
-#!                   '"-o _DTPROPID=<propid> -o _DTCALDAT=<caldat>"')
-#!        else:
-#!            msg = '<no operator message in ingest_decoder.py::decodIngest()>'
-#!        return 'Operator:: ' + msg

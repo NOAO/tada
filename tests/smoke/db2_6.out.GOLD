@@ -1,7 +1,9 @@
-# Waiting up to 15 secs for /sandbox/tada/tests/smoke/tada-test-data/short-drop/20110101/ct13m-andicam/ir141225.0179.fits to be submitted: 
-# ....!
-# Found file after 4 seconds.
-Found file: /sandbox/tada/tests/smoke/tada-test-data/short-drop/20110101/ct13m-andicam/ir141225.0179.fits
-# DBG-SMOKE AUDITDB sql: SELECT success FROM audit WHERE srcpath='/sandbox/tada/tests/smoke/tada-test-data/short-drop/20110101/ct13m-andicam/ir141225.0179.fits' AND telescope='ct13m' AND instrument='andicam';
+# DBG-SMOKE: add YAML in /home/vagrant/.tada/dropcache/20110101/ct13m-andicam/ir141225.0179.fits (/data/tada-test-data/short-drop/20110101/ct13m-andicam/ir141225.0179.fits)
+# DBG-SMOKE: sql=SELECT count(*) FROM audit WHERE success IS NOT NULL  AND srcpath='/data/tada-test-data/short-drop/20110101/ct13m-andicam/ir141225.0179.fits' AND telescope='ct13m' AND instrument='andicam';
+# Waiting up to 5 secs for /data/tada-test-data/short-drop/20110101/ct13m-andicam/ir141225.0179.fits to be submitted: 
+# .!
+Found file: /data/tada-test-data/short-drop/20110101/ct13m-andicam/ir141225.0179.fits
+# Found file after 1 seconds.
+# DBG-SMOKE AUDITDB sql: SELECT success FROM audit WHERE srcpath='/data/tada-test-data/short-drop/20110101/ct13m-andicam/ir141225.0179.fits' AND telescope='ct13m' AND instrument='andicam';
 # DBG-SMOKE AUDITDB actual=1
-# DBG-SMOKE wait-n-match: actual=expected
+# DBG-SMOKE wait_for_match: actual=expected

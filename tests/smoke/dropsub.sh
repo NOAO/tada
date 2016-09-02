@@ -4,6 +4,10 @@ AUDITDB="/var/log/tada/audit.db"
 SMOKEDB="$HOME/.tada/smoke.db"
 DROPCACHE="$HOME/.tada/dropcache"
 
+# sqlite3 --header $SMOKEDB "select * from expected"
+# sqlite3 $AUDITDB "select success,srcpath,recorded from audit"
+
+
 # Maximum seconds waited for a dropped file to show at ingest.
 # (excluding files that NEVER make it to ingest)
 MAX_FOUND_TIME=0 
@@ -13,7 +17,9 @@ CREATE_SMOKEDB="CREATE TABLE expected (
    fits text,
    tele text,
    instrum text,
-   success integer);
+   success integer,
+   updated datetime
+);
 "
 
 if [ ! -e $SMOKEDB ]; then
@@ -30,6 +36,30 @@ function setup_dropbox_tests () {
     chmod a+rw $SMOKEDB
 }
 
+# Estimate time to upload FITS (iput) at rate=10mbps
+function up_secs () {
+    local FITS=$1
+    local bytes=`du -b $FITS | cut -f1`
+    echo "2 k $bytes 8 * 1000000 / 10 / p" | dc
+}
+
+function audit_vs_expected () {
+    local audit=NA
+    local exptd=NA
+    for f in `sqlite3 $SMOKEDB "SELECT fits FROM expected"`; do
+        audit=`sqlite3 $AUDITDB "SELECT success FROM audit WHERE srcpath='$f'"`
+        exptd=`sqlite3 $SMOKEDB "SELECT success FROM expected WHERE fits='$f'"`
+        if [ "$audit" = "$exptd" ]; then
+            echo "PASS: $f; expected=$exptd  audit=$audit"
+        elif [ -z "$audit" ]; then
+            echo "FAIL: $f; not in audit"            
+        else
+            echo "FAIL: $f; expected=$exptd  audit=$audit" 
+        fi
+    done
+}
+
+    
 function clean_manifest () {
     rm  $MANIFEST > /dev/null
     touch $MANIFEST 
@@ -42,11 +72,11 @@ function record_expected () {
     local YYYMMDD=$2 # e.g. "20160101"
     local TELE_INST=$3
     local expected=$4
-
+    local now=`date --rfc-3339=seconds`
     local day="${YYYYMMDD:0:4}-${YYYYMMDD:4:2}-${YYYYMMDD:6:2}"
     IFS='-' read  tele inst <<< "$TELE_INST"
 
-    local sql="INSERT INTO expected VALUES ('$fits','$tele', '$inst', '$expected');"
+    local sql="INSERT INTO expected VALUES ('$fits','$tele', '$inst', '$expected', '$now');"
     sqlite3 $SMOKEDB "$sql"
     #!echo "# RECORD_EXPECTED in $SMOKEDB: sql=$sql"
     #gen-audit-records.sh -d $day -t $tele -i $inst -n $marshost $fits>/dev/null
@@ -60,15 +90,18 @@ function wait_for_match () { # (fitsfile, tele_inst) => $STATUS
     local FITS=$2 # full path to source FITS file
     local TELE_INST=$3
     IFS='-' read  tele inst <<< "$TELE_INST"
-    #local TIMEOUT=${MAX_DROP_WAIT_TIME:-15} # seconds
+    local auditsql="SELECT success FROM audit WHERE srcpath='$FITS';"
+    # AND srcpath='$FITS' AND telescope='$tele' AND instrument='$inst';"
+    expectedsql="SELECT success FROM expected WHERE fits='$FITS';"
+    # AND tele='$tele' AND instrum='$inst';"
+
+
     
     local sql="SELECT count(*) FROM audit \
-WHERE success IS NOT NULL \
- AND srcpath='$FITS' AND telescope='$tele' AND instrument='$inst';"
+WHERE success IS NOT NULL AND srcpath='$FITS';"
     local maxTries=$TIMEOUT
     local tries=0
     local STATUS=0
-    echo "# DBG-SMOKE: sql=$sql"
     echo "# Waiting up to $TIMEOUT secs for $FITSFILE to be submitted: " 
     echo -n "# "
     while [ `sqlite3 $AUDITDB "$sql"` -eq 0 ]; do
@@ -77,7 +110,6 @@ WHERE success IS NOT NULL \
             echo "!"
             echo "# Aborted after $maxTries seconds. Not submitted: $FITS"
             STATUS=9
-	    echo "# Timeout exceeded. Aborted wait for $FITS."
             return $STATUS
         fi
         echo -n "."
@@ -89,16 +121,8 @@ WHERE success IS NOT NULL \
     if [ "$tries" -gt "$MAX_FOUND_TIME" ]; then
         MAX_FOUND_TIME=$tries
     fi
-    sql="SELECT success FROM audit \
-WHERE srcpath='$FITS' AND telescope='$tele' AND instrument='$inst';"
-    local actual=`sqlite3 $AUDITDB "$sql"` 
-    echo "# DBG-SMOKE AUDITDB sql: $sql"
-    echo "# DBG-SMOKE AUDITDB actual=$actual"
-    
-    sql="SELECT success FROM expected \
-WHERE fits='$FITS' AND tele='$tele' AND instrum='$inst';"
-    local expected=`sqlite3 $SMOKEDB "$sql"`
-    
+    local actual=`sqlite3 $AUDITDB "$auditsql"` 
+    local expected=`sqlite3 $SMOKEDB "$expectedsql"`
     if [ "$actual" != "$expected" ]; then
         echo "# DBG-SMOKE wait_for_match: actual($actual) != expected($expected)"
         STATUS=1
@@ -151,7 +175,7 @@ function pylogfilter () {
     local filename=$3
 
     csplit --quiet $logfile "%$marker%"+1
-    grep `basename $filename .fz` xx00 | grep -v INFO | cut -d' ' -f3- 
+    grep `basename $filename .fz` xx00 | grep  "WARNING \| ERROR " | cut -d' ' -f3- 
 }
 
 function insertsrc () {

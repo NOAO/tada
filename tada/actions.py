@@ -10,6 +10,7 @@ import shutil
 import time
 from pathlib import PurePath
 import hashlib
+import traceback
 
 from . import submit as ts
 from . import diag
@@ -19,6 +20,7 @@ import dataq.red_utils as ru
 from . import config
 from . import audit
 from . import exceptions as tex
+from . import utils as tut
 
 qcfg, dirs = config.get_config(None,
                                validate=False,
@@ -215,46 +217,40 @@ def network_move(rec, qname, **kwargs):
 #!                      msg=comment),
 #!              file=f)
 
-
-
 def unprotected_submit(rec, qname, **kwargs):
     """Try to modify headers and submit FITS to archive. If anything fails 
 more than N times, move the queue entry to Inactive. (where N is the 
 configuration field: maximum_errors_per_record)
 """
-    logging.debug('EXECUTING submit({})'.format(rec.get('filename','NA')))
-    # eg. /tempZone/mountain_mirror/other/vagrant/16/text/plain/fubar.txt
-    ifname = rec['filename']            # absolute path (mountain_mirror)
-    checksum = rec['checksum']          
-
-    #    md5sum = md5(rec['filename'])
-    md5sum = checksum
-    auditor.set_fstop(md5sum, 'valley:cache', host=socket.getfqdn())
-
-    qcfg = du.get_keyword('qcfg', kwargs)
-    # dq_host = qcfg['dq_host']
-    # dq_port = qcfg['dq_port']
+    logging.debug('EXECUTING unprotected_submit({})'
+                  .format(rec.get('filename','NA')))
 
     noarc_root =  '/var/tada/anticache'
     mirror_root = '/var/tada/cache'    
+    ifname = rec['filename']            # absolute path (mountain_mirror)
+    md5sum = rec['checksum']          
 
+    auditor.set_fstop(md5sum, 'valley:cache', host=socket.getfqdn())
+
+    qcfg = du.get_keyword('qcfg', kwargs)
 
     try:
         ftype = file_type(ifname)
+    except tex.IngestRejection:
+        raise
     except Exception as ex:
         logging.error('Execution failed: {}; ifname={}'.format(ex, ifname))
         raise tex.IngestRejection(md5sum, ifname, ex, dict())
         
-    #! logging.debug('File type for "{}" is "{}".'.format(ifname, ftype))
     destfname = None
     if 'FITS' == ftype :  # is FITS
         msg = 'FITS_file'
         popts, pprms = fu.get_options_dict(ifname) # .yaml or .options
         origfname = pprms['filename']
         try:
-            destfname = ts.submit_to_archive(ifname, checksum, qname, qcfg=qcfg)
-        #!except tex.IngestRejection:
-        #!    raise !!!!
+            destfname = ts.submit_to_archive(ifname, md5sum, qname, qcfg=qcfg)
+        except tex.IngestRejection:
+            raise
         except Exception as sex:
             msg = 'Failed to submit {}: {}'.format(ifname, sex)
             auditor.set_fstop(md5sum, 'valley:cache', host=socket.getfqdn())
@@ -283,7 +279,7 @@ configuration field: maximum_errors_per_record)
             logging.warning('Failed to mv non-fits file from mirror on Valley.')
             raise tex.IngestRejection(md5sum, ifname, ex, dict())
 
-        #auditor.log_audit(md5sum, origfname, False, destfname, 'Non-FITS file')
+        #auditor.log_audit(md5sum, origfname, False,destfname,'Non-FITS file')
         auditor.set_fstop(md5sum, 'mountain:anticache', host=socket.getfqdn())
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
         logging.info('Non-FITS file put in: {}'.format(destfname))
@@ -296,7 +292,20 @@ configuration field: maximum_errors_per_record)
 def submit(rec, qname, **kwargs):
     try:
         unprotected_submit(rec, qname, **kwargs)
+    except tex.IngestRejection as ex:
+        tut.log_traceback()        
+        try:
+            auditor.log_audit(ex.md5sum, ex.origfilename, False, '',
+                              ex.errmsg, newhdr=ex.newhdr)
+        except Exception as err:
+            # At this point, we must ignore the error and move on.
+            logging.exception('Error in log_audit after ingest reject; {}'
+                              .format(err))
+            return False
+        
     except Exception as ex:
+        logging.error('Do not let errors fall through this far!!!')
+        logging.error(traceback.format_exc())
         logging.error(('Failed to run action "submit" from dataq.'
                        ' rec={}; qname={}; {}')
                       .format(rec, qname, ex))

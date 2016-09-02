@@ -2,31 +2,38 @@ import logging
 
 from . import config
 from . import audit
-from . import tada_utils as tut
+from . import utils as tut
 
 auditor = audit.Auditor()
 
+
+
+class NoPersonality(Exception):
+    """We did not find expected YAML personality files 
+in /var/tada/personalities/<INSTRUMENT>/*.yaml"""
+    pass
+
+
+class SubmitException(Exception):
+    "Something went wrong with submit to archive"
+    pass 
 
 class IngestRejection(Exception):
     """File could not be ingested into archive. (We might not even attempt to
 ingest if file is known to be invalid before hand)."""
     #def __init__(self, localfits, srcpath, errmsg, newhdr):
     def __init__(self, md5sum, origfilename, errmsg, newhdr):
+        self.md5sum = md5sum
+        self.origfilename = origfilename
         self.errmsg = errmsg
         self.newhdr = newhdr # dict of new FITS metadata
-        #print('DBG: IngestRejection; errmsg={}'.format(errmsg))
-        auditor.log_audit(md5sum, origfilename, False, '', errmsg,
-                          newhdr=newhdr)
-        #logging.exception('IngestRejection: recorded with log_audit')
-        tut.log_traceback()        
+        logging.debug('IngestRejection({}, {}, {}, {})'
+                      .format(self.md5sum, self.origfilename,
+                              self.errmsg, self.newhdr))
 
     def __str__(self):
-        return str(self.errmsg)
-
-class SubmitException(Exception):
-    "Something went wrong with submit to archive"
-    def __init__(self, errmsg):
-        logging.error(errmsg)
+        return str('Rejected ingest of {}. REASON: {}'
+                   .format(self.origfilename, self.errmsg))
 
 class InvalidHeader(SubmitException):
     "Exception when FITS header doesn't contains everything we need."

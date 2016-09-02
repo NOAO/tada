@@ -25,7 +25,7 @@ from . import irods331 as iu
 from . import ingest_decoder as idec
 from . import config
 from . import audit
-from . import tada_utils as tut
+from . import utils as tut
 
 auditor = audit.Auditor()
 ARCHIVE_SERVICE_TIMEOUT = 10.0 # seconds to wait for an answer from Archive svc
@@ -75,9 +75,11 @@ RETURN: (statusBool, message, operatorMessage)"""
             'Problem in opening or reading connection to: {}{}; {}'
             .format(archserver_url, payload, err))
 
-    success, operator_msg, mtype = idec.decodeIngest(response)
+    success, operator_msg, mtype, itype = idec.decodeIngestResponse(response)
     logging.debug('ARCH server: success={}, msg={}, errcode={}'
                   .format(success, operator_msg, mtype))
+    if itype == 'SUCCESS_WITH_WARNING':
+        logging.warning('ARCH server: {}'.format(operator_msg))
     message = operator_msg
     if not success:
         message = ('HTTP response from ARCH server for file {}: "{}"; {}'
@@ -97,7 +99,8 @@ def new_fits(orig_fitspath, changes, moddir=None):
         modfilepath = shutil.copy(orig_fitspath, moddir)
         os.chmod(modfilepath, 0o664)
 
-    #!logging.debug('new_fits modfilepath={}'.format(modfilepath))
+    logging.debug('new_fits({}, {}, moddir={})'
+                  .format(orig_fitspath, changes, moddir))
     # Apply changes to header (MODIFY IN PLACE)
     hdulist = pyfits.open(modfilepath, mode='update') # modify IN PLACE
     fitshdr = hdulist[0].header # use only first in list.
@@ -175,8 +178,8 @@ RETURN: irods location of hdr file.
     """
     options = persona_options if  persona_options else dict()
     opt_params = persona_params if persona_params else dict()
-    #!logging.debug('prep_for_ingest(): options={}, opt_params={}'
-    #!              .format(options, opt_params))
+    logging.debug('prep_for_ingest(): options={}, opt_params={}'
+                  .format(options, opt_params))
     
     # +++ API: under-under parameters via lp options
     jidt = opt_params.get('jobid_type',None)  # plain | seconds | (False)
@@ -187,30 +190,32 @@ RETURN: irods location of hdr file.
     orig_fullname = opt_params['filename']
     md5sum= opt_params['md5sum']
     #! hdr_ifname = "None"
-    hdr=dict()
+    newhdr=dict()
     try:
-        # augment hdr (add fields demanded of downstream process)
+        # augment newhdr (add fields demanded of downstream process)
         #! hdulist = pyfits.open(mirror_fname, mode='update') # modify IN PLACE
-        #! hdr = hdulist[0].header # use only first in list.
-        hdr = fu.get_hdr_as_dict(mirror_fname)
+        #! newhdr = hdulist[0].header # use only first in list.
+        newhdr = fu.get_hdr_as_dict(mirror_fname)
         if opt_params.get('OPS_PREAPPLY_UPDATE','no') == 'yes': #!!!
-            fu.apply_options(options, hdr)
-        if 'DTACQNAM' not in hdr:
-            hdr['DTACQNAM'] = orig_fullname
+            fu.apply_options(options, newhdr)
+        if 'DTACQNAM' not in newhdr:
+            newhdr['DTACQNAM'] = orig_fullname
         # we will set DTNSANAM after we generate_fname, here to pass validate
-        hdr['DTNSANAM'] = 'NA' 
-        fu.validate_raw_hdr(hdr, orig_fullname)
+        newhdr['DTNSANAM'] = 'NA' 
+        fu.validate_raw_hdr(newhdr, orig_fullname)
         try:
-            fname_fields = fu.fix_hdr(hdr, mirror_fname,
+            fname_fields = fu.fix_hdr(newhdr, mirror_fname,
                                       options, opt_params, **kwargs)
             logging.debug('fix_hdr fname_fields={}'.format(fname_fields))
+        except tex.IngestRejection:
+            raise
+        except tex.BadPropid as bpe:
+            raise tex.IngestRejection(md5sum, orig_fullname, str(bpe), newhdr)
         except Exception as err:
-            #!oldmsg = ('Could not update FITS header of "{}"; {}'
-            #!          .format(orig_fullname, err))
-            raise tex.IngestRejection(md5sum, orig_fullname, err, hdr)
-        fu.validate_cooked_hdr(hdr, orig_fullname)
+            raise tex.IngestRejection(md5sum, orig_fullname, err, newhdr)
+        fu.validate_cooked_hdr(newhdr, orig_fullname)
         if opt_params.get('VERBOSE', False):
-            fu.validate_recommended_hdr(hdr, orig_fullname)
+            fu.validate_recommended_hdr(newhdr, orig_fullname)
         # Generate standards conforming filename
         # EXCEPT: add field when JOBID_TYPE and/or JOB_TAG given.
         jtypes=set(['plain', 'obsmicro', 'seconds'])
@@ -224,8 +229,8 @@ RETURN: irods location of hdr file.
         elif jidt == 'obsmicro':
             # use microseconds from DATE-OBS
             logging.debug('Using microseconds from DATE-OBS: {} of {}'
-                          .format(hdr['DATE-OBS'], mirror_fname))
-            parts = hdr['DATE-OBS'].split('.')
+                          .format(newhdr['DATE-OBS'], mirror_fname))
+            parts = newhdr['DATE-OBS'].split('.')
             jobid = '0' if len(parts) < 2 else parts[1]
             tag = jobid if tag == '' else (jobid + '_' + tag)
         elif jidt == 'seconds': 
@@ -238,16 +243,16 @@ RETURN: irods location of hdr file.
         #ext = fn.fits_extension(orig_fullname)
         ext = fn.fits_extension(mirror_fname)
         if source == 'pipeline':
-            #new_basename = hdr.get('PLDSID','no_PLDSID_given') + ".fits.fz"
+            #new_basename = newhdr.get('PLDSID','no_PLDSID_given') + ".fits.fz"
             new_basename = os.path.basename(orig_fullname)
             logging.debug('Source=pipeline so using basename:{}'
                           .format(new_basename))
         else:
-            new_basename = fn.generate_fname(hdr, ext,
+            new_basename = fn.generate_fname(newhdr, ext,
                                              tag=tag,
                                              orig=mirror_fname)
-        hdr['DTNSANAM'] = new_basename
-        new_ipath = fn.generate_archive_path(hdr, source=source) / new_basename
+        newhdr['DTNSANAM'] = new_basename
+        new_ipath = fn.generate_archive_path(newhdr, source=source) / new_basename
         #ext = fn.fits_extension(new_basename)
         logging.debug('orig_fullname={}, new_basename={}, ext={}'
                       .format(orig_fullname, new_basename, ext))
@@ -277,7 +282,7 @@ RETURN: irods location of hdr file.
             msg = ('iRODS FITS file already exists at {} on submit of {}.'
                    .format(new_ifname, orig_fullname))
             if resubmit == 1:
-                logging.error(msg + ' Trying to igest anyhow.')
+                logging.error(msg + ' Trying to ingest anyhow.')
             elif resubmit > 1:
                 pass
             else:
@@ -286,16 +291,17 @@ RETURN: irods location of hdr file.
                 raise tex.IrodsContentException(msg)
 
         # Create final (modified) FITS
-        try:
-            newfits = new_fits(mirror_fname, hdr, moddir=moddir)
-        except Exception as err:
-            raise tex.IngestRejection(md5sum, orig_fullname, err, options)    
+        newfits = new_fits(mirror_fname, newhdr, moddir=moddir)
 
         hdrfile = gen_hdr_file(newfits, new_basename)
         iu.irods_put331(hdrfile, new_ihdr)
         os.remove(hdrfile)        
+    except tex.IngestRejection:
+        raise
+    except tex.InvalidFits as ife:
+        raise tex.IngestRejection(md5sum, orig_fullname, str(ife), newhdr) 
     except Exception as err:
-        raise tex.IngestRejection(md5sum, orig_fullname, err, hdr)
+        raise tex.IngestRejection(md5sum, orig_fullname, err, newhdr)
 
         
     #! iu.irods_put331(mirror_fname, new_ifname) # iput renamed FITS
@@ -304,7 +310,7 @@ RETURN: irods location of hdr file.
     #
 
     logging.debug('prep_for_ingest: RETURN={}'.format(new_ihdr))
-    return new_ihdr, new_ifname, hdr, newfits
+    return new_ihdr, new_ifname, newhdr, newfits
     # END prep_for_ingest()
 
 
@@ -349,7 +355,7 @@ standards. There are numerous under-the-hood requirements imposed by
 how Archive works. See comments above for the grim details.
 
 ifname:: full path of fits file (in cache)
-checksum:: NOT USED
+checksum:: checksum of original file
 qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 
     """
@@ -366,7 +372,7 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
     logging.debug('submit_to_archive(popts={},pprms={})'.format(popts, pprms))
     #!origfname = pprms.get('filename', ifname)
     origfname = pprms['filename']
-    md5sum = pprms['md5sum']
+    md5sum = checksum
     if 'do_audit' in pprms:
         auditor.do_svc = pprms['do_audit']
 

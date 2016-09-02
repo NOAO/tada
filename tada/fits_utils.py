@@ -26,7 +26,7 @@ from . import exceptions as tex
 from . import hdr_calc_funcs as hf
 from . import scrub
 from . import config 
-from . import tada_utils as tut
+from . import utils as tut
 
 #DOC: vvv
 # All bets are off in the original FITS file does not contain all of these.
@@ -464,12 +464,11 @@ def validate_recommended_hdr(hdr, orig_fullname):
 def fitsverify(fname):
     '''Verify FITS file. Throw exception on invalid.'''
     logging.debug('fitsverify({})'.format(fname))
-    fitsverify = '/usr/local/bin/fitsverify'
+    cmd = ['/usr/local/bin/fitsverify', '-e', '-q', fname]
     try:
-        subprocess.check_output([fitsverify, '-e', '-q', fname])
+        subprocess.check_output(cmd)
     except Exception as err:
-        raise tex.InvalidFits('Command failed: {}'
-                           .format(' '.join([fitsverify, '-e', '-q', fname])))
+        raise tex.InvalidFits('Verify failed: {}'.format(' '.join(cmd)))
     logging.debug('{} PASSED fitsverify()'.format(fname))
     return True
 

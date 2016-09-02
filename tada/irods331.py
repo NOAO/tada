@@ -6,7 +6,7 @@ import os
 import os.path
 import shutil
 
-from . import tada_utils as tut
+from . import utils as tut
 
 '''
 From the icommands documentation:

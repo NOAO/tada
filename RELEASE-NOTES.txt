@@ -11,6 +11,8 @@
 - replace uses of urllib with "requests" package
 - addition errcode coding for audit
 - smokes for dropbox can now be done file by file (with pass/fail expects)
+- change in error reporting (in logs)
+
 
 * Release 2.5.15 <2016-08-04 Thu>
 - fix bug causing ingestion of corrupted files

@@ -38,13 +38,19 @@ have line numbers so would cause unsability in GOLD files.
 """
     etype, evalue, tb = sys.exc_info()
 
-    logging.error(traceback.format_exception_only(etype, evalue)[0])
-    #!ll = traceback.format_exc()
+    logging.error(traceback.format_exception_only(etype, evalue)[0]+'!')
+
     #!ll = traceback.format_exception_only(etype, evalue)
-    ll = traceback.format_exception(etype, evalue, tb)
-    logging.info(';'.join([s.replace('\n','') for s in ll]))
+    #!ll = traceback.format_exception(etype, evalue, tb)
+    #!logging.info(';'.join([s.replace('\n','') for s in ll]))
+    logging.info(traceback.format_exc()) # multi-line human readable
+
     
 def trace_if(trace):    
     if trace:
         traceback.print_exc()
     
+
+def dict_str(dict):
+    """Return string that formats content of dictionary suitable for log"""
+    return '[' + ', '.join(['{}={}' for k,v in dict.items()]) + ']'
