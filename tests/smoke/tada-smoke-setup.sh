@@ -12,11 +12,10 @@ mars_rollback
 if [ -d "$tdata" ]; then
     echo "# Data directory ($tdata) exists. Using it!"
 else
-    echo "# Data directory ($tdata) does not exist. Transfering it"
-    #rm /sandbox/tada/tests/smoke/fits-test-data.tgz
-    rm $SCRIPTDIR/fits-test-data.tgz
-    wget -nc http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
-    tar xf fits-test-data.tgz
+    echo "# DISABLED:Data directory ($tdata) does not exist. Transfering it"
+    #rm $SCRIPTDIR/fits-test-data.tgz
+    #wget -nc http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
+    #tar xf fits-test-data.tgz
 fi
 source $tadadir/../tada-tools/dev-scripts/irods_init.sh
 echo "# TADA packages installed:"

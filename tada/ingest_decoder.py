@@ -100,6 +100,9 @@ fitsverifyRE = re.compile(r"Verify failed:")
 notschedRE = re.compile(r"not in scheduled list of Propids")
 ''' Propid from hdr (BADSCRUB.BAD-PROPID) not in scheduled list of Propids ['2016A-0189', '2016A-0453']'''
 
+etlkeyRE = re.compile(r"ETL failed to parse bad keyword value")
+'''ETL failed to parse bad keyword value. keyword:[ZD] value:[30:26:47.67728784] Storing null value for keyword instead. ETL exception msg was: For input string: "30:26:47.67728784"'''
+
 # these must be searched in order. First MatchFunc to return True wins.
 ERRMAP = [
     # ERRCODE,  MatchREGEX,       ShortDesc
@@ -113,6 +116,7 @@ ERRMAP = [
     ('STILUT',  stilutRE,         'Prefix table missing entry'),
     ('NOVERIFY',fitsverifyRE,     'File fails fitsverify'),
     ('NOSCHED', notschedRE,       'Header propid not in schedule split list'),
+    ('ETLKEY',  etlkeyRE,         'ETL cannot parse keyword. Subsititing'),
     ('none',    None,             'No error'),
     ('UNKNOWN', None,             'Unknown error'),
 ]

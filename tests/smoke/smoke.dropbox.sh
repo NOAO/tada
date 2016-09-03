@@ -92,7 +92,7 @@ testLog db2_5_log "pylogfilter $plog \"$MARKER\" $FITS"
 # This one takes longish! (68mb): 57 seconds for 71222400 bytes @ 10mbps
 # fail-pass fitsverify
 FITS="$tdata/scrape/20160314/kp4m-mosaic3/mos3.75870.fits.fz"
-testCommand db1_2 "passdrop 70 $FITS 20160314 kp4m-mosaic3" "^\#" n 0
+testCommand db1_2 "passdrop 60 $FITS 20160314 kp4m-mosaic3" "^\#" n 0
 testLog db1_2_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 # Figure out how to verify behavior on MOUNTAIN!!!
@@ -111,11 +111,18 @@ testLog db1_2_log "pylogfilter $plog \"$MARKER\" $FITS"
 #! FITS=$tdata/short-drop/20160610/kp4m-mosaic3/mos3.94567.fits
 #! testCommand db2_4 "passdrop 230 $FITS 20160610 kp4m-mosaic3" "^\#" n 0 
 
+#########################
+
+# Summary check: we expect:  !!!
+#  3 INFO "SUCCESSFUL submit_to_archive"
+#  2 ERROR IngestRejection
+#  2 WARNING 
+
+
 ##############################################################################
 
 echo "MAX_FOUND_TIME=$MAX_FOUND_TIME"
 emins=$((`date +'%s'` - tic))
-# expect about 168 seconds
 echo "# Completed dropbox test: " `date` " in $emins seconds"
 
 ###########################################

@@ -114,34 +114,7 @@ def fixTriplespec(orig, **kwargs):
 #!    else:
 #!        return {'DTPROPID': propid}
 
-def set_dtpropid(orig, **kwargs):
-    pids = ws_lookup_propids(orig.get('DTCALDAT'),
-                             orig.get('DTTELESC'),
-                             orig.get('DTINSTRU'),
-                             **kwargs)
-    if len(pids) == 0:
-        return {'DTPROPID': 'NONE'} # no svc connect?
-    logging.debug('Schedule propids ({}, {}, {}) = {}'
-                  .format(orig.get('DTCALDAT'),
-                          orig.get('DTTELESC'),
-                          orig.get('DTINSTRU'),
-                          pids))
-
-    hdrpid = orig.get('DTPROPID', orig.get('PROPID', None))
-    if hdrpid in pids:
-        return {'DTPROPID': hdrpid}
-    else:
-        if len(pids) > 1: # split night
-            err = ('Propid from hdr ({}) not in scheduled list of Propids {}'.
-                   format(hdrpid, pids))
-            raise tex.BadPropid(err)
-        else: # not split, hdr doesn't match schedule
-            logging.warning((
-            'Ignoring header propid {} that does not match schedule. '
-                'Using "{}" from schedule.')
-                .format(hdrpid, pids[0]))
-            return {'DTPROPID': pids[0]}
-    return {'DTPROPID': 'NONE'} # this should never happen!
+# MOVED TO FITS_UTILS: def set_dtpropid(orig, **kwargs):
 
 
 #!def trustSchedPropid(orig, **kwargs):

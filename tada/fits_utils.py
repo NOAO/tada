@@ -472,6 +472,35 @@ def fitsverify(fname):
     logging.debug('{} PASSED fitsverify()'.format(fname))
     return True
 
+def set_dtpropid(orig, **kwargs):
+    pids = hf.ws_lookup_propids(orig.get('DTCALDAT'),
+                                orig.get('DTTELESC'),
+                                orig.get('DTINSTRU'),
+                                **kwargs)
+    if len(pids) == 0:
+        return {'DTPROPID': 'NONE'} # no svc connect?
+    logging.debug('Schedule propids ({}, {}, {}) = {}'
+                  .format(orig.get('DTCALDAT'),
+                          orig.get('DTTELESC'),
+                          orig.get('DTINSTRU'),
+                          pids))
+
+    hdrpid = orig.get('DTPROPID', orig.get('PROPID', None))
+    if hdrpid in pids:
+        return {'DTPROPID': hdrpid}
+    else:
+        if len(pids) > 1: # split night
+            err = ('Propid from hdr ({}) not in scheduled list of Propids {}'.
+                   format(hdrpid, pids))
+            raise tex.BadPropid(err)
+        else: # not split, hdr doesn't match schedule
+            logging.warning((
+            'Ignoring header propid {} that does not match schedule. '
+                'Using "{}" from schedule.')
+                .format(hdrpid, pids[0]))
+            return {'DTPROPID': pids[0]}
+    return {'DTPROPID': 'NONE'} # this should never happen!
+
 def fix_hdr(hdr, fname, options, opt_params, **kwargs):
     '''
 SIDE-EFFECT: Modify hdr dict in place to suit Archive Ingest. 
@@ -519,7 +548,8 @@ Include fields in hdr needed to construct new filename that fullfills standards.
         logging.debug('[{}] new field values={}'.format(calcfunc.__name__, new))
         hdr.update(new)
 
-    new = hf.set_dtpropid(hdr, **kwargs)
+    #new = hf.set_dtpropid(hdr, **kwargs)
+    new = set_dtpropid(hdr, **kwargs) # !!! Emitted warning ref orig_fullname
     logging.debug('Updating DTPROPID from {} => {}'
                   .format(hdr.get('DTPROPID'),
                           new.get('DTPROPID')))

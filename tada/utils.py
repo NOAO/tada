@@ -43,7 +43,7 @@ have line numbers so would cause unsability in GOLD files.
     #!ll = traceback.format_exception_only(etype, evalue)
     #!ll = traceback.format_exception(etype, evalue, tb)
     #!logging.info(';'.join([s.replace('\n','') for s in ll]))
-    logging.info(traceback.format_exc()) # multi-line human readable
+    logging.debug(traceback.format_exc()) # multi-line human readable
 
     
 def trace_if(trace):    

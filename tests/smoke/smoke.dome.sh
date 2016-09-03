@@ -52,9 +52,9 @@ echo ""
 if [ -d "$tdata/basic" ]; then
     echo "data directory ($tdata/basic) exists. Using it"
 else
-    echo "data directory ($tdata/basic) does not exist. Transfering it"
-    wget http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
-    tar xf fits-test-data.tgz
+    echo "DISABLED:data directory ($tdata/basic) does not exist. Transfering it"
+    #!wget http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
+    #!tar xf fits-test-data.tgz
 fi
 
 # Standard post of file that can be used from any DOME
