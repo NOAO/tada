@@ -1,4 +1,4 @@
-"Actions that can be run against entry when popping from  data-queue."
+"Actions that can be run against entry when popping from  data-queue."ru
 # 2.4.18
 import logging
 import os
@@ -18,14 +18,15 @@ from . import fits_utils as fu
 import dataq.dqutils as du
 import dataq.red_utils as ru
 from . import config
-from . import audit
 from . import exceptions as tex
 from . import utils as tut
 
-qcfg, dirs = config.get_config(None,
-                               validate=False,
-                               yaml_filename='/etc/tada/tada.conf')
-auditor = audit.Auditor()
+from . import settings
+
+#!qcfg, dirs = config.get_config(None,
+#!                               validate=False,
+#!                               yaml_filename='/etc/tada/tada.conf')
+auditor = settings.auditor # audit.Auditor()
 
 
 def md5(fitsname):
@@ -68,32 +69,32 @@ def network_move(rec, qname, **kwargs):
     shutil.move(tempfname+'.yaml', fname+'.yaml')
 
     auditor.set_fstop(md5sum, 'mountain:cache', host=thishost)
-    for p in ['qcfg', 'dirs']:
-        if p not in kwargs:
-            raise Exception(
-                'ERROR: "network_move" Action did not get required '
-                +' keyword parameter: "{}" in: {}'
-                .format(p, kwargs))
-    qcfg=kwargs['qcfg']
-    dirs=kwargs['dirs']
+    #!for p in ['qcfg', 'dirs']:
+    #!    if p not in kwargs:
+    #!        raise Exception(
+    #!            'ERROR: "network_move" Action did not get required '
+    #!            +' keyword parameter: "{}" in: {}'
+    #!            .format(p, kwargs))
+    #!qcfg=kwargs['qcfg']
+    #!dirs=kwargs['dirs']
     logging.debug('dirs={}'.format(dirs))
 
     # nextq = qcfg['transfer']['next_queue']
     # dq_host = qcfg['dq_host']
-    dq_port = qcfg['dq_port']
-    valley_host = qcfg['valley_host']
-    redis_port = qcfg['redis_port']
+    #! dq_port = settings.dq_port
+    #! valley_host = settings.valley_host
+    #! redis_port = settings.'redis_port'
 
     source_root = '/var/tada/cache' 
-    pre_action = qcfg.get('pre_action',None)
+    #!pre_action = qcfg.get('pre_action',None)
     #sync_root =  qcfg[qname]['mirror_dir']
-    sync_root =  'rsync://tada@{}/cache'.format(qcfg['valley_host'])
+    sync_root =  'rsync://tada@{}/cache'.format(settings.valley_host)
     valley_root = '/var/tada/cache'
     popts, pprms = fu.get_options_dict(fname) # .yaml or .options
-    if thishost == qcfg.get('valley_host',None):
+    if thishost == settings.valley_host:
         logging.error(('Current host ({}) is same as "valley_host" ({}). '
-                      'Not moving file!').format(thishost,
-                                                 qcfg.get('valley_host')))
+                      'Not moving file!')
+                      .format(thishost, settings.valley_host))
         return None
 
 
@@ -105,8 +106,8 @@ def network_move(rec, qname, **kwargs):
     # ifname = os.path.join(sync_root, os.path.relpath(fname, source_root))
     # optfname = ifname + ".options"
     newfname = fname # temp dir, not rsync
-    logging.debug('pre_action={}'.format(pre_action))
-    if pre_action:
+    logging.debug('pre_action={}'.format(settings.pre_action))
+    if settings.pre_action:
         # pre_action is full path to shell script to run.
         # WARNING: a bad script could do bad things to the
         #    mountain_cache files!!!
@@ -118,17 +119,18 @@ def network_move(rec, qname, **kwargs):
         # Error (non-zero return code) will be logged to ERROR but normal
         # TADA processing will continue.
         try:
-            cmdline = [pre_action, fname, source_root, fname+'.options']
+            cmdline = [settings.pre_action, fname, source_root,
+                       fname+'.options']
             diag.dbgcmd(cmdline)
             bout = subprocess.check_output(cmdline, stderr=subprocess.STDOUT)
             if len(bout) > 0:
                 out = bout.decode('utf-8')
                 newfname = out.split()[0]
                 logging.info('pre_action "{}", newfname={}, output: {}'
-                             .format(pre_action, newfname, out))
+                             .format(settings.pre_action, newfname, out))
         except subprocess.CalledProcessError as cpe:
             logging.warning('Failed Transfer pre_action ({} {} {}) {}; {}'
-                            .format(pre_action, fname, source_root,
+                            .format(settings.pre_action, fname, source_root,
                                     cpe, cpe.output ))
         
     out = None
@@ -186,7 +188,7 @@ def network_move(rec, qname, **kwargs):
         return False
 
     # successfully transfered to Valley
-    auditor.set_fstop(md5sum, 'valley:cache', host=qcfg.get('valley_host'))
+    auditor.set_fstop(md5sum, 'valley:cache', settings.valley_host)
     logging.debug('rsync output:{}'.format(out))
     logging.info('Successfully moved file from {} to {}'
                  .format(newfname, sync_root))
@@ -194,12 +196,11 @@ def network_move(rec, qname, **kwargs):
                                 os.path.relpath(newfname, source_root))
     try:
         # What if QUEUE is down?!!!
-        ru.push_direct(valley_host, redis_port,
-                       mirror_fname, md5sum,
-                       max_queue_size=qcfg.get('maximum_queue_size',999))
+        ru.push_direct(settings.valley_host, settings.redis_port,
+                       mirror_fname, md5sum)
     except Exception as ex:
-        logging.error('Failed to push to queue on {}:{}; {}'
-                        .format(valley_host, dq_port, ex ))
+        logging.error('Failed to push to queue on {}; {}'
+                      .format(settings.valley_host, ex))
         logging.error('push_to_q stack: {}'.format(du.trace_str()))
         raise
     auditor.set_fstop(md5sum, 'valley:queue')
@@ -268,21 +269,15 @@ configuration field: maximum_errors_per_record)
             if os.path.exists(optfname):
                 os.remove(optfname)
     else: # not FITS
-        msg = 'non-fits'
         destfname = ifname.replace(mirror_root, noarc_root)
-        try:
-            os.makedirs(os.path.dirname(destfname), exist_ok=True)
-            shutil.move(ifname, destfname)
-            auditor.set_fstop(md5sum, 'valley:anticache', host=socket.getfqdn())
-        except Exception as ex:
-            msg = 'Non-FITS file: {}'.format(ex)
-            logging.warning('Failed to mv non-fits file from mirror on Valley.')
-            raise tex.IngestRejection(md5sum, ifname, ex, dict())
-
-        #auditor.log_audit(md5sum, origfname, False,destfname,'Non-FITS file')
+        os.makedirs(os.path.dirname(destfname), exist_ok=True)
+        shutil.move(ifname, destfname)
+        auditor.set_fstop(md5sum, 'valley:anticache', host=socket.getfqdn())
+        #! msg = 'Non-FITS file: {}'.format(ex)
+        #! logging.warning('Failed to mv non-fits file from mirror on Valley.')
         auditor.set_fstop(md5sum, 'mountain:anticache', host=socket.getfqdn())
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
-        logging.info('Non-FITS file put in: {}'.format(destfname))
+        raise tex.IngestRejection(md5sum, ifname, ex, dict())
         
     auditor.set_fstop(md5sum,'archive')
     return True

@@ -54,3 +54,5 @@ def trace_if(trace):
 def dict_str(dict):
     """Return string that formats content of dictionary suitable for log"""
     return '[' + ', '.join(['{}={}' for k,v in dict.items()]) + ']'
+
+
