@@ -1,0 +1,5 @@
+actions.py        INFO     Successfully moved file from /var/tada/cache/20110101/ct13m-andicam/ir141225.0179.fits.fz to rsync://tada@valley.test.noao.edu/cache
+actions.py        INFO     Successfully moved file from /var/tada/cache/20110101/wiyn-bench/24dec_2014.061.fits.fz to rsync://tada@valley.test.noao.edu/cache
+actions.py        INFO     Successfully moved file from /var/tada/cache/20141220/wiyn-whirc/obj_355.fits.fz to rsync://tada@valley.test.noao.edu/cache
+actions.py        INFO     Successfully moved file from /var/tada/cache/20160610/kp4m-mosaic3/mos3.badprop.fits.fz to rsync://tada@valley.test.noao.edu/cache
+actions.py        INFO     Successfully moved file from /var/tada/cache/20160314/kp4m-mosaic3/mos3.75870.fits.fz to rsync://tada@valley.test.noao.edu/cache

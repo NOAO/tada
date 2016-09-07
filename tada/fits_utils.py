@@ -589,20 +589,20 @@ def get_options_dict(fits_filename):
             options = yd.get('options', {})
             opt_params = yd.get('params', {})
 
-    elif os.path.exists(fits_filename + '.options'):
-        with open(fits_filename + '.options', encoding='utf-8') as f:
-            options = dict()
-            opt_params = dict()
-            for opt in f.readline().split():
-                k, v = opt.split('=')
-                if k[0] != '_':
-                    continue
-                if k[1] == '_':
-                    opt_params[k[2:]] = v
-                else:
-                    options[k[1:]] = v.replace('_', ' ')                
-            if 'calchdr' in opt_params:
-                opt_params['calchdr'] = opt_params['calchdr'].split(',')
+#!    elif os.path.exists(fits_filename + '.options'):
+#!        with open(fits_filename + '.options', encoding='utf-8') as f:
+#!            options = dict()
+#!            opt_params = dict()
+#!            for opt in f.readline().split():
+#!                k, v = opt.split('=')
+#!                if k[0] != '_':
+#!                    continue
+#!                if k[1] == '_':
+#!                    opt_params[k[2:]] = v
+#!                else:
+#!                    options[k[1:]] = v.replace('_', ' ')                
+#!            if 'calchdr' in opt_params:
+#!                opt_params['calchdr'] = opt_params['calchdr'].split(',')
     else:
         logging.error('Options file not found for: {}'.format(fits_filename))
         return dict(), dict()
@@ -705,7 +705,6 @@ def fits_compliant(fits_file_list,
                    ignore_recommended=False,
                    show_values=False, show_header=False, show_stdfname=True,
                    required=False, verbose=False,
-                   qname='submit',
                    trace=False):
     """Check FITS file for complaince with Archive Ingest."""
     import warnings
@@ -954,12 +953,6 @@ def main():
                         format='%(levelname)s %(message)s',
                         datefmt='%m-%d %H:%M')
     logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
-
-    #!qname = 'submit'
-    #!qcfg, dirs = config.get_config(None,
-    #!                               validate=False,
-    #!                               yaml_filename=args.config)
-
 
     # fits_compliant /data/raw/nhs_2014_n14_299403.fits
     fits_compliant(args.infiles,

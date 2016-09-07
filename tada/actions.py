@@ -12,44 +12,21 @@ from pathlib import PurePath
 import hashlib
 import traceback
 
+import dataq.dqutils as du
+import dataq.red_utils as ru
+
 from . import submit as ts
 from . import diag
 from . import fits_utils as fu
-import dataq.dqutils as du
-import dataq.red_utils as ru
 from . import config
 from . import exceptions as tex
 from . import utils as tut
 from . import audit
-
 from . import settings
 
-#!qcfg, dirs = config.get_config(None,
-#!                               validate=False,
-#!                               yaml_filename='/etc/tada/tada.conf')
 auditor = audit.Auditor()
 
 
-def md5(fitsname):
-    hash_md5 = hashlib.md5()
-    with open(fitsname, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
-
-
-# +++ Add code here if TADA needs to handle additional types of files!!!
-def file_type(filename):
-    """Return an abstracted file type string.  MIME isn't always good enough."""
-    type = 'UNKNOWN'
-    if magic.from_file(filename).decode().find('FITS image data') >= 0:
-        type = 'FITS'
-    elif magic.from_file(filename).decode().find('JPEG image data') >= 0:
-        type = 'JPEG'
-    elif magic.from_file(filename).decode().find('script text executable') >= 0:
-        type = 'shell script'
-    return type
-    
 
 ##############################################################################
 ### Actions
@@ -64,33 +41,17 @@ def network_move(rec, qname):
     logging.debug('EXECUTING network_move()')
     thishost = socket.getfqdn()
     md5sum = rec['checksum']
+
+    auditor.set_fstop(md5sum, 'mountain:cache', host=thishost)
+
     tempfname = rec['filename']  # absolute path (in temp cache)
     fname = tempfname.replace('/cache/.queue/', '/cache/')
     shutil.move(tempfname,fname) # from temp (non-rsync) dir to rsync dir
     shutil.move(tempfname+'.yaml', fname+'.yaml')
-
-    auditor.set_fstop(md5sum, 'mountain:cache', host=thishost)
-    #!for p in ['qcfg', 'dirs']:
-    #!    if p not in kwargs:
-    #!        raise Exception(
-    #!            'ERROR: "network_move" Action did not get required '
-    #!            +' keyword parameter: "{}" in: {}'
-    #!            .format(p, kwargs))
-    #!qcfg=kwargs['qcfg']
-    #!dirs=kwargs['dirs']
-
-    # nextq = qcfg['transfer']['next_queue']
-    # dq_host = qcfg['dq_host']
-    #! dq_port = settings.dq_port
-    #! valley_host = settings.valley_host
-    #! redis_port = settings.'redis_port'
-
     source_root = '/var/tada/cache' 
-    #!pre_action = qcfg.get('pre_action',None)
-    #sync_root =  qcfg[qname]['mirror_dir']
     sync_root =  'rsync://tada@{}/cache'.format(settings.valley_host)
     valley_root = '/var/tada/cache'
-    popts, pprms = fu.get_options_dict(fname) # .yaml or .options
+    popts, pprms = fu.get_options_dict(fname) # .yaml
     if thishost == settings.valley_host:
         logging.error(('Current host ({}) is same as "valley_host" ({}). '
                       'Not moving file!')
@@ -173,8 +134,8 @@ def network_move(rec, qname):
         tic = time.time()
         out = subprocess.check_output(cmdline,
                                       stderr=subprocess.STDOUT)
-        logging.info('rsync completed in {:.2f} seconds'
-                     .format(time.time() - tic))
+        logging.debug('rsync completed in {:.2f} seconds'
+                      .format(time.time() - tic))
     except Exception as ex:
         logging.warning('Failed to transfer from Mountain to Valley using: {}; '
                         '{}; {}'
@@ -207,72 +168,10 @@ def network_move(rec, qname):
     return True
     # END network_move
 
-
-#!def logsubmit(src, dest, comment, fail=False,
-#!              submitlog='/var/log/tada/submit.manifest'):
-#!    with open(submitlog, mode='a') as f:
-#!        print('{timestamp}\t{status}\t{srcfname}\t{destfname}\t{msg}'
-#!              .format(timestamp=datetime.now().strftime('%m/%d/%y_%H:%M:%S'),
-#!                      status = 'FAILURE' if fail else 'SUCCESS',
-#!                      srcfname=src,
-#!                      destfname=dest,
-#!                      msg=comment),
-#!              file=f)
-
-def unprotected_submit(rec, qname):
-    """Try to modify headers and submit FITS to archive. If anything fails 
-more than N times, move the queue entry to Inactive. (where N is the 
-configuration field: maximum_errors_per_record)
-"""
-    logging.debug('EXECUTING unprotected_submit({})'
-                  .format(rec.get('filename','NA')))
-
-    noarc_root =  '/var/tada/anticache'
-    mirror_root = '/var/tada/cache'    
-    ifname = rec['filename']            # absolute path (mountain_mirror)
-    md5sum = rec['checksum']          
-
-    auditor.set_fstop(md5sum, 'valley:cache', host=socket.getfqdn())
-
-    try:
-        ftype = file_type(ifname)
-    except tex.IngestRejection:
-        raise
-    except Exception as ex:
-        logging.error('Execution failed: {}; ifname={}'.format(ex, ifname))
-        raise tex.IngestRejection(md5sum, ifname, ex, dict())
-        
-    destfname = None
-    if 'FITS' == ftype :  # is FITS
-        msg = 'FITS_file'
-        popts, pprms = fu.get_options_dict(ifname) # .yaml 
-        origfname = pprms['filename']
-        destfname = ts.submit_to_archive(ifname, md5sum, qname)
-        logging.debug('SUCCESSFUL submit; {} as {}'.format(ifname, destfname))
-        os.remove(ifname)
-        optfname = ifname + ".options"
-        logging.debug('Remove possible options file: {}'.format(optfname))
-        if os.path.exists(optfname):
-            os.remove(optfname)
-    else: # not FITS
-        destfname = ifname.replace(mirror_root, noarc_root)
-        os.makedirs(os.path.dirname(destfname), exist_ok=True)
-        shutil.move(ifname, destfname)
-        auditor.set_fstop(md5sum, 'valley:anticache', host=socket.getfqdn())
-        #! msg = 'Non-FITS file: {}'.format(ex)
-        #! logging.warning('Failed to mv non-fits file from mirror on Valley.')
-        auditor.set_fstop(md5sum, 'mountain:anticache', host=socket.getfqdn())
-        # Remove files if noarc_root is taking up too much space (FIFO)!!!
-        raise tex.IngestRejection(md5sum, ifname, ex, dict())
-        
-    auditor.set_fstop(md5sum,'archive')
-    return True
-# END unprotected_submit() action
-
 # Done against each record popped from data-queue
 def submit(rec, qname):
     try:
-        unprotected_submit(rec, qname)
+        ts.unprotected_submit(rec['filename'], rec['checksum'])
     except tex.IngestRejection as ex:
         tut.log_traceback()        
         try:

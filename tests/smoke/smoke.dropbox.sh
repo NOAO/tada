@@ -53,6 +53,12 @@ echo $MARKER >> $plog
 FTO=5 # fail timeout
 # To estimate timeout for FITS transfer use dropsub.sh:up_secs
 
+mtn_plog=~/.tada/mountain-logs/pop.log
+mtn_wlog=~/.tada/mountain-logs/watch.log
+rsync -az --password-file ~/.tada/rsync.pwd tada@mountain.test.noao.edu::logs ~/.tada/mountain-logs
+mtn_plog_start=`cat $mtn_plog | wc -l`
+mtn_wlog_start=`cat $mtn_wlog | wc -l`
+
 ##############################################################################
 ### Tests
 
@@ -88,18 +94,30 @@ FITS=$tdata/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits
 testCommand db2_5 "faildrop 7 $FITS 20160610 kp4m-mosaic3" "^\#" n 0 
 testLog db2_5_log "pylogfilter $plog \"$MARKER\" $FITS"
 
-# This one takes longish! (68mb): 57 seconds for 71,222,400 bytes @ 10mbps
+# This one takes longish!
+# (68mb): 57 seconds to iputr 71,222,400 bytes @ 10mbps
 # fail-pass fitsverify
 FITS="$tdata/scrape/20160314/kp4m-mosaic3/mos3.75870.fits.fz"
-testCommand db1_2 "passdrop 60 $FITS 20160314 kp4m-mosaic3" "^\#" n 0
+testCommand db1_2 "passdrop 70 $FITS 20160314 kp4m-mosaic3" "^\#" n 0
 testLog db1_2_log "pylogfilter $plog \"$MARKER\" $FITS"
 
-# Figure out how to verify behavior on MOUNTAIN!!!
+#########################
+# TODO: Summary check. We expect:  !!!
+#  3 INFO "SUCCESSFUL submit_to_archive"
+#  2 ERROR IngestRejection
+#  2 WARNING 
+testLog db3_1_log "pylogrun $plog \"$MARKER\""
+
+# Verify behavior on MOUNTAIN!!!
 # Should fail at MOUNTAIN (see watch.log)
 # Therefore not transfer to valley, so timeout here.
 #! FITS=$tdata/short-drop/bad-date/wiyn-whirc/obj_355a.fits.fz
 #! testCommand db2_1 "faildrop $FTO $FITS bad-date wiyn-whirc" "^\#" n 9
 #! testLog db2_1_log  "pylogfilter $plog \"$MARKER\" $FITS"
+
+rsync -az --password-file ~/.tada/rsync.pwd tada@mountain.test.noao.edu::logs ~/.tada/mountain-logs
+testLog db4_1_log "mtnlogrun $mtn_plog ${mtn_plog_start}"
+testLog db5_1_log "mtnlogrun $mtn_wlog ${mtn_wlog_start}"
 
 # Directory structure is wrong! (one too deep) TEST ON MOUNTAIN
 # scrape/<date>/<instrument>/.../*.fits.fz
@@ -109,13 +127,6 @@ testLog db1_2_log "pylogfilter $plog \"$MARKER\" $FITS"
 # TOO LONG!!! Almost 4 minutes to transfer
 #! FITS=$tdata/short-drop/20160610/kp4m-mosaic3/mos3.94567.fits
 #! testCommand db2_4 "passdrop 230 $FITS 20160610 kp4m-mosaic3" "^\#" n 0 
-
-#########################
-
-# Summary check. We expect:  !!!
-#  3 INFO "SUCCESSFUL submit_to_archive"
-#  2 ERROR IngestRejection
-#  2 WARNING 
 
 ###
 ##############################################################################

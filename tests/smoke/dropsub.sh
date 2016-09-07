@@ -178,6 +178,24 @@ function pylogfilter () {
     grep `basename $filename .fz` xx00 | grep  "WARNING \| ERROR " | cut -d' ' -f3- 
 }
 
+# All INFO, WARNING and ERROR lines for this smoke-test run
+function pylogrun () {
+    local logfile=$1
+    local marker=$2
+
+    csplit --quiet $logfile "%$marker%"+1
+    grep  "INFO \| WARNING \| ERROR " xx00 | cut -d' ' -f3- 
+}
+
+function mtnlogrun () {
+    local log=$1
+    local start=$2
+
+    tail -n +$((start+1)) $log \
+        | grep  "INFO \| WARNING \| ERROR " | cut -d' ' -f3- 
+}
+
+
 function insertsrc () {
     local srcpath=$1
     local SRCFILES="$SRCFILES $srcpath"

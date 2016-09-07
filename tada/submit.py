@@ -17,6 +17,8 @@ import shutil
 import magic
 import yaml
 import hashlib
+import socket
+
 
 from . import fits_utils as fu
 from . import file_naming as fn
@@ -312,6 +314,64 @@ RETURN: irods location of hdr file.
     # END prep_for_ingest()
 
 
+# +++ Add code here if TADA needs to handle additional types of files!!!
+def file_type(filename):
+    """Return an abstracted file type string.  MIME isn't always good enough."""
+    type = 'UNKNOWN'
+    if magic.from_file(filename).decode().find('FITS image data') >= 0:
+        type = 'FITS'
+    elif magic.from_file(filename).decode().find('JPEG image data') >= 0:
+        type = 'JPEG'
+    elif magic.from_file(filename).decode().find('script text executable') >= 0:
+        type = 'shell script'
+    return type
+
+def unprotected_submit(ifname, md5sum):
+    """Try to modify headers and submit FITS to archive. If anything fails 
+more than N times, move the queue entry to Inactive. (where N is the 
+configuration field: maximum_errors_per_record)
+    ifname:: absolute path (mountain_mirror)
+"""
+    logging.debug('EXECUTING unprotected_submit({}, {})'.format(ifname, md5sum))
+    noarc_root =  '/var/tada/anticache'
+    mirror_root = '/var/tada/cache'    
+    auditor.set_fstop(md5sum, 'valley:cache', host=socket.getfqdn())
+
+    try:
+        ftype = file_type(ifname)
+    except tex.IngestRejection:
+        raise
+    except Exception as ex:
+        logging.error('Execution failed: {}; ifname={}'.format(ex, ifname))
+        raise tex.IngestRejection(md5sum, ifname, ex, dict())
+        
+    destfname = None
+    if 'FITS' == ftype :  # is FITS
+        msg = 'FITS_file'
+        popts, pprms = fu.get_options_dict(ifname) # .yaml 
+        origfname = pprms['filename']
+        destfname = submit_to_archive(ifname, md5sum)
+        logging.debug('SUCCESSFUL submit; {} as {}'.format(ifname, destfname))
+        os.remove(ifname)
+        optfname = ifname + ".options"
+        logging.debug('Remove possible options file: {}'.format(optfname))
+        if os.path.exists(optfname):
+            os.remove(optfname)
+    else: # not FITS
+        destfname = ifname.replace(mirror_root, noarc_root)
+        os.makedirs(os.path.dirname(destfname), exist_ok=True)
+        shutil.move(ifname, destfname)
+        auditor.set_fstop(md5sum, 'valley:anticache', host=socket.getfqdn())
+        #! msg = 'Non-FITS file: {}'.format(ex)
+        #! logging.warning('Failed to mv non-fits file from mirror on Valley.')
+        auditor.set_fstop(md5sum, 'mountain:anticache', host=socket.getfqdn())
+        # Remove files if noarc_root is taking up too much space (FIFO)!!!
+        raise tex.IngestRejection(md5sum, ifname, ex, dict())
+        
+    auditor.set_fstop(md5sum,'archive')
+    return True
+# END unprotected_submit() action
+
 
 ##########
 # (-sp-) GRIM DETAILS: The Archive Ingest process is ugly and the
@@ -378,37 +438,18 @@ checksum:: checksum of original file
         raise
     (success, msg, ops_msg, mtype) = http_archive_ingest(new_ihdr,
                                                          origfname=origfname)
-
-    if not success:
-        #!rejected = '/var/log/tada/rejected.manifest'
-        #!if os.path.exists(rejected):
-        #!    with open(rejected, mode='a') as mf:
-        #!        print('{}\t{}\t{}'
-        #!              .format(datetime.datetime.now(), origfname, destfname),
-        #!              file=mf)
-        logging.debug(msg)
-        if moddir != None:
-            os.remove(modfits)
-            #!logging.debug('DBG: Removed modfits={}'.format(modfits))
-        #raise tex.SubmitException(ops_msg)
-        raise tex.IngestRejection(md5sum, origfname, ops_msg, popts)
-    else:
-        logging.debug('DBG-1')
-        auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
-                          orighdr=popts, newhdr=changed)
-
-    iu.irods_put331(modfits, destfname) # iput renamed FITS
     if moddir != None:
         os.remove(modfits)
-        #!logging.debug('DBG: Removed modfits={}'.format(modfits))
+
+    if not success:
+        logging.debug(msg)
+        raise tex.IngestRejection(md5sum, origfname, ops_msg, popts)
+
+    iu.irods_put331(modfits, destfname) # iput renamed FITS
     logging.info('SUCCESSFUL submit_to_archive; {} as {}'
                  .format(origfname, destfname))
-    #!manifest = '/var/log/tada/archived.manifest'
-    #!if os.path.exists(manifest):
-    #!    with open(manifest, mode='a') as mf:
-    #!        print('{}\t{}\t{}'
-    #!              .format(datetime.datetime.now(), origfname, destfname),
-    #!              file=mf)
+    auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
+                      orighdr=popts, newhdr=changed)
     return destfname
 
 
@@ -464,14 +505,16 @@ So, caller should not have to put this function in try/except."""
     if not success:
         if moddir != None:
             os.remove(modfits)
-            #!logging.debug('DBG: Removed modfits={}'.format(modfits))
+            logging.debug('DBG: Removed modfits={}; moddir={}'
+                          .format(modfits, moddir))
         return(False, 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg))
     else:
         # iput renamed, modified FITS
         iu.irods_put331(modfits, destfname) # iput renamed FITS
         if moddir != None:
             os.remove(modfits)
-            #!logging.debug('DBG: Removed modfits={}'.format(modfits))
+            logging.debug('DBG: Removed modfits={}; moddir={}'
+                          .format(modfits, moddir))
         return(True, 'SUCCESS: archived {} as {}'.format(fitsfile, destfname))
     return (ok, statusmsg)
     # END: protected_direct_submit()
@@ -546,7 +589,8 @@ def direct_submit(fitsfile, moddir,
     print(statusmsg, file=sys.stderr)
     if moddir != None:
         os.remove(modfits)
-        #!logging.debug('DBG: Removed modfits={}'.format(modfits))
+        logging.debug('DBG: Removed modfits={}; moddir={}'
+                      .format(modfits, moddir))
     sys.exit(statuscode)
  
 def main():

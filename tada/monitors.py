@@ -43,15 +43,6 @@ auditor = audit.Auditor()
 ### that's harder.  So, for now, recursively watch "watched_dir".
 ###
 
-#!qcfg, dirs = config.get_config(None,
-#!                               validate=False,
-#!                               yaml_filename='/etc/tada/tada.conf')
-
-def get_qname():
-    cmd = 'source /etc/tada/dqd.conf; echo $qname'
-    valstr = subprocess.check_output(['bash', '-c', cmd ]).decode()
-    return valstr[:-1]
-
 def md5(fname):
     hash_md5 = hashlib.md5()
     with open(fname, "rb") as f:
@@ -67,7 +58,6 @@ to ANTICACHE.
 After this, normal TADA takes over; pop record, perform q-action(transfer)
 YAML file will be transfered with FITS because its in same directory..
 """
-    #qname = get_qname()
     patterns = ['**/*.fits', '**/*.fz']
     
     def __init__(self, drop_dir, status_dir):
@@ -164,6 +154,8 @@ YAML file will be transfered with FITS because its in same directory..
         logging.debug('DBG: new_file({})'.format(ifname))
         try:
             pdict = self.options_from_yamls(ifname)
+        #!except tex.NoPersonality:
+        #!    raise
         except Exception as ex:
             logging.error('Failed to get options_from_yamls({}); {}'
                           .format(ifname, ex))
@@ -241,10 +233,9 @@ YAML file will be transfered with FITS because its in same directory..
         globpattern = os.path.join(self.personalitydir, inst, '*.yaml')
         yfiles = glob(globpattern)
         if len(yfiles) == 0:
-            msg = ("Didn't find expected YAML personality file(s) in: {}"
-                   .format(globpattern))
-            logging.error(msg)
-            raise tex.NoPersonality(msg)
+            raise tex.NoPersonality(
+                "Did not find expected YAML personality file(s) in: {}"
+                .format(globpattern))
         
         logging.debug('DBG: read YAML files: {}'.format(yfiles))
         for yfile in sorted(yfiles):
