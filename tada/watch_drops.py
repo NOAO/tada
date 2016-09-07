@@ -11,9 +11,9 @@ from datetime import datetime
 import yaml
 
 
-from . import config
+#from . import config
 from .monitors import push_drops
-
+from . import settings
 
 ##############################################################################
 
@@ -22,7 +22,7 @@ def main():
         description='Ingest or stash files as the appear in watched directory',
         epilog='EXAMPLE: %(prog)s a b"'
         )
-    dflt_config = '/etc/tada/tada.conf'
+    #dflt_config = '/etc/tada/tada.conf'
     logconf='/etc/tada/watch.yaml'
     dflt_watchdir = '/var/tada/dropbox'
 
@@ -37,10 +37,10 @@ def main():
                               'DEFAULT: {}').format(dflt_watchdir),
                         default=dflt_watchdir,
                         )
-    parser.add_argument('-c', '--config',
-                        help='Config file. [default={}]'.format(dflt_config),
-                        default=dflt_config,
-                        )
+    #!parser.add_argument('-c', '--config',
+    #!                    help='Config file. [default={}]'.format(dflt_config),
+    #!                    default=dflt_config,
+    #!                    )
     parser.add_argument('--loglevel',
                         help='Kind of diagnostic output',
                         choices=['CRTICAL', 'ERROR', 'WARNING',
@@ -60,9 +60,9 @@ def main():
     logging.config.dictConfig(logdict)
     logging.getLogger().setLevel(log_level)
 
-    qcfg, dirs = config.get_config(None,
-                                   validate=False,
-                                   yaml_filename=args.config)
+    #!qcfg, dirs = config.get_config(None,
+    #!                               validate=False,
+    #!                               yaml_filename=args.config)
     logging.info('watch_drops: logdict={}'.format(logdict))
     logging.info('watch_drops: started: {}'
                  .format(datetime.now().isoformat()))

@@ -30,6 +30,8 @@ import watchdog.observers
 #from . import submit as ts
 from . import fpack as fp
 
+from . import settings
+auditor = audit.Auditor()
 
 ##############################################################################
 ### Monitor
@@ -41,10 +43,9 @@ from . import fpack as fp
 ### that's harder.  So, for now, recursively watch "watched_dir".
 ###
 
-qcfg, dirs = config.get_config(None,
-                               validate=False,
-                               yaml_filename='/etc/tada/tada.conf')
-auditor = audit.Auditor()
+#!qcfg, dirs = config.get_config(None,
+#!                               validate=False,
+#!                               yaml_filename='/etc/tada/tada.conf')
 
 def get_qname():
     cmd = 'source /etc/tada/dqd.conf; echo $qname'
@@ -87,11 +88,12 @@ YAML file will be transfered with FITS because its in same directory..
             #!cmdstr = ('dqcli --pushfile "{}"'.format(fullfname))
             #!logging.debug('EXECUTING: {}'.format(cmdstr))
             #!subprocess.check_call(cmdstr, shell=True)
+            logging.debug('EXECUTING: push_direct; redis_port="{}"'
+                          .format(settings.redis_port))
             ru.push_direct(socket.getfqdn(), # this host
-                           qcfg['redis_port'],
+                           settings.redis_port, #qcfg['redis_port'],
                            fullfname,
-                           md5sum,
-                           max_queue_size=qcfg['maximum_queue_size'])
+                           md5sum)
         except Exception as err:
             logging.error('Could not push file. {}'.format(err))
 

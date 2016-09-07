@@ -1,4 +1,4 @@
-"Actions that can be run against entry when popping from  data-queue."ru
+"Actions that can be run against entry when popping from  data-queue."
 # 2.4.18
 import logging
 import os
@@ -20,13 +20,14 @@ import dataq.red_utils as ru
 from . import config
 from . import exceptions as tex
 from . import utils as tut
+from . import audit
 
 from . import settings
 
 #!qcfg, dirs = config.get_config(None,
 #!                               validate=False,
 #!                               yaml_filename='/etc/tada/tada.conf')
-auditor = settings.auditor # audit.Auditor()
+auditor = audit.Auditor()
 
 
 def md5(fitsname):
@@ -58,7 +59,7 @@ def file_type(filename):
 ###           False or exception on error
 ###
 
-def network_move(rec, qname, **kwargs):
+def network_move(rec, qname):
     "Transfer from Mountain to Valley"
     logging.debug('EXECUTING network_move()')
     thishost = socket.getfqdn()
@@ -77,7 +78,6 @@ def network_move(rec, qname, **kwargs):
     #!            .format(p, kwargs))
     #!qcfg=kwargs['qcfg']
     #!dirs=kwargs['dirs']
-    logging.debug('dirs={}'.format(dirs))
 
     # nextq = qcfg['transfer']['next_queue']
     # dq_host = qcfg['dq_host']
@@ -205,6 +205,7 @@ def network_move(rec, qname, **kwargs):
         raise
     auditor.set_fstop(md5sum, 'valley:queue')
     return True
+    # END network_move
 
 
 #!def logsubmit(src, dest, comment, fail=False,
@@ -218,7 +219,7 @@ def network_move(rec, qname, **kwargs):
 #!                      msg=comment),
 #!              file=f)
 
-def unprotected_submit(rec, qname, **kwargs):
+def unprotected_submit(rec, qname):
     """Try to modify headers and submit FITS to archive. If anything fails 
 more than N times, move the queue entry to Inactive. (where N is the 
 configuration field: maximum_errors_per_record)
@@ -233,8 +234,6 @@ configuration field: maximum_errors_per_record)
 
     auditor.set_fstop(md5sum, 'valley:cache', host=socket.getfqdn())
 
-    qcfg = du.get_keyword('qcfg', kwargs)
-
     try:
         ftype = file_type(ifname)
     except tex.IngestRejection:
@@ -246,28 +245,15 @@ configuration field: maximum_errors_per_record)
     destfname = None
     if 'FITS' == ftype :  # is FITS
         msg = 'FITS_file'
-        popts, pprms = fu.get_options_dict(ifname) # .yaml or .options
+        popts, pprms = fu.get_options_dict(ifname) # .yaml 
         origfname = pprms['filename']
-        try:
-            destfname = ts.submit_to_archive(ifname, md5sum, qname, qcfg=qcfg)
-        except tex.IngestRejection:
-            raise
-        except Exception as sex:
-            msg = 'Failed to submit {}: {}'.format(ifname, sex)
-            auditor.set_fstop(md5sum, 'valley:cache', host=socket.getfqdn())
-            raise tex.IngestRejection(md5sum, ifname, sex, popts)
-        else:
-            msg = 'SUCCESSFUL fits submit; {} as {}'.format(ifname, destfname)
-            logging.debug(msg)
-            # successfully transfered to Archive
-
-            #logging.warning('DISABLED remove of cache file: {}'.format(ifname))
-            os.remove(ifname)
-
-            optfname = ifname + ".options"
-            logging.debug('Remove possible options file: {}'.format(optfname))
-            if os.path.exists(optfname):
-                os.remove(optfname)
+        destfname = ts.submit_to_archive(ifname, md5sum, qname)
+        logging.debug('SUCCESSFUL submit; {} as {}'.format(ifname, destfname))
+        os.remove(ifname)
+        optfname = ifname + ".options"
+        logging.debug('Remove possible options file: {}'.format(optfname))
+        if os.path.exists(optfname):
+            os.remove(optfname)
     else: # not FITS
         destfname = ifname.replace(mirror_root, noarc_root)
         os.makedirs(os.path.dirname(destfname), exist_ok=True)
@@ -284,9 +270,9 @@ configuration field: maximum_errors_per_record)
 # END unprotected_submit() action
 
 # Done against each record popped from data-queue
-def submit(rec, qname, **kwargs):
+def submit(rec, qname):
     try:
-        unprotected_submit(rec, qname, **kwargs)
+        unprotected_submit(rec, qname)
     except tex.IngestRejection as ex:
         tut.log_traceback()        
         try:

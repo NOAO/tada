@@ -26,8 +26,11 @@ from . import ingest_decoder as idec
 from . import config
 from . import audit
 from . import utils as tut
+from . import settings
 
 auditor = audit.Auditor()
+
+
 ARCHIVE_SERVICE_TIMEOUT = 10.0 # seconds to wait for an answer from Archive svc
 
 def md5(fname):
@@ -38,20 +41,15 @@ def md5(fname):
     return hash_md5.hexdigest()
 
 
-def http_archive_ingest(hdr_ipath, qname, qcfg=None, origfname='NA', ipfx='irods://'):
+def http_archive_ingest(hdr_ipath, origfname='NA', ipfx='irods://'):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
 Archive Ingest via REST-like interface. 
 RETURN: (statusBool, message, operatorMessage)"""
-    logging.debug('EXECUTING: http_archive_ingest({}, {})'
-                  .format(hdr_ipath, qname))
+    logging.debug('EXECUTING: http_archive_ingest({})'
+                  .format(hdr_ipath))
 
-    # extract from qcfg ealier and pass dict (see prep_for_ingest)!!!
-    arch_host = qcfg['arch_host']
-    arch_port = qcfg['arch_port']
-
-    #!archserver_url = ('http://{}:{}/?hdrUri={}{}'
-    #!                 .format(arch_host, arch_port, ipfx, hdr_ipath))
-    archserver_url = ('http://{}:{}/'.format(arch_host, arch_port))
+    archserver_url = ('http://{}:{}/'.format(settings.arch_host,
+                                             settings.arch_port))
     payload = dict(hdrUri=ipfx+hdr_ipath)
     logging.debug('archserver_url={}, prms={}, timeout={}'
                   .format(archserver_url, payload, ARCHIVE_SERVICE_TIMEOUT))
@@ -348,7 +346,7 @@ RETURN: irods location of hdr file.
 # 
 ##########
 #
-def submit_to_archive(ifname, checksum, qname, qcfg=None, moddir=None):
+def submit_to_archive(ifname, checksum, moddir=None):
     """Ingest a FITS file (really JUST Header) into the archive if
 possible.  Ingest involves renaming to satisfy filename
 standards. There are numerous under-the-hood requirements imposed by
@@ -356,21 +354,13 @@ how Archive works. See comments above for the grim details.
 
 ifname:: full path of fits file (in cache)
 checksum:: checksum of original file
-qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 
     """
-    logging.debug('submit_to_archive({},{})'.format(ifname, qname))
+    logging.debug('submit_to_archive({})'.format(ifname))
     
-    
-    cfgprms = dict(archive331 =  qcfg['archive_irods331'],
-                   mars_host  =  qcfg.get('mars_host'),  
-                   mars_port  =  qcfg.get('mars_port'),
-                   )
-
     #!popts, pprms = fu.get_options_dict(ifname + ".options")
-    popts, pprms = fu.get_options_dict(ifname) # .yaml or .options
+    popts, pprms = fu.get_options_dict(ifname) # .yaml 
     logging.debug('submit_to_archive(popts={},pprms={})'.format(popts, pprms))
-    #!origfname = pprms.get('filename', ifname)
     origfname = pprms['filename']
     md5sum = checksum
     if 'do_audit' in pprms:
@@ -382,12 +372,12 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
             ifname,
             persona_options=popts,
             persona_params=pprms,
-            moddir=None,
-            **cfgprms)
+            moddir=None)
+
     except: # Exception as err:
         raise
-    (success, msg, ops_msg, mtype) = http_archive_ingest(new_ihdr, qname,
-                                                 qcfg=qcfg, origfname=origfname)
+    (success, msg, ops_msg, mtype) = http_archive_ingest(new_ihdr,
+                                                         origfname=origfname)
 
     if not success:
         #!rejected = '/var/log/tada/rejected.manifest'
@@ -424,8 +414,6 @@ qname:: Name of queue from tada.conf (e.g. "transfer", "submit")
 
 def protected_direct_submit(fitsfile, moddir,
                   personality=None, # dictionary from YAML 
-                  qname='submit',
-                  qcfg=None,
                   trace=False):
     """Blocking submit to archive without Queue. 
 Waits for ingest service to complete and returns its formated result.
@@ -443,10 +431,6 @@ So, caller should not have to put this function in try/except."""
         auditor.log_audit(md5(fitsfile), fitsfile, False, '', errmsg)
         return (False, errmsg)
 
-    cfgprms = dict(archive331 =  qcfg['archive_irods331'],
-                   mars_host  =  qcfg.get('mars_host'),
-                   mars_port  =  qcfg.get('mars_port'),
-                   )
 
     if personality == None:
         personality = dict(params={}, options={})
@@ -463,8 +447,7 @@ So, caller should not have to put this function in try/except."""
         new_ihdr, destfname, changed, modfits = prep_for_ingest(fitsfile,
                                                        persona_options=popts,
                                                        persona_params=pprms,
-                                                       moddir=moddir,
-                                                       **cfgprms)
+                                                       moddir=moddir)
     except Exception as err:
         tut.trace_if(trace)
         msg = str(err)
@@ -473,8 +456,8 @@ So, caller should not have to put this function in try/except."""
         auditor.log_audit(md5sum, origfname, False, '', str(err), newhdr=popts)
         return (False, msg)
 
-    success, m1, ops_msg, mtype = http_archive_ingest(new_ihdr, qname,
-                                               qcfg=qcfg, origfname=origfname)
+    success, m1, ops_msg, mtype = http_archive_ingest(new_ihdr, 
+                                                      origfname=origfname)
     logging.debug('DBG-4')
     auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
                       orighdr=popts, newhdr=changed)
@@ -497,8 +480,6 @@ So, caller should not have to put this function in try/except."""
 def direct_submit(fitsfile, moddir,
                   personality_files=[],
                   personality=None, # dictionary from YAML 
-                  qname='submit',
-                  qcfg=None,
                   trace=False):
     logging.debug('EXECUTING: direct_submit({}, personality={}, personality_files={}, '
                   'moddir={})'
@@ -513,11 +494,6 @@ def direct_submit(fitsfile, moddir,
     success = True
     statuscode = 0    # for sys.exit(statuscode)
     statusmsg = 'NA'
-    cfgprms = dict(#mirror_dir =  qcfg[qname]['mirror_dir'],
-                   archive331 =  qcfg['archive_irods331'],
-                   mars_host  =  qcfg.get('mars_host'),
-                   mars_port  =  qcfg.get('mars_port'),
-                   )
 
     popts = dict()
     pprms = dict()
@@ -538,8 +514,7 @@ def direct_submit(fitsfile, moddir,
         new_ihdr,destfname,changed,modfits = prep_for_ingest(fitsfile,
                                                      persona_options=popts,
                                                      persona_params=pprms,
-                                                     moddir=moddir,
-                                                     **cfgprms)
+                                                     moddir=moddir)
     except Exception as err:
         logging.debug('DBG-6')
         auditor.log_audit(md5sum, origfname, False, '', str(err),
@@ -552,8 +527,8 @@ def direct_submit(fitsfile, moddir,
         sys.exit(statusmsg)
 
         
-    success,m1,ops_msg,mtype = http_archive_ingest(new_ihdr, qname,
-                                         qcfg=qcfg, origfname=origfname)
+    success,m1,ops_msg,mtype = http_archive_ingest(new_ihdr, 
+                                                   origfname=origfname)
     logging.debug('DBG-7')
     auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
                       orighdr=popts, newhdr=changed)
@@ -641,15 +616,13 @@ def main():
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
-    qcfg, dirs = config.get_config(None,
-                                   validate=False,
-                                   yaml_filename=args.config)
+    #!qcfg, dirs = config.get_config(None,
+    #!                               validate=False,
+    #!                               yaml_filename=args.config)
 
     direct_submit(args.fitsfile, args.moddir,
                   personality_files=pers_list,
-                  trace=args.trace,
-                  qcfg=qcfg
-                  )
+                  trace=args.trace)
     
 if __name__ == '__main__':
     main()

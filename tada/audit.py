@@ -15,6 +15,7 @@ import socket
 
 from . import ingest_decoder as dec
 from . import utils as tut
+from . import settings
 
 def md5(fname):
     hash_md5 = hashlib.md5()
@@ -29,12 +30,11 @@ class Auditor():
     "Maintain audit records both locally (valley) and via MARS service"
     
     def __init__(self):
-        cfg = tut.read_hiera_yaml()
         self.con = sqlite3.connect('/var/log/tada/audit.db')
         self.timeout = (3.05, 5) # (connect, read) in seconds
-        self.mars_port = cfg['mars_port']
-        self.mars_host = cfg['mars_host']
-        self.do_svc = cfg.get('do_audit',True)
+        self.mars_port = settings.mars_port
+        self.mars_host = settings.mars_host
+        self.do_svc = settings.do_audit
         
         #!self.fstops = set(['dome',
         #!                   'mountain:dropbox',

@@ -25,8 +25,9 @@ from . import file_naming as fn
 from . import exceptions as tex
 from . import hdr_calc_funcs as hf
 from . import scrub
-from . import config 
+#from . import config 
 from . import utils as tut
+from . import settings
 
 #DOC: vvv
 # All bets are off in the original FITS file does not contain all of these.
@@ -705,13 +706,9 @@ def fits_compliant(fits_file_list,
                    show_values=False, show_header=False, show_stdfname=True,
                    required=False, verbose=False,
                    qname='submit',
-                   qcfg=None,
                    trace=False):
     """Check FITS file for complaince with Archive Ingest."""
     import warnings
-    cfgprms = dict(mars_host  =  qcfg.get('mars_host'),
-                   mars_port  =  qcfg.get('mars_port'),
-                   )
 
     logging.debug('EXECUTING fits_compliant({}, personalities={}, '
                   'quiet={}, '
@@ -807,7 +804,7 @@ def fits_compliant(fits_file_list,
             missing_raw = missing_in_raw_hdr(hdr)
             if len(missing_raw) == 0:
                 #!fname_fields = modify_hdr(hdr, ffile, options, opt_params)
-                fix_hdr(hdr, ffile, options, opt_params, **cfgprms)
+                fix_hdr(hdr, ffile, options, opt_params)
                 missing_cooked = missing_in_archive_hdr(hdr)
                 missing_recommended = missing_in_recommended_hdr(hdr)
         except Exception as err:
@@ -897,7 +894,7 @@ def fits_compliant(fits_file_list,
 
 def main():
     "Parse command line arguments and do the work."
-    dflt_config = '/etc/tada/tada.conf'
+    #!dflt_config = '/etc/tada/tada.conf'
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=('Check for compliance of FITS files with respect '
@@ -934,10 +931,10 @@ def main():
     parser.add_argument('--header',
                         action='store_true',
                         help='Show full header')
-    parser.add_argument('-c', '--config',
-                        default=dflt_config,
-                        help='Config file. [default={}]'.format(dflt_config),
-                        )
+    #!parser.add_argument('-c', '--config',
+    #!                    default=dflt_config,
+    #!                    help='Config file. [default={}]'.format(dflt_config),
+    #!                    )
     parser.add_argument('--loglevel',
                         help='Kind of diagnostic output',
                         choices=['CRTICAL', 'ERROR', 'WARNING',
@@ -959,9 +956,9 @@ def main():
     logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
     #!qname = 'submit'
-    qcfg, dirs = config.get_config(None,
-                                   validate=False,
-                                   yaml_filename=args.config)
+    #!qcfg, dirs = config.get_config(None,
+    #!                               validate=False,
+    #!                               yaml_filename=args.config)
 
 
     # fits_compliant /data/raw/nhs_2014_n14_299403.fits
@@ -972,8 +969,7 @@ def main():
                    ignore_recommended=args.ignore_recommended,
                    show_values=args.values,
                    show_header=args.header,
-                   trace=args.trace,
-                   qcfg=qcfg )
+                   trace=args.trace )
     
 
 if __name__ == '__main__':

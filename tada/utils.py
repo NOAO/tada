@@ -21,6 +21,16 @@ def read_hiera_yaml():
         raise
     return res
 
+def read_tada_yaml():
+    yamlfile = '/etc/tada/tada.conf'
+    try:
+        res = read_yaml(yamlfile)
+    except Exception as err:
+        logging.error('Could not read YAML file {}; {}'
+                      .format(yamlfile, err))
+        raise
+    return res
+
 
 def tic():
     tic.start = time.perf_counter()

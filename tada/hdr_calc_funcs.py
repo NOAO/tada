@@ -23,6 +23,7 @@ from dateutil import tz
 import datetime as dt
 #from . import hdr_calc_utils as ut
 from . import exceptions as tex
+from . import settings
 
 calc_func_source_fields = set([
     'UTSHUT', 'INSTRUM', 'INSTRUME',
@@ -63,8 +64,8 @@ def ws_lookup_propids(date, telescope, instrument, **kwargs):
 -OR- None if cannot reach service
 -OR- 'NA' if service reachable but lookup fails."""
     logging.debug('ws_lookup_propids; kwargs={}'.format(kwargs))
-    host=kwargs.get('mars_host')
-    port=kwargs.get('mars_port')
+    host=settings.mars_host
+    port=settings.mars_port
     if host == None or port == None:
         logging.error('Missing MARS host ({}) or port ({}).'.format(host,port))
         return []
