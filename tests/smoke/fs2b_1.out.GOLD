@@ -1,2 +1,2 @@
-EXECUTED: direct_submit -p /var/tada/personalities/ops/smoke.yaml -p /sandbox/tada/tests/smoke/tada-test-data/basic/cleaned-bok.fits.fz.yaml /DATA/basic/cleaned-bok.fits.fz
+EXECUTED: direct_submit -p /var/tada/personalities/ops/smoke.yaml -p /data/tada-test-data/basic/cleaned-bok.fits.fz.yaml /DATA/basic/cleaned-bok.fits.fz
 FAILED: /basic/cleaned-bok.fits.fz not archived; Header for reference:[ksb_150709_044421_ori_TADASMOKE.fits.fz] has already been stored in the database

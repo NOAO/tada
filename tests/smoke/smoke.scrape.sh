@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 # AUTHORS:    S. Pothier
 # PURPOSE:    Wrapper for smoke test;
 
@@ -10,7 +10,8 @@ tadadir=$(dirname $testdir)
 # tadadir=/sandbox/tada
 #!tdata=$SCRIPTDIR/data-scrape
 # tdata=/sandbox/tada/tests/smoke/tada-test-data/scrape
-tdata=$SCRIPTDIR/tada-test-data/scrape
+#tdata=$SCRIPTDIR/tada-test-data/scrape
+tdata=/data/tada-test-data/scrape
 #echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
 ppath=/var/tada/personalities
 
@@ -25,7 +26,7 @@ return_code=0
 SMOKEOUT="README-smoke-results.scrape.txt"
 
 echo "# "
-echo "# Starting tests in \"smoke.scrape.sh\" ..."
+echo "# Starting tests in \"smoke.scrape.sh\" [allow 8 minutes] ..."
 echo "# "
 source tada-smoke-setup.sh
 
@@ -44,10 +45,10 @@ testCommand sc9_1  "fsub $tdata/20110101/soar-goodman/0079.spec_flat.fits.fz soa
 #soar-osiris  # scrape has no "passable" files for this instrument
 #soar-sami    # scrape has no "passable" files for this instrument
 testCommand sc10_1 "fsub $tdata/20110101/soar-spartan/011-6365d0.fits.fz soar-spartan" "^\#" n
-testCommand sc11_1 "fsub $tdata/20110101/wiyn-bench/24dec_2014.061.fits.fz wiyn-bench" "^\#" n
+testCommand sc11_1 "fsub $tdata/20110101/wiyn-bench/24dec_2014.061.fits.fz wiyn-bench" "^\#" n 1
 testCommand sc12_1 "fsub $tdata/20110101/wiyn-whirc/obj_355.fits.fz wiyn-whirc" "^\#" n
 testCommand sc13_1 "fsub $tdata/20150929/kp4m-kosmos/a.20153.fits.fz kp4m-kosmos" "^\#" n
-testCommand sc14_1 "fsub $tdata/20141127/soar-soi/test.027.fits.fz soar-soi" "^\#" n
+testCommand sc14_1 "fsub $tdata/20141127/soar-soi/test.027.fits.fz soar-soi" "^\#" n 1
 testCommand sc15_1 "fsub $tdata/20160315/ct4m-arcoiris/SV_f0064.fits ct4m-arcoiris" "^\#" n
 
 ###########################################

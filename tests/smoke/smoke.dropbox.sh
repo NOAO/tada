@@ -50,7 +50,7 @@ MAX_DROP_WAIT_TIME=10  # max seconds from file drop to ingest/reject
 plog="/var/log/tada/pop.log"
 MARKER="`date '+%Y-%m-%d %H:%M:%S'` START-SMOKE-TEST"
 echo $MARKER >> $plog
-FTO=5 # fail timeout
+FTO=10 # timeout to use when we expect ingest failure; driven by webservices?
 # To estimate timeout for FITS transfer use dropsub.sh:up_secs
 
 mtn_plog=~/.tada/mountain-logs/pop.log
@@ -62,16 +62,16 @@ mtn_wlog_start=`cat $mtn_wlog | wc -l`
 ##############################################################################
 ### Tests
 
+# fail-fail (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
+FITS="$tdata/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz"
+testCommand db1_1 "faildrop $FTO $FITS 20110101 wiyn-bench" "^\#" n 0
+testLog db1_1_log "pylogfilter $plog \"$MARKER\" $FITS"
+
 # pass-pass fitsverify
 # uncompressed (compress on the fly); allow extra time for compression
 FITS=$tdata/short-drop/20110101/ct13m-andicam/ir141225.0179.fits
 testCommand db2_6 "passdrop 10 $FITS 20110101 ct13m-andicam" "^\#" n 0 
 testLog db2_6_log "pylogfilter $plog \"$MARKER\" $FITS"
-
-# fail-fail (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
-FITS="$tdata/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz"
-testCommand db1_1 "faildrop $FTO $FITS 20110101 wiyn-bench" "^\#" n 0
-testLog db1_1_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 
 ############
@@ -94,8 +94,9 @@ FITS=$tdata/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits
 testCommand db2_5 "faildrop 7 $FITS 20160610 kp4m-mosaic3" "^\#" n 0 
 testLog db2_5_log "pylogfilter $plog \"$MARKER\" $FITS"
 
-# This one takes longish!
-# (68mb): 57 seconds to iputr 71,222,400 bytes @ 10mbps
+# This one takes longish! Could not find smaller file that astropy fixes
+# (original fails fitsverify, to-be-ingested passes verify)
+# 57 seconds to iputr 71,222,400 bytes @ 10mbps
 # fail-pass fitsverify
 FITS="$tdata/scrape/20160314/kp4m-mosaic3/mos3.75870.fits.fz"
 testCommand db1_2 "passdrop 70 $FITS 20160314 kp4m-mosaic3" "^\#" n 0

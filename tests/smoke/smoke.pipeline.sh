@@ -15,8 +15,7 @@ SCRIPT=$(readlink -e $0)     #Absolute path to this script
 SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script is in
 testdir=$(dirname $SCRIPTDIR)
 tadadir=$(dirname $testdir)
-tdata=$SCRIPTDIR/tada-test-data
-# tdata=/sandbox/tada/tests/smoke/tada-test-data
+tdata=/data/tada-test-data
 ppath=/var/tada/personalities
 
 dir=$SCRIPTDIR
@@ -27,10 +26,10 @@ PATH=$tadadir/../tada-cli/scripts:$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:
 
 source smoke-lib.sh
 return_code=0
-SMOKEOUT="README-smoke-results.pipeline_submit.txt"
+SMOKEOUT="README-smoke-results.pipeline.txt"
 
 echo ""
-echo "Starting tests in \"smoke.pipeline_submit.sh\" ..."
+echo "Starting tests in \"smoke.pipeline.sh\" [allow 1 minutes] ..."
 echo ""
 echo ""
 source tada-smoke-setup.sh

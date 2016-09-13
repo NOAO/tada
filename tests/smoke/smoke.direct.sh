@@ -11,11 +11,7 @@ SCRIPT=$(readlink -e $0)     #Absolute path to this script
 SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script is in
 testdir=$(dirname $SCRIPTDIR)
 tadadir=$(dirname $testdir)
-# tadadir=/sandbox/tada
-#tdata=$SCRIPTDIR/data
-tdata=$SCRIPTDIR/tada-test-data
-# tdata=/sandbox/tada/tests/smoke/tada-test-data
-# echo "tdata=$tdata; tadadir=$tadadir; SCRIPTDIR=$SCRIPTDIR"
+tdata=/data/tada-test-data
 
 dir=$SCRIPTDIR
 origdir=`pwd`
@@ -28,7 +24,7 @@ return_code=0
 SMOKEOUT="README-smoke-results.direct.txt"
 
 echo "# "
-echo "# Starting tests in \"smoke.direct.sh\" ..."
+echo "# Starting tests in \"smoke.direct.sh\"  [allow 2 minutes] ..."
 echo "# "
 source tada-smoke-setup.sh
 

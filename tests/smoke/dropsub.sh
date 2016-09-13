@@ -4,8 +4,8 @@ AUDITDB="/var/log/tada/audit.db"
 SMOKEDB="$HOME/.tada/smoke.db"
 DROPCACHE="$HOME/.tada/dropcache"
 
-# sqlite3 --header $SMOKEDB "select * from expected"
-# sqlite3 $AUDITDB "select success,srcpath,recorded from audit"
+# sqlite3 --header $SMOKEDB "select success,fits,updated from expected"
+# sqlite3 --header $AUDITDB "select success,srcpath,recorded from audit"
 
 
 # Maximum seconds waited for a dropped file to show at ingest.
@@ -28,9 +28,7 @@ fi
 
 function setup_dropbox_tests () {
     mkdir -p $DROPCACHE
-
     sqlite3 $AUDITDB "delete from audit;"
-    
     rm $SMOKEDB
     sqlite3 $SMOKEDB "$CREATE_SMOKEDB"
     chmod a+rw $SMOKEDB
@@ -175,7 +173,8 @@ function pylogfilter () {
     local filename=$3
 
     csplit --quiet $logfile "%$marker%"+1
-    grep `basename $filename .fz` xx00 | grep  "WARNING \| ERROR " | cut -d' ' -f3- 
+    grep `basename $filename .fz` xx00 \
+        | grep  "WARNING \| ERROR " | cut -d' ' -f3- 
 }
 
 # All INFO, WARNING and ERROR lines for this smoke-test run

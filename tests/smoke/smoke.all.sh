@@ -21,7 +21,7 @@ chgrp tada /var/log/tada/pop*.log
 function tally () {
     mastertotalcnt=$((totalcnt + mastertotalcnt))
     masterfailcnt=$((failcnt + masterfailcnt))
-    echo "Score so far; passed=$(($totalcnt-$failcnt))/$totalcnt"
+    echo "Score so far; suite  passed=$(($totalcnt-$failcnt))/$totalcnt"
     echo "Score so far; master passed=$(($mastertotalcnt-$masterfailcnt))/$mastertotalcnt"
     totalcnt=0
     failcnt=0
@@ -30,16 +30,15 @@ function tally () {
 # Mountain (dome) or Valley
 #source $SCRIPTDIR/smoke.sh; tally
 #source $SCRIPTDIR/smoke.raw.sh; tally # REMOVED because uses deprecated LP
-
 source $SCRIPTDIR/smoke.dropbox.sh; tally
 
-# Valley
+# Test Valley only behavior
 #! $SCRIPTDIR/smoke.fits_compliant.sh; tally
 #! $SCRIPTDIR/smoke.fits_submit.sh; tally
 source $SCRIPTDIR/smoke.direct.sh; tally  # test error conditions
 #!echo "WARNING: skipping scrape test!!!"
 source $SCRIPTDIR/smoke.scrape.sh; tally  # uses direct_submit
-source $SCRIPTDIR/smoke.pipeline_submit.sh; tally
+source $SCRIPTDIR/smoke.pipeline.sh; tally
 
 echo "tada config params used:"
 grep  "get_config got:" /var/log/tada/pop-detail.log | tail -1
