@@ -35,7 +35,7 @@ return_code=0
 SMOKEOUT="README-smoke-results.dropbox.txt"
 
 echo "# "
-echo "# Starting tests in \"smoke.dropbox.sh\" ..."
+echo "# Starting \"smoke.dropbox.sh\" on `date` ..."
 echo "# "
 source tada-smoke-setup.sh
 source dropsub.sh
