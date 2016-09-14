@@ -42,7 +42,7 @@ def network_move(rec, qname):
     thishost = socket.getfqdn()
     md5sum = rec['checksum']
 
-    auditor.set_fstop(md5sum, 'mountain:cache', host=thishost)
+    auditor.set_fstop(md5sum, 'mountain:cache', thishost)
 
     tempfname = rec['filename']  # absolute path (in temp cache)
     fname = tempfname.replace('/cache/.queue/', '/cache/')

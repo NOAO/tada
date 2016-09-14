@@ -76,7 +76,8 @@ class Auditor():
         return True
 
 
-    def log_audit(self, md5sum, origfname, success, archfile, err,
+    def log_audit(self, md5sum, origfname, success,
+                  archfile, err,
                   orighdr=None, newhdr=None):
         """Log audit record to MARS.
         origfname:: absolute dome filename
@@ -115,8 +116,8 @@ class Auditor():
                 logging.info(('Could not find DTCALDAT in orighdr of {},'
                               ' using TODAY as observation day.')
                              .format(origfname))
-            tele = newhdr.get('DTTELESC',orighdr.get('DTTELESC', 'unknown'))
-            instrum = newhdr.get('DTINSTRU',orighdr.get('DTINSTRU', 'unknown'))
+            tele = newhdr.get('DTTELESC',orighdr.get('DTTELESC','UNKNOWN'))
+            instrum = newhdr.get('DTINSTRU',orighdr.get('DTINSTRU', 'UNKNOWN'))
             recdic = dict(md5sum=md5sum,
                           # obsday,telescope,instrument; provided by dome
                           #    unless dome never created audit record, OR
