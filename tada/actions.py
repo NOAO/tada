@@ -164,7 +164,7 @@ def network_move(rec, qname):
                       .format(settings.valley_host, ex))
         logging.error('push_to_q stack: {}'.format(du.trace_str()))
         raise
-    auditor.set_fstop(md5sum, 'valley:queue')
+    auditor.set_fstop(md5sum, 'valley:queue', settings.valley_host)
     return True
     # END network_move
 

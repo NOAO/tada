@@ -35,7 +35,6 @@ class Auditor():
         self.mars_port = settings.mars_port
         self.mars_host = settings.mars_host
         self.do_svc = settings.do_audit
-        
         #!self.fstops = set(['dome',
         #!                   'mountain:dropbox',
         #!                   'mountain:queue',
@@ -51,15 +50,15 @@ class Auditor():
         """Update audit service with hhe most downstream stop of FITS file"""
         if not self.do_svc:
             return False
-        if host == None:
+        if host == '' or host == None:
             host = socket.getfqdn() # this host
         logging.debug('AUDIT.set_fstop({}, {}, {})'.format(md5sum, fstop, host))
         uri = ('http://{}:{}/audit/fstop/{}/{}/{}/'
                .format(self.mars_host, self.mars_port, md5sum, fstop, host))
 
+        machine = fstop.split(':')[0]
         logging.debug('DBG-0: fstop uri={}'.format(uri))
         #!ddict = dict(md5sum=md5sum, fstop=fstop)
-        #!machine = fstop.split(':')[0]
         #!if machine == 'dome':
         #!    ddict['dome_host'] = dome_host
         #!elif machine == 'mountain':
@@ -68,7 +67,7 @@ class Auditor():
         #!    ddict['valley_host'] = val_host
         try:
             response = requests.post(uri, timeout=self.timeout)
-            logging.debug('DBG-2: uri={}, response={}'.format(uri,response))
+            logging.debug('DBG-2: uri={}, response={}'.format(uri, response))
             #return response.text
         except  Exception as err:
             logging.error('AUDIT: fstop Error contacting service via "{}"; {}'

@@ -30,6 +30,7 @@ function mars_stuff () {
 }
 
 
+# Add filename to provisional list in MARS.
 function mars_add () {
     archfile=$1
     ffile=$2
@@ -42,4 +43,30 @@ function mars_add () {
         echo "# COULD NOT add $archfile to PROVISIONAL list via ws"
     fi
     #echo "Successful ingest of $archfile."
+}
+
+# Insert an initial audit record (usually done from a dome)
+function dome_audit () {
+    local md5=$1   # md5sum of original (dome) FITS file
+    local FITS=$2  # full path of orignal (dome) FITS file
+    local DATE=$3  # YYYYMMDD, obsday
+    local TELE_INST=$4
+    local MARS_HOST=${5:-$marshost}
+    
+    JSONFILE="/tmp/dropsub.$md5.json"
+    IFS='-' read  tele inst <<< "$TELE_INST"
+    DAY="${DATE:0:4}-${DATE:4:2}-${DATE:6:2}"
+    cat > $JSONFILE <<EOF
+{ "observations": [
+  { "md5sum": "$md5", 
+    "srcpath": "$FITS", 
+    "obsday": "$DAY", 
+    "telescope": "$tele", 
+    "instrument": "$inst" 
+  } ] }
+EOF
+    curl -H "Content-Type: application/json" \
+         -d @$JSONFILE \
+         http://$MARS_HOST:8000/audit/source/ > /dev/null 2>&1
+    
 }

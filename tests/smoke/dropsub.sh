@@ -141,16 +141,31 @@ function dropfile () {
     local BNAME=`basename $FITSFILE`
     local boxhost="mountain.`hostname --domain`"
 
-    mkdir -p $DROPCACHE
     dropfile=$DROPCACHE/$DATE/${TELE_INST}/$BNAME
     mkdir -p `dirname $dropfile`
     cp $FITSFILE $dropfile
     #!chmod -R a+rwX $DROPCACHE
 
     record_expected $FITSFILE $DATE ${TELE_INST} $expected
-
+    
     echo "# DBG-SMOKE: add YAML in $dropfile ($FITSFILE)"
     add_test_personality.sh $FITSFILE $dropfile
+    md5=`grep md5sum $dropfile.yaml | cut -b 13-`
+    JSONFILE="$DROPCACHE/dropsub.$md5.json"
+    IFS='-' read  tele inst <<< "$TELE_INST"
+    DAY="${DATE:0:4}-${DATE:4:2}-${DATE:6:2}"
+    cat > $JSONFILE <<EOF
+{ "observations": [
+  { "md5sum": "$md5", 
+    "srcpath": "$FITSFILE", 
+    "obsday": "$DAY", 
+    "telescope": "$tele", 
+    "instrument": "$inst" 
+  } ] }
+EOF
+    curl -H "Content-Type: application/json" \
+         -d @$JSONFILE \
+         http://$marshost:8000/audit/source/ > /dev/null 2>&1
     rsync -az --password-file ~/.tada/rsync.pwd \
       $DROPCACHE/ tada@$boxhost::dropbox
 

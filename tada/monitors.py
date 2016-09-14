@@ -165,8 +165,10 @@ YAML file will be transfered with FITS because its in same directory..
             logging.debug('Got pdict from yamls:{}'.format(pdict))
 
         try:
-            auditor.set_fstop(pdict.get('md5sum',os.path.basename(ifname)),
-                              'watch')
+            #!auditor.set_fstop(pdict.get('md5sum',os.path.basename(ifname)),
+            auditor.set_fstop(pdict['params']['md5sum'],
+                              'watch',
+                              host=socket.getfqdn())
             cachename = ifname.replace(self.dropdir, self.cachedir)
             os.makedirs(os.path.dirname(cachename), exist_ok=True)
             queuename = cachename.replace('/cache/','/cache/.queue/')

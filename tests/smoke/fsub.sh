@@ -8,6 +8,9 @@ export PATH=/sandbox/tada-cli/scripts:$PATH
 function fsub () {
     ffile=$1; shift
     add_test_personality.sh $ffile $ffile
+    #!md5=`grep md5sum $ffile.yaml | cut -b 13-`
+    #!dome_audit $md5 $ffile "$DATE" "$TELE_INST" "$MARS_HOST"
+
     #pers=""
     pers="-p ${ffile}.yaml"
 #!    if [ ! -r ${ffile}.yaml ]; then
