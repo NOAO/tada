@@ -111,13 +111,13 @@ class Auditor():
             now = datetime.datetime.now().isoformat()
             today = datetime.date.today().isoformat()
 
-            obsday = newhdr.get('DTCALDAT',orighdr.get('DTCALDAT', today))
+            obsday = newhdr.get('DTCALDAT', orighdr.get('DTCALDAT', today))
             if ('DTCALDAT' not in newhdr) and ('DTCALDAT' not in orighdr):
                 logging.info(('Could not find DTCALDAT in orighdr of {},'
                               ' using TODAY as observation day.')
                              .format(origfname))
-            tele = newhdr.get('DTTELESC',orighdr.get('DTTELESC','UNKNOWN'))
-            instrum = newhdr.get('DTINSTRU',orighdr.get('DTINSTRU', 'UNKNOWN'))
+            tele = newhdr.get('DTTELESC', orighdr.get('DTTELESC', 'UNKNOWN'))
+            instrum = newhdr.get('DTINSTRU', orighdr.get('DTINSTRU', 'UNKNOWN'))
             recdic = dict(md5sum=md5sum,
                           # obsday,telescope,instrument; provided by dome
                           #    unless dome never created audit record, OR
