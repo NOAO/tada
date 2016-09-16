@@ -1,4 +1,4 @@
-* Release 2.5.16
+* Release 2.5.16 
 - hotfix: On mtn fpack from dropbox rename X.fits to X.fits.fz
 - feature: use fitsverify (MAY CAUSE INGESTS THAT PREVIOUSLY WORKED TO FAIL)
   + mtn (against dropbox)
@@ -12,7 +12,8 @@
 - addition errcode coding for audit
 - smokes for dropbox can now be done file by file (with pass/fail expects)
 - change in error reporting (in logs)
-
+- use different RPM creation mechanism; now store as python-tada-*.rpm
+  + REQUIRES CHANGE to ~yum update~
 
 * Release 2.5.15 <2016-08-04 Thu>
 - fix bug causing ingestion of corrupted files
@@ -207,3 +208,7 @@ Hotfix in support of BOK batch ingests.
 * Release 0.1.18 <2015-12-07 Mon 14:37>
 nothing here
 
+
+// Local variables:
+// mode: org
+// end:
