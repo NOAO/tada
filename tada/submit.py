@@ -531,7 +531,9 @@ def direct_submit(fitsfile, moddir,
         errmsg = 'Cannot ingest non-FITS file: {}'.format(fitsfile)
         logging.error(errmsg)
         logging.debug('DBG-5')
-        auditor.log_audit(md5(fitsfile), fitsfile, False, '', errmsg)
+        m5 = md5(fitsfile)
+        auditor.log_audit(m5, fitsfile, False, '', errmsg)
+        auditor.set_fstop(m5, 'valley:direct', host=socket.getfqdn())
         sys.exit(errmsg)
         
     success = True
@@ -562,6 +564,8 @@ def direct_submit(fitsfile, moddir,
         logging.debug('DBG-6')
         auditor.log_audit(md5sum, origfname, False, '', str(err),
                           orighdr=popts, newhdr=changed)
+        auditor.set_fstop(md5sum, 'valley:direct', host=socket.getfqdn())
+
         tut.trace_if(trace)
         statusmsg = str(err)
         #statusmsg = err.errmsg
@@ -575,6 +579,7 @@ def direct_submit(fitsfile, moddir,
     logging.debug('DBG-7')
     auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
                       orighdr=popts, newhdr=changed)
+    auditor.set_fstop(md5sum, 'valley:direct', host=socket.getfqdn())
     if not success:
         statusmsg = 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg)
         statuscode = 2
