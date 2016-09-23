@@ -43,6 +43,7 @@ def md5(fname):
     return hash_md5.hexdigest()
 
 
+
 def http_archive_ingest(hdr_ipath, origfname='NA', ipfx='irods://'):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
 Archive Ingest via REST-like interface. 
@@ -129,10 +130,6 @@ def gen_hdr_file(fitsfilepath, new_basename):
     # (with length longer than standard allows)
     hdrstr = hdrstr.replace("&\'\nCONTINUE  \'","")
     
-    #!md5 = subprocess.check_output("md5sum -b {} | cut -f1 -d' '"
-    #!                              .format(fitsfilepath),
-    #!                              shell=True)
-    #!md5sum=md5.decode().strip()
     md5sum = md5(fitsfilepath)
     
     filesize=os.path.getsize(fitsfilepath)
@@ -159,6 +156,7 @@ def gen_hdr_file(fitsfilepath, new_basename):
     return hdrfilepath
     
 def prep_for_ingest(mirror_fname,
+                    md5sum,
                     persona_options=None,  # e.g. (under "_DTSITE")
                     persona_params=None,   # e.g. (under,under) "__FOO"
                     moddir=None,
@@ -430,6 +428,7 @@ checksum:: checksum of original file
         # Following does irods_put331 to new_ihdr if the hdr looks valid
         new_ihdr,destfname,changed,modfits = prep_for_ingest(
             ifname,
+            md5sum,
             persona_options=popts,
             persona_params=pprms,
             moddir=None)
@@ -463,13 +462,14 @@ So, caller should not have to put this function in try/except."""
     logging.debug('EXECUTING: protected_direct_submit({}, personality={},'
                   'moddir={})'
                   .format(fitsfile, personality,  moddir))
+    md5sum = md5(fitsfile)
     ok = True  
     statusmsg = None
     if 'FITS image data' not in str(magic.from_file(fitsfile)):
         errmsg = 'Cannot ingest non-FITS file: {}'.format(fitsfile)
         logging.error(errmsg)
         logging.debug('DBG-2')
-        auditor.log_audit(md5(fitsfile), fitsfile, False, '', errmsg)
+        auditor.log_audit(md5sum, fitsfile, False, '', errmsg)
         return (False, errmsg)
 
 
@@ -486,6 +486,7 @@ So, caller should not have to put this function in try/except."""
     origfname = fitsfile
     try:
         new_ihdr, destfname, changed, modfits = prep_for_ingest(fitsfile,
+                                                                md5sum,
                                                        persona_options=popts,
                                                        persona_params=pprms,
                                                        moddir=moddir)
@@ -527,13 +528,13 @@ def direct_submit(fitsfile, moddir,
     logging.debug('EXECUTING: direct_submit({}, personality={}, personality_files={}, '
                   'moddir={})'
                   .format(fitsfile, personality, personality_files, moddir))
+    md5sum = md5(fitsfile)
+
     if 'FITS image data' not in str(magic.from_file(fitsfile)):
         errmsg = 'Cannot ingest non-FITS file: {}'.format(fitsfile)
         logging.error(errmsg)
-        logging.debug('DBG-5')
-        m5 = md5(fitsfile)
-        auditor.log_audit(m5, fitsfile, False, '', errmsg)
-        auditor.set_fstop(m5, 'valley:direct', host=socket.getfqdn())
+        auditor.log_audit(md5sum, fitsfile, False, '', errmsg)
+        auditor.set_fstop(md5sum, 'valley:direct', host=socket.getfqdn())
         sys.exit(errmsg)
         
     success = True
@@ -546,17 +547,18 @@ def direct_submit(fitsfile, moddir,
         po, pp = fu.get_personality_dict(pf)        
         popts.update(po)
         pprms.update(pp)
-    pprms['filename'] = fitsfile
+    if 'filename' not in pprms:
+        pprms['filename'] = fitsfile
     if personality:
         pprms.update(personality['params'])
         popts.update(personality['options'])
     logging.debug('direct_submit: popts={}'.format(popts))
     logging.debug('direct_submit: pprms={}'.format(pprms))
     origfname = fitsfile
-    md5sum = md5(origfname)
     changed = dict()
     try:
         new_ihdr,destfname,changed,modfits = prep_for_ingest(fitsfile,
+                                                             md5sum,
                                                      persona_options=popts,
                                                      persona_params=pprms,
                                                      moddir=moddir)

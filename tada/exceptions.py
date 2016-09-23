@@ -12,6 +12,10 @@ class NoPersonality(Exception):
 in /var/tada/personalities/<INSTRUMENT>/*.yaml"""
     pass
 
+class InvalidPersonality(Exception):
+    "Personality file is invalid"
+    pass
+
 
 class SubmitException(Exception):
     "Something went wrong with submit to archive"

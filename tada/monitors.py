@@ -43,13 +43,28 @@ auditor = audit.Auditor()
 ### that's harder.  So, for now, recursively watch "watched_dir".
 ###
 
-def md5(fname):
-    hash_md5 = hashlib.md5()
-    with open(fname, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
+#!def md5(fname):
+#!    hash_md5 = hashlib.md5()
+#!    with open(fname, "rb") as f:
+#!        for chunk in iter(lambda: f.read(4096), b""):
+#!            hash_md5.update(chunk)
+#!    return hash_md5.hexdigest()
 
+def validate_personality(pdict):
+    if 'params' not in pdict:
+        raise tex.InvalidPersonality('Missing "params" in {}'
+                                     .format(pdict))
+    if 'md5sum' not in pdict['params']:
+        raise tex.InvalidPersonality('Missing "params.md5sum" in {}'
+                                     .format(pdict))
+    if 'filename' not in pdict['params']:
+        raise tex.InvalidPersonality('Missing "params.filename" in {}'
+                                     .format(pdict))
+    if 'options' not in pdict:
+        raise tex.InvalidPersonality('Missing "options" in {}'
+                                     .format(pdict))
+
+    return True
 
 #class PushEventHandler(watchdog.events.FileSystemEventHandler):
 class PushEventHandler(watchdog.events.PatternMatchingEventHandler):
@@ -161,14 +176,12 @@ YAML file will be transfered with FITS because its in same directory..
                           .format(ifname, ex))
             tut.log_traceback()
             return None
-        else:
-            logging.debug('Got pdict from yamls:{}'.format(pdict))
 
+        logging.debug('Got pdict from yamls:{}'.format(pdict))
+        md5sum = pdict['params']['md5sum']
         try:
             #!auditor.set_fstop(pdict.get('md5sum',os.path.basename(ifname)),
-            auditor.set_fstop(pdict['params']['md5sum'],
-                              'watch',
-                              host=socket.getfqdn())
+            auditor.set_fstop(md5sum, 'watch', host=socket.getfqdn())
             cachename = ifname.replace(self.dropdir, self.cachedir)
             os.makedirs(os.path.dirname(cachename), exist_ok=True)
             queuename = cachename.replace('/cache/','/cache/.queue/')
@@ -203,7 +216,7 @@ YAML file will be transfered with FITS because its in same directory..
                 yaml.safe_dump(pdict, yf, default_flow_style=False)
 
             try:
-                self.pushfile(md5(ifname), queuename)
+                self.pushfile(md5sum, queuename)
                 logging.info('Pushed {} to cache: {}'.format(ifname, queuename))
                 Path(statusname).touch(exist_ok=True)
             except Exception as ex:
@@ -229,18 +242,16 @@ YAML file will be transfered with FITS because its in same directory..
         #logging.debug('DBG: file={}, day={}, inst={}'.format(ifname, day, inst))
 
         pdict = dict(options={}, params={})
-        pdict['params']['filename'] = ifname # default 
+        #pdict['params']['filename'] = ifname # default 
 
         # from PERSONALITYDIR
         globpattern = os.path.join(self.personalitydir, inst, '*.yaml')
-        yfiles = glob(globpattern)
-        if len(yfiles) == 0:
+        yfiles1 = glob(globpattern)
+        if len(yfiles1) == 0:
             raise tex.NoPersonality(
                 "Did not find expected YAML personality file(s) in: {}"
                 .format(globpattern))
-        
-        logging.debug('DBG: read YAML files: {}'.format(yfiles))
-        for yfile in sorted(yfiles):
+        for yfile in sorted(yfiles1):
             with open(yfile) as yy:
                 yd = yaml.safe_load(yy)
                 pdict['params'].update(yd.get('params', {}))
@@ -248,10 +259,8 @@ YAML file will be transfered with FITS because its in same directory..
 
         # from DROPDIR
         globpattern = os.path.join(self.dropdir, inst, '*.yaml')
-        yfiles = glob(globpattern)
-        if len(yfiles) > 0:
-            logging.debug('DBG: read YAML files: {}'.format(yfiles))
-        for yfile in sorted(yfiles):
+        yfiles2 = glob(globpattern)
+        for yfile in sorted(yfiles2):
             with open(yfile) as yy:
                 yd = yaml.safe_load(yy)
                 pdict['params'].update(yd.get('params', {}))
@@ -265,7 +274,10 @@ YAML file will be transfered with FITS because its in same directory..
                 pdict['params'].update(yd.get('params', {}))
                 pdict['options'].update(yd.get('options', {}))
 
+        logging.debug('DBG: read YAML files: {}'
+                      .format(yfiles1 + yfiles2 + [yfile]))
         logging.debug('DBG: pdict={}'.format(pdict))
+        validate_personality(pdict)
         return pdict 
             
 

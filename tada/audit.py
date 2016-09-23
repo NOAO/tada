@@ -17,12 +17,12 @@ from . import ingest_decoder as dec
 from . import utils as tut
 from . import settings
 
-def md5(fname):
-    hash_md5 = hashlib.md5()
-    with open(fname, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
+#!def md5(fname):
+#!    hash_md5 = hashlib.md5()
+#!    with open(fname, "rb") as f:
+#!        for chunk in iter(lambda: f.read(4096), b""):
+#!            hash_md5.update(chunk)
+#!    return hash_md5.hexdigest()
 
 
 
@@ -58,13 +58,6 @@ class Auditor():
 
         machine = fstop.split(':')[0]
         logging.debug('DBG-0: fstop uri={}'.format(uri))
-        #!ddict = dict(md5sum=md5sum, fstop=fstop)
-        #!if machine == 'dome':
-        #!    ddict['dome_host'] = dome_host
-        #!elif machine == 'mountain':
-        #!    ddict['mountain_host'] = mtn_host
-        #!elif machine == 'valley':
-        #!    ddict['valley_host'] = val_host
         try:
             response = requests.post(uri, timeout=self.timeout)
             logging.debug('DBG-2: uri={}, response={}'.format(uri, response))
@@ -92,14 +85,7 @@ class Auditor():
         if newhdr == None: newhdr = dict()
 
         try:
-            #!origfname = prms.get('filename','filename-NA-in-yaml')
-            #!md5sum = prms.get('md5sum', 'md5sum-NA-in-yaml')
-            #!if ('filename' in prms) and ('md5sum' not in prms):
-            #!    # We have a file but no md5sum
-            #!    md5sum = md5(prms['filename'])
-            #~ if md5sum == None:  md5sum = md5(origfname)
             archerr = str(err)
-
             logging.debug('log_audit({}, {},{},{},{},{},{} do_svc={})'
                           .format(md5sum, origfname, success,
                                   archfile, archerr,
@@ -202,10 +188,3 @@ class Auditor():
             return False
         logging.debug('DONE: Adding audit record')
         return True
-
-
-
-        
-
-
-
