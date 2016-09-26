@@ -360,11 +360,11 @@ configuration field: maximum_errors_per_record)
         os.makedirs(os.path.dirname(destfname), exist_ok=True)
         shutil.move(ifname, destfname)
         auditor.set_fstop(md5sum, 'valley:anticache', host=socket.getfqdn())
-        #! msg = 'Non-FITS file: {}'.format(ex)
+        msg = 'Non-FITS file: {}'.format(ifname)
         #! logging.warning('Failed to mv non-fits file from mirror on Valley.')
         auditor.set_fstop(md5sum, 'mountain:anticache', host=socket.getfqdn())
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
-        raise tex.IngestRejection(md5sum, ifname, ex, dict())
+        raise tex.IngestRejection(md5sum, ifname, msg, dict())
         
     auditor.set_fstop(md5sum,'archive')
     return True
