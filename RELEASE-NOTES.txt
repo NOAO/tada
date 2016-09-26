@@ -14,9 +14,6 @@
 - change in error reporting (in logs)
 - use different RPM creation mechanism; now store as python-tada-*.rpm
   + REQUIRES CHANGE to ~yum update~
-- The md5sum put in *.hdr files iput to archive ("file_md5" field) now
-  refer to the ORIGINAL file (from dome).  Previously TADA inserted
-  the md5sum of the modified FITS file iput to the Archive.
 
 * Release 2.5.15 <2016-08-04 Thu>
 - fix bug causing ingestion of corrupted files
