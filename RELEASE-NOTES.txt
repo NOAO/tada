@@ -14,6 +14,9 @@
 - change in error reporting (in logs)
 - use different RPM creation mechanism; now store as python-tada-*.rpm
   + REQUIRES CHANGE to ~yum update~
+- REMOVED "pre_action" functionality from TADA mountain processing.
+  This was no longer used (mostly replaced by inline fpack processing)
+  and was a feature that could screw things up badly. 
 
 * Release 2.5.15 <2016-08-04 Thu>
 - fix bug causing ingestion of corrupted files
