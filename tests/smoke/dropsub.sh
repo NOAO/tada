@@ -1,3 +1,5 @@
+# Functions (subroutines) for dropbox related tests
+
 #!MANIFEST="$dir/manifest.out"
 #!ARCHLOG="/var/log/tada/archived.manifest"
 AUDITDB="/var/log/tada/audit.db"
@@ -130,6 +132,24 @@ WHERE success IS NOT NULL AND srcpath='$FITS';"
     return $STATUS
 }
 
+# drop a whole directory to dropbox on given (default=valley) host 
+function dropdir () {
+    local SRCDIR=$1
+    local BOXHOST=${2:-`grep valley_host /etc/tada/hiera.yaml | cut -d' ' -f2`}
+    # use create-audit-for-drop.sh to create JSON file if needed
+    local JSONFILE="$SRCDIR/dome-audit.json"
+    local MARSHOST=`grep mars_host /etc/tada/hiera.yaml | cut -d' ' -f2`
+
+    echo "Posting JSONFILE ($JSONFILE) to MARS ($MARSHOST)"
+    curl -H "Content-Type: application/json" \
+         -d @$JSONFILE http://$MARSHOST:8000/audit/source/ \
+         > /dev/null 2>&1
+    echo "Sending SRCDIR ($SRCDIR) to dropbox on $BOXHOST"
+    find $SRCDIR/  -type f -name "*.fits" -o -name "*.fz" -exec touch {} \;
+    rsync -az --password-file ~/.tada/rsync.pwd $SRCDIR/ tada@$BOXHOST::dropbox
+    echo "RSYNC to dropbox completed. Now check RESULTS of dropbox."
+}
+
 # drop one file to mountain dropbox (ingest may Pass or Fail)
 #   copy to pre-drop, add personality, record expected, drop to TADA
 function dropfile () {
@@ -181,6 +201,7 @@ function passdrop () {
 function faildrop () {
     dropfile $1 $2 $3 $4 0
 }
+
 
 function pylogfilter () {
     local logfile=$1
