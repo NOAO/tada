@@ -1,0 +1,7 @@
+# Using dropbox on: valley.test.noao.edu
+# DBG-SMOKE: add YAML in /home/vagrant/.tada/dropcache/20141220/wiyn-whirc/obj_355.fits.fz (/data/tada-test-data/short-drop/20141220/wiyn-whirc/obj_355.fits.fz)
+# Waiting up to 10 secs for /data/tada-test-data/short-drop/20141220/wiyn-whirc/obj_355.fits.fz to be submitted: 
+# .......!
+Found file: /data/tada-test-data/short-drop/20141220/wiyn-whirc/obj_355.fits.fz
+# Found file after 7 seconds.
+# DBG-SMOKE wait_for_match: actual=expected

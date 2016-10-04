@@ -1,0 +1,1 @@
+utils.py          ERROR    tada.exceptions.IngestRejection: Rejected ingest of /data/tada-test-data/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits. REASON: Propid from hdr (BADSCRUB.BAD-PROPID) not in scheduled list of Propids ['2016A-0189', '2016A-0453']

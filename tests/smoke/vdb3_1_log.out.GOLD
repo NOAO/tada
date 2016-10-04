@@ -1,0 +1,7 @@
+fits_utils.py     WARNING  Ignoring header propid 2014B-0458 that does not match schedule. Using "wiyn" from schedule.
+utils.py          ERROR    tada.exceptions.IngestRejection: Rejected ingest of /data/tada-test-data/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz. REASON: Verify failed: /usr/local/bin/fitsverify -e -q /var/tada/cache/.queue/20110101/wiyn-bench/24dec_2014.061.fits.fz
+submit.py         INFO     SUCCESSFUL submit_to_archive; /data/tada-test-data/short-drop/20110101/ct13m-andicam/ir141225.0179.fits as /noao-tuc-z1/mtn/20141225/ct13m/smarts/c13a_141226_070040_ori_TADASMOKE.fits.fz
+submit.py         WARNING  ARCH server: ETL failed to parse bad keyword value. keyword:[ZD] value:[30:26:47.67728784] Storing null value for keyword instead. ETL exception msg was: For input string: "30:26:47.67728784"
+submit.py         INFO     SUCCESSFUL submit_to_archive; /data/tada-test-data/short-drop/20141220/wiyn-whirc/obj_355.fits.fz as /noao-tuc-z1/mtn/20141219/WIYN/2012B-0500/kww_141220_130138_ori_TADASMOKE.fits.fz
+utils.py          ERROR    tada.exceptions.IngestRejection: Rejected ingest of /data/tada-test-data/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits. REASON: Propid from hdr (BADSCRUB.BAD-PROPID) not in scheduled list of Propids ['2016A-0189', '2016A-0453']
+submit.py         INFO     SUCCESSFUL submit_to_archive; /data/tada-test-data/scrape/20160314/kp4m-mosaic3/mos3.75870.fits.fz as /noao-tuc-z1/mtn/20160313/kp4m/2016A-0453/k4m_160314_072558_ori_TADASMOKE.fits.fz

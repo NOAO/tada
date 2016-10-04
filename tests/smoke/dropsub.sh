@@ -153,6 +153,10 @@ function dropdir () {
 # drop one file to mountain dropbox (ingest may Pass or Fail)
 #   copy to pre-drop, add personality, record expected, drop to TADA
 function dropfile () {
+    if [ $# -lt 5 ]; then
+        echo "ERROR: dropfile needs 5 arguments"
+        return 9
+    fi
     local TIMEOUT=$1 # seconds to wait for file to ingest (includes transfer)
     local FITSFILE=$2
     local DATE=$3 # e.g. "20160101"
@@ -161,7 +165,7 @@ function dropfile () {
     local BNAME=`basename $FITSFILE`
     local boxhost=${DROPHOST:-"mountain.`hostname --domain`"}
 
-    echo "Using dropbox on: $boxhost"
+    echo "# Using dropbox on: $boxhost"
 
     dropfile=$DROPCACHE/$DATE/${TELE_INST}/$BNAME
     mkdir -p `dirname $dropfile`

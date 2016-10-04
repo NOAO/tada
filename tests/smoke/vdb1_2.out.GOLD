@@ -1,0 +1,7 @@
+# Using dropbox on: valley.test.noao.edu
+# DBG-SMOKE: add YAML in /home/vagrant/.tada/dropcache/20160314/kp4m-mosaic3/mos3.75870.fits.fz (/data/tada-test-data/scrape/20160314/kp4m-mosaic3/mos3.75870.fits.fz)
+# Waiting up to 70 secs for /data/tada-test-data/scrape/20160314/kp4m-mosaic3/mos3.75870.fits.fz to be submitted: 
+# ............................................................!
+Found file: /data/tada-test-data/scrape/20160314/kp4m-mosaic3/mos3.75870.fits.fz
+# Found file after 60 seconds.
+# DBG-SMOKE wait_for_match: actual=expected

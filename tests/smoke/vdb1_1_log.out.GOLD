@@ -1,0 +1,1 @@
+utils.py          ERROR    tada.exceptions.IngestRejection: Rejected ingest of /data/tada-test-data/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz. REASON: Verify failed: /usr/local/bin/fitsverify -e -q /var/tada/cache/.queue/20110101/wiyn-bench/24dec_2014.061.fits.fz
