@@ -159,7 +159,9 @@ function dropfile () {
     local TELE_INST=$4
     local expected=$5 # {1=PASS, 0=FAIL}
     local BNAME=`basename $FITSFILE`
-    local boxhost="mountain.`hostname --domain`"
+    local boxhost=${DROPHOST:-"mountain.`hostname --domain`"}
+
+    echo "Using dropbox on: $boxhost"
 
     dropfile=$DROPCACHE/$DATE/${TELE_INST}/$BNAME
     mkdir -p `dirname $dropfile`
