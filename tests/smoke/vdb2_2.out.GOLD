@@ -1,0 +1,5 @@
+# Using dropbox on: valley.test.noao.edu
+# DBG-SMOKE: add YAML in /home/vagrant/.tada/dropcache/20160909/bad-instrum/obj_355b.fits.fz (/data/tada-test-data/short-drop/20160909/bad-instrum/obj_355b.fits.fz)
+# Waiting up to 10 secs for /data/tada-test-data/short-drop/20160909/bad-instrum/obj_355b.fits.fz to be submitted: 
+# ..........!
+# Aborted after 10 seconds. Not submitted: /data/tada-test-data/short-drop/20160909/bad-instrum/obj_355b.fits.fz
