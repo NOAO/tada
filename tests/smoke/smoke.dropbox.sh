@@ -55,7 +55,7 @@ FTO=10 # timeout to use when we expect ingest failure; driven by webservices?
 
 mtn_plog=~/.tada/mountain-logs/pop.log
 mtn_wlog=~/.tada/mountain-logs/watch.log
-rsync -az --password-file ~/.tada/rsync.pwd tada@mountain.test.noao.edu::logs ~/.tada/mountain-logs
+rsync -az --password-file ~/.tada/rsync.pwd tada@mountain.vagrant.noao.edu::logs ~/.tada/mountain-logs
 mtn_plog_start=`cat $mtn_plog | wc -l`
 mtn_wlog_start=`cat $mtn_wlog | wc -l`
 
@@ -116,7 +116,7 @@ testLog db3_1_log "pylogrun $plog \"$MARKER\""
 #! testCommand db2_1 "faildrop $FTO $FITS bad-date wiyn-whirc" "^\#" n 9
 #! testLog db2_1_log  "pylogfilter $plog \"$MARKER\" $FITS"
 
-rsync -az --password-file ~/.tada/rsync.pwd tada@mountain.test.noao.edu::logs ~/.tada/mountain-logs
+rsync -az --password-file ~/.tada/rsync.pwd tada@mountain.vagrant.noao.edu::logs ~/.tada/mountain-logs
 testLog db4_1_log "mtnlogrun $mtn_plog ${mtn_plog_start}"
 testLog db5_1_log "mtnlogrun $mtn_wlog ${mtn_wlog_start}"
 

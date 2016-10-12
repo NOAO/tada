@@ -55,6 +55,14 @@ file:/noao-tuc-z1/tada/vagrant/5/k4n_20141114_122626_oru.hdr error
 msg:Header for k4n_20141114_122626_oru.fits has already been stored in
 the database'''
 
+hdr_existsRE = re.compile(r"iRODS HDR file already exists")
+'''iRODS HDR file already exists at
+/noao-tuc-z1/mtn/20160608/ct4m/NA/c4ai_160609_151943_ori.hdr on submit
+of
+/data1/tada/dropbox/20160609/ct4m-arcoiris/SPEC_FFtest0583.fits. Aborting
+attempt to ingest.'''
+
+
 dup_propRE = re.compile(r"Could not find unique proposal")
 '''Failure reason:Failed to ingest
 file:/noao-tuc-z1/tada/vagrant/23/ksb_041016_195304_uuu_1188439357.hdr
@@ -107,6 +115,7 @@ etlkeyRE = re.compile(r"ETL failed to parse bad keyword value")
 ERRMAP = [
     # ERRCODE,  MatchREGEX,       ShortDesc
     ('DUPFITS', existsRE,         'Already stored in Archive'),
+    ('HDREXIST',hdr_existsRE,     'HDR file already exists in iRODS'),
     ('BADPROP', dup_propRE,       'Unique propid not found' ),
     ('COLLIDE', dup_obspropRE,    'Multi-files match date + propid'),
     ('NOPROP',  prop_not_foundRE, 'Propid not in Archive DB'),
