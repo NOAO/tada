@@ -45,6 +45,8 @@ source $SCRIPTDIR/smoke.direct.sh; tally  # test error conditions
 source $SCRIPTDIR/smoke.scrape.sh; tally  # uses direct_submit
 source $SCRIPTDIR/smoke.pipeline.sh; tally
 
+
+
 ##############################################################################
 
 echo "tada config params used:"
