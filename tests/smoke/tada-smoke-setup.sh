@@ -4,6 +4,7 @@
 #
 
 #! echo "# Common setup for TADA smoke tests"
+source hosts.sh
 source fsub.sh
 source mars.sh
 mars_stuff
@@ -22,7 +23,14 @@ echo "# TADA packages installed:"
 yum list installed | grep tada
 yum list installed | grep dataq
 echo "# Hosts used:"
-grep _host /etc/tada/*.conf /etc/tada/hiera.yaml | grep -v \#
+#grep _host /etc/tada/*.conf /etc/tada/hiera.yaml | grep -v \#
+echo "  DQHOST=$DQHOST"
+echo "  ARCHHOST=$ARCHHOST"
+echo "  IRODSHOST=$IRODSHOST"
+echo "  MARSHOST=$MARSHOST"
+echo "  MTNHOST=$MTNHOST"
+echo "  VALHOST=$VALHOST"
+
 echo "#"
 
 

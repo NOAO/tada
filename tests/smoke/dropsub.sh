@@ -135,10 +135,11 @@ WHERE success IS NOT NULL AND srcpath='$FITS';"
 # drop a whole directory to dropbox on given (default=valley) host 
 function dropdir () {
     local SRCDIR=$1
-    local BOXHOST=${2:-`grep valley_host /etc/tada/hiera.yaml | cut -d' ' -f2`}
+    #local BOXHOST=${2:-`grep valley_host /etc/tada/hiera.yaml | cut -d' ' -f2`}
+    local BOXHOST=${2:-$VALHOST}
     # use create-audit-for-drop.sh to create JSON file if needed
     local JSONFILE="$SRCDIR/dome-audit.json"
-    local MARSHOST=`grep mars_host /etc/tada/hiera.yaml | cut -d' ' -f2`
+    #local MARSHOST=`grep mars_host /etc/tada/hiera.yaml | cut -d' ' -f2`
 
     echo "Posting JSONFILE ($JSONFILE) to MARS ($MARSHOST)"
     curl -H "Content-Type: application/json" \

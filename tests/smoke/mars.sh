@@ -4,7 +4,8 @@
 
 #marshost=mars.sdm.noao.edu
 #marshost=valley.sdm.noao.edu
-marshost=`grep mars_host /etc/tada/hiera.yaml | cut -f2 -d' '`
+#marshost=`grep mars_host /etc/tada/hiera.yaml | cut -f2 -d' '`
+marshost="$MARSHOST"
 marsurl="http://$marshost:8000"
 copts="--connect-timeout 10 --max-time 600 -s -S"
 
