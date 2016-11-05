@@ -18,7 +18,11 @@ else
     #wget -nc http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
     #tar xf fits-test-data.tgz
 fi
-source $tadadir/../tada-tools/dev-scripts/irods_init.sh
+
+if [ ! -d ~/.irods ]; then
+    source $tadadir/../tada-tools/dev-scripts/irods_init.sh
+fi
+
 echo "# TADA packages installed:"
 yum list installed | grep tada
 yum list installed | grep dataq
