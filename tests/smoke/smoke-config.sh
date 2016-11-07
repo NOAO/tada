@@ -1,5 +1,4 @@
-# Collect the names of hosts that are needed for smoke tests.
-
+# Variables to allow smoke-tests to run on specific machineconfigurations.
 
 ARCHHOST=`grep arch_host /etc/tada/hiera.yaml | cut -d' ' -f2`
 IRODSHOST=`grep irods_host /etc/tada/hiera.yaml | cut -d' ' -f2`

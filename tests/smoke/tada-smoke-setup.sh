@@ -20,7 +20,9 @@ else
 fi
 
 if [ ! -d ~/.irods ]; then
-    source $tadadir/../tada-tools/dev-scripts/irods_init.sh
+    #source $tadadir/../tada-tools/dev-scripts/irods_init.sh
+    echo "ERROR: Smoke tests can only be run from valley with valid irods setup in ~/.irods"
+    exit 1
 fi
 
 echo "# TADA packages installed:"
