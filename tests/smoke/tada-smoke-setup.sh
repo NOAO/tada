@@ -4,6 +4,7 @@
 #
 
 #! echo "# Common setup for TADA smoke tests"
+source /opt/smoke-config.sh
 source fsub.sh
 source mars.sh
 mars_stuff
@@ -22,11 +23,25 @@ fi
 #!ln -s  ~/.irods/irodsEnv.dev ~/.irods/.irodsEnv
 #!$ICMDS/iinit < /etc/tada/iinit.in
 
+#!if [ ! -d ~/.irods ]; then
+#!    #source $tadadir/../tada-tools/dev-scripts/irods_init.sh
+#!    echo "ERROR: Smoke tests can only be run from valley with valid irods setup in ~/.irods"
+#!    exit 1
+#!fi
+
+
 echo "# TADA packages installed:"
 yum list installed | grep tada
 yum list installed | grep dataq
 echo "# Hosts used:"
-grep _host /etc/tada/*.conf /etc/tada/hiera.yaml | grep -v \#
+#grep _host /etc/tada/*.conf /etc/tada/hiera.yaml | grep -v \#
+echo "  DQHOST=$DQHOST"
+echo "  ARCHHOST=$ARCHHOST"
+echo "  IRODSHOST=$IRODSHOST"
+echo "  MARSHOST=$MARSHOST"
+echo "  MTNHOST=$MTNHOST"
+echo "  VALHOST=$VALHOST"
+
 echo "#"
 
 

@@ -135,10 +135,11 @@ WHERE success IS NOT NULL AND srcpath='$FITS';"
 # drop a whole directory to dropbox on given (default=valley) host 
 function dropdir () {
     local SRCDIR=$1
-    local BOXHOST=${2:-`grep valley_host /etc/tada/hiera.yaml | cut -d' ' -f2`}
+    #local BOXHOST=${2:-`grep valley_host /etc/tada/hiera.yaml | cut -d' ' -f2`}
+    local BOXHOST=${2:-$VALHOST}
     # use create-audit-for-drop.sh to create JSON file if needed
     local JSONFILE="$SRCDIR/dome-audit.json"
-    local MARSHOST=`grep mars_host /etc/tada/hiera.yaml | cut -d' ' -f2`
+    #local MARSHOST=`grep mars_host /etc/tada/hiera.yaml | cut -d' ' -f2`
 
     echo "Posting JSONFILE ($JSONFILE) to MARS ($MARSHOST)"
     curl -H "Content-Type: application/json" \
@@ -163,7 +164,8 @@ function dropfile () {
     local TELE_INST=$4
     local expected=$5 # {1=PASS, 0=FAIL}
     local BNAME=`basename $FITSFILE`
-    local boxhost=${DROPHOST:-"mountain.`hostname --domain`"}
+    #local boxhost=${DROPHOST:-"mountain.`hostname --domain`"}
+    local boxhost=${DROPHOST:-"$MTNHOST"}
 
     echo "# Using dropbox on: $boxhost"
 
@@ -249,7 +251,7 @@ function insertsrc () {
 
 # Get drop status from Mountain    
 function sbox () {
-    local mtnhost="mountain.`hostname --domain`"
+    local mtnhost="$MTNHOST"
     local statusdir="$SCRIPTDIR/remote_status"
     mkdir -p $statusdir
     rsync -a --password-file ~/.tada/rsync.pwd tada@$mtnhost::statusbox $statusdir
@@ -261,7 +263,7 @@ function mdbox () {
     clean_manifest
     local srcdir=$1
     local MAXRUNTIME=120  # max seconds to wait for all files to be submitted
-    local boxhost="mountain.`hostname --domain`"
+    local boxhost="$MTNHOST"
     for f in `find $srcdir \( -name "*.fits" -o -name "*.fits.fz" \)`; do
         # Force all fits files to be touched on remote (which creates event)
         add_test_personality.sh $f

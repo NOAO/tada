@@ -152,8 +152,8 @@ def network_move(rec, qname):
     # successfully transfered to Valley
     auditor.set_fstop(md5sum, 'valley:cache', settings.valley_host)
     logging.debug('rsync output:{}'.format(out))
-    logging.info('Successfully moved file from {} to {}'
-                 .format(newfname, sync_root))
+    logging.info('Successfully moved file from {} to VALLEY'.format(newfname))
+    logging.debug('VALLEY transfer is: {}'.format(sync_root))
     mirror_fname = os.path.join(valley_root,
                                 os.path.relpath(newfname, source_root))
     try:

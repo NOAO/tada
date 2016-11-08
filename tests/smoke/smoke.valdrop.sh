@@ -48,7 +48,8 @@ FTO=10 # timeout to use when we expect ingest failure; driven by webservices?
 
 ##############################################################################
 ### Tests
-DROPHOST=`grep valley_host /etc/tada/hiera.yaml | cut -d' ' -f2`
+#DROPHOST=`grep valley_host /etc/tada/hiera.yaml | cut -d' ' -f2`
+DROPHOST="$VALHOST"
 echo "# Using DROPHOST=$DROPHOST"
 
 # fail-fail (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
