@@ -60,8 +60,9 @@ echo "  2. verify Archive filenames look ok: http://localhost:8000/provisional/"
 
 emins=$(((`date +'%s'` - tic)/60))
 passed=$(($mastertotalcnt-$masterfailcnt))/$mastertotalcnt
+hostname=`hostname`
 cat <<EOF | mail -s "Smoke.all completed! (passed=$passed)" pothier@email.noao.edu
-Script:   $SCRIPT
+Script:   $hostname:$SCRIPT
 Started:  $sdate
 Finished: `date`
 
