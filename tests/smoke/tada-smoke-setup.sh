@@ -17,7 +17,11 @@ else
     #wget -nc http://mirrors.sdm.noao.edu/tada-test-data/fits-test-data.tgz
     #tar xf fits-test-data.tgz
 fi
-source $tadadir/../tada-tools/dev-scripts/irods_init.sh
+#!!source $tadadir/../tada-tools/dev-scripts/irods_init.sh
+#!ICMDS="/usr/local/share/applications/irods3.3.1/iRODS/clients/icommands/bin"
+#!ln -s  ~/.irods/irodsEnv.dev ~/.irods/.irodsEnv
+#!$ICMDS/iinit < /etc/tada/iinit.in
+
 echo "# TADA packages installed:"
 yum list installed | grep tada
 yum list installed | grep dataq
