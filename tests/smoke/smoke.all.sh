@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ## TO ADD:
 ##  failure tests; make sure DIRECT ingest failures return non-zero status

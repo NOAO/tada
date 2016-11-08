@@ -4,7 +4,7 @@
 #
 
 #! echo "# Common setup for TADA smoke tests"
-source /opt/smoke-config.sh
+source /etc/tada/smoke-config.sh
 source fsub.sh
 source mars.sh
 mars_stuff
