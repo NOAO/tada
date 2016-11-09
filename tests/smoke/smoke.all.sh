@@ -15,7 +15,7 @@ SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script is in
 
 #rm /var/log/tada/pop*.log
 date > /var/log/tada/pop.log
-date > /var/log/tada/pop-detail.log
+#!date > /var/log/tada/pop-detail.log
 #!chgrp tada /var/log/tada/pop*.log
 
 

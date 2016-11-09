@@ -469,7 +469,9 @@ def fitsverify(fname):
     try:
         subprocess.check_output(cmd)
     except Exception as err:
-        raise tex.InvalidFits('Verify failed: {}'.format(' '.join(cmd)))
+        #!raise tex.InvalidFits('Verify failed: {}'.format(' '.join(cmd)))
+        raise tex.InvalidFits('Verify failed: /usr/local/bin/fitsverify -e -q {}'
+                              .format(os.path.basename(fname)))
     logging.debug('{} PASSED fitsverify()'.format(fname))
     return True
 
