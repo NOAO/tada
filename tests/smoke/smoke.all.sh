@@ -36,7 +36,6 @@ echo "Current User: $USER"
 echo "Hiera values:"
 cat /etc/tada/hiera.yaml
 
-
 ####
 # Mountain (dome) or Valley
 #source $SCRIPTDIR/smoke.sh; tally
