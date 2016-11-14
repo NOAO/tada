@@ -23,7 +23,7 @@ export PATH=$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:$PATH
 
 source smoke-lib.sh
 return_code=0
-SMOKEOUT="README-smoke-results.scrape.txt"
+SMOKEOUT="$sto/README-smoke-results.scrape.txt"
 
 echo "# "
 echo "# Starting tests in \"smoke.scrape.sh\" [allow 8 minutes] ..."

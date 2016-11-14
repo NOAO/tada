@@ -33,7 +33,7 @@ export PATH=$tadadir/../tada-cli/scripts:$SCRIPTDIR:$PATH
 
 source smoke-lib.sh
 return_code=0
-SMOKEOUT="README-smoke-results.txt"
+SMOKEOUT="$sto/README-smoke-results.txt"
 
 echo ""
 echo "Starting tests with: \"$SCRIPT\" ..."

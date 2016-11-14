@@ -19,11 +19,12 @@ cd $dir
 
 export PATH=$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:$PATH
 
-source /opt/tada/venv/bin/activate
+#! source /opt/tada/venv/bin/activate
 
 source smoke-lib.sh
 return_code=0
-SMOKEOUT="README-smoke-results.direct.txt"
+
+        SMOKEOUT="$sto/README-smoke-results.direct.txt"
 
 echo "# "
 echo "# Starting tests in \"smoke.direct.sh\"  [allow 2 minutes] ..."

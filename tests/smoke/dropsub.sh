@@ -94,11 +94,7 @@ function wait_for_match () { # (fitsfile, tele_inst) => $STATUS
     # AND srcpath='$FITS' AND telescope='$tele' AND instrument='$inst';"
     expectedsql="SELECT success FROM expected WHERE fits='$FITS';"
     # AND tele='$tele' AND instrum='$inst';"
-
-
-    
-    local sql="SELECT count(*) FROM audit \
-WHERE success IS NOT NULL AND srcpath='$FITS';"
+    local sql="SELECT count(*) FROM audit WHERE success IS NOT NULL AND srcpath='$FITS';"
     local maxTries=$TIMEOUT
     local tries=0
     local STATUS=0
@@ -124,10 +120,11 @@ WHERE success IS NOT NULL AND srcpath='$FITS';"
     local actual=`sqlite3 $AUDITDB "$auditsql"` 
     local expected=`sqlite3 $SMOKEDB "$expectedsql"`
     if [ "$actual" != "$expected" ]; then
-        echo "# DBG-SMOKE wait_for_match: actual($actual) != expected($expected)"
+        #echo "# DBG-SMOKE wait_for_match: actual($actual) != expected($expected)"
         STATUS=1
     else
-        echo "# DBG-SMOKE wait_for_match: actual=expected"
+        x=1
+        #echo "# DBG-SMOKE wait_for_match: actual=expected"
     fi
     return $STATUS
 }
@@ -176,7 +173,7 @@ function dropfile () {
 
     record_expected $FITSFILE $DATE ${TELE_INST} $expected
     
-    echo "# DBG-SMOKE: add YAML in $dropfile ($FITSFILE)"
+    #echo "# DBG-SMOKE: add YAML in $dropfile ($FITSFILE)"
     add_test_personality.sh $FITSFILE $dropfile
     md5=`grep md5sum $dropfile.yaml | cut -b 13-`
     JSONFILE="$DROPCACHE/dropsub.$md5.json"
@@ -216,8 +213,8 @@ function pylogfilter () {
     local marker=$2
     local filename=$3
 
-    csplit --quiet $logfile "%$marker%"+1
-    grep `basename $filename .fz` xx00 \
+    csplit --prefix=$sto/xx --quiet $logfile "%$marker%"+1
+    grep `basename $filename .fz` $sto/xx00 \
         | grep  "WARNING \| ERROR " | cut -d' ' -f3- 
 }
 
@@ -226,8 +223,8 @@ function pylogrun () {
     local logfile=$1
     local marker=$2
 
-    csplit --quiet $logfile "%$marker%"+1
-    grep  "INFO \| WARNING \| ERROR " xx00 | cut -d' ' -f3- 
+    csplit --prefix=$sto/xx --quiet $logfile "%$marker%"+1
+    grep  "INFO \| WARNING \| ERROR " $sto/xx00 | cut -d' ' -f3- 
 }
 
 function mtnlogrun () {

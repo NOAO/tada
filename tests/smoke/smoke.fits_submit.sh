@@ -26,7 +26,7 @@ export PATH=$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:$PATH
 
 source smoke-lib.sh
 return_code=0
-SMOKEOUT="README-smoke-results.fits_submit.txt"
+SMOKEOUT="$sto/README-smoke-results.fits_submit.txt"
 
 echo ""
 echo "Starting tests in \"$dir\" ..."

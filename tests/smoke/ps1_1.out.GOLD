@@ -1,2 +1,2 @@
-EXECUTED: direct_submit -p /var/tada/personalities/ops/smoke.yaml -p /data/tada-test-data/basic/uofa-mandle.jpg.yaml -p /var/tada/personalities/pipeline-mosaic3/pipeline-mosaic3.yaml /DATA/basic/uofa-mandle.jpg
+EXECUTED: /opt/tada/venv/bin/direct_submit -p /var/tada/personalities/ops/smoke.yaml -p /data/tada-test-data/basic/uofa-mandle.jpg.yaml -p /var/tada/personalities/pipeline-mosaic3/pipeline-mosaic3.yaml /DATA/basic/uofa-mandle.jpg
 Cannot ingest non-FITS file: /basic/uofa-mandle.jpg

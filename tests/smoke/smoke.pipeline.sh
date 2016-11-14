@@ -26,7 +26,7 @@ PATH=$tadadir/../tada-cli/scripts:$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:
 
 source smoke-lib.sh
 return_code=0
-SMOKEOUT="README-smoke-results.pipeline.txt"
+SMOKEOUT="$sto/README-smoke-results.pipeline.txt"
 
 echo ""
 echo "Starting tests in \"smoke.pipeline.sh\" [allow 1 minutes] ..."

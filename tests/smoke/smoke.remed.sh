@@ -24,7 +24,7 @@ export PATH=$tadadir/../tada-cli/scripts:$PATH
 source smoke-lib.sh
 
 return_code=0
-SMOKEOUT="README-smoke-results.remed.txt"
+SMOKEOUT="$sto/README-smoke-results.remed.txt"
 MANIFEST="$dir/manifest.out"
 rm  $MANIFEST > /dev/null
 touch $MANIFEST

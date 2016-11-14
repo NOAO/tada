@@ -25,7 +25,7 @@ cd $dir
 PATH=$tadadir/scripts:$SCRIPTDIR:$PATH
 source smoke-lib.sh
 return_code=0
-SMOKEOUT="README-smoke-results.txt"
+SMOKEOUT="$sto/README-smoke-results.txt"
 delay=6 # seconds
 ##############################################################################
 

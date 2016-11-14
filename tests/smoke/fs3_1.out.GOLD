@@ -1,2 +1,2 @@
-EXECUTED: direct_submit -p /var/tada/personalities/ops/smoke.yaml -p /data/tada-test-data/basic/kp109391.fits.fz.yaml /DATA/basic/kp109391.fits.fz
+EXECUTED: /opt/tada/venv/bin/direct_submit -p /var/tada/personalities/ops/smoke.yaml -p /data/tada-test-data/basic/kp109391.fits.fz.yaml /DATA/basic/kp109391.fits.fz
 Rejected ingest of /basic/kp109391.fits.fz. REASON: Modified FITS header is missing required metadata fields (OBSTYPE, PROCTYPE, PRODTYPE) in file /data/tada-test-data/basic/kp109391.fits.fz

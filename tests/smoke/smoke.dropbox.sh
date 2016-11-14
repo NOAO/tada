@@ -24,7 +24,7 @@ tdata=/data/tada-test-data
 
 dir=$SCRIPTDIR
 origdir=`pwd`
-cd $dir
+pushd $dir
 
 export PATH=$tadadir/../tada-tools/dev-scripts:$SCRIPTDIR:$PATH
 export PATH=$tadadir/../tada-cli/scripts:$PATH
@@ -32,7 +32,7 @@ export PATH=$tadadir/../tada-cli/scripts:$PATH
 source smoke-lib.sh
 
 return_code=0
-SMOKEOUT="README-smoke-results.dropbox.txt"
+SMOKEOUT="$sto/README-smoke-results.dropbox.txt"
 
 echo "# "
 echo "# Starting \"smoke.dropbox.sh\" on `date` ..."
@@ -70,7 +70,7 @@ testLog db1_1_log "pylogfilter $plog \"$MARKER\" $FITS"
 # pass-pass fitsverify
 # uncompressed (compress on the fly); allow extra time for compression
 FITS=$tdata/short-drop/20110101/ct13m-andicam/ir141225.0179.fits
-testCommand db2_6 "passdrop 10 $FITS 20110101 ct13m-andicam" "^\#" n 0 
+testCommand db2_6 "passdrop 10 $FITS 20110101 ct13m-andicam" "^\#" y 0
 testLog db2_6_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 
@@ -155,6 +155,7 @@ fi
 
 ##############################################################################
 # Don't move or remove! 
-cd $origdir
+#cd $origdir
+popd
 #exit $return_code
 return $return_cod

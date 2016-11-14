@@ -41,7 +41,7 @@ deletenoarch=`type -path delete-noarchive.sh`
 source smoke-lib.sh
 
 return_code=0
-SMOKEOUT="README-smoke-results.raw.txt"
+SMOKEOUT="$sto/README-smoke-results.raw.txt"
 #!delay=7 # seconds
 delay=6 # seconds
 

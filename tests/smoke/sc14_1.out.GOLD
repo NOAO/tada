@@ -1,2 +1,2 @@
-EXECUTED: direct_submit -p /var/tada/personalities/ops/smoke.yaml -p /data/tada-test-data/scrape/20141127/soar-soi/test.027.fits.fz.yaml -p /var/tada/personalities/soar-soi/soar-soi.yaml /DATA/20141127/soar-soi/test.027.fits.fz
-Rejected ingest of /20141127/soar-soi/test.027.fits.fz. REASON: Verify failed: /usr/local/bin/fitsverify -e -q /home/vagrant/.tada/submitted/test.027.fits.fz
+EXECUTED: /opt/tada/venv/bin/direct_submit -p /var/tada/personalities/ops/smoke.yaml -p /data/tada-test-data/scrape/20141127/soar-soi/test.027.fits.fz.yaml -p /var/tada/personalities/soar-soi/soar-soi.yaml /DATA/20141127/soar-soi/test.027.fits.fz
+Rejected ingest of /20141127/soar-soi/test.027.fits.fz. REASON: Verify failed: /usr/local/bin/fitsverify -e -q test.027.fits.fz

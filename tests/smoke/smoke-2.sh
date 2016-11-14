@@ -24,7 +24,7 @@ deletenoarch=`type -path delete-noarchive.sh`
 
 source smoke-lib.sh
 return_code=0
-SMOKEOUT="README-smoke-results.txt"
+SMOKEOUT="$sto/README-smoke-results.txt"
 
 function cleanStart () {
     # Clear old transfer queue

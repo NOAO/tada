@@ -21,7 +21,7 @@ export PATH=$tadadir/../tada-cli/scripts:$PATH
 
 source smoke-lib.sh
 return_code=0
-SMOKEOUT="README-smoke-results.valdrop.txt"
+SMOKEOUT="$sto/README-smoke-results.valdrop.txt"
 
 echo ""
 echo "# Starting \"smoke.dropbox.sh\" on `date` ..."
