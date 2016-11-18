@@ -5,8 +5,10 @@ import logging
 import os
 import os.path
 import shutil
+import tempfile
 
 from . import utils as tut
+from . import exceptions as tex
 
 '''
 From the icommands documentation:
@@ -72,20 +74,30 @@ def irods_put331(local_fname, irods_fname):
     logging.debug('{}({}, {})'.format(tag, local_fname, irods_fname))
     tut.tic()
     try:
+        #!out = subprocess.check_output(os.path.join(icmdpath, 'ienv'))
+        #!logging.debug('DBG-irods: ienv={}'.format(out))
         cmd = [os.path.join(icmdpath, 'imkdir'),
                '-p',
                os.path.dirname(irods_fname)]
-        subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+        #!subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+        subprocess.check_output(cmd, stderr=subprocess.STDOUT)
         #! start_new_session=True)
+        (fd, temp_fname) = tempfile.mkstemp()
+        os.close(fd)
         cmd = [os.path.join(icmdpath, 'iput'),
                '-f', '-K',
-               '--retries', '4', '-X', '/home/tada/.tada/irods-restart-file',
+               '--retries', '4', '-X', temp_fname,
                local_fname, irods_fname]
-        subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+        #!subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+        subprocess.check_output(cmd, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as ex:
-        logging.error('FAILED {}: {}; {}'
-                      .format(tag, ex, ex.output.decode('utf-8')))
-        raise
+        msg = ('icommand {} failed: {}; {}'
+               .format(tag, ex, ex.output.decode('utf-8')))
+        logging.error(msg)
+        raise tex.FailedIrodsCommand(msg)
+    finally:
+        os.unlink(temp_fname)
+
     logging.debug('{} completed in {} seconds'.format(tag,tut.toc()))
 
 def irods_get331(irods_fname, local_fname):
@@ -136,9 +148,10 @@ def irods_remove331(irods_fname):
         cmd = [os.path.join(icmdpath, 'irm'), '-f', irods_fname]
         subprocess.check_output(cmd, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as ex:
-        logging.error('FAILED {}: {}; {}'
-                      .format(tag, ex, ex.output.decode('utf-8')))
-        raise
+        msg = ('icommand "{}" failed: {}; {}'
+               .format(tag, ex, ex.output.decode('utf-8')))
+        logging.error(msg)
+        raise tex.FailedIrodsCommand(msg)
 
 def irods_exists331(irods_fname):
     "Find out if file already exists. RETURN: True if it does"

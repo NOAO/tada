@@ -906,7 +906,10 @@ def main():
                 .format(prog='%(prog)s'))
         )
 
-    parser.add_argument('--version', action='version', version='1.1')
+    with open('/opt/tada/build/lib/tada/VERSION') as version_file:
+        tada_version = version_file.read().strip()
+    
+    parser.add_argument('--version', action='version', version=tada_version)
     parser.add_argument('infiles',
                         nargs='*',
                         help='Input file')

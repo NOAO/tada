@@ -82,6 +82,10 @@ class IrodsContentException(Exception):
     "Irods contains something that prevents ingest"
     pass
 
+class FailedIrodsCommand(Exception):
+    "iRODS iCOMMAND failed"
+    pass
+
 
 class SuccessfulNonIngest(Exception):
     "We did not ingest. On purpose. (e.g. dry-run)"

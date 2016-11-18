@@ -224,7 +224,8 @@ function pylogrun () {
     local marker=$2
 
     csplit --prefix=$sto/xx --quiet $logfile "%$marker%"+1
-    grep  "INFO \| WARNING \| ERROR " $sto/xx00 | cut -d' ' -f3- 
+    sort $sto/xx00 > $sto/sorted-xx00
+    grep  "INFO \| WARNING \| ERROR " $sto/sorted-xx00 | cut -d' ' -f3- 
 }
 
 function mtnlogrun () {
