@@ -201,7 +201,7 @@ YAML file will be transfered with FITS because its in same directory..
             except Exception as ex:
                 logging.warning(('Dropbox file ({}) is invalid FITS.'
                                  ' Trying to continue anyhow. {}')
-                                .format(ifname, ex))
+                                .format(os.path.basename(ifname), ex))
 
             try:
                 fp.fpack_to(ifname, queuename)

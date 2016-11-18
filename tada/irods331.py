@@ -23,7 +23,8 @@ def irods_init331():
                 '/icommands/bin')
     try:
         print('Enter your current iRODS password:')
-        subprocess.check_output([os.path.join(icmdpath, 'iinit')]),
+        cmd = [os.path.join(icmdpath, 'iinit')]
+        subprocess.check_output(cmd),
     except subprocess.CalledProcessError as ex:
         return False
     
@@ -71,13 +72,16 @@ def irods_put331(local_fname, irods_fname):
     logging.debug('{}({}, {})'.format(tag, local_fname, irods_fname))
     tut.tic()
     try:
-        subprocess.check_output([os.path.join(icmdpath, 'imkdir'),
-                                 '-p',
-                                 os.path.dirname(irods_fname)])
-                                #! start_new_session=True)
-        subprocess.check_output([os.path.join(icmdpath, 'iput'),
-                                 '-f', '-K',
-                                 local_fname, irods_fname])
+        cmd = [os.path.join(icmdpath, 'imkdir'),
+               '-p',
+               os.path.dirname(irods_fname)]
+        subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+        #! start_new_session=True)
+        cmd = [os.path.join(icmdpath, 'iput'),
+               '-f', '-K',
+               '--retries', '4', '-X', '/home/tada/.tada/irods-restart-file',
+               local_fname, irods_fname]
+        subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as ex:
         logging.error('FAILED {}: {}; {}'
                       .format(tag, ex, ex.output.decode('utf-8')))
@@ -93,10 +97,9 @@ def irods_get331(irods_fname, local_fname):
     try:
         # -f:: force overwrite of local file if it exists
         # -K:: verify checksum
-        subprocess.check_output([os.path.join(icmdpath, 'iget'),
-                                 '-f', '-K', irods_fname, local_fname],
-                                stderr=subprocess.DEVNULL,
-        )
+        cmd = [os.path.join(icmdpath, 'iget'),
+               '-f', '-K', irods_fname, local_fname]
+        subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError as ex:
         logging.debug('did not do {}: {}; {}'
                       .format(tag, ex, ex.output.decode('utf-8')))
@@ -110,12 +113,13 @@ def irods_move331(src_irods_fname, dst_irods_fname):
     icmdpath = ('/usr/local/share/applications/irods3.3.1/iRODS/clients'
                 '/icommands/bin')
     try:
-        subprocess.check_output([os.path.join(icmdpath, 'imkdir'),
-                                 '-p',
-                                 os.path.dirname(dst_irods_fname)])
-        subprocess.check_output([os.path.join(icmdpath, 'imv'),
-                                 src_irods_fname, dst_irods_fname],
-                                stderr=subprocess.DEVNULL )
+        cmd = [os.path.join(icmdpath, 'imkdir'),
+               '-p',
+               os.path.dirname(dst_irods_fname)]
+        subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+        subprocess.check_output(
+            [os.path.join(icmdpath, 'imv'), src_irods_fname, dst_irods_fname],
+            stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError as ex:
         logging.debug('did not do {}: {}; {}'
                       .format(tag, ex, ex.output.decode('utf-8')))
@@ -129,8 +133,8 @@ def irods_remove331(irods_fname):
     icmdpath = ('/usr/local/share/applications/irods3.3.1/iRODS/clients'
                 '/icommands/bin')
     try:
-        subprocess.check_output([os.path.join(icmdpath, 'irm'),
-                                 '-f', irods_fname])
+        cmd = [os.path.join(icmdpath, 'irm'), '-f', irods_fname]
+        subprocess.check_output(cmd, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as ex:
         logging.error('FAILED {}: {}; {}'
                       .format(tag, ex, ex.output.decode('utf-8')))
