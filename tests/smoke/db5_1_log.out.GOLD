@@ -1,10 +1,10 @@
-monitors.py       WARNING  Dropbox file (/var/tada/data/dropbox/20110101/wiyn-bench/24dec_2014.061.fits.fz) is invalid FITS. Trying to continue anyhow. Verify failed: /usr/local/bin/fitsverify -e -q 24dec_2014.061.fits.fz
+monitors.py       WARNING  Dropbox file (24dec_2014.061.fits.fz) is invalid FITS. Trying to continue anyhow. Verify failed: /usr/local/bin/fitsverify -e -q 24dec_2014.061.fits.fz
 monitors.py       INFO     Pushed /var/tada/data/dropbox/20110101/wiyn-bench/24dec_2014.061.fits.fz to cache: /var/tada/cache/.queue/20110101/wiyn-bench/24dec_2014.061.fits.fz
 monitors.py       INFO     Pushed /var/tada/data/dropbox/20110101/ct13m-andicam/ir141225.0179.fits to cache: /var/tada/cache/.queue/20110101/ct13m-andicam/ir141225.0179.fits.fz
 monitors.py       ERROR    Failed to get options_from_yamls(/var/tada/data/dropbox/20160909/bad-instrum/obj_355b.fits.fz); Did not find expected YAML personality file(s) in: /var/tada/personalities/bad-instrum/*.yaml
 utils.py          ERROR    tada.exceptions.NoPersonality: Did not find expected YAML personality file(s) in: /var/tada/personalities/bad-instrum/*.yaml
 monitors.py       INFO     Pushed /var/tada/data/dropbox/20141220/wiyn-whirc/obj_355.fits.fz to cache: /var/tada/cache/.queue/20141220/wiyn-whirc/obj_355.fits.fz
-monitors.py       WARNING  Dropbox file (/var/tada/data/dropbox/20160610/kp4m-mosaic3/mos3.badprop.fits) is invalid FITS. Trying to continue anyhow. Verify failed: /usr/local/bin/fitsverify -e -q mos3.badprop.fits
+monitors.py       WARNING  Dropbox file (mos3.badprop.fits) is invalid FITS. Trying to continue anyhow. Verify failed: /usr/local/bin/fitsverify -e -q mos3.badprop.fits
 monitors.py       INFO     Pushed /var/tada/data/dropbox/20160610/kp4m-mosaic3/mos3.badprop.fits to cache: /var/tada/cache/.queue/20160610/kp4m-mosaic3/mos3.badprop.fits.fz
-monitors.py       WARNING  Dropbox file (/var/tada/data/dropbox/20160314/kp4m-mosaic3/mos3.75870.fits.fz) is invalid FITS. Trying to continue anyhow. Verify failed: /usr/local/bin/fitsverify -e -q mos3.75870.fits.fz
+monitors.py       WARNING  Dropbox file (mos3.75870.fits.fz) is invalid FITS. Trying to continue anyhow. Verify failed: /usr/local/bin/fitsverify -e -q mos3.75870.fits.fz
 monitors.py       INFO     Pushed /var/tada/data/dropbox/20160314/kp4m-mosaic3/mos3.75870.fits.fz to cache: /var/tada/cache/.queue/20160314/kp4m-mosaic3/mos3.75870.fits.fz
