@@ -19,7 +19,6 @@ date > /var/log/tada/pop.log
 #!chgrp tada /var/log/tada/pop*.log
 
 
-
 function tally () {
     mastertotalcnt=$((totalcnt + mastertotalcnt))
     masterfailcnt=$((failcnt + masterfailcnt))
