@@ -112,6 +112,7 @@ setup(
             'pers2yaml=tada.personality2yaml:main',
             'cleanyaml=tada.reformat_yaml:main',
             'remediate=tada.remediate:main',
+            'change_fits=tada.change_hdr:main',
         ],
     },
 )

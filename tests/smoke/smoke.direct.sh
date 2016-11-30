@@ -54,6 +54,11 @@ testCommand fs2_1 "fsub $file2" "^\#" n
 ## compliant FITS with no options (BUT, already inserted above so ingest FAIL)
 testCommand fs2b_1 "fsub $file2" "^\#" n 2
 
+file2new=/tmp/changed.fits.fz
+change_fits $file2 $file2new $tdata/basic/change.yaml
+testCommand fs2c_1 "fsub $file2new" "^\#" n
+rm $fits2new
+
 ## bad format for DATE-OBS
 testCommand fs3_1 "fsub $tdata/basic/kp109391.fits.fz" "^\#"  n 1
 

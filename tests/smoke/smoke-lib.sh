@@ -22,6 +22,23 @@ x=${failcnt:=0}
 x=${totalcnt:=0}
 
 
+function testIrods () {
+  proc=testIrods
+  testName="$1" # No Spaces; e.g. CCUE
+  HDR="$2"
+  expectedStatus=${3:-0} # default, HDR not found in iRODS
+  ils $HDR
+  actualStatus=$?
+  if [ $actualStatus -ne $expectedStatus ]; then
+    echo "Failed command: ils ${HDR}"
+    echo "*** $proc FAILED [$testName] (Command returned unexpected status; got $actualStatus <> $expectedStatus) ***"
+    failcnt=$((failcnt + 1))
+    return_code=1
+  else
+    echo "*** $proc PASSED [$testName] (Command correctly returned status = $expectedStatus***"
+  fi
+}
+
 ##
 ## Run given CMD and compare its ACTUAL stdout to EXPECTED stdout.
 ## Ignore lines that start with COMMENT (defaults to ";")
@@ -63,7 +80,6 @@ function testCommand () {
   else
     echo "*** $proc PASSED [$testName] ($tn; Command correctly returned status = $expectedStatus***"
   fi
-
   ## Make sure we didn't get errors (output to stderr).
   tn="2/3"
   if [ -s $err ]; then
@@ -95,6 +111,7 @@ function testCommand () {
       #!rm $diff $GOLD.clean $sto/$actual.clean
   fi
 }  # END testCommand
+
 
 ##
 ## Make sure a generated output file matches expected.

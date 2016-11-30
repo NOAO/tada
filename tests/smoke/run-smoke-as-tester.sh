@@ -2,6 +2,11 @@
 # PURPOSE: Run TADA smoke test.
 #
 # EXAMPLE:
+#   # For Dev (vagrant) test
+#   ~/sandbox/tada/tests/smoke/run-smoke-as-tester.sh
+#
+#   # For PAT test
+#   run-smoke-as-tester.sh val.pat.sdm.noao.edu
 #
 # AUTHORS: S.Pothier
 

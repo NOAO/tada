@@ -64,13 +64,16 @@ mtn_wlog_start=`cat $mtn_wlog | wc -l`
 
 # fail-fail (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
 FITS="$tdata/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz"
+#!HDR="/noao-tuc-z1/mtn/20141223/wiyn/wiyn/kwb_141224_131723_cri_4638197325_TADASMOKE.hdr"
+#!testIrods db1_1a_irods 
 testCommand db1_1 "faildrop $FTO $FITS 20110101 wiyn-bench" "^\#" n 0
 testLog db1_1_log "pylogfilter $plog \"$MARKER\" $FITS"
+#!testIrods db1_1b_irods 
 
 # pass-pass fitsverify
 # uncompressed (compress on the fly); allow extra time for compression
 FITS=$tdata/short-drop/20110101/ct13m-andicam/ir141225.0179.fits
-testCommand db2_6 "passdrop 10 $FITS 20110101 ct13m-andicam" "^\#" y 0
+testCommand db2_6 "passdrop 10 $FITS 20110101 ct13m-andicam" "^\#" n 0
 testLog db2_6_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 
