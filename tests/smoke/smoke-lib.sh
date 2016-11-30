@@ -26,16 +26,16 @@ function testIrods () {
   proc=testIrods
   testName="$1" # No Spaces; e.g. CCUE
   HDR="$2"
-  expectedStatus=${3:-0} # default, HDR not found in iRODS
-  ils $HDR
+  expectedStatus=${3:-4} # default, HDR not found in iRODS
+  /usr/local/share/applications/irods3.3.1/iRODS/clients/icommands/bin/ils $HDR > /dev/null 2>&1
   actualStatus=$?
   if [ $actualStatus -ne $expectedStatus ]; then
-    echo "Failed command: ils ${HDR}"
+    echo "Failed command: ${HDR} found using ils"
     echo "*** $proc FAILED [$testName] (Command returned unexpected status; got $actualStatus <> $expectedStatus) ***"
     failcnt=$((failcnt + 1))
     return_code=1
   else
-    echo "*** $proc PASSED [$testName] (Command correctly returned status = $expectedStatus***"
+    echo "*** $proc PASSED [$testName] (Command correctly returned status = $expectedStatus)***"
   fi
 }
 

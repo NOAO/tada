@@ -98,6 +98,7 @@ stiLUT = {
     ('kp', 'kp09m', 'mosaic'):    'k09m',  
     ('kp', 'kp09m', 'ice'):       'k09i',
     ('kp', 'bok23m','90prime'):   'ksb',  # BOK
+    ('ct', 'bok23m','kosmos'):   'ksb',  # fake, for testing
     #'NOTA':      'uuuu',  
 }
 

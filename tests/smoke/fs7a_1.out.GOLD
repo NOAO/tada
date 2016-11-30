@@ -1,0 +1,2 @@
+EXECUTED: /opt/tada/venv/bin/direct_submit -p /var/tada/personalities/ops/smoke.yaml -p /tmp/changed.fits.fz.yaml -p /var/tada/personalities/ops-fakearcoiris/ops-fakearcoiris.yaml /tmp/changed.fits.fz
+FAILED: /tmp/changed.fits.fz not archived; Could not find the proposal:[1815A-0801] in the database.

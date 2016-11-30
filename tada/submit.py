@@ -31,8 +31,6 @@ from . import utils as tut
 from . import settings
 
 auditor = audit.Auditor()
-
-
 ARCHIVE_SERVICE_TIMEOUT = 10.0 # seconds to wait for an answer from Archive svc
 
 def md5(fname):
@@ -41,8 +39,6 @@ def md5(fname):
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
-
-
 
 def http_archive_ingest(hdr_ipath, origfname='NA', ipfx='irods://'):
     """Store ingestible FITS file and hdr in IRODS.  Pass location of hdr to
@@ -301,8 +297,6 @@ RETURN: irods location of hdr file.
     except Exception as err:
         raise tex.IngestRejection(md5sum, orig_fullname, err, newhdr)
 
-        
-    #! iu.irods_put331(mirror_fname, new_ifname) # iput renamed FITS
     #
     # At this point both FITS and HDR are in archive331
     #
@@ -442,6 +436,7 @@ checksum:: checksum of original file
 
     if not success:
         logging.debug(msg)
+        iu.irods_remove331(new_ihdr)
         raise tex.IngestRejection(md5sum, origfname, ops_msg, popts)
 
     iu.irods_put331(modfits, destfname) # iput renamed FITS
@@ -504,6 +499,7 @@ So, caller should not have to put this function in try/except."""
     auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
                       orighdr=popts, newhdr=changed)
     if not success:
+        iu.irods_remove331(new_ihdr)
         if moddir != None:
             os.remove(modfits)
             logging.debug('DBG: Removed modfits={}; moddir={}'
@@ -583,10 +579,10 @@ def direct_submit(fitsfile, moddir,
                       orighdr=popts, newhdr=changed)
     auditor.set_fstop(md5sum, 'valley:direct', host=socket.getfqdn())
     if not success:
+        iu.irods_remove331(new_ihdr)
         statusmsg = 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg)
         statuscode = 2
     else:
-        #!iu.irods_put331(newfile, destfname) # iput renamed FITS
         # iput renamed, modified FITS
         iu.irods_put331(modfits, destfname) # iput renamed FITS
 

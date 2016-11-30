@@ -34,6 +34,23 @@ source tada-smoke-setup.sh
 ##############################################################################
 
 
+################################
+## Insure irods (mass store) is clean up if call to Ingest returns success=false
+HDR="/noao-tuc-z1/mtn/20160322/bok23m/1815A-0801/ksb_160322_234217_gri_846000_TADASMOKE.hdr"
+testIrods fs7a_1a_irods $HDR
+fits="$tdata/scrape/20160315/ct4m-arcoiris/SV_f0064.fits"
+newfits=/tmp/changed.fits.fz
+change_fits $fits $newfits $tdata/basic/change.yaml
+testCommand fs7a_1 "fsub $newfits ops-fakearcoiris" "^\#" n 2
+rm $newfits
+testIrods fs7a_1b_irods $HDR
+
+###########################################
+#echo "WARNING: ignoring remainder of tests"
+#exit $return_code
+###########################################a
+
+
 ## bad DATE-OBS content
 testCommand fc1_1 "fcom $tdata/basic/kp109391.fits.fz" "^\#" n 0
 
@@ -47,6 +64,7 @@ testCommand fc2_1 "fcom $tdata/basic/kptest.fits" "^\#" n
 ## non-FITS; (reject, not try to ingest)
 testCommand fs1_1 "fsub $tdata/basic/uofa-mandle.jpg" "^\#" n 1
 
+
 ## compliant FITS with no options (no need for them, so ingest success)
 file2="$tdata/basic/cleaned-bok.fits.fz"
 testCommand fs2_1 "fsub $file2" "^\#" n
@@ -54,10 +72,11 @@ testCommand fs2_1 "fsub $file2" "^\#" n
 ## compliant FITS with no options (BUT, already inserted above so ingest FAIL)
 testCommand fs2b_1 "fsub $file2" "^\#" n 2
 
-file2new=/tmp/changed.fits.fz
-change_fits $file2 $file2new $tdata/basic/change.yaml
-testCommand fs2c_1 "fsub $file2new" "^\#" n
-rm $fits2new
+###########################################
+#echo "WARNING: ignoring remainder of tests"
+#exit $return_code
+###########################################a
+
 
 ## bad format for DATE-OBS
 testCommand fs3_1 "fsub $tdata/basic/kp109391.fits.fz" "^\#"  n 1
@@ -83,11 +102,6 @@ testCommand fs8_1 "fsub $tdata/broken/20160203/kp4m-newfirm/nhs_1.fits.fz" "^\#"
 # FITS header is missing required metadata fields (PROCTYPE, PRODTYPE)
 testCommand fs9_1 "fsub $tdata/broken/20160203/kp/kptest.fits.fz" "^\#" n 1
 
-
-###########################################
-#echo "WARNING: ignoring remainder of tests"
-#exit $return_code
-###########################################a
 
 
 

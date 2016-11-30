@@ -26,7 +26,6 @@ def apply_changes(fitsfile, updates_yaml):
     
     hdulist = pyfits.open(fitsfile, mode='update') # modify IN PLACE
     fitshdr = hdulist[0].header # use only first in list.
-    print('yd={}'.format(yd))
     fitshdr.update(yd)
     hdulist.close(output_verify='fix')         # now FITS header is MODIFIED
     return None
@@ -37,7 +36,7 @@ def apply_changes(fitsfile, updates_yaml):
 
 def main():
     "Parse command line arguments and do the work."
-    print('EXECUTING: %s\n\n' % (' '.join(sys.argv)))
+    #!print('EXECUTING: %s\n\n' % (' '.join(sys.argv)))
     parser = argparse.ArgumentParser(
         description='My shiny new python program',
         epilog='EXAMPLE: %(prog)s a b"'
