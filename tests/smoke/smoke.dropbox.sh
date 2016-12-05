@@ -85,13 +85,13 @@ testCommand db2_2 "dropfile $FTO $FITS 20160909 bad-instrum 1" "^\#" n 9
 testLog db2_2_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 FITS=$tdata/short-drop/20141220/wiyn-whirc/obj_355.fits.fz
-testCommand db2_3 "passdrop 10 $FITS 20141220 wiyn-whirc" "^\#" n 0
+testCommand db2_3 "passdrop 12 $FITS 20141220 wiyn-whirc" "^\#" n 0
 testLog db2_3_log "pylogfilter $plog \"$MARKER\" $FITS"
 ### 
 ############
 
 FITS=$tdata/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits
-testCommand db2_5 "faildrop 7 $FITS 20160610 kp4m-mosaic3" "^\#" n 0 
+testCommand db2_5 "faildrop 10 $FITS 20160610 kp4m-mosaic3" "^\#" n 0 
 testLog db2_5_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 # This one takes longish! Could not find smaller file that astropy fixes

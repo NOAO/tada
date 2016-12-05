@@ -42,7 +42,7 @@ echo "  MARSHOST=$MARSHOST"
 echo "  MTNHOST=$MTNHOST"
 echo "  VALHOST=$VALHOST"
 
-echo "tada version: " `fits_compliant --version`
+#echo "tada version: " `fits_compliant --version`
 
 echo "#"
 
