@@ -1,3 +1,11 @@
+* Release 2.7
+# - TADA-2: add TARGET param to direct_post (explicit relative
+#    directory for ingest file)
+
+* Release 2.6.1
+- fix TADA-21; Now removes HDR when ingest fails due to PROPID missing
+  from Archive DB
+
 * Release 2.5.16 
 - hotfix: On mtn fpack from dropbox rename X.fits to X.fits.fz
 - feature: use fitsverify (MAY CAUSE INGESTS THAT PREVIOUSLY WORKED TO FAIL)
