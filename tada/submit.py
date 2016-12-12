@@ -153,6 +153,7 @@ def gen_hdr_file(fitsfilepath, new_basename):
     
 def prep_for_ingest(mirror_fname,
                     md5sum,
+                    targetpath=None,
                     persona_options=None,  # e.g. (under "_DTSITE")
                     persona_params=None,   # e.g. (under,under) "__FOO"
                     moddir=None,
@@ -237,17 +238,20 @@ RETURN: irods location of hdr file.
         #ext = fn.fits_extension(orig_fullname)
         ext = fn.fits_extension(mirror_fname)
         if source == 'pipeline':
-            #new_basename = newhdr.get('PLDSID','no_PLDSID_given') + ".fits.fz"
             new_basename = os.path.basename(orig_fullname)
             logging.debug('Source=pipeline so using basename:{}'
                           .format(new_basename))
+        elif targetpath != None:
+            new_basename = os.path.basename(targetpath)
         else:
             new_basename = fn.generate_fname(newhdr, ext,
                                              tag=tag,
                                              orig=mirror_fname)
         newhdr['DTNSANAM'] = new_basename
-        new_ipath = fn.generate_archive_path(newhdr, source=source) / new_basename
-        #ext = fn.fits_extension(new_basename)
+        new_ipath = (fn.generate_archive_path(newhdr, source=source)/new_basename
+                     if targetpath == None
+                     else PurePath('/noao-tuc-z1/hlsp',
+                                   targetpath))
         logging.debug('orig_fullname={}, new_basename={}, ext={}'
                       .format(orig_fullname, new_basename, ext))
         new_ifname = str(new_ipath)
@@ -519,11 +523,14 @@ So, caller should not have to put this function in try/except."""
 ##############################################################################
 def direct_submit(fitsfile, moddir,
                   personality_files=[],
-                  personality=None, # dictionary from YAML 
+                  personality=None, # dictionary from YAML
+                  target=None,
                   trace=False):
-    logging.debug('EXECUTING: direct_submit({}, personality={}, personality_files={}, '
-                  'moddir={})'
-                  .format(fitsfile, personality, personality_files, moddir))
+    logging.debug('EXECUTING: direct_submit({}, '
+                  'personality={}, personality_files={}, '
+                  'moddir={}, target={})'
+                  .format(fitsfile, personality, personality_files,
+                          moddir, target))
     md5sum = md5(fitsfile)
 
     if 'FITS image data' not in str(magic.from_file(fitsfile)):
@@ -553,11 +560,13 @@ def direct_submit(fitsfile, moddir,
     origfname = fitsfile
     changed = dict()
     try:
-        new_ihdr,destfname,changed,modfits = prep_for_ingest(fitsfile,
-                                                             md5sum,
-                                                     persona_options=popts,
-                                                     persona_params=pprms,
-                                                     moddir=moddir)
+        new_ihdr,destfname,changed,modfits = prep_for_ingest(
+            fitsfile,
+            md5sum,
+            targetpath=target,
+            persona_options=popts,
+            persona_params=pprms,
+            moddir=moddir)
     except Exception as err:
         logging.debug('DBG-6')
         auditor.log_audit(md5sum, origfname, False, '', str(err),
@@ -630,6 +639,8 @@ def main():
                         default=dflt_config,
                         help='Config file. [default={}]'.format(dflt_config),
                         )
+    parser.add_argument('--target',
+                        help='Relative irods path to store FITS into')
     parser.add_argument('--trace',
                         action='store_true',
                         help='Produce stack trace on error')
@@ -667,8 +678,11 @@ def main():
     #!                               validate=False,
     #!                               yaml_filename=args.config)
 
+    if args.target and args.target[0] == '/':
+        args.target = args.target[1:] # insure it is relative
     direct_submit(args.fitsfile, args.moddir,
                   personality_files=pers_list,
+                  target=args.target,
                   trace=args.trace)
     
 if __name__ == '__main__':

@@ -45,6 +45,42 @@ function fsub () {
     return $status
 }
 
+#############################################
+### hlsp_submit (High Level Science Products)
+###
+function hsub () {
+    target=$1; shift
+    ffile=$1; shift
+    add_test_personality.sh $ffile $ffile
+    #!md5=`grep md5sum $ffile.yaml | cut -b 13-`
+    #!dome_audit $md5 $ffile "$DATE" "$TELE_INST" "$MARS_HOST"
+
+    #pers=""
+    pers="-p ${ffile}.yaml"
+    ppath="/var/tada/personalities"
+    for p; do
+	    pers="$pers -p $ppath/$p/$p.yaml"
+    done
+    cmd="/opt/tada/venv/bin/direct_submit --target ${target} --loglevel DEBUG -p $ppath/ops/smoke.yaml $pers $ffile 2>&1 "
+    echo "cmd=$cmd"
+    msg=`$cmd`
+    status=$?
+    msg=`echo $msg | perl -pe "s|$tdata||"`
+    #echo "msg=$msg"
+    if [ $status -eq 0 ]; then
+        irodsfile=`echo $msg | cut -s --delimiter=' ' --fields=5`
+        archfile=`basename $irodsfile`
+        echo $msg 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
+        mars_add "$archfile" "$ffile"
+        echo ""
+    else
+	tailffile=`echo $ffile | perl -pe "s|$tdata|/DATA|"`
+        echo "EXECUTED: /opt/tada/venv/bin/direct_submit --target ${target} -p $ppath/ops/smoke.yaml $pers $tailffile"  
+        echo $msg
+    fi
+    return $status
+}
+
 
 ###########################################
 ### pipeline_submit

@@ -1,0 +1,2 @@
+EXECUTED: /opt/tada/venv/bin/direct_submit --target smoketest/jira/tada-2 -p /var/tada/personalities/ops/smoke.yaml -p /data/tada-test-data/basic/cleaned-bok.fits.fz.yaml /DATA/basic/cleaned-bok.fits.fz
+

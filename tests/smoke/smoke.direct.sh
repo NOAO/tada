@@ -33,6 +33,19 @@ source tada-smoke-setup.sh
 
 ##############################################################################
 
+#############################################
+### High Level Science Products (HLSP) submit
+###
+fits="$tdata/basic/cleaned-bok.fits.fz"
+#testCommand hs2_1 "hsub smoketest/jira/tada-2 $fits" "^\#" y
+testCommand hs2_1 "hsub smoketest/jira/tada-2/clean-bok-TADASMOKE.fits.fz $fits" "^\#" y
+
+
+###########################################
+echo "WARNING: ignoring remainder of tests"
+exit $return_code
+###########################################a
+
 
 ################################
 ## Insure irods (mass store) is clean up if call to Ingest returns success=false
@@ -44,11 +57,6 @@ change_fits $fits $newfits $tdata/basic/change.yaml
 testCommand fs7a_1 "fsub $newfits ops-fakearcoiris" "^\#" n 2
 rm $newfits
 testIrods fs7a_1b_irods $HDR
-
-###########################################
-#echo "WARNING: ignoring remainder of tests"
-#exit $return_code
-###########################################a
 
 
 ## bad DATE-OBS content

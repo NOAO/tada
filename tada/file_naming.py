@@ -298,10 +298,6 @@ this function.'''
                         hdr['DTTELESC'],
                         hdr['DTPROPID'])
     elif source == 'pipeline':
-        #!return PurePath('/noao-tuc-z1/pipeline',
-        #!                hdr['DTSUBMIT'],
-        #!                hdr['PLQUEUE'],
-        #!                hdr['PLQNAME'])
         return PurePath('/noao-tuc-z1/pipe',
                         hdr['DTCALDAT'].replace('-',''),
                         hdr['DTTELESC'],
