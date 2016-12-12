@@ -61,12 +61,14 @@ function hsub () {
     for p; do
 	    pers="$pers -p $ppath/$p/$p.yaml"
     done
-    cmd="/opt/tada/venv/bin/direct_submit --target ${target} --loglevel DEBUG -p $ppath/ops/smoke.yaml $pers $ffile 2>&1 "
-    echo "cmd=$cmd"
-    msg=`$cmd`
+    cmd="/opt/tada/venv/bin/direct_submit --target ${target} --loglevel DEBUG -p $ppath/ops/smoke.yaml $pers $ffile "
+    #echo "cmd=$cmd"
+    msg=`$cmd  2>&1`
     status=$?
-    msg=`echo $msg | perl -pe "s|$tdata||"`
     #echo "msg=$msg"
+    #echo "status=$status"
+
+    msg=`echo $msg | perl -pe "s|$tdata||"`
     if [ $status -eq 0 ]; then
         irodsfile=`echo $msg | cut -s --delimiter=' ' --fields=5`
         archfile=`basename $irodsfile`

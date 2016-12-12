@@ -38,25 +38,24 @@ source tada-smoke-setup.sh
 ###
 fits="$tdata/basic/cleaned-bok.fits.fz"
 #testCommand hs2_1 "hsub smoketest/jira/tada-2 $fits" "^\#" y
-testCommand hs2_1 "hsub smoketest/jira/tada-2/clean-bok-TADASMOKE.fits.fz $fits" "^\#" y
-
-
-###########################################
-echo "WARNING: ignoring remainder of tests"
-exit $return_code
-###########################################a
-
+testCommand hs2_1 "hsub smoketest/jira/tada-2/clean-bok-TADASMOKE.fits.fz $fits" "^\#" n
 
 ################################
-## Insure irods (mass store) is clean up if call to Ingest returns success=false
+## Insure irods (massstore) is cleaned up if call to Ingest returns success=false
 HDR="/noao-tuc-z1/mtn/20160322/bok23m/1815A-0801/ksb_160322_234217_gri_846000_TADASMOKE.hdr"
 testIrods fs7a_1a_irods $HDR
 fits="$tdata/scrape/20160315/ct4m-arcoiris/SV_f0064.fits"
 newfits=/tmp/changed.fits.fz
-change_fits $fits $newfits $tdata/basic/change.yaml
+# expect failure because 1815A-0801 not in DB
+change_fits $fits $newfits $tdata/basic/change.yaml 
 testCommand fs7a_1 "fsub $newfits ops-fakearcoiris" "^\#" n 2
 rm $newfits
 testIrods fs7a_1b_irods $HDR
+
+###########################################
+#echo "WARNING: ignoring remainder of tests"
+#exit $return_code
+###########################################a
 
 
 ## bad DATE-OBS content

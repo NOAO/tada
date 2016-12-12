@@ -73,6 +73,8 @@ def irods_put331(local_fname, irods_fname):
                 '/icommands/bin')
     logging.debug('{}({}, {})'.format(tag, local_fname, irods_fname))
     tut.tic()
+    (fd, temp_fname) = tempfile.mkstemp()
+    os.close(fd)
     try:
         #!out = subprocess.check_output(os.path.join(icmdpath, 'ienv'))
         #!logging.debug('DBG-irods: ienv={}'.format(out))
@@ -82,8 +84,6 @@ def irods_put331(local_fname, irods_fname):
         #!subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
         subprocess.check_output(cmd, stderr=subprocess.STDOUT)
         #! start_new_session=True)
-        (fd, temp_fname) = tempfile.mkstemp()
-        os.close(fd)
         cmd = [os.path.join(icmdpath, 'iput'),
                '-f', '-K',
                '--retries', '4', '-X', temp_fname,
