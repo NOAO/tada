@@ -35,6 +35,7 @@ source tada-smoke-setup.sh
 
 #############################################
 ### High Level Science Products (HLSP) submit
+### /noao-tuc-z1/hlsp/smoketest/jira/tada-2/clean-bok-TADASMOKE.fits.fz
 ###
 fits="$tdata/basic/cleaned-bok.fits.fz"
 #testCommand hs2_1 "hsub smoketest/jira/tada-2 $fits" "^\#" y
