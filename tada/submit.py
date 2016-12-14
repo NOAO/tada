@@ -31,7 +31,6 @@ from . import utils as tut
 from . import settings
 
 auditor = audit.Auditor()
-ARCHIVE_SERVICE_TIMEOUT = 10.0 # seconds to wait for an answer from Archive svc
 
 def md5(fname):
     hash_md5 = hashlib.md5()
@@ -46,12 +45,14 @@ Archive Ingest via REST-like interface.
 RETURN: (statusBool, message, operatorMessage)"""
     logging.debug('EXECUTING: http_archive_ingest({})'
                   .format(hdr_ipath))
+    timeout = settings.arch_timeout
+
 
     archserver_url = ('http://{}:{}/'.format(settings.arch_host,
                                              settings.arch_port))
     payload = dict(hdrUri=ipfx+hdr_ipath)
     logging.debug('archserver_url={}, prms={}, timeout={}'
-                  .format(archserver_url, payload, ARCHIVE_SERVICE_TIMEOUT))
+                  .format(archserver_url, payload, timeout))
 
     response = ''
     try:
@@ -59,9 +60,7 @@ RETURN: (statusBool, message, operatorMessage)"""
         #!    response = f.read().decode('utf-8')
         #!logging.debug('ARCH server response: {}'.format(response))
         tut.tic()
-        r = requests.get(archserver_url,
-                         params=payload,
-                         timeout=ARCHIVE_SERVICE_TIMEOUT)
+        r = requests.get(archserver_url, params=payload, timeout=timeout)
         response = r.text
         logging.debug('archserver full url = {}'.format(r.url))
         elapsed = tut.toc()
