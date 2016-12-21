@@ -68,36 +68,8 @@ def network_move(rec, qname):
     # ifname = os.path.join(sync_root, os.path.relpath(fname, source_root))
     # optfname = ifname + ".options"
     newfname = fname # temp dir, not rsync
-    #!logging.debug('pre_action={}'.format(settings.pre_action))
-    #!if settings.pre_action:
-    #!    # pre_action is full path to shell script to run.
-    #!    # WARNING: a bad script could do bad things to the
-    #!    #    mountain_cache files!!!
-    #!    # Script must accept three params:
-    #!    #   1. absolute path of file from queue
-    #!    #   2. absolute path mountain_cache
-    #!    #   3. absolute path of file containing options
-    #!    # Stdout and stderr from pre_action will be logged to INFO.
-    #!    # Error (non-zero return code) will be logged to ERROR but normal
-    #!    # TADA processing will continue.
-    #!    try:
-    #!        cmdline = [settings.pre_action, fname, source_root,
-    #!                   fname+'.options']
-    #!        diag.dbgcmd(cmdline)
-    #!        bout = subprocess.check_output(cmdline, stderr=subprocess.STDOUT)
-    #!        if len(bout) > 0:
-    #!            out = bout.decode('utf-8')
-    #!            newfname = out.split()[0]
-    #!            logging.info('pre_action "{}", newfname={}, output: {}'
-    #!                         .format(settings.pre_action, newfname, out))
-    #!    except subprocess.CalledProcessError as cpe:
-    #!        logging.warning('Failed Transfer pre_action ({} {} {}) {}; {}'
-    #!                        .format(settings.pre_action, fname, source_root,
-    #!                                cpe, cpe.output ))
-        
     out = None
     try:
-
         # Use feature of rsync 2.6.7 and later that limits path info
         # sent as implied directories.  The "./" marker in the path
         # means "append path after this to destination prefix to get
