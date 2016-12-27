@@ -19,7 +19,6 @@ import yaml
 import hashlib
 import socket
 
-
 from . import fits_utils as fu
 from . import file_naming as fn
 from . import exceptions as tex
@@ -46,8 +45,6 @@ RETURN: (statusBool, message, operatorMessage)"""
     logging.debug('EXECUTING: http_archive_ingest({})'
                   .format(hdr_ipath))
     timeout = settings.arch_timeout
-
-
     archserver_url = ('http://{}:{}/'.format(settings.arch_host,
                                              settings.arch_port))
     payload = dict(hdrUri=ipfx+hdr_ipath)
@@ -56,9 +53,6 @@ RETURN: (statusBool, message, operatorMessage)"""
 
     response = ''
     try:
-        #!with urllib.request.urlopen(archserver_url) as f:
-        #!    response = f.read().decode('utf-8')
-        #!logging.debug('ARCH server response: {}'.format(response))
         tut.tic()
         r = requests.get(archserver_url, params=payload, timeout=timeout)
         response = r.text
@@ -67,23 +61,21 @@ RETURN: (statusBool, message, operatorMessage)"""
         logging.debug('archserver response({:.2f}): {}'
                       .format(elapsed, response))
     except Exception as err:
-        raise tex.ArchiveWebserviceProblem(
-            'Problem in opening or reading connection to: {}{}; {}'
-            .format(archserver_url, payload, err))
-
-    success, operator_msg, mtype, itype = idec.decodeIngestResponse(response)
-    logging.debug('ARCH server: success={}, msg={}, errcode={}'
-                  .format(success, operator_msg, mtype))
-    if itype == 'SUCCESS_WITH_WARNING':
-        logging.warning('ARCH server: {}'.format(operator_msg))
-    message = operator_msg
+        success = False
+        ops_msg= ('Problem in opening or reading connection to: {}{}; {}'
+                  .format(archserver_url, payload, err))
+    else:
+        success, ops_msg, mtype, itype = idec.decodeIngestResponse(response)
+        logging.debug('ARCH server: success={}, msg={}, errcode={}'
+                      .format(success, ops_msg, mtype))
+        if itype == 'SUCCESS_WITH_WARNING':
+            logging.warning('ARCH server: {}'.format(ops_msg))
     if not success:
-        message = ('HTTP response from ARCH server for file {}: "{}"; {}'
-                   .format(origfname, response, operator_msg))
-        #raise tex.SubmitException(message)
+        iu.irods_remove331(hdr_ipath)
+        
+    return (success, ops_msg)
 
-    return (success, message, operator_msg, mtype)
-
+    
 
 def new_fits(orig_fitspath, changes, moddir=None):
     if moddir == None:
@@ -162,9 +154,9 @@ DO:
   validate RAW fields
   Augment hdr. 
   validate AUGMENTED fields
-  Add hdr as text file to irods331.
+  Add hdr as text file to irods.
   Rename FITS to satisfy standards. 
-  Add fits to irods331
+  Add fits to irods
   remove from mirror
 
 mirror_fname :: Mountain mirror on valley
@@ -432,14 +424,12 @@ checksum:: checksum of original file
 
     except: # Exception as err:
         raise
-    (success, msg, ops_msg, mtype) = http_archive_ingest(new_ihdr,
-                                                         origfname=origfname)
+    (success, ops_msg) = http_archive_ingest(new_ihdr, origfname=origfname)
+        
     if moddir != None:
         os.remove(modfits)
 
     if not success:
-        logging.debug(msg)
-        iu.irods_remove331(new_ihdr)
         raise tex.IngestRejection(md5sum, origfname, ops_msg, popts)
 
     iu.irods_put331(modfits, destfname) # iput renamed FITS
@@ -466,7 +456,6 @@ So, caller should not have to put this function in try/except."""
     if 'FITS image data' not in str(magic.from_file(fitsfile)):
         errmsg = 'Cannot ingest non-FITS file: {}'.format(fitsfile)
         logging.error(errmsg)
-        logging.debug('DBG-2')
         auditor.log_audit(md5sum, fitsfile, False, '', errmsg)
         return (False, errmsg)
 
@@ -492,17 +481,13 @@ So, caller should not have to put this function in try/except."""
         tut.trace_if(trace)
         msg = str(err)
         logging.error(msg)
-        logging.debug('DBG-3')
         auditor.log_audit(md5sum, origfname, False, '', str(err), newhdr=popts)
         return (False, msg)
 
-    success, m1, ops_msg, mtype = http_archive_ingest(new_ihdr, 
-                                                      origfname=origfname)
-    logging.debug('DBG-4')
+    success, ops_msg = http_archive_ingest(new_ihdr, origfname=origfname)
     auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
                       orighdr=popts, newhdr=changed)
     if not success:
-        iu.irods_remove331(new_ihdr)
         if moddir != None:
             os.remove(modfits)
             logging.debug('DBG: Removed modfits={}; moddir={}'
@@ -567,7 +552,6 @@ def direct_submit(fitsfile, moddir,
             persona_params=pprms,
             moddir=moddir)
     except Exception as err:
-        logging.debug('DBG-6')
         auditor.log_audit(md5sum, origfname, False, '', str(err),
                           orighdr=popts, newhdr=changed)
         auditor.set_fstop(md5sum, 'valley:direct', host=socket.getfqdn())
@@ -580,14 +564,11 @@ def direct_submit(fitsfile, moddir,
         sys.exit(statusmsg)
 
         
-    success,m1,ops_msg,mtype = http_archive_ingest(new_ihdr, 
-                                                   origfname=origfname)
-    logging.debug('DBG-7')
+    success, ops_msg = http_archive_ingest(new_ihdr, origfname=origfname)
     auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
                       orighdr=popts, newhdr=changed)
     auditor.set_fstop(md5sum, 'valley:direct', host=socket.getfqdn())
     if not success:
-        iu.irods_remove331(new_ihdr)
         statusmsg = 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg)
         statuscode = 2
     else:

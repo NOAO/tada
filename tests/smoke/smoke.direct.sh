@@ -50,8 +50,13 @@ newfits=/tmp/changed.fits.fz
 # expect failure because 1815A-0801 not in DB
 change_fits $fits $newfits $tdata/basic/change.yaml 
 testCommand fs7a_1 "fsub $newfits ops-fakearcoiris" "^\#" n 2
-rm $newfits
 testIrods fs7a_1b_irods $HDR
+# invoke TIMEOUT on connection to Ingest Service
+zero_archive_timeout
+testCommand fs7a_2 "fsub $newfits ops-fakearcoiris" "^\#" n 2
+restore_archive_timeout
+testIrods fs7a_1b_irods $HDR
+rm $newfits
 
 ###########################################
 #echo "WARNING: ignoring remainder of tests"
