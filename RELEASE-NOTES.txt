@@ -1,7 +1,8 @@
-* Release 2.7
-# - TADA-2: add TARGET param to direct_post (explicit relative
-#    directory for ingest file)
-
+* Release 2.7.1
+- TADA-2: add TARGET param to direct_post (explicit relative
+    directory for ingest file)
+- Ingest svc timeout can be set from hiera
+  + e.g. "arch_timeout: 9" (defaults to 10 seconds)
 * Release 2.6.1
 - fix TADA-21; Now removes HDR when ingest fails due to PROPID missing
   from Archive DB
