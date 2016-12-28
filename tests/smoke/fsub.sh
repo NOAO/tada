@@ -8,7 +8,7 @@ function zero_archive_timeout () {
 }
 
 function restore_archive_timeout () {
-    mv /etc/tada/hiera.yaml.bak /etc/tada/hiera.yaml
+    cp /etc/tada/hiera.yaml.bak /etc/tada/hiera.yaml
     echo "Restored Ingest Service timeout to previous value"
     }
 
