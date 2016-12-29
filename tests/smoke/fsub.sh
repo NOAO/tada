@@ -4,6 +4,7 @@ export PATH=/sandbox/tada-cli/scripts:$PATH
 
 function zero_archive_timeout () {
     sed -i.bak 's/arch_timeout:.*/arch_timeout: 0/' /etc/tada/hiera.yaml
+    chmod a+r /etc/tada/hiera.yaml
     echo "Changed Ingest Service timeout to ZERO"
 }
 
