@@ -32,6 +32,7 @@ source tada-smoke-setup.sh
 
 echo "Doing 15 tests (using scraped files)"    
 
+
 testCommand sc1_1  "fsub $tdata/20150709/bok23m-90prime/d7212.0062.fits.fz bok23m-90prime" "^\#" n
 testCommand sc2_1  "fsub $tdata/20110101/ct13m-andicam/ir141225.0179.fits.fz ct13m-andicam" "^\#" n
 testCommand sc3_1  "fsub $tdata/20110101/ct15m-echelle/chi150724.1000.fits.fz ct15m-echelle" "^\#" n
@@ -44,6 +45,7 @@ testCommand sc8_1  "fsub $tdata/20141215/kp4m-newfirm/nhs_2015_n04_319685.fits.f
 testCommand sc9_1  "fsub $tdata/20110101/soar-goodman/0079.spec_flat.fits.fz soar-goodman" "^\#" n
 #soar-osiris  # scrape has no "passable" files for this instrument
 #soar-sami    # scrape has no "passable" files for this instrument
+#testCommand sc16_1 "fsub $tdata/20110101/soar-sami/SO2016B-015.013.fits.fz soar-sami" "^\#" n
 testCommand sc10_1 "fsub $tdata/20110101/soar-spartan/011-6365d0.fits.fz soar-spartan" "^\#" n
 testCommand sc11_1 "fsub $tdata/20110101/wiyn-bench/24dec_2014.061.fits.fz wiyn-bench" "^\#" n 1
 testCommand sc12_1 "fsub $tdata/20110101/wiyn-whirc/obj_355.fits.fz wiyn-whirc" "^\#" n

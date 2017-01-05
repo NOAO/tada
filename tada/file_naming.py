@@ -59,7 +59,7 @@ stiLUT = {
     ('cp', 'soar', 'soi'):       'psi',  
     ('cp', 'soar', 'spartan'):   'pss',  
     ('cp', 'soar', 'spartan ir camera'):   'pss',   # added
-    ('cp', 'soar', 'sam'):       'psa',  
+    ('cp', 'soar', 'sami'):      'psa',  
     ('ct', 'ct4m', 'decam'):     'c4d',  
     ('ct', 'ct4m', 'cosmos'):    'c4c', 
     ('ct', 'ct4m', 'ispi'):      'c4i',  
