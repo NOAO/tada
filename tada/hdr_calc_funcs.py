@@ -1,4 +1,4 @@
-'''Functions intended to be referenced in Personality files. 
+>'''Functions intended to be referenced in Personality files. 
 
 Each function accepts a dictionary of name/values (intended to be from
 a FITS header) and returns a dictionary of new name/values.  Fields
@@ -8,7 +8,9 @@ respect to the original. To update the original dict, use python dict update:
 
 In each function of this file:
   orig::    orginal header as a dictionary
-  RETURNS:: dictionary that should be used to update the header
+  RETURNS:: 
+    updict:: dictionary that should be used to update the header
+    delfields:: fields that should be deleted from header
 
 These function names MUST NOT CONTAIN UNDERSCORE ("_").  They are
 listed by name in option values passed to "lp". Then underscores are
@@ -17,11 +19,9 @@ expanded to spaces to handle the command line argument limitation.
 '''
 
 import logging
-#!import urllib.request
 import requests
-from dateutil import tz
 import datetime as dt
-#from . import hdr_calc_utils as ut
+from dateutil import tz
 from . import exceptions as tex
 from . import settings
 
@@ -81,8 +81,14 @@ def ws_lookup_propids(date, telescope, instrument, **kwargs):
 def deprecate(funcname, *msg):
     logging.warning('Using deprecated hdr_calc_func: {}'
                     .format(funcname, msg))
-    
+
+def hist_change(field, old, new):
+    msg = 'Changed field "{}" from "{}" to "{}"'.format(field, old, new)
+    return msg
+
 ##############################################################################
+### MAPPING FUNCTIONS
+###
 
 def fixTriplespec(orig, **kwargs):
     new = {'DATE-OBS': orig['UTSHUT'],
@@ -92,89 +98,51 @@ def fixTriplespec(orig, **kwargs):
                   #', INSTRUME ({})'
                   #.format(new['DATE-OBS'], new['INSTRUME']))
                   .format(new['DATE-OBS']))
-    return  new
+    return  new, dict()
 
     
-#!def trustHdrPropid(orig, **kwargs):
-#!    deprecate('trustHdrPropid', 'Now we ALWAYS trust schedule.')
-#!    return {}
-
-#!    propid = orig.get('DTPROPID')
-#!    if propid == 'BADSCRUB':
-#!        # fallback
-#!        propids = ws_lookup_propids(orig.get('DTCALDAT'),
-#!                                    orig.get('DTTELESC'),
-#!                                    orig.get('DTINSTRU'),
-#!                                    **kwargs)
-#!        if propids == None:
-#!            return {}
-#!        elif len(propids) > 1:
-#!            return {'DTPROPID': 'SPLIT'}
-#!        else:
-#!            return {'DTPROPID': propids[0]}
-#!    else:
-#!        return {'DTPROPID': propid}
-
-# MOVED TO FITS_UTILS: def set_dtpropid(orig, **kwargs):
-
-
-#!def trustSchedPropid(orig, **kwargs):
-#!    '''Propid from schedule trumps header.  
-#!But if not found in schedule, use header'''
-#!    deprecate('trustSchedPropid')
-#!    return {}
-#!
-#!    pids = ws_lookup_propids(orig.get('DTCALDAT'),
-#!                             orig.get('DTTELESC'),
-#!                             orig.get('DTINSTRU'),
-#!                             **kwargs)
-#!    if pids == None:
-#!        return {'DTPROPID': 'NOSCHED'}
-#!    elif pids == 'NA':
-#!        return {'DTPROPID': orig.get('DTPROPID',
-#!                                     orig.get('PROPID', 'MISSCHED'))}
-#!    elif len(pids) > 1:
-#!        return {'DTPROPID': 'SPLIT'}
-#!    else:
-#!        return {'DTPROPID': pids[0]}
-
 def trustSchedOrAAPropid(orig, **kwargs):
     '''Propid from schedule trumps header.  
 But if not found in schedule, use field AAPROPID from header'''
     deprecate('trustSchedorAAPPropid')
-    return {}
-    #!pids = ws_lookup_propids(orig.get('DTCALDAT'),
-    #!                         orig.get('DTTELESC'),
-    #!                         orig.get('DTINSTRU'),
-    #!                         **kwargs)
-    #!if pids == None:
-    #!    return {'DTPROPID': 'NOSCHED'}
-    #!elif pids == 'NA':
-    #!    return {'DTPROPID': orig.get('AAPROPID', 'na')}
-    #!elif len(pids) > 1:
-    #!    return {'DTPROPID': 'SPLIT'}
-    #!else:
-    #!    return {'DTPROPID': pids[0]}
-
-
+    return {}, dict()
     
 def addTimeToDATEOBS(orig, **kwargs):
     'Use TIME-OBS for time portion of DATEOBS. Depends on: DATE-OBS, TIME-OBS'
     if ('T' in orig['DATE-OBS']):
         new = dict()
     else:
-        if 'ODATEOBS' in orig:
-            logging.warning('Overwriting existing ODATEOBS!')
-        new = {'ODATEOBS': orig['DATE-OBS'],            # save original
-               'DATE-OBS': orig['DATE-OBS'] + 'T' + orig['TIME-OBS']
-           }
-    return new
+        oldval = orig.get('DATE-OBS','<NONE>')
+        newval = orig['DATE-OBS'] + 'T' + orig['TIME-OBS']
+        new = {'DATE-OBS': newval }
+    change = dict(history = [hist_change('DATE-OBS', oldval, newval)])
+    return new, change
 
+def DATEOBSmicrosFromDETSERNO(orig, **kwargs):
+    """Intended for soar-spartan FITS files."""
+    history=dict()
+    serno = orig.get('DETSERNO',None)
+    if not serno:
+        return dict(), dict()
+
+    sn = serno.strip()
+    oldval = orig['DATE-OBS']
+    newval = orig['DATE-OBS'].split('.')[0] + '.' + sn
+    change = dict(history = [hist_change('DATE-OBS', oldval, newval)])
+    return {'DATE-OBS': newval}, change
+    
 def DATEOBSfromDATE(orig, **kwargs):
-    if 'ODATEOBS' in orig:
-        logging.warning('Overwriting existing ODATEOBS!')
-    return {'ODATEOBS': orig['DATE-OBS'],            # save original
-            'DATE-OBS': orig['DATE']+'.0' }
+    oldval = orig.get('DATE-OBS','<NONE>')
+    newval = orig['DATE']+'.0'
+    change = dict(history = [hist_change('DATE-OBS', oldval, newval)])
+    return {'DATE-OBS': newval }, change
+
+
+def DATEOBStoISO(orig, **kwargs):
+    oldval = orig.get('DATE-OBS','<NONE>')
+    newval = orig['DATE-OBS'].replace(' ','T')
+    change = dict(history = [hist_change('DATE-OBS', oldval, newval)])
+    return {'DATE-OBS': newval}, change
 
 #DATEOBS is UTC, so convert DATEOBS to localdate and localtime, then:
 #if [ $localtime > 9:00]; then DTCALDAT=localdate; else DTCALDAT=localdate-1
@@ -188,10 +156,8 @@ def DTCALDATfromDATEOBStus(orig, **kwargs):
         caldate = localdt.date()
     else:
         caldate = localdt.date() - dt.timedelta(days=1)
-    #!logging.debug('localdt={}, DATE-OBS={}, caldate={}'
-    #!              .format(localdt, orig['DATE-OBS'], caldate))
     new = {'DTCALDAT': caldate.isoformat()}
-    return new
+    return new, dict()
 
 
 def DTCALDATfromDATEOBSchile(orig, **kwargs):
@@ -204,62 +170,29 @@ def DTCALDATfromDATEOBSchile(orig, **kwargs):
         caldate = localdt.date()
     else:
         caldate = localdt.date() - dt.timedelta(days=1)
-    logging.debug('localdt={}, DATE-OBS={}, caldate={}'
-                  .format(localdt, orig['DATE-OBS'], caldate))
     new = {'DTCALDAT': caldate.isoformat()}
-    return new
+    return new, dict()
 
 def PROPIDplusCentury(orig, **kwargs):
     'Depends on: PROPID. Add missing century'
-    return {'DTPROPID': '20' + orig.get('PROPID','NA').strip('"') }
+    return {'DTPROPID': '20' + orig.get('PROPID','NA').strip('"') }, dict()
 
 def INSTRUMEtoDT(orig, **kwargs):
     'Depends on: INSTRUME'
     if 'DTINSTRU' in orig:
-        return {'DTINSTRU': orig['DTINSTRU'] }
+        return {'DTINSTRU': orig['DTINSTRU'] }, dict()
     else:
-        return {'DTINSTRU': orig['INSTRUME'] }
+        return {'DTINSTRU': orig['INSTRUME'] }, dict()
 
 
 def IMAGTYPEtoOBSTYPE(orig, **kwargs):
     'Depends on: IMAGETYP'
-    return {'OBSTYPE': orig['IMAGETYP']  }
+    return {'OBSTYPE': orig['IMAGETYP']  }, dict()
 
 
 def bokOBSID(orig, **kwargs):
     "Depends on DATE-OBS"
-    return {'OBSID': 'bok23m.'+orig['DATE-OBS'] }
-
-#! def DTTELESCfromINSTRUME(orig, **kwargs):
-#!     "Instrument specific calculations. Depends on: INSTRUME, OBSID"
-#!     new = dict() # Fields to calculate
-#!     instrument = orig['INSTRUME'].lower()
-#! 
-#!     # e.g. OBSID = 'kp4m.20141114T122626'
-#!     # e.g. OBSID = 'soar.sam.20141220T015929.7Z'
-#!     #!tele, dt_str = orighdr['OBSID'].split('.')
-#!     if 'cosmos' == instrument:
-#!         tele, dt_str = orig['OBSID'].split('.')
-#!         new['DTTELESC'] = tele
-#!     elif 'mosaic1.1' == instrument:
-#!         tele, dt_str = orig['OBSID'].split('.')
-#!         new['DTTELESC'] = tele
-#!     elif 'soi' == instrument:
-#!         tele, inst, dt_str1, dt_str2 = orig['OBSID'].split('.')
-#!         new['DTTELESC'] = tele
-#! #!    elif '90prime' == instrument: # BOK
-#! #!        # FILENAME='bokrm.20140425.0119.fits' / base filename at acquisition
-#! #!        tele = orig.get('TELESCOP', None)
-#! #!        if tele == None:
-#! #!            tele, datestr, *rest = orig['FILENAME'].split('.')
-#! #!        new['DTTELESC'] = tele
-#! #!        new['OBSTYPE'] = orig.get('IMAGETYP','object')
-#! #!    else:
-#! #!        tele, dt_str = orig['OBSID'].split('.')
-#! #!        new['DTTELESC'] = tele
-#! 
-#!     #! new['DTINSTRU'] = instrument # eg. 'NEWFIRM'
-#!     return new
+    return {'OBSID': 'bok23m.'+orig['DATE-OBS'] }, dict()
 
 
     

@@ -391,77 +391,6 @@ def validate_recommended_hdr(hdr, orig_fullname):
             .format(', '.join(sorted(missing)), orig_fullname))
     return True
 
-
-
-
-# SIDE-EFFECTS: fields added to FITS header
-# Used istb/src/header.{h,c} for hints.
-# raw: nhs_2014_n14_299403.fits
-#! def modify_hdr(hdr, fname, options, opt_params, forceRecalc=True, **kwargs):
-#!     '''Modify header to suit Archive Ingest. Return fields needed to construct
-#!  new filename that fullfills standards
-#!     options :: e.g. {'INSTRUME': 'KOSMOS', 'OBSERVAT': 'KPNO'}
-#! '''
-#!     orig_fullname = opt_params.get('filename','<no filename option provided>')
-#!     for k,v in options.items():
-#!         if forceRecalc or (k not in hdr):
-#!             hdr[k] = v
-#!     
-#!     # Validate after explicit overrides, before calculated fields.
-#!     # This is because calc-funcs may depend on required fields.
-#!     #!validate_raw_hdr(hdr)
-#! 
-#!     calc_param = opt_params.get('calchdr',None)
-#!     calc_funcs = []
-#!     if calc_param != None:
-#!         for funcname in calc_param.split(','):
-#!             try:
-#!                 func = eval('hf.'+funcname)
-#!                 calc_funcs.append(func)
-#!             except:
-#!                 raise Exception('Function name "{}" given in option "calchdr"'
-#!                                 ' does not exist in tada/hdr_calc_funcs.py'
-#!                                 .format(funcname))
-#!     logging.debug('calc_funcs={}'.format(calc_funcs))
-#!     chg = dict(hdr.items()) # plain dictionary of hdr; no FITS specific access
-#!     for calcfunc in calc_funcs:
-#!         new = calcfunc(chg, **kwargs)
-#!         chg.update(new)
-#!         logging.debug('MOD:new field values={}'.format(new))    
-#!     #! logging.debug('updated field values={}'.format(chg))    
-#!     #! chg, dateobs = fc.calc_hdr(hdr, fname, **options)
-#!     #!try:
-#!     #!    dateobs = dt.datetime.strptime(chg['DATE-OBS'],'%Y-%m-%dT%H:%M:%S.%f')
-#!     #!except:
-#!     #!    raise tex.SubmitException(
-#!     #!        'Could not parse DATE-OBS field ({}) in header of: {}'
-#!     #!        .format(chg['DATE-OBS'], orig_fullname))
-#!     #!validate_dateobs_content(dateobs, chg['DATE-OBS'])
-#!     
-#!     if forceRecalc:
-#!         for k,v in chg.items():
-#!             hdr[k] = v
-#!     else: # Use existing field if it is present, else use new one
-#!         for k,v in chg.items():
-#!             hdr[k] = hdr.get(k,v)
-#! 
-#!     # If we have what we need in RAW and doing everything we should in
-#!     # this function, then we should never be missing anything in archive_hdr.
-#!     # This check is therefore here only to catch programming errors.
-#!     #!validate_cooked_hdr(hdr)
-#!     #!validate_recommended_hdr(hdr)
-#!     
-#!     ext = fits_extension(fname)
-#!     return (hdr.get('DTSITE', 'na'),
-#!             hdr.get('DTTELESC', 'na'),
-#!             hdr.get('DTINSTRU', 'na'),
-#!             dateobs, 
-#!             hdr.get('OBSTYPE', 'nota').lower(),
-#!             hdr.get('PROCTYPE', 'nota').lower(),
-#!             hdr.get('PRODTYPE', 'nota').lower(),
-#!             ext[1:])
-
-
 def fitsverify(fname):
     '''Verify FITS file. Throw exception on invalid.'''
     logging.debug('fitsverify({})'.format(fname))
@@ -531,7 +460,6 @@ Include fields in hdr needed to construct new filename that fullfills standards.
     calc_param = opt_params.get('calchdr',None)
     calc_funcs = []
     if calc_param != None:
-        #!for funcname in calc_param.split(','):
         for funcname in calc_param:
             try:
                 func = eval('hf.'+funcname)
@@ -543,7 +471,7 @@ Include fields in hdr needed to construct new filename that fullfills standards.
     logging.debug('calc_funcs={}'.format([f.__name__ for f in calc_funcs]))
     for calcfunc in calc_funcs:
         try:
-            new = calcfunc(hdr, **kwargs)
+            new, change = calcfunc(hdr, **kwargs)
         except Exception as ex:
             raise tex.InvalidHeader(
                 'Could not apply hdr_calc_funcs ({}) to {}; {}'
@@ -551,30 +479,17 @@ Include fields in hdr needed to construct new filename that fullfills standards.
         logging.debug('[{}] new field values={}'.format(calcfunc.__name__, new))
         hdr.update(new)
 
-    #new = hf.set_dtpropid(hdr, **kwargs)
     new = set_dtpropid(hdr, **kwargs) # !!! Emitted warning ref orig_fullname
     logging.debug('Updating DTPROPID from {} => {}'
                   .format(hdr.get('DTPROPID'),
                           new.get('DTPROPID')))
     hdr.update(new)
-    
-    if hdr.get('DTPROPID') == 'BADSCRUB' or hdr.get('DTPROPID') == 'NOSCHED': 
+    if hdr.get('DTPROPID') == 'BADSCRUB' or hdr.get('DTPROPID') == 'NOSCHED':
         raise tex.SubmitException(
             'Could not create good DTPROPID from PROPID ({}) or from schedule '
             'lookup for header of: {} (DTPROPID={})'
             .format(hdr.get('PROPID', 'NA'), orig_fullname,
                     hdr.get('DTPROPID')))
-        
-
-    #!old_return = (hdr.get('DTSITE', 'na'),
-    #!              hdr.get('DTTELESC', 'na'),
-    #!              hdr.get('DTINSTRU', 'na'),
-    #!              dateobs, 
-    #!              hdr.get('OBSTYPE', 'nota').lower(),
-    #!              hdr.get('PROCTYPE', 'nota').lower(),
-    #!              hdr.get('PRODTYPE', 'nota').lower(),
-    #!              ext[1:])
-    # END: fix_hdr()
 
 def show_hdr_values(msg, hdr):
     """Show the values for 'interesting' header fields"""
@@ -590,21 +505,6 @@ def get_options_dict(fits_filename):
             yd = yaml.safe_load(yy)
             options = yd.get('options', {})
             opt_params = yd.get('params', {})
-
-#!    elif os.path.exists(fits_filename + '.options'):
-#!        with open(fits_filename + '.options', encoding='utf-8') as f:
-#!            options = dict()
-#!            opt_params = dict()
-#!            for opt in f.readline().split():
-#!                k, v = opt.split('=')
-#!                if k[0] != '_':
-#!                    continue
-#!                if k[1] == '_':
-#!                    opt_params[k[2:]] = v
-#!                else:
-#!                    options[k[1:]] = v.replace('_', ' ')                
-#!            if 'calchdr' in opt_params:
-#!                opt_params['calchdr'] = opt_params['calchdr'].split(',')
     else:
         logging.error('Options file not found for: {}'.format(fits_filename))
         return dict(), dict()
@@ -890,6 +790,43 @@ def fits_compliant(fits_file_list,
         if exception_cnt > 0:
             sys.exit('Abnormal termination due to exception(s)')
 
+# FITS standard 3.0 (July 2010) defines these fields as floats:
+#  BSCALE, BZERO,
+#  DATAMAX, DATAMIN,
+#  PSCALn, PZEROn,
+#  TSCALn, TZEROn,
+#  CRPIXj, CRVALi, CDELTi, CROTAi, PCi_j, CDi_j
+#  PVi_m, CRDERi, CSYERi,
+#  EPOCH, EQUINOXa, DATE-OBS, MJD-OBS, LONPOLEa, LATPOLEa, MJD-AVG,
+#  OBSGEO-Za, OBSGEO-Ya, OBSGEO-Za,
+#  RESTFRQa, RESTWAVa,
+#  VELANGLa, VELOSYSa, ZSOURCEa
+def scrubFits(fitsfname):
+    """Fix some violations against FITS standard (3.0) IN PLACE."""
+    float_fields =  ['BSCALE', 'BZERO',
+                     'DATAMAX', 'DATAMIN',
+                     'PSCAL', 'PZERO',
+                     'TSCAL', 'TZERO',
+                     'CRPIX', 'CRVAL', 'CDELT', 'CROTA', 'PC', 'CD',
+                     'PV', 'CRDER', 'CSYER',
+                     'EPOCH', 'EQUINOX', 'DATE-OBS',
+                     'MJD-OBS', 'MJD-AVG',
+                     'LONPOLE', 'LATPOLE', 
+                     'OBSGEO-Z', 'OBSGEO-Y', 'OBSGEO-Z',
+                     'RESTFRQ', 'RESTWAV',
+                     'VELANGL', 'VELOSYS', 'ZSOURCE']
+
+    hdulist = pyfits.open(fitsfname, mode='update')
+    for hdu in hdulist:
+        for kw in float_fields:
+            hdr = hdu.header
+            if (kw in hdr) and (type(hdr[kw]) is str):
+                msg = ('Removed "{}" since its value ("{}") was a string'
+                       .format(kw, hdr[kw]))
+                hdr['HISTORY'] = msg
+            del hdr[kw]
+            logging.warning('Invalid FITS file "{}": {}'.format(fitsfname, msg))
+    hdulist.close(output_verify='fix')
 
 ##############################################################################
 

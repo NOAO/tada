@@ -1,3 +1,6 @@
+- added mapping function: "DATEOBStoISO" intended to add "T" to ISO
+  timestamp value of DATE-OBS in kp09m-hdi instrument.
+
 * Release 2.7.1
 - TADA-2: add TARGET param to direct_post (explicit relative
     directory for ingest file)
