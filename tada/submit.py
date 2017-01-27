@@ -9,10 +9,8 @@ import os
 import os.path
 from pathlib import PurePath
 import pathlib
-#!import urllib.request
 import requests
 import datetime
-#import subprocess
 import shutil
 import magic
 import yaml
@@ -190,9 +188,8 @@ RETURN: irods location of hdr file.
         newhdr['DTNSANAM'] = 'NA' 
         fu.validate_raw_hdr(newhdr, orig_fullname)
         try:
-            fname_fields = fu.fix_hdr(newhdr, mirror_fname,
-                                      options, opt_params, **kwargs)
-            logging.debug('fix_hdr fname_fields={}'.format(fname_fields))
+            fu.fix_hdr(newhdr, mirror_fname,
+                       options, opt_params, **kwargs)
         except tex.IngestRejection:
             raise
         except tex.BadPropid as bpe:

@@ -17,72 +17,30 @@ expanded to spaces to handle the command line argument limitation.
 '''
 
 import logging
-#!import urllib.request
-import requests
 from dateutil import tz
 import datetime as dt
-#from . import hdr_calc_utils as ut
+from . import hdr_calc_utils as hcu
 from . import exceptions as tex
-from . import settings
 
+# Add fields to this list that are used by at least one hdr_func
+# (unless they are already required in fits_utils:FILENAME_REQUIRED_FIELDS.)
 calc_func_source_fields = set([
     'UTSHUT', 'INSTRUM', 'INSTRUME',
     'DATE-OBS', 'DATE', 'TIME-OBS',
     'IMAGETYP',
+    'DETSERNO',
     #'OBSTYPE',
     #'OBSID',
 ])
 
-##############################################################################
-
-# propid=`curl 'http://127.0.0.1:8000/schedule/propid/kp4m/kosmos/2016-02-01/'`
-def http_get_propids_from_schedule(telescope, instrument, date,
-                                  host=None, port=8000):
-    '''Use MARS web-service to get PROPIDs given: Telescope, Instrument,
-    Date of observation.  There will be multiple propids listed on split nights.
-    '''
-    url = ('http://{}:{}/schedule/propid/{}/{}/{}/'
-           .format(host, port, telescope, instrument, date))
-    logging.debug('MARS: get PROPID from schedule; url = {}'.format(url))
-    propids = []
-    try:
-        #!with urllib.request.urlopen(url,timeout=6) as f:
-        #!    response = f.read().decode('utf-8')
-        r = requests.get(url, timeout=6)
-        response = r.text
-        logging.debug('MARS: server response="{}"'.format(response))
-        propids = [pid.strip() for pid in response.split(',')]
-        return propids
-    except Exception as ex:
-        logging.error('MARS: Error contacting schedule service via {}; {}'
-                      .format(url, ex))
-        return []
-    return propids # Should never happen
-
-def ws_lookup_propids(date, telescope, instrument, **kwargs):
-    """Return propids from schedule (list of one or more)
--OR- None if cannot reach service
--OR- 'NA' if service reachable but lookup fails."""
-    logging.debug('ws_lookup_propids; kwargs={}'.format(kwargs))
-    host=settings.mars_host
-    port=settings.mars_port
-    if host == None or port == None:
-        logging.error('Missing MARS host ({}) or port ({}).'.format(host,port))
-        return []
-
-    # telescope, instrument, date = ('kp4m', 'kosmos', '2016-02-01')
-    logging.debug('WS schedule lookup; '
-                  'DTCALDAT="{}", DTTELESC="{}", DTINSTRU="{}"'
-                  .format(date, telescope, instrument))
-    propids = http_get_propids_from_schedule(telescope, instrument, date,
-                                             host=host, port=port)
-    return propids
-
-def deprecate(funcname, *msg):
-    logging.warning('Using deprecated hdr_calc_func: {}'
-                    .format(funcname, msg))
     
 ##############################################################################
+
+def DETSERNOtoDTSERNO(orig, **kwargs):
+    """Intended for soar-spartan FITS files."""
+    if 'DETSERNO' in orig:
+        return {'DTSERNO': orig['DETSERNO'].strip()}
+    return dict()
 
 def fixTriplespec(orig, **kwargs):
     new = {'DATE-OBS': orig['UTSHUT'],
@@ -94,70 +52,12 @@ def fixTriplespec(orig, **kwargs):
                   .format(new['DATE-OBS']))
     return  new
 
-    
-#!def trustHdrPropid(orig, **kwargs):
-#!    deprecate('trustHdrPropid', 'Now we ALWAYS trust schedule.')
-#!    return {}
-
-#!    propid = orig.get('DTPROPID')
-#!    if propid == 'BADSCRUB':
-#!        # fallback
-#!        propids = ws_lookup_propids(orig.get('DTCALDAT'),
-#!                                    orig.get('DTTELESC'),
-#!                                    orig.get('DTINSTRU'),
-#!                                    **kwargs)
-#!        if propids == None:
-#!            return {}
-#!        elif len(propids) > 1:
-#!            return {'DTPROPID': 'SPLIT'}
-#!        else:
-#!            return {'DTPROPID': propids[0]}
-#!    else:
-#!        return {'DTPROPID': propid}
-
-# MOVED TO FITS_UTILS: def set_dtpropid(orig, **kwargs):
-
-
-#!def trustSchedPropid(orig, **kwargs):
+#!def trustSchedOrAAPropid(orig, **kwargs):
 #!    '''Propid from schedule trumps header.  
-#!But if not found in schedule, use header'''
-#!    deprecate('trustSchedPropid')
+#!But if not found in schedule, use field AAPROPID from header'''
+#!    deprecate('trustSchedorAAPPropid')
 #!    return {}
-#!
-#!    pids = ws_lookup_propids(orig.get('DTCALDAT'),
-#!                             orig.get('DTTELESC'),
-#!                             orig.get('DTINSTRU'),
-#!                             **kwargs)
-#!    if pids == None:
-#!        return {'DTPROPID': 'NOSCHED'}
-#!    elif pids == 'NA':
-#!        return {'DTPROPID': orig.get('DTPROPID',
-#!                                     orig.get('PROPID', 'MISSCHED'))}
-#!    elif len(pids) > 1:
-#!        return {'DTPROPID': 'SPLIT'}
-#!    else:
-#!        return {'DTPROPID': pids[0]}
 
-def trustSchedOrAAPropid(orig, **kwargs):
-    '''Propid from schedule trumps header.  
-But if not found in schedule, use field AAPROPID from header'''
-    deprecate('trustSchedorAAPPropid')
-    return {}
-    #!pids = ws_lookup_propids(orig.get('DTCALDAT'),
-    #!                         orig.get('DTTELESC'),
-    #!                         orig.get('DTINSTRU'),
-    #!                         **kwargs)
-    #!if pids == None:
-    #!    return {'DTPROPID': 'NOSCHED'}
-    #!elif pids == 'NA':
-    #!    return {'DTPROPID': orig.get('AAPROPID', 'na')}
-    #!elif len(pids) > 1:
-    #!    return {'DTPROPID': 'SPLIT'}
-    #!else:
-    #!    return {'DTPROPID': pids[0]}
-
-
-    
 def addTimeToDATEOBS(orig, **kwargs):
     'Use TIME-OBS for time portion of DATEOBS. Depends on: DATE-OBS, TIME-OBS'
     if ('T' in orig['DATE-OBS']):
@@ -230,36 +130,6 @@ def bokOBSID(orig, **kwargs):
     "Depends on DATE-OBS"
     return {'OBSID': 'bok23m.'+orig['DATE-OBS'] }
 
-#! def DTTELESCfromINSTRUME(orig, **kwargs):
-#!     "Instrument specific calculations. Depends on: INSTRUME, OBSID"
-#!     new = dict() # Fields to calculate
-#!     instrument = orig['INSTRUME'].lower()
-#! 
-#!     # e.g. OBSID = 'kp4m.20141114T122626'
-#!     # e.g. OBSID = 'soar.sam.20141220T015929.7Z'
-#!     #!tele, dt_str = orighdr['OBSID'].split('.')
-#!     if 'cosmos' == instrument:
-#!         tele, dt_str = orig['OBSID'].split('.')
-#!         new['DTTELESC'] = tele
-#!     elif 'mosaic1.1' == instrument:
-#!         tele, dt_str = orig['OBSID'].split('.')
-#!         new['DTTELESC'] = tele
-#!     elif 'soi' == instrument:
-#!         tele, inst, dt_str1, dt_str2 = orig['OBSID'].split('.')
-#!         new['DTTELESC'] = tele
-#! #!    elif '90prime' == instrument: # BOK
-#! #!        # FILENAME='bokrm.20140425.0119.fits' / base filename at acquisition
-#! #!        tele = orig.get('TELESCOP', None)
-#! #!        if tele == None:
-#! #!            tele, datestr, *rest = orig['FILENAME'].split('.')
-#! #!        new['DTTELESC'] = tele
-#! #!        new['OBSTYPE'] = orig.get('IMAGETYP','object')
-#! #!    else:
-#! #!        tele, dt_str = orig['OBSID'].split('.')
-#! #!        new['DTTELESC'] = tele
-#! 
-#!     #! new['DTINSTRU'] = instrument # eg. 'NEWFIRM'
-#!     return new
 
 
     

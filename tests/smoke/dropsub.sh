@@ -34,6 +34,7 @@ function setup_dropbox_tests () {
     rm $SMOKEDB
     sqlite3 $SMOKEDB "$CREATE_SMOKEDB"
     chmod a+rw $SMOKEDB
+    echo "COMPLETED setup for dropbox tests"
 }
 
 # Estimate time to upload FITS (iput) at rate=10mbps
@@ -168,6 +169,7 @@ function dropfile () {
 
     dropfile=$DROPCACHE/$DATE/${TELE_INST}/$BNAME
     mkdir -p `dirname $dropfile`
+    echo "# DBG: dropping \"$FITSFILE\" to \"$dropfile\""
     cp $FITSFILE $dropfile
     #!chmod -R a+rwX $DROPCACHE
 

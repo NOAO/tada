@@ -1,0 +1,579 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tada package &#8212; TADA 2.7.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.7.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="tada-package">
+<h1>tada package<a class="headerlink" href="#tada-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tada-actions-module">
+<h2>tada.actions module<a class="headerlink" href="#tada-actions-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tada-audit-module">
+<h2>tada.audit module<a class="headerlink" href="#tada-audit-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-tada.change_hdr">
+<span id="tada-change-hdr-module"></span><h2>tada.change_hdr module<a class="headerlink" href="#module-tada.change_hdr" title="Permalink to this headline">¶</a></h2>
+<p>Modify header of FITS file from YAML of hdr name/value pairs.</p>
+<dl class="function">
+<dt id="tada.change_hdr.apply_changes">
+<code class="descclassname">tada.change_hdr.</code><code class="descname">apply_changes</code><span class="sig-paren">(</span><em>fitsfile</em>, <em>updates_yaml</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.change_hdr.apply_changes" title="Permalink to this definition">¶</a></dt>
+<dd><p>The work-horse function.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.change_hdr.main">
+<code class="descclassname">tada.change_hdr.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tada.change_hdr.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse command line arguments and do the work.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tada.config">
+<span id="tada-config-module"></span><h2>tada.config module<a class="headerlink" href="#module-tada.config" title="Permalink to this headline">¶</a></h2>
+<p>Read, parse, and validate configuration file.</p>
+<dl class="function">
+<dt id="tada.config.get_config">
+<code class="descclassname">tada.config.</code><code class="descname">get_config</code><span class="sig-paren">(</span><em>queue_names</em>, <em>yaml_filename='/etc/tada/tada.conf'</em>, <em>hiera_filename='/etc/tada/hiera.yaml'</em>, <em>validate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.config.get_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read multi-queue config from yaml_filename.  Validate its
+contents. Insure queue_names are all in the list of named queues.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.config.get_config_lut">
+<code class="descclassname">tada.config.</code><code class="descname">get_config_lut</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.config.get_config_lut" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return dictionary indexed by queue name.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.config.validate_config">
+<code class="descclassname">tada.config.</code><code class="descname">validate_config</code><span class="sig-paren">(</span><em>cfg</em>, <em>fname=None</em>, <em>qnames=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.config.validate_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure config has the fields we expect.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tada.dateobs">
+<span id="tada-dateobs-module"></span><h2>tada.dateobs module<a class="headerlink" href="#module-tada.dateobs" title="Permalink to this headline">¶</a></h2>
+<p>Normalize the DATE-OBS field in a FITS header.</p>
+</div>
+<div class="section" id="module-tada.diag">
+<span id="tada-diag-module"></span><h2>tada.diag module<a class="headerlink" href="#module-tada.diag" title="Permalink to this headline">¶</a></h2>
+<p>Diagnostics. 
+Nothing here is required for production but use of it would have to be 
+commented out before this file could be removed.</p>
+<dl class="function">
+<dt id="tada.diag.dbgcmd">
+<code class="descclassname">tada.diag.</code><code class="descname">dbgcmd</code><span class="sig-paren">(</span><em>cmdargs</em>, <em>msg='EXECUTING cmd: '</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.diag.dbgcmd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tada.diag.metadata_catalog">
+<code class="descclassname">tada.diag.</code><code class="descname">metadata_catalog</code><span class="sig-paren">(</span><em>fits_filenames</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.diag.metadata_catalog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Histogram the metadata values in list of fits files.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.diag.metadata_field_use">
+<code class="descclassname">tada.diag.</code><code class="descname">metadata_field_use</code><span class="sig-paren">(</span><em>fits_filenames</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.diag.metadata_field_use" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find Common and Optional sets of fields used in list of fits files.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.diag.traceback_if_debug">
+<code class="descclassname">tada.diag.</code><code class="descname">traceback_if_debug</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tada.diag.traceback_if_debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print traceback of logging level is set to DEBUG</p>
+</dd></dl>
+
+</div>
+<div class="section" id="tada-exceptions-module">
+<h2>tada.exceptions module<a class="headerlink" href="#tada-exceptions-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tada-file-naming-module">
+<h2>tada.file_naming module<a class="headerlink" href="#tada-file-naming-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tada-fits-utils-module">
+<h2>tada.fits_utils module<a class="headerlink" href="#tada-fits-utils-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tada-fpack-module">
+<h2>tada.fpack module<a class="headerlink" href="#tada-fpack-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-tada.generate_files">
+<span id="tada-generate-files-module"></span><h2>tada.generate_files module<a class="headerlink" href="#module-tada.generate_files" title="Permalink to this headline">¶</a></h2>
+<p>This file is ONLY as an aid to testing.  Not used in production TADA.</p>
+<p>The files generated will be valid FITS, but not valid to Archive
+Ingest. They should go through TADA, but fail on submit.</p>
+<p>Each file is 5760 bytes.  
+Took  14 seconds to create  10,000 files (on chimp16).
+Took 148 seconds to create 100,000 files (on chimp16).</p>
+<dl class="function">
+<dt id="tada.generate_files.create_files">
+<code class="descclassname">tada.generate_files.</code><code class="descname">create_files</code><span class="sig-paren">(</span><em>outdir</em>, <em>count</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.generate_files.create_files" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tada.generate_files.gen_unique_fits">
+<code class="descclassname">tada.generate_files.</code><code class="descname">gen_unique_fits</code><span class="sig-paren">(</span><em>fitsfile</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.generate_files.gen_unique_fits" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tada.generate_files.main">
+<code class="descclassname">tada.generate_files.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tada.generate_files.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse command line arguments and do the work.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tada.get_schedule">
+<span id="tada-get-schedule-module"></span><h2>tada.get_schedule module<a class="headerlink" href="#module-tada.get_schedule" title="Permalink to this headline">¶</a></h2>
+<p>Retrieve NOAOA propsoal information from web service.</p>
+<p>See: /d1/bits/getschedule (perl script)</p>
+<dl class="function">
+<dt id="tada.get_schedule.main">
+<code class="descclassname">tada.get_schedule.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tada.get_schedule.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse command line arguments and do the work.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.get_schedule.my_func">
+<code class="descclassname">tada.get_schedule.</code><code class="descname">my_func</code><span class="sig-paren">(</span><em>arg1</em>, <em>arg2</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.get_schedule.my_func" title="Permalink to this definition">¶</a></dt>
+<dd><p>The work-horse function.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="tada-hdr-calc-funcs-module">
+<h2>tada.hdr_calc_funcs module<a class="headerlink" href="#tada-hdr-calc-funcs-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tada-hdr-calc-utils-module">
+<h2>tada.hdr_calc_utils module<a class="headerlink" href="#tada-hdr-calc-utils-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-tada.icmd">
+<span id="tada-icmd-module"></span><h2>tada.icmd module<a class="headerlink" href="#module-tada.icmd" title="Permalink to this headline">¶</a></h2>
+<p>Interface to subset of irods icommands (<a class="reference external" href="http://irods.org/documentation/">http://irods.org/documentation/</a>).</p>
+<dl class="exception">
+<dt id="tada.icmd.IcommandException">
+<em class="property">exception </em><code class="descclassname">tada.icmd.</code><code class="descname">IcommandException</code><a class="headerlink" href="#tada.icmd.IcommandException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tada.icmd.Icommands">
+<em class="property">class </em><code class="descclassname">tada.icmd.</code><code class="descname">Icommands</code><span class="sig-paren">(</span><em>host='172.16.1.12'</em>, <em>port='1247'</em>, <em>user_name='rods'</em>, <em>zone='tempZone'</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.icmd.Icommands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="tada.icmd.Icommands.iget">
+<code class="descname">iget</code><span class="sig-paren">(</span><em>irod_fname</em>, <em>local_fname</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.icmd.Icommands.iget" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tada.icmd.Icommands.ils">
+<code class="descname">ils</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.icmd.Icommands.ils" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tada.icmd.Icommands.imkdir">
+<code class="descname">imkdir</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.icmd.Icommands.imkdir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tada.icmd.Icommands.iput">
+<code class="descname">iput</code><span class="sig-paren">(</span><em>flags</em>, <em>local_fname_list</em>, <em>irod_fname</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.icmd.Icommands.iput" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tada.icmd.Icommands.irsync">
+<code class="descname">irsync</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.icmd.Icommands.irsync" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tada.icmd.Icommands.run_icmd">
+<code class="descname">run_icmd</code><span class="sig-paren">(</span><em>icmd</em>, <em>arg_list=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.icmd.Icommands.run_icmd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-tada.ingest_decoder">
+<span id="tada-ingest-decoder-module"></span><h2>tada.ingest_decoder module<a class="headerlink" href="#module-tada.ingest_decoder" title="Permalink to this headline">¶</a></h2>
+<p>Make sense of HTTP responses from Archive Ingest.
++++ Add to this to get better messages in TADA log when Archive Ingest fails.</p>
+<dl class="data">
+<dt id="tada.ingest_decoder.baddateRE">
+<code class="descclassname">tada.ingest_decoder.</code><code class="descname">baddateRE</code><em class="property"> = re.compile('Could not parse DATE-OBS field')</em><a class="headerlink" href="#tada.ingest_decoder.baddateRE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Could not parse DATE-OBS field (2004-12-16) in header of: /sandbox/tada/tests/smoke/tada-test-data/basic/kp109391.fits.fz</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.ingest_decoder.decodeIngestResponse">
+<code class="descclassname">tada.ingest_decoder.</code><code class="descname">decodeIngestResponse</code><span class="sig-paren">(</span><em>response</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.ingest_decoder.decodeIngestResponse" title="Permalink to this definition">¶</a></dt>
+<dd><p>response:: XML-string http-response from nsaarchive</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="tada.ingest_decoder.dup_obspropRE">
+<code class="descclassname">tada.ingest_decoder.</code><code class="descname">dup_obspropRE</code><em class="property"> = re.compile('Got more than one observation matching calibration date for proposal')</em><a class="headerlink" href="#tada.ingest_decoder.dup_obspropRE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Failure reason:Failed to ingest
+file:/noao-tuc-z1/tada/vagrant/2/k4k_140922_234549_zuu_1186823651.hdr
+error msg:Got more than one observation matching calibration date for
+proposal. Query: select distinct o from ObservationEntity o join fetch
+o.proposalSet p where p.proposalId = ?1 and o.calibrationDate between
+?2 and ?3 and o.publicDataReleaseDate &lt; ?4</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="tada.ingest_decoder.dup_propRE">
+<code class="descclassname">tada.ingest_decoder.</code><code class="descname">dup_propRE</code><em class="property"> = re.compile('Could not find unique proposal')</em><a class="headerlink" href="#tada.ingest_decoder.dup_propRE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Failure reason:Failed to ingest
+file:/noao-tuc-z1/tada/vagrant/23/ksb_041016_195304_uuu_1188439357.hdr
+error msg:Could not find unique proposal TEST-noao in metadata
+database, found 0</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.ingest_decoder.errcode">
+<code class="descclassname">tada.ingest_decoder.</code><code class="descname">errcode</code><span class="sig-paren">(</span><em>response</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.ingest_decoder.errcode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="tada.ingest_decoder.etlkeyRE">
+<code class="descclassname">tada.ingest_decoder.</code><code class="descname">etlkeyRE</code><em class="property"> = re.compile('ETL failed to parse bad keyword value')</em><a class="headerlink" href="#tada.ingest_decoder.etlkeyRE" title="Permalink to this definition">¶</a></dt>
+<dd><p>ETL failed to parse bad keyword value. keyword:[ZD] value:[30:26:47.67728784] Storing null value for keyword instead. ETL exception msg was: For input string: &#8220;30:26:47.67728784&#8221;</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="tada.ingest_decoder.existsRE">
+<code class="descclassname">tada.ingest_decoder.</code><code class="descname">existsRE</code><em class="property"> = re.compile('has already been stored in the database')</em><a class="headerlink" href="#tada.ingest_decoder.existsRE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Failure reason:Failed to ingest
+file:/noao-tuc-z1/tada/vagrant/5/k4n_20141114_122626_oru.hdr error
+msg:Header for k4n_20141114_122626_oru.fits has already been stored in
+the database</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="tada.ingest_decoder.fitsverifyRE">
+<code class="descclassname">tada.ingest_decoder.</code><code class="descname">fitsverifyRE</code><em class="property"> = re.compile('Verify failed:')</em><a class="headerlink" href="#tada.ingest_decoder.fitsverifyRE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify failed: /usr/local/bin/fitsverify -e -q /var/tada/cache/20110101/wiyn-bench/24dec_2014.061.fits.fz</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="tada.ingest_decoder.hdr_existsRE">
+<code class="descclassname">tada.ingest_decoder.</code><code class="descname">hdr_existsRE</code><em class="property"> = re.compile('iRODS HDR file already exists at')</em><a class="headerlink" href="#tada.ingest_decoder.hdr_existsRE" title="Permalink to this definition">¶</a></dt>
+<dd><p>iRODS HDR file already exists at
+/noao-tuc-z1/mtn/20160608/ct4m/NA/c4ai_160609_151943_ori.hdr on submit
+of
+/data1/tada/dropbox/20160609/ct4m-arcoiris/SPEC_FFtest0583.fits. Aborting
+attempt to ingest.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="tada.ingest_decoder.missingreqRE">
+<code class="descclassname">tada.ingest_decoder.</code><code class="descname">missingreqRE</code><em class="property"> = re.compile('header is missing required metadata fields')</em><a class="headerlink" href="#tada.ingest_decoder.missingreqRE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modified FITS header is missing required metadata fields (PROCTYPE, PRODTYPE) in file /sandbox/tada/tests/smoke/tada-test-data/basic/kptest.fits</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="tada.ingest_decoder.nonfitsRE">
+<code class="descclassname">tada.ingest_decoder.</code><code class="descname">nonfitsRE</code><em class="property"> = re.compile('Cannot ingest non-FITS file:')</em><a class="headerlink" href="#tada.ingest_decoder.nonfitsRE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cannot ingest non-FITS file:
+/sandbox/tada/tests/smoke/tada-test-data/basic/uofa-mandle.jpg</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="tada.ingest_decoder.notschedRE">
+<code class="descclassname">tada.ingest_decoder.</code><code class="descname">notschedRE</code><em class="property"> = re.compile('not in scheduled list of Propids')</em><a class="headerlink" href="#tada.ingest_decoder.notschedRE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propid from hdr (BADSCRUB.BAD-PROPID) not in scheduled list of Propids [&#8216;2016A-0189&#8217;, &#8216;2016A-0453&#8217;]</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="tada.ingest_decoder.prop_not_foundRE">
+<code class="descclassname">tada.ingest_decoder.</code><code class="descname">prop_not_foundRE</code><em class="property"> = re.compile('Could not find the proposal:')</em><a class="headerlink" href="#tada.ingest_decoder.prop_not_foundRE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Could not find the proposal:[NA] in the database.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="tada.ingest_decoder.stilutRE">
+<code class="descclassname">tada.ingest_decoder.</code><code class="descname">stilutRE</code><em class="property"> = re.compile('Unknown combination for stiLUT:')</em><a class="headerlink" href="#tada.ingest_decoder.stilutRE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unknown combination for stiLUT: SITE(ct), TELESCOPE(ct09m), and
+INSTRUMENT(biw) (in /var/tada/cache/20160616/ct09m-biw/f177.fits.fz)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="tada-irods331-module">
+<h2>tada.irods331 module<a class="headerlink" href="#tada-irods331-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-tada.irods_utils">
+<span id="tada-irods-utils-module"></span><h2>tada.irods_utils module<a class="headerlink" href="#module-tada.irods_utils" title="Permalink to this headline">¶</a></h2>
+<p>Interface to working with irods.  All of our calls to irods
+provided functions should be in this file.</p>
+<dl class="function">
+<dt id="tada.irods_utils.get_irods_cksum">
+<code class="descclassname">tada.irods_utils.</code><code class="descname">get_irods_cksum</code><span class="sig-paren">(</span><em>irods_path</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.irods_utils.get_irods_cksum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tada.irods_utils.irods_debug">
+<code class="descclassname">tada.irods_utils.</code><code class="descname">irods_debug</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tada.irods_utils.irods_debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>For diagnostics only.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.irods_utils.irods_file_type">
+<code class="descclassname">tada.irods_utils.</code><code class="descname">irods_file_type</code><span class="sig-paren">(</span><em>irods_fname</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.irods_utils.irods_file_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tada.irods_utils.irods_get">
+<code class="descclassname">tada.irods_utils.</code><code class="descname">irods_get</code><span class="sig-paren">(</span><em>local_fname</em>, <em>irods_fname</em>, <em>remove_irods=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.irods_utils.irods_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get file from irods, creating local parent directories if needed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.irods_utils.irods_get_physical">
+<code class="descclassname">tada.irods_utils.</code><code class="descname">irods_get_physical</code><span class="sig-paren">(</span><em>ipath</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.irods_utils.irods_get_physical" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tada.irods_utils.irods_mv">
+<code class="descclassname">tada.irods_utils.</code><code class="descname">irods_mv</code><span class="sig-paren">(</span><em>src_ipath</em>, <em>dst_ipath</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.irods_utils.irods_mv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move/rename irods file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.irods_utils.irods_mv_dir">
+<code class="descclassname">tada.irods_utils.</code><code class="descname">irods_mv_dir</code><span class="sig-paren">(</span><em>src_idir</em>, <em>dst_idir</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.irods_utils.irods_mv_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move irods directory (collection) from one place to another,
+creating desting parent directories if needed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.irods_utils.irods_mv_tree">
+<code class="descclassname">tada.irods_utils.</code><code class="descname">irods_mv_tree</code><span class="sig-paren">(</span><em>src_ipath</em>, <em>dst_ipath</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.irods_utils.irods_mv_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move/rename irods file including parent directories</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.irods_utils.irods_put">
+<code class="descclassname">tada.irods_utils.</code><code class="descname">irods_put</code><span class="sig-paren">(</span><em>local_fname</em>, <em>irods_fname</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.irods_utils.irods_put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Put file to irods, creating parent directories if needed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.irods_utils.irods_reg">
+<code class="descclassname">tada.irods_utils.</code><code class="descname">irods_reg</code><span class="sig-paren">(</span><em>fs_path</em>, <em>irods_path</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.irods_utils.irods_reg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a file or a directory of files and subdirectory into
+iRODS. The file must already exist on the server where the resource is
+located. The full path must be supplied for both paths.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.irods_utils.irods_set_meta">
+<code class="descclassname">tada.irods_utils.</code><code class="descname">irods_set_meta</code><span class="sig-paren">(</span><em>ifname</em>, <em>att_name</em>, <em>att_value</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.irods_utils.irods_set_meta" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tada.irods_utils.irods_unreg">
+<code class="descclassname">tada.irods_utils.</code><code class="descname">irods_unreg</code><span class="sig-paren">(</span><em>irods_path</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.irods_utils.irods_unreg" title="Permalink to this definition">¶</a></dt>
+<dd><p>unregister the file or collection</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tada.make_network_diagram">
+<span id="tada-make-network-diagram-module"></span><h2>tada.make_network_diagram module<a class="headerlink" href="#module-tada.make_network_diagram" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tada-monitors-module">
+<h2>tada.monitors module<a class="headerlink" href="#tada-monitors-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tada-personality2yaml-module">
+<h2>tada.personality2yaml module<a class="headerlink" href="#tada-personality2yaml-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tada-reformat-yaml-module">
+<h2>tada.reformat_yaml module<a class="headerlink" href="#tada-reformat-yaml-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tada-scrub-module">
+<h2>tada.scrub module<a class="headerlink" href="#tada-scrub-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tada-settings-module">
+<h2>tada.settings module<a class="headerlink" href="#tada-settings-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tada-submit-module">
+<h2>tada.submit module<a class="headerlink" href="#tada-submit-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-tada.utils">
+<span id="tada-utils-module"></span><h2>tada.utils module<a class="headerlink" href="#module-tada.utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="tada.utils.dict_str">
+<code class="descclassname">tada.utils.</code><code class="descname">dict_str</code><span class="sig-paren">(</span><em>dict</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.utils.dict_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return string that formats content of dictionary suitable for log</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.utils.log_traceback">
+<code class="descclassname">tada.utils.</code><code class="descname">log_traceback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tada.utils.log_traceback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log a traceback with sufficient detail to point to source of error.
+NOTE: The traceback (stack) itself is logged to INFO, not ERROR. This is to
+allow tests to use ERROR and WARNING logging to insure correct behavior. Stacks
+have line numbers so would cause unsability in GOLD files.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tada.utils.read_hiera_yaml">
+<code class="descclassname">tada.utils.</code><code class="descname">read_hiera_yaml</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tada.utils.read_hiera_yaml" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tada.utils.read_tada_yaml">
+<code class="descclassname">tada.utils.</code><code class="descname">read_tada_yaml</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tada.utils.read_tada_yaml" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tada.utils.read_yaml">
+<code class="descclassname">tada.utils.</code><code class="descname">read_yaml</code><span class="sig-paren">(</span><em>yamlfile</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.utils.read_yaml" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tada.utils.tic">
+<code class="descclassname">tada.utils.</code><code class="descname">tic</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tada.utils.tic" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tada.utils.toc">
+<code class="descclassname">tada.utils.</code><code class="descname">toc</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tada.utils.toc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tada.utils.trace_if">
+<code class="descclassname">tada.utils.</code><code class="descname">trace_if</code><span class="sig-paren">(</span><em>trace</em><span class="sig-paren">)</span><a class="headerlink" href="#tada.utils.trace_if" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="tada-watch-drops-module">
+<h2>tada.watch_drops module<a class="headerlink" href="#tada-watch-drops-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-tada">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-tada" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">tada package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#tada-actions-module">tada.actions module</a></li>
+<li><a class="reference internal" href="#tada-audit-module">tada.audit module</a></li>
+<li><a class="reference internal" href="#module-tada.change_hdr">tada.change_hdr module</a></li>
+<li><a class="reference internal" href="#module-tada.config">tada.config module</a></li>
+<li><a class="reference internal" href="#module-tada.dateobs">tada.dateobs module</a></li>
+<li><a class="reference internal" href="#module-tada.diag">tada.diag module</a></li>
+<li><a class="reference internal" href="#tada-exceptions-module">tada.exceptions module</a></li>
+<li><a class="reference internal" href="#tada-file-naming-module">tada.file_naming module</a></li>
+<li><a class="reference internal" href="#tada-fits-utils-module">tada.fits_utils module</a></li>
+<li><a class="reference internal" href="#tada-fpack-module">tada.fpack module</a></li>
+<li><a class="reference internal" href="#module-tada.generate_files">tada.generate_files module</a></li>
+<li><a class="reference internal" href="#module-tada.get_schedule">tada.get_schedule module</a></li>
+<li><a class="reference internal" href="#tada-hdr-calc-funcs-module">tada.hdr_calc_funcs module</a></li>
+<li><a class="reference internal" href="#tada-hdr-calc-utils-module">tada.hdr_calc_utils module</a></li>
+<li><a class="reference internal" href="#module-tada.icmd">tada.icmd module</a></li>
+<li><a class="reference internal" href="#module-tada.ingest_decoder">tada.ingest_decoder module</a></li>
+<li><a class="reference internal" href="#tada-irods331-module">tada.irods331 module</a></li>
+<li><a class="reference internal" href="#module-tada.irods_utils">tada.irods_utils module</a></li>
+<li><a class="reference internal" href="#module-tada.make_network_diagram">tada.make_network_diagram module</a></li>
+<li><a class="reference internal" href="#tada-monitors-module">tada.monitors module</a></li>
+<li><a class="reference internal" href="#tada-personality2yaml-module">tada.personality2yaml module</a></li>
+<li><a class="reference internal" href="#tada-reformat-yaml-module">tada.reformat_yaml module</a></li>
+<li><a class="reference internal" href="#tada-scrub-module">tada.scrub module</a></li>
+<li><a class="reference internal" href="#tada-settings-module">tada.settings module</a></li>
+<li><a class="reference internal" href="#tada-submit-module">tada.submit module</a></li>
+<li><a class="reference internal" href="#module-tada.utils">tada.utils module</a></li>
+<li><a class="reference internal" href="#tada-watch-drops-module">tada.watch_drops module</a></li>
+<li><a class="reference internal" href="#module-tada">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/tada.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, S.Pothier.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="../_sources/api/tada.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
