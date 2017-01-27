@@ -9,10 +9,8 @@ import os
 import os.path
 from pathlib import PurePath
 import pathlib
-#!import urllib.request
 import requests
 import datetime
-#import subprocess
 import shutil
 import magic
 import yaml

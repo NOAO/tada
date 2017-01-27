@@ -22,10 +22,13 @@ import datetime as dt
 from . import hdr_calc_utils as hcu
 from . import exceptions as tex
 
+# Add fields to this list that are used by at least one hdr_func
+# (unless they are already required in fits_utils:FILENAME_REQUIRED_FIELDS.)
 calc_func_source_fields = set([
     'UTSHUT', 'INSTRUM', 'INSTRUME',
     'DATE-OBS', 'DATE', 'TIME-OBS',
     'IMAGETYP',
+    'DETSERNO',
     #'OBSTYPE',
     #'OBSID',
 ])
@@ -33,11 +36,11 @@ calc_func_source_fields = set([
     
 ##############################################################################
 
-def DATEOBSmicrosFromDETSERNO(orig, **kwargs):
+def DETSERNOtoDTSERNO(orig, **kwargs):
     """Intended for soar-spartan FITS files."""
     if 'DETSERNO' in orig:
-        sn = orig['DETSERNO'].strip()
-        return {'DATE-OBS', orig['DATE-OBS'].split('.')[0] + '.' + sn}
+        return {'DTSERNO': orig['DETSERNO'].strip()}
+    return dict()
 
 def fixTriplespec(orig, **kwargs):
     new = {'DATE-OBS': orig['UTSHUT'],

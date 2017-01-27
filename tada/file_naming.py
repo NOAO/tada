@@ -172,20 +172,12 @@ def get_hdr_fname(fitsname):
     return(fitsname.replace(extension, '.hdr'))
 
 
-#!def generate_fname(site, telescope, instrument,
-#!                   obsdt,
-#!                   obstype, proctype, prodtype,
-#!                   ext,
-#!                   orig=None,
-#!                   #jobid=False,
-#!                   tag='',
-#!                   wunk=True):
 def generate_fname(hdr, # dict
                    ext,
                    orig=None,
                    require_known=True,
                    sti_fname='/etc/tada/prefix_table.csv',
-                   tag='' ):
+                   tag=None ):
     """Generate standard filename from metadata values.
 e.g. k4k_140923_024819_uri.fits.fz"""
     site = hdr.get('DTSITE','nota').lower()
@@ -194,6 +186,7 @@ e.g. k4k_140923_024819_uri.fits.fz"""
     obstype = hdr.get('OBSTYPE', 'nota').lower()
     proctype = hdr.get('PROCTYPE', 'nota').lower()
     prodtype = hdr.get('PRODTYPE', 'nota').lower()
+    serno = hdr.get('DTSERNO')
     logging.debug('generate_fname: site="{}", tele="{}", instrument="{}", '
                   'obstype="{}", proctype="{}", prodtype="{}"'
                   .format(site, telescope, instrument,
@@ -238,43 +231,26 @@ e.g. k4k_140923_024819_uri.fits.fz"""
         obstype=obsLUT.get(obstype, 'u'),    # if not in LUT, use "u"!!!
         proctype=procLUT.get(proctype,'u'),
         prodtype=prodLUT.get(prodtype,'u'),
+        serno=serno,
+        tag=tag,
         ext=ext,
         )
 
+    #!std='{prefix}_{date}_{time}_{obstype}{proctype}{prodtype}'
+    #!if tag != None:
+    #!    fields['tag'] = tag
+    #!    new_fname = (std+"_{tag}.{ext}").format(**fields)
+    #!else:
+    #!    new_fname = (std+".{ext}").format(**fields)
+
     std='{prefix}_{date}_{time}_{obstype}{proctype}{prodtype}'
-    if tag != '':
-        fields['tag'] = tag
-        new_fname = (std+"_{tag}.{ext}").format(**fields)
-    else:
-        new_fname = (std+".{ext}").format(**fields)
-    return new_fname
+    if serno != None:
+        std += '_{serno}'
+    if tag != None:
+        std += '_{tag}'
+    std += '.{ext}'
 
-# UNDER CONSTRUCTION
-#!def generate_archive_basename(hdr, origfname, jobid=False, wunk=False):
-#!    '''Generate standard filename from metadata values. All modifications
-#!to hdr should be done before calling this function.  Returns something
-#!like: k4k_140923_024819_uri.fits.fz'''
-#!    obsdt = dt.datetime.strptime(hdr['DATE-OBS'], '%Y-%m-%dT%H:%M:%S.%f')
-#!    date = obsdt.date().strftime('%y%m%d')
-#!    time = obsdt.time().strftime('%H%M%S')
-#!    _,ext = os.path.splitext(origfname)
-#!    fields = dict(
-#!        instrument = hdr.get('INSTRUME'),
-#!        date = date,
-#!        time=time,
-#!        obstype = hdr.get('OBSTYPE'),
-#!        proctype = hdr.get('PROCTYPE'),
-#!        prodtype = hdr.get('PRODTYPE'),
-#!        extension = ext[1:]
-#!        )
-#!    std='{instrument}_{date}_{time}_{obstype}{proctype}{prodtype}'
-#!    if jobid:
-#!        fields['jobid'] = jobid
-#!        new_fname = (std+"_{jobid}.{extension}").format(**fields)
-#!    else:
-#!        new_fname = (std+".{extension}").format(**fields)
-#!    return new_fname
-
+    return std.format(**fields)
 
 
 # /Volumes/archive/mtn/20150518/kp4m/2015A-0253/k4k_150519_111338_ori.hdr

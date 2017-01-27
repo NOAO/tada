@@ -30,7 +30,12 @@ echo "# Starting tests in \"smoke.scrape.sh\" [allow 8 minutes] ..."
 echo "# "
 source tada-smoke-setup.sh
 
-echo "Doing 15 tests (using scraped files)"    
+echo "Doing 17 tests (using scraped files)"    
+
+###########################################
+#!echo "WARNING: ignoring remainder of tests"
+#!exit $return_code
+###########################################a
 
 
 testCommand sc1_1  "fsub $tdata/20150709/bok23m-90prime/d7212.0062.fits.fz bok23m-90prime" "^\#" n
@@ -47,16 +52,14 @@ testCommand sc9_1  "fsub $tdata/20110101/soar-goodman/0079.spec_flat.fits.fz soa
 #soar-sami    # scrape has no "passable" files for this instrument
 #testCommand sc16_1 "fsub $tdata/20110101/soar-sami/SO2016B-015.013.fits.fz soar-sami" "^\#" n
 testCommand sc10_1 "fsub $tdata/20110101/soar-spartan/011-6365d0.fits.fz soar-spartan" "^\#" n
+testCommand sc10_1a "fsub $tdata/20110101/soar-spartan/S301D_K012-0484d0.fits.fz soar-spartan" "^\#" n
+testCommand sc10_1b "fsub $tdata/20110101/soar-spartan/S301D_K012-0484d3.fits.fz soar-spartan" "^\#" n
 testCommand sc11_1 "fsub $tdata/20110101/wiyn-bench/24dec_2014.061.fits.fz wiyn-bench" "^\#" n 1
 testCommand sc12_1 "fsub $tdata/20110101/wiyn-whirc/obj_355.fits.fz wiyn-whirc" "^\#" n
 testCommand sc13_1 "fsub $tdata/20150929/kp4m-kosmos/a.20153.fits.fz kp4m-kosmos" "^\#" n
 testCommand sc14_1 "fsub $tdata/20141127/soar-soi/test.027.fits.fz soar-soi" "^\#" n 1
 testCommand sc15_1 "fsub $tdata/20160315/ct4m-arcoiris/SV_f0064.fits ct4m-arcoiris" "^\#" n
 
-###########################################
-#!echo "WARNING: ignoring remainder of tests"
-#!exit $return_code
-###########################################a
 
 ##############################################################################
 
