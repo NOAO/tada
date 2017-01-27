@@ -28,7 +28,7 @@ calc_func_source_fields = set([
     'UTSHUT', 'INSTRUM', 'INSTRUME',
     'DATE-OBS', 'DATE', 'TIME-OBS',
     'IMAGETYP',
-    'DETSERNO',
+    'DETSERNO', 'DTSERNO',
     #'OBSTYPE',
     #'OBSID',
 ])

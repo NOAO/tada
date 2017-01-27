@@ -603,6 +603,45 @@ def get_hdr_as_dict(fitsfile):
     return hdict
 
 
+# FITS standard 3.0 (July 2010) defines these fields as floats:
+#  BSCALE, BZERO,
+#  DATAMAX, DATAMIN,
+#  PSCALn, PZEROn,
+#  TSCALn, TZEROn,
+#  CRPIXj, CRVALi, CDELTi, CROTAi, PCi_j, CDi_j
+#  PVi_m, CRDERi, CSYERi,
+#  EPOCH, EQUINOXa, DATE-OBS, MJD-OBS, LONPOLEa, LATPOLEa, MJD-AVG,
+#  OBSGEO-Za, OBSGEO-Ya, OBSGEO-Za,
+#  RESTFRQa, RESTWAVa,
+#  VELANGLa, VELOSYSa, ZSOURCEa
+def scrub_fits(fitsfname):
+    """Fix some violations against FITS standard (3.0) IN PLACE."""
+    float_fields =  ['BSCALE', 'BZERO',
+                     'DATAMAX', 'DATAMIN',
+                     'PSCAL', 'PZERO',
+                     'TSCAL', 'TZERO',
+                     'CRPIX', 'CRVAL', 'CDELT', 'CROTA', 'PC', 'CD',
+                     'PV', 'CRDER', 'CSYER',
+                     'EPOCH', 'EQUINOX', 'DATE-OBS',
+                     'MJD-OBS', 'MJD-AVG',
+                     'LONPOLE', 'LATPOLE', 
+                     'OBSGEO-Z', 'OBSGEO-Y', 'OBSGEO-Z',
+                     'RESTFRQ', 'RESTWAV',
+                     'VELANGL', 'VELOSYS', 'ZSOURCE']
+
+    hdulist = pyfits.open(fitsfname, mode='update')
+    for hdu in hdulist:
+        # Remove any fields defined by standard as FLOAT whos value is NOT float.
+        for kw in float_fields:
+            hdr = hdu.header
+            if (kw in hdr) and (type(hdr[kw]) is str):
+                msg = ('Removed "{}" since its value ("{}") was a string'
+                       .format(kw, hdr[kw]))
+                hdr['HISTORY'] = msg
+                del hdr[kw]
+                logging.warning('Invalid FITS file "{}": {}'.format(fitsfname, msg))
+    hdulist.close(output_verify='fix')
+
 # EXAMPLE:
 #   find /data/raw -name "*.fits*" -print0 | xargs --null  fits_compliant
 def fits_compliant(fits_file_list,
