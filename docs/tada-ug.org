@@ -43,17 +43,16 @@ The source of this document is on [[https://github.com/pothiers/tada/blob/master
 format for rsync delivery.  But github does a reasonably good job of
 rendering /.org/ files.
 
-* Overview
-This release of TADA will accept files from both a *dropbox* and the
-deprecated *LPR based* submit. This document won't tell you anything about
-the LPR based system. So there!
+* Overview                                                           :export:
+This release of TADA attempts to archive files put in a
+*dropbox*. 
 
-Personality files in this release are all YAML format.  (the
-*.personality* format files are deprecated)  The YAML personalities are
+Personality files in this release are all YAML format.  (legacy
+*.personality* format files not supported)  The YAML personalities are
 installed on mountain and valley in: ~/var/tada/personalties~
 Their source is in [[https://github.com/pothiers/tada-cli/tree/master/personalities][tada-cli]].
 
-* What Can I do with Personality Files?
+* What Can I do with Personality Files?                              :export:
 Modify from an example YAML personality such as [[https://github.com/pothiers/tada-cli/blob/master/personalities/bok23m-90prime/bok23m-90prime.yaml][bok]]. The ~options~
 section consists of FITS field names following by the value to stuff
 into them (overwrite).  The ~params:calchdr:~ section contains a list
