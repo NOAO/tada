@@ -143,53 +143,53 @@ def irods_mv_tree(src_ipath, dst_ipath):
 
  
 
-# light-weight but dangerous.
-# Register file in irods331  to physical file under irods403.
-def fast_bridge_copy(src_ipath, dst_ipath, remove_orig=False):
-    logging.warning(':Start EXECUTING FAST TEMP HACK!!!: bridge_copy({}, {})'
-                    .format(src_ipath, dst_ipath))
-    local_file = irods_get_physical(src_ipath)
-    irods_reg_331(local_file, dst_ipath)
-
-    logging.warning(':Done EXECUTING FAST TEMP HACK!!!')
-    return dst_ipath
-    
-# This does expensive iget, iput combination!!!
-# When Archive moves up to irods 4, we can dispense with this nonsense!
-def bridge_copy(src_ipath, dst_ipath, remove_orig=False): 
-    logging.warning(':Start EXECUTING TEMPORARY HACK!!!: bridge_copy({}, {})'
-                  .format(src_ipath, dst_ipath))
-
-    (fd, temp_fname) = tempfile.mkstemp()
-    os.close(fd)
-    cmdargs1 = ['iget', '-f', src_ipath, temp_fname]
-    try:
-        diag.dbgcmd(cmdargs1)
-        subprocess.check_output(cmdargs1)
-    except subprocess.CalledProcessError as ex:
-        logging.error('Execution failed: {}; {}'
-                      .format(ex,
-                              ex.output.decode('utf-8')))
-        raise
-    logging.debug('Successful iget {} into {}'.format(src_ipath, temp_fname))
-    irods_put331(temp_fname, dst_ipath)
-    logging.debug('Successful put-331 {} into {}'.format(temp_fname, dst_ipath))
-    os.unlink(temp_fname)
-
-    # Only happens if iget and iput succeed
-    if remove_orig:
-        cmdargs2 = ['irm', '-f', '-U', src_ipath]
-        try:
-            diag.dbgcmd(cmdargs2)
-            subprocess.check_output(cmdargs2)
-        except subprocess.CalledProcessError as ex:
-            logging.error('Execution failed: {}; {}'
-                          .format(ex, ex.output.decode('utf-8')))
-            raise
-        
-    logging.debug(':Done EXECUTING TEMPORARY HACK!!!')
-    return dst_ipath
-
+#!# light-weight but dangerous.
+#!# Register file in irods331  to physical file under irods403.
+#!def fast_bridge_copy(src_ipath, dst_ipath, remove_orig=False):
+#!    logging.warning(':Start EXECUTING FAST TEMP HACK!!!: bridge_copy({}, {})'
+#!                    .format(src_ipath, dst_ipath))
+#!    local_file = irods_get_physical(src_ipath)
+#!    irods_reg_331(local_file, dst_ipath)
+#!
+#!    logging.warning(':Done EXECUTING FAST TEMP HACK!!!')
+#!    return dst_ipath
+#!    
+#!# This does expensive iget, iput combination!!!
+#!# When Archive moves up to irods 4, we can dispense with this nonsense!
+#!def bridge_copy(src_ipath, dst_ipath, remove_orig=False): 
+#!    logging.warning(':Start EXECUTING TEMPORARY HACK!!!: bridge_copy({}, {})'
+#!                  .format(src_ipath, dst_ipath))
+#!
+#!    (fd, temp_fname) = tempfile.mkstemp()
+#!    os.close(fd)
+#!    cmdargs1 = ['iget', '-f', src_ipath, temp_fname]
+#!    try:
+#!        diag.dbgcmd(cmdargs1)
+#!        subprocess.check_output(cmdargs1)
+#!    except subprocess.CalledProcessError as ex:
+#!        logging.error('Execution failed: {}; {}'
+#!                      .format(ex,
+#!                              ex.output.decode('utf-8')))
+#!        raise
+#!    logging.debug('Successful iget {} into {}'.format(src_ipath, temp_fname))
+#!    irods_put331(temp_fname, dst_ipath)
+#!    logging.debug('Successful put-331 {} into {}'.format(temp_fname, dst_ipath))
+#!    os.unlink(temp_fname)
+#!
+#!    # Only happens if iget and iput succeed
+#!    if remove_orig:
+#!        cmdargs2 = ['irm', '-f', '-U', src_ipath]
+#!        try:
+#!            diag.dbgcmd(cmdargs2)
+#!            subprocess.check_output(cmdargs2)
+#!        except subprocess.CalledProcessError as ex:
+#!            logging.error('Execution failed: {}; {}'
+#!                          .format(ex, ex.output.decode('utf-8')))
+#!            raise
+#!        
+#!    logging.debug(':Done EXECUTING TEMPORARY HACK!!!')
+#!    return dst_ipath
+#!
 
 
 def irods_mv_dir(src_idir, dst_idir):

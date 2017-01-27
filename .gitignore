@@ -14,7 +14,8 @@ bok/
 tests/smoke/data
 tests/smoke/data-scrape
 tests/smoke/tada-test-data/
-env_tada
+env_tada/
+venv/
 
 tt
 tt[0-9]

@@ -58,13 +58,9 @@ def validate_config(cfg, fname=None, qnames=None):
 
     missingqs = set(qnames) - set([d['name'] for d in cfg['queues']])
     if len(missingqs) > 0:
-        raise Exception('Config in {} is missing required queues {}.'
-                        + ' Required {}.'
-                        .format(
-                            fname,
-                            ', '.join(missingqs),
-                            ', '.join(qnames),
-                        ))
+        raise Exception(
+            'Config in {} is missing required queues {}. Required {}.'
+            .format(fname, ', '.join(missingqs), ', '.join(qnames) ))
 
 def get_config(queue_names,
                yaml_filename='/etc/tada/tada.conf',

@@ -24,6 +24,7 @@ from astropy.utils.exceptions import AstropyWarning, AstropyUserWarning
 from . import file_naming as fn
 from . import exceptions as tex
 from . import hdr_calc_funcs as hf
+from . import hdr_calc_utils as hcu
 from . import scrub
 #from . import config 
 from . import utils as tut
@@ -476,10 +477,10 @@ def fitsverify(fname):
     return True
 
 def set_dtpropid(orig, **kwargs):
-    pids = hf.ws_lookup_propids(orig.get('DTCALDAT'),
-                                orig.get('DTTELESC'),
-                                orig.get('DTINSTRU'),
-                                **kwargs)
+    pids = hcu.ws_lookup_propids(orig.get('DTCALDAT'),
+                                 orig.get('DTTELESC'),
+                                 orig.get('DTINSTRU'),
+                                 **kwargs)
     if len(pids) == 0:
         return {'DTPROPID': 'NONE'} # no svc connect?
     logging.debug('Schedule propids ({}, {}, {}) = {}'

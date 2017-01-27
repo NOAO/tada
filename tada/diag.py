@@ -5,6 +5,7 @@ commented out before this file could be removed."""
 import astropy.io.fits as pyfits
 import logging
 import collections
+import traceback
 from glob import glob
 from pprint import pprint
 
