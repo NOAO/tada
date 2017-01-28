@@ -616,14 +616,15 @@ def get_hdr_as_dict(fitsfile):
 #  VELANGLa, VELOSYSa, ZSOURCEa
 def scrub_fits(fitsfname):
     """Fix some violations against FITS standard (3.0) IN PLACE."""
-    float_fields =  ['BSCALE', 'BZERO',
+    float_fields =  [#'BSCALE', 'BZERO',
                      'DATAMAX', 'DATAMIN',
                      'PSCAL', 'PZERO',
                      'TSCAL', 'TZERO',
                      'CRPIX', 'CRVAL', 'CDELT', 'CROTA', 'PC', 'CD',
                      'PV', 'CRDER', 'CSYER',
-                     'EPOCH', 'EQUINOX', 'DATE-OBS',
-                     'MJD-OBS', 'MJD-AVG',
+                     'EPOCH', 'EQUINOX',
+                     #'DATE-OBS',
+                     #'MJD-OBS', 'MJD-AVG',
                      'LONPOLE', 'LATPOLE', 
                      'OBSGEO-Z', 'OBSGEO-Y', 'OBSGEO-Z',
                      'RESTFRQ', 'RESTWAV',

@@ -243,6 +243,7 @@ e.g. k4k_140923_024819_uri.fits.fz"""
     #!else:
     #!    new_fname = (std+".{ext}").format(**fields)
 
+    # Add "Flavor field"
     std='{prefix}_{date}_{time}_{obstype}{proctype}{prodtype}'
     if serno != None:
         std += '_{serno}'
