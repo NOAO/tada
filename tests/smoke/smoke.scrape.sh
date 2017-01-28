@@ -33,8 +33,8 @@ source tada-smoke-setup.sh
 echo "Doing 17 tests (using scraped files)"    
 
 ###########################################
-#!echo "WARNING: ignoring remainder of tests"
-#!exit $return_code
+#echo "WARNING: ignoring remainder of tests"
+#exit $return_code
 ###########################################a
 
 
@@ -57,7 +57,7 @@ testCommand sc10_1b "fsub $tdata/20110101/soar-spartan/S301D_K012-0484d3.fits.fz
 testCommand sc11_1 "fsub $tdata/20110101/wiyn-bench/24dec_2014.061.fits.fz wiyn-bench" "^\#" n 1
 testCommand sc12_1 "fsub $tdata/20110101/wiyn-whirc/obj_355.fits.fz wiyn-whirc" "^\#" n
 testCommand sc13_1 "fsub $tdata/20150929/kp4m-kosmos/a.20153.fits.fz kp4m-kosmos" "^\#" n
-testCommand sc14_1 "fsub $tdata/20141127/soar-soi/test.027.fits.fz soar-soi" "^\#" n 1
+testCommand sc14_1 "fsub $tdata/20141127/soar-soi/test.027.fits.fz soar-soi" "^\#" n 0
 testCommand sc15_1 "fsub $tdata/20160315/ct4m-arcoiris/SV_f0064.fits ct4m-arcoiris" "^\#" n
 
 

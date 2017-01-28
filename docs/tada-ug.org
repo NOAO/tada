@@ -1,6 +1,6 @@
 \setlength{\parindent}{0em}
 \parskip 7.2pt 
-# Each version, change: This documents release...
+# Each version, change: "This documents release"...
 
 * COMMENT PRESCRIPT
 * Quick Start
@@ -36,7 +36,7 @@ see also:
   - sandbox/tada/RELEASE-*.txt
 
 This document is intended to be a /brief go-to document/ for using
-TADA. The intended audience is: Sean M. and Steve P.
+TADA. The intended audience is: Sean M. (OPS) and Steve P. (DEV)
 This documents release 0.2.2 of TADA (more or less).
 
 The source of this document is on [[https://github.com/pothiers/tada/blob/master/docs/tada-ug.org][github]].  It is rendered to PDF

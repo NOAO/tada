@@ -30,10 +30,17 @@ function tally () {
 
 
 ##############################################################################
+### Context of tests
+###
 echo "# Running: $SCRIPT"
 echo "Current User: $USER"
 echo "Hiera values:"
 cat /etc/tada/hiera.yaml
+
+echo "TADA repo branch/tag currently active:"
+pushd $SCRIPDIR
+git symbolic-ref --short -q HEAD || git describe --tags --exact-match
+popd
 
 # Make sure hosts and services are running!
 source $SCRIPTDIR/smoke.system.sh; tally
