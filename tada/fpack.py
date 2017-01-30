@@ -25,6 +25,7 @@ def fpack_to(fitsfile, outfile, force=False):
     # for floating point 
     # $FPACK -Y -g -q 0 ${BASEFILE}.fits
     fpackcmd = '/usr/local/bin/fpack'
+    fitscopycmd = '/usr/local/bin/fitscopy'
     logging.debug('fpack_to({}, {})'.format(fitsfile, outfile))
 
     #tmpfile = outfile.replace('/cache/','/cache/.tempcache/')
@@ -40,20 +41,21 @@ def fpack_to(fitsfile, outfile, force=False):
         shutil.copy(fitsfile, outfile)
     else: # compress on the fly
         try:
-            hdr = fu.get_hdr_as_dict(fitsfile)
             remove_if_exists(outfile)
-            with open(outfile, 'wb') as file:
-                # -S :: Output compressed FITS files to STDOUT.
-                if (hdr.get('BITPIX',None) == -32
-                    or hdr.get('BITPIX',None) == -64):
-                    # is floating point image
-                    # Default options are lossy. Use lossless options instead.
-                    subprocess.call([fpackcmd, '-C', '-S', '-g', '-q',
-                                     0, fitsfile],
-                                    stdout=file)
-                else:
-                    subprocess.call([fpackcmd, '-C', '-S', fitsfile],
-                                    stdout=file)
+            subprocess.call([fitscopycmd, fitsfile, outfile])
+            hdr = fu.get_hdr_as_dict(outfile)
+            #with open(outfile, 'wb') as file:
+            # -S :: Output compressed FITS files to STDOUT.
+            if (hdr.get('BITPIX',None) == -32
+                or hdr.get('BITPIX',None) == -64):
+                # is floating point image
+                # Default options are lossy. Use lossless options instead.
+                subprocess.call([fpackcmd, '-C', '-F', '-g',
+                                 '-q', 0, outfile])
+            else:
+                #!subprocess.call([fpackcmd, '-C', '-S', fitsfile],
+                #!                stdout=file)
+                subprocess.call([fpackcmd, '-C', '-F', outfile])
         except subprocess.CalledProcessError as ex:
             logging.error('FAILED fpack_to: {}; {}'
                           .format(ex, ex.output.decode('utf-8')))

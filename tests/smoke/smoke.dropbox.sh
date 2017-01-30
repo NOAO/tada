@@ -120,6 +120,17 @@ rsync -az --password-file ~/.tada/rsync.pwd tada@$MTNHOST::logs ~/.tada/mountain
 testLog db4_1_log "mtnlogrun $mtn_plog ${mtn_plog_start}"
 testLog db5_1_log "mtnlogrun $mtn_wlog ${mtn_wlog_start}"
 
+# FITS not readable by Astropy, but CFITSIO (fitscopy) will correct it on mtn
+FITS="$tdata/noastropy/20161230/soar-goodman/0084.leia.fits"
+testCommand db6_1 "passdrop 18 $FITS 20161230 soar-goodman" "^\#" n 0
+testLog db6_1_log "pylogfilter $plog \"$MARKER\" $FITS"
+
+###########################################
+#echo "WARNING: ignoring remainder of tests"
+#exit $return_code
+###########################################a
+
+
 # Directory structure is wrong! (one too deep) TEST ON MOUNTAIN
 # scrape/<date>/<instrument>/.../*.fits.fz
 #! testCommand db2_1 "mdbox $tdata/scrape" "^\#" n

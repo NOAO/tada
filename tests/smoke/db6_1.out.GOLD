@@ -1,0 +1,6 @@
+# Using dropbox on: mountain.vagrant.noao.edu
+# DBG: dropping "/data/tada-test-data/noastropy/20161230/soar-goodman/0084.leia.fits" to "/home/tester/.tada/dropcache/20161230/soar-goodman/0084.leia.fits"
+# Waiting up to 18 secs for /data/tada-test-data/noastropy/20161230/soar-goodman/0084.leia.fits to be submitted: 
+# ............!
+Found file: /data/tada-test-data/noastropy/20161230/soar-goodman/0084.leia.fits
+# Found file after 12 seconds.

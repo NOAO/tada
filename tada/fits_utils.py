@@ -423,8 +423,15 @@ def set_dtpropid(orig, **kwargs):
         return {'DTPROPID': hdrpid}
     else:
         if len(pids) > 1: # split night
-            err = ('Propid from hdr ({}) not in scheduled list of Propids {}'.
-                   format(hdrpid, pids))
+            if '<!DOCTYPE html>' == pids[0]:
+                err = ('MARS lookup of ({}, {}, {}) for {} got error'
+                       .format(orig.get('DTCALDAT'),
+                               orig.get('DTTELESC'),
+                               orig.get('DTINSTRU'),
+                               hdrpid))
+            else:
+                err = ('Propid from hdr ({}) not in scheduled list of Propids {}'
+                       .format(hdrpid, pids))
             raise tex.BadPropid(err)
         else: # not split, hdr doesn't match schedule
             logging.warning((
