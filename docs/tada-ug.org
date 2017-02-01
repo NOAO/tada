@@ -94,6 +94,11 @@ Here's a list that is more or less right:
   - warn_unknown :: (default=?)
   - test_resubmit :: (default='0') Or set = '1'
 
+* Filename Flavors
+- s<serno> :: adds a field to filename from DTSERNO
+- t<tag> :: adds a field to filename of personality defines
+     "job_tag". Used in smoke tests to add "TADASMOKE" to filenames
+
 * Remediation
 There is no defined or automatic remediation work-flow in this
 release. There are a few main places you should look on BOTH Mountain

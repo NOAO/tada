@@ -37,30 +37,31 @@ echo "Current User: $USER"
 echo "Hiera values:"
 cat /etc/tada/hiera.yaml
 
-echo "TADA repo branch/tag currently active:"
-pushd $SCRIPTDIR
+pushd $SCRIPTDIR > /dev/null 2>&1
+echo -n "TADA repo branch/tag currently active: "
 # --short option not available in git 1.7.1
 #!git symbolic-ref --short -q HEAD || git describe --tags --exact-match
 git symbolic-ref -q HEAD || git describe --tags --exact-match
-popd
-
-# Make sure hosts and services are running!
-source $SCRIPTDIR/smoke.system.sh; tally
+popd > /dev/null 2>&1
+####
+##############################################################################
 
 ####
-# Mountain (dome) or Valley
-#source $SCRIPTDIR/smoke.sh; tally
-#source $SCRIPTDIR/smoke.raw.sh; tally # REMOVED because uses deprecated LP
-source $SCRIPTDIR/smoke.dropbox.sh; tally
+# Make sure hosts and services are running!
+source $SCRIPTDIR/smoke.system.sh; tally
 
 ####
 # Test Valley only behavior
 #! $SCRIPTDIR/smoke.fits_compliant.sh; tally
 #! $SCRIPTDIR/smoke.fits_submit.sh; tally
 source $SCRIPTDIR/smoke.direct.sh; tally  # test error conditions
-#!echo "WARNING: skipping scrape test!!!"
 source $SCRIPTDIR/smoke.scrape.sh; tally  # uses direct_submit
 source $SCRIPTDIR/smoke.pipeline.sh; tally
+
+####
+# Mountain (dome) or Valley
+#!source $SCRIPTDIR/smoke.raw.sh; tally # REMOVED because uses deprecated LP
+source $SCRIPTDIR/smoke.dropbox.sh; tally
 
 
 

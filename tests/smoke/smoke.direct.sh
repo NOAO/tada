@@ -52,6 +52,7 @@ change_fits $fits $newfits $tdata/basic/change.yaml
 testCommand fs7a_1 "fsub $newfits ops-fakearcoiris" "^\#" n 2
 testIrods fs7a_1b_irods $HDR
 # invoke TIMEOUT on connection to Ingest Service
+## FAILED: /tmp/changed.fits.fz not archived; Problem in opening or reading connection to: http://nsaserver.pat.sdm.noao.edu:9000/{'hdrUri': 'irods:///noao-tuc-z1/mtn/20160322/bok23m/1815A-0801/ksb_160322_234217_gri_t846000_TADASMOKE.hdr'}; ('Connection aborted.', BlockingIOError(115, 'Operation now in progress'))
 zero_archive_timeout
 testCommand fs7a_2 "fsub $newfits ops-fakearcoiris" "^\#" n 2
 restore_archive_timeout

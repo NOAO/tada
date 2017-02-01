@@ -64,7 +64,7 @@ mtn_wlog_start=`cat $mtn_wlog | wc -l`
 
 # fail-fail (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
 FITS="$tdata/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz"
-testCommand db1_1 "faildrop $FTO $FITS 20110101 wiyn-bench" "^\#" y 0
+testCommand db1_1 "faildrop $FTO $FITS 20110101 wiyn-bench" "^\#" n 0
 testLog db1_1_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 # pass-pass fitsverify

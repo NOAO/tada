@@ -17,8 +17,6 @@ def http_get_propids_from_schedule(telescope, instrument, date,
     logging.debug('MARS: get PROPID from schedule; url = {}'.format(url))
     propids = []
     try:
-        #!with urllib.request.urlopen(url,timeout=6) as f:
-        #!    response = f.read().decode('utf-8')
         r = requests.get(url, timeout=6)
         response = r.text
         logging.debug('MARS: server response="{}"'.format(response))
@@ -31,9 +29,9 @@ def http_get_propids_from_schedule(telescope, instrument, date,
     return propids # Should never happen
 
 def ws_lookup_propids(date, telescope, instrument, **kwargs):
-    """Return propids from schedule (list of one or more)
--OR- None if cannot reach service
--OR- 'NA' if service reachable but lookup fails."""
+    """Returna list of propids from schedule (list of one or more)
+-OR- [] if cannot reach service
+-OR- ['NEED-DEFAULT.'<tel>.<inst>] if service reachable but lookup fails."""
     logging.debug('ws_lookup_propids; kwargs={}'.format(kwargs))
     host=settings.mars_host
     port=settings.mars_port
@@ -47,7 +45,11 @@ def ws_lookup_propids(date, telescope, instrument, **kwargs):
                   .format(date, telescope, instrument))
     propids = http_get_propids_from_schedule(telescope, instrument, date,
                                              host=host, port=port)
-    return propids
+    if propids[0][:15] == '<!DOCTYPE html>':
+        logging.error('WS schedule lookup returned HTML')
+        return []
+    else:
+        return propids
 
 def deprecate(funcname, *msg):
     logging.warning('Using deprecated hdr_calc_func: {}; {}'

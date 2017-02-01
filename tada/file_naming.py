@@ -246,9 +246,9 @@ e.g. k4k_140923_024819_uri.fits.fz"""
     # Add "Flavor field"
     std='{prefix}_{date}_{time}_{obstype}{proctype}{prodtype}'
     if serno != None:
-        std += '_{serno}'
+        std += '_s{serno}'
     if tag != None:
-        std += '_{tag}'
+        std += '_t{tag}'
     std += '.{ext}'
 
     return std.format(**fields)
