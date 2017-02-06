@@ -1,4 +1,21 @@
 'Accumalate FITS header changes to apply later.'
+# UNDER CONSTRUCTION!!!
+
+# INPUTS:
+#  original header
+#  modified header (updates aggregated)
+#  definitions in YAML (python for hdr funcs)
+#  procedure YAML (python)
+#
+# OUTPUTS:
+#  change applied to new FITS header
+#  list of fields to delete
+#  (automatic HISTORY entries in FITS header)
+#
+# Validate all YAML on load.
+# How would this look if done in Scheme?
+# Intended for use by TADA, DART
+
 
 import logging
 import datetime
