@@ -630,8 +630,8 @@ def scrub_fits(fitsfname):
                      'CRPIX', 'CRVAL', 'CDELT', 'CROTA', 'PC', 'CD',
                      'PV', 'CRDER', 'CSYER',
                      'EPOCH', 'EQUINOX',
-                     #'DATE-OBS',
-                     #'MJD-OBS', 'MJD-AVG',
+                     #'DATE-OBS', # standard calls this Float and String
+                     'MJD-OBS', 'MJD-AVG',
                      'LONPOLE', 'LATPOLE', 
                      'OBSGEO-Z', 'OBSGEO-Y', 'OBSGEO-Z',
                      'RESTFRQ', 'RESTWAV',
@@ -643,11 +643,17 @@ def scrub_fits(fitsfname):
         for kw in float_fields:
             hdr = hdu.header
             if (kw in hdr) and (type(hdr[kw]) is str):
-                msg = ('Removed "{}" since its value ("{}") was a string'
+                try:
+                    ff = float(hdr(kw))
+                except:
+                    msg = ('Removed "{}" since its value ("{}") was a string'
                        .format(kw, hdr[kw]))
-                hdr['HISTORY'] = msg
-                del hdr[kw]
-                logging.warning('Invalid FITS file "{}": {}'.format(fitsfname, msg))
+                    hdr['HISTORY'] = msg
+                    del hdr[kw]
+                    logging.warning('Invalid FITS file "{}": {}'
+                                    .format(fitsfname, msg))
+                else:
+                    hdr = ff
     hdulist.close(output_verify='fix')
 
 # EXAMPLE:

@@ -247,7 +247,7 @@ e.g. k4k_140923_024819_uri.fits.fz"""
     std='{prefix}_{date}_{time}_{obstype}{proctype}{prodtype}'
     if serno != None:
         std += '_s{serno}'
-    if tag != None:
+    if (tag != None) and (tag != ''):
         std += '_t{tag}'
     std += '.{ext}'
 
