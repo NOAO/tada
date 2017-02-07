@@ -62,10 +62,11 @@ mtn_wlog_start=`cat $mtn_wlog | wc -l`
 ##############################################################################
 ### Tests
 
-# fail-fail (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
-FITS="$tdata/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz"
-testCommand db1_1 "faildrop $FTO $FITS 20110101 wiyn-bench" "^\#" n 0
-testLog db1_1_log "pylogfilter $plog \"$MARKER\" $FITS"
+## As of 2/7/2017 this will PASS INGEST because scrub_fits() fixes the header.
+#!# fail-fail (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
+#!FITS="$tdata/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz"
+#!testCommand db1_1 "faildrop $FTO $FITS 20110101 wiyn-bench" "^\#" n 0
+#!testLog db1_1_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 # pass-pass fitsverify
 # uncompressed (compress on the fly); allow extra time for compression

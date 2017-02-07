@@ -1,2 +1,3 @@
-EXECUTED: /opt/tada/venv/bin/direct_submit -p /var/tada/personalities/ops/smoke.yaml -p /data/tada-test-data/scrape/20110101/wiyn-bench/24dec_2014.061.fits.fz.yaml -p /var/tada/personalities/wiyn-bench/wiyn-bench.yaml /DATA/20110101/wiyn-bench/24dec_2014.061.fits.fz
-Rejected ingest of /20110101/wiyn-bench/24dec_2014.061.fits.fz. REASON: Verify failed: /usr/local/bin/fitsverify -e -q 24dec_2014.061.fits.fz
+SUCCESS: archived /20110101/wiyn-bench/24dec_2014.061.fits.fz 
+# Added provisional name for kwb_141224_131723_cri_tTADASMOKE.fits.fz
+
