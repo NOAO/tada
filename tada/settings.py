@@ -26,3 +26,11 @@ pre_action = tada.get('pre_action',None)
 
 
 #dict([(v,getattr(settings,v)) for v in dir(settings) if not v.startswith("_")])
+
+# Load FITS filename prefix table (ultimately creating using MARS)
+stiLUT = tut.read_sti_yaml()
+obsLUT = tut.read_obstype_yaml()
+procLUT = tut.read_proctype_yaml()
+prodLUT = tut.read_prodtype_yaml()
+
+

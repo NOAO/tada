@@ -31,6 +31,49 @@ def read_tada_yaml():
         raise
     return res
 
+def read_sti_yaml():
+    yamlfile = '/etc/tada/prefix_table.yaml'
+    try:
+        res = read_yaml(yamlfile)
+    except Exception as err:
+        logging.error('Could not read YAML file {}; {}'
+                      .format(yamlfile, err))
+        raise
+
+    # INPUT: [dict(instrument__name, prefix, site__name, telescope__name),...]
+    # OUPUT: dict[(site, telescope,instrument)] => prefix
+    lut = dict()
+    for d in res:
+        lut[(d['site__name'],
+             d['telescope__name'],
+             d['instrument__name']
+        )] = d['prefix']
+    
+    return lut
+
+def read_name_code_yaml(yamlfile):
+    try:
+        res = read_yaml(yamlfile)
+    except Exception as err:
+        logging.error('Could not read YAML file {}; {}'
+                      .format(yamlfile, err))
+        raise
+
+    # INPUT: [dict(name, code),...]
+    # OUPUT: dict[name] => code
+    lut = dict()
+    for d in res:
+        lut[d['name']] = d['code']
+    return lut
+
+def read_obstype_yaml():
+    return read_name_code_yaml('/etc/tada/obstype_table.yaml')
+
+def read_proctype_yaml():
+    return read_name_code_yaml('/etc/tada/proctype_table.yaml')
+
+def read_prodtype_yaml():
+    return read_name_code_yaml('/etc/tada/prodtype_table.yaml')
 
 def tic():
     tic.start = time.perf_counter()
