@@ -1,11 +1,10 @@
-#! /usr/bin/env python
 """Get tables from MARS, store each in YAML files (for tada.settings via read on DQD startup)
 """
 
 import sys
 import argparse
 import logging
-import from_mars as fm
+from . import from_mars as fm
 
 ##############################################################################
 
@@ -29,6 +28,8 @@ def main():
     logging.basicConfig(level=log_level,
                         format='%(levelname)s %(message)s',
                         datefmt='%m-%d %H:%M')
+
+    logging.getLogger().setLevel(log_level)
     logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
     fm.genPrefixTable('/etc/tada/prefix_table.yaml')

@@ -113,6 +113,7 @@ setup(
             'cleanyaml=tada.reformat_yaml:main',
             'remediate=tada.remediate:main',
             'change_fits=tada.change_hdr:main',
+            'installTadaTables=getconfig.writeTadaTables:main',
         ],
     },
 )

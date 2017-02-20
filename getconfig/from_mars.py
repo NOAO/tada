@@ -1,9 +1,9 @@
 """Library for retrieving TADA config info from MARS.
 """
-
 import json
 import requests
 import yaml
+import logging
 #!from tada import settings
 
 def getMarsTadaJson(urlleaf):

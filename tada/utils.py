@@ -3,6 +3,7 @@ import logging
 import time
 import traceback
 import sys
+import os.path
 
 
 def read_yaml(yamlfile):
@@ -33,6 +34,9 @@ def read_tada_yaml():
 
 def read_sti_yaml():
     yamlfile = '/etc/tada/prefix_table.yaml'
+    if not os.path.exists(yamlfile):
+        return dict()
+
     try:
         res = read_yaml(yamlfile)
     except Exception as err:
@@ -52,6 +56,9 @@ def read_sti_yaml():
     return lut
 
 def read_name_code_yaml(yamlfile):
+    if not os.path.exists(yamlfile):
+        return dict()
+
     try:
         res = read_yaml(yamlfile)
     except Exception as err:
