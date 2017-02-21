@@ -3,7 +3,7 @@
 #
 # EXAMPLE:
 #   # For Dev (vagrant) test
-#   ~/sandbox/tada/tests/smoke/run-smoke-as-tester.sh
+#   cd ~/sandbox/vagrant-tada;~/sandbox/tada/tests/smoke/run-smoke-as-tester.sh
 #
 #   # For PAT test
 #   ~/sandbox/tada/tests/smoke/run-smoke-as-tester.sh val.pat.sdm.noao.edu
