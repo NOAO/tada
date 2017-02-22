@@ -71,7 +71,7 @@ mtn_wlog_start=`cat $mtn_wlog | wc -l`
 # pass-pass fitsverify
 # uncompressed (compress on the fly); allow extra time for compression
 FITS=$tdata/short-drop/20110101/ct13m-andicam/ir141225.0179.fits
-testCommand db2_6 "passdrop 10 $FITS 20110101 ct13m-andicam" "^\#" n 0
+testCommand db2_6 "passdrop 18 $FITS 20110101 ct13m-andicam" "^\#" n 0
 testLog db2_6_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 

@@ -20,9 +20,10 @@ date > /var/log/tada/pop.log
 
 
 function tally () {
+    src=$1
     mastertotalcnt=$((totalcnt + mastertotalcnt))
     masterfailcnt=$((failcnt + masterfailcnt))
-    echo "Score so far; suite  passed=$(($totalcnt-$failcnt))/$totalcnt"
+    echo "Score so far; suite  passed=$(($totalcnt-$failcnt))/$totalcnt ($src)"
     echo "Score so far; master passed=$(($mastertotalcnt-$masterfailcnt))/$mastertotalcnt"
     totalcnt=0
     failcnt=0
@@ -48,20 +49,20 @@ popd > /dev/null 2>&1
 
 ####
 # Make sure hosts and services are running!
-source $SCRIPTDIR/smoke.system.sh; tally
+source $SCRIPTDIR/smoke.system.sh; tally smoke.system
 
 ####
 # Test Valley only behavior
 #! $SCRIPTDIR/smoke.fits_compliant.sh; tally
 #! $SCRIPTDIR/smoke.fits_submit.sh; tally
-source $SCRIPTDIR/smoke.direct.sh; tally  # test error conditions
-source $SCRIPTDIR/smoke.scrape.sh; tally  # uses direct_submit
-source $SCRIPTDIR/smoke.pipeline.sh; tally
+source $SCRIPTDIR/smoke.direct.sh; tally   smoke.direct # test error conditions
+source $SCRIPTDIR/smoke.scrape.sh; tally   smoke.scrape # uses direct_submit
+source $SCRIPTDIR/smoke.pipeline.sh; tally smoke.pipeline
 
 ####
 # Mountain (dome) or Valley
-#!source $SCRIPTDIR/smoke.raw.sh; tally # REMOVED because uses deprecated LP
-source $SCRIPTDIR/smoke.dropbox.sh; tally
+#!source $SCRIPTDIR/smoke.raw.sh; tally raw# REMOVED because uses deprecated LP
+source $SCRIPTDIR/smoke.dropbox.sh; tally smoke.dropbox
 
 
 
