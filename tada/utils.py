@@ -75,16 +75,43 @@ def read_name_code_yaml(yamlfile):
 
 def read_obstype_yaml():
     return read_name_code_yaml('/etc/tada/obstype_table.yaml')
-
 def read_proctype_yaml():
     return read_name_code_yaml('/etc/tada/proctype_table.yaml')
-
 def read_prodtype_yaml():
     return read_name_code_yaml('/etc/tada/prodtype_table.yaml')
+##############################################################################
+def read_name_set_yaml(yamlfile):
+    if not os.path.exists(yamlfile):
+        return dict()
+
+    try:
+        res = read_yaml(yamlfile)
+    except Exception as err:
+        logging.error('Could not read YAML file {}; {}'
+                      .format(yamlfile, err))
+        raise
+
+    # INPUT: [dict(name, comment),...]
+    # OUPUT: set([name, ...])
+    return set([d['name'] for d in res])
+
+
+def read_rawreq_yaml():
+    return read_name_set_yaml('/etc/tada/raw_required_table.yaml')
+def read_fnreq_yaml():
+    return read_name_set_yaml('/etc/tada/filename_required_table.yaml')
+def read_ingestreq_yaml():
+    return read_name_set_yaml('/etc/tada/ingest_required_table.yaml')
+def read_ingestrec_yaml():
+    return read_name_set_yaml('/etc/tada/ingest_recommended_table.yaml')
+def read_supportreq_yaml():
+    return read_name_set_yaml('/etc/tada/support_required_table.yaml')
+def read_float_yaml():
+    return read_name_set_yaml('/etc/tada/float_table.yaml')
+
 
 def tic():
     tic.start = time.perf_counter()
-
 def toc():
     elapsed_seconds = time.perf_counter() - tic.start
     return elapsed_seconds # fractional

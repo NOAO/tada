@@ -22,7 +22,7 @@ def getMarsTadaJson(urlleaf):
 
 def genPrefixTable(yamlfilename):
     """Convert SiteTelescopeInstrument LUT from MARS into YAML."""
-    jsondata = getMarsTadaJson('pfx')
+    jsondata = getMarsTadaJson('prefix')
     with open(yamlfilename, 'w') as yamlfile:
         yaml.dump(jsondata, yamlfile)
     return
@@ -47,3 +47,43 @@ def genProdTable(yamlfilename):
     with open(yamlfilename, 'w') as yamlfile:
         yaml.dump(jsondata, yamlfile)
     return
+
+##############################################################################
+
+def genRawReqTable(yamlfilename):
+    jsondata = getMarsTadaJson('rawreq')
+    with open(yamlfilename, 'w') as yamlfile:
+        yaml.dump(jsondata, yamlfile)
+    return
+
+def genFilenameReqTable(yamlfilename):
+    jsondata = getMarsTadaJson('fnreq')
+    with open(yamlfilename, 'w') as yamlfile:
+        yaml.dump(jsondata, yamlfile)
+    return
+
+def genIngestReqTable(yamlfilename):
+    jsondata = getMarsTadaJson('ingestreq')
+    with open(yamlfilename, 'w') as yamlfile:
+        yaml.dump(jsondata, yamlfile)
+    return
+
+def genIngestRecTable(yamlfilename):
+    jsondata = getMarsTadaJson('ingestrec')
+    with open(yamlfilename, 'w') as yamlfile:
+        yaml.dump(jsondata, yamlfile)
+    return
+
+def genSupportReqTable(yamlfilename):
+    jsondata = getMarsTadaJson('supportreq')
+    with open(yamlfilename, 'w') as yamlfile:
+        yaml.dump(jsondata, yamlfile)
+    return
+
+def genFloatTable(yamlfilename):
+    jsondata = getMarsTadaJson('floatreq')
+    with open(yamlfilename, 'w') as yamlfile:
+        yaml.dump(jsondata, yamlfile)
+    return
+
+

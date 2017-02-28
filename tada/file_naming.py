@@ -9,46 +9,46 @@ import csv
 from . import exceptions as tex
 from . import settings
 
-# From: http://ast.noao.edu/data/docs
-table1_str = '''
-| Site         | Telescope | Instrument | Type                   | Prefix |
-|--------------+-----------+------------+------------------------+--------|
-| Cerro Pachon | SOAR      | Goodman    | spectograph            | psg    |
-| Cerro Pachon | SOAR      | OSIRIS     | IR imager/spectrograph | pso    |
-| Cerro Pachon | SOAR      | SOI        | image                  | psi    |
-| Cerro Pachon | SOAR      | Spartan    | IR imager              | pss    |
-| Cerro Pachon | SOAR      | SAM        | imager                 | psa    |
-| Cerro Tololo | Blanco 4m | DECam      | imager                 | c4d    |
-| Cerro Tololo | Blanco 4m | COSMOS     | spectrograph           | c4c    |
-| Cerro Tololo | Blanco 4m | ISPI       | IR imager              | c4i    |
-| Cerro Tololo | Blanco 4m | Arcon      | imagers/spectrographs  | c4a    |
-| Cerro Tololo | Blanco 4m | Mosaic     | imager                 | c4m    |
-| Cerro Tololo | Blanco 4m | NEWFIRM    | IR imager              | c4n    |
-| Cerro Tololo | 1.5m      | Chiron     | spectrograph           | c15e   |
-| Cerro Tololo | 1.5m      | Arcon      | spectrograph           | c15s   |
-| Cerro Tololo | 1.3m      | ANDICAM    | O/IR imager            | c13a   |
-| Cerro Tololo | 1.0m      | Y4KCam     | imager                 | c1i    |
-| Cerro Tololo | 0.9m      | Arcon      | imager                 | c09i   |
-| Cerro Tololo | lab       | COSMOS     | spectrograph           | clc    |
-| Kitt Peak    | Mayall 4m | Mosaic     | imager                 | k4m    |
-| Kitt Peak    | Mayall 4m | NEWFIRM    | IR imager              | k4n    |
-| Kitt Peak    | Mayall 4m | KOSMOS     | spectograph            | k4k    |
-| Kitt Peak    | Mayall 4m | ICE        | Opt. imagers/spectro.  | k4i    |
-| Kitt Peak    | Mayall 4m | Wildfire   | IR imager/spectro.     | k4w    |
-| Kitt Peak    | Mayall 4m | Flamingos  | IR imager/spectro.     | k4f    |
-| Kitt Peak    | Mayall 4m | WHIRC      | IR imager              | kww    |
-| Kitt Peak    | Mayall 4m | Bench      | spectrograph           | kwb    |
-| Kitt Peak    | Mayall 4m | MiniMo/ICE | imager                 | kwi    |
-| Kitt Peak    | Mayall 4m | (p)ODI     | imager                 | kwo    |
-| Kitt Peak    | Mayall 4m | MOP/ICE    | imager/spectrograph    | k21i   |
-| Kitt Peak    | Mayall 4m | Wildfire   | IR imager/spectrograph | k21w   |
-| Kitt Peak    | Mayall 4m | Falmingos  | IR imager/spectrograph | k21f   |
-| Kitt Peak    | Mayall 4m | GTCam      | imager                 | k21g   |
-| Kitt Peak    | Mayall 4m | MOP/ICE    | spectrograph           | kcfs   |
-| Kitt Peak    | Mayall 4m | HDI        | imager                 | k09h   |
-| Kitt Peak    | Mayall 4m | Mosaic     | imager                 | k09m   |
-| Kitt Peak    | Mayall 4m | ICE        | imager                 | k09i   |
-'''
+#! From: http://ast.noao.edu/data/docs
+#!table1_str = '''
+#!| Site         | Telescope | Instrument | Type                   | Prefix |
+#!|--------------+-----------+------------+------------------------+--------|
+#!| Cerro Pachon | SOAR      | Goodman    | spectograph            | psg    |
+#!| Cerro Pachon | SOAR      | OSIRIS     | IR imager/spectrograph | pso    |
+#!| Cerro Pachon | SOAR      | SOI        | image                  | psi    |
+#!| Cerro Pachon | SOAR      | Spartan    | IR imager              | pss    |
+#!| Cerro Pachon | SOAR      | SAM        | imager                 | psa    |
+#!| Cerro Tololo | Blanco 4m | DECam      | imager                 | c4d    |
+#!| Cerro Tololo | Blanco 4m | COSMOS     | spectrograph           | c4c    |
+#!| Cerro Tololo | Blanco 4m | ISPI       | IR imager              | c4i    |
+#!| Cerro Tololo | Blanco 4m | Arcon      | imagers/spectrographs  | c4a    |
+#!| Cerro Tololo | Blanco 4m | Mosaic     | imager                 | c4m    |
+#!| Cerro Tololo | Blanco 4m | NEWFIRM    | IR imager              | c4n    |
+#!| Cerro Tololo | 1.5m      | Chiron     | spectrograph           | c15e   |
+#!| Cerro Tololo | 1.5m      | Arcon      | spectrograph           | c15s   |
+#!| Cerro Tololo | 1.3m      | ANDICAM    | O/IR imager            | c13a   |
+#!| Cerro Tololo | 1.0m      | Y4KCam     | imager                 | c1i    |
+#!| Cerro Tololo | 0.9m      | Arcon      | imager                 | c09i   |
+#!| Cerro Tololo | lab       | COSMOS     | spectrograph           | clc    |
+#!| Kitt Peak    | Mayall 4m | Mosaic     | imager                 | k4m    |
+#!| Kitt Peak    | Mayall 4m | NEWFIRM    | IR imager              | k4n    |
+#!| Kitt Peak    | Mayall 4m | KOSMOS     | spectograph            | k4k    |
+#!| Kitt Peak    | Mayall 4m | ICE        | Opt. imagers/spectro.  | k4i    |
+#!| Kitt Peak    | Mayall 4m | Wildfire   | IR imager/spectro.     | k4w    |
+#!| Kitt Peak    | Mayall 4m | Flamingos  | IR imager/spectro.     | k4f    |
+#!| Kitt Peak    | Mayall 4m | WHIRC      | IR imager              | kww    |
+#!| Kitt Peak    | Mayall 4m | Bench      | spectrograph           | kwb    |
+#!| Kitt Peak    | Mayall 4m | MiniMo/ICE | imager                 | kwi    |
+#!| Kitt Peak    | Mayall 4m | (p)ODI     | imager                 | kwo    |
+#!| Kitt Peak    | Mayall 4m | MOP/ICE    | imager/spectrograph    | k21i   |
+#!| Kitt Peak    | Mayall 4m | Wildfire   | IR imager/spectrograph | k21w   |
+#!| Kitt Peak    | Mayall 4m | Falmingos  | IR imager/spectrograph | k21f   |
+#!| Kitt Peak    | Mayall 4m | GTCam      | imager                 | k21g   |
+#!| Kitt Peak    | Mayall 4m | MOP/ICE    | spectrograph           | kcfs   |
+#!| Kitt Peak    | Mayall 4m | HDI        | imager                 | k09h   |
+#!| Kitt Peak    | Mayall 4m | Mosaic     | imager                 | k09m   |
+#!| Kitt Peak    | Mayall 4m | ICE        | imager                 | k09i   |
+#!'''
 
 
 # MOVED to external file, read in settings.py

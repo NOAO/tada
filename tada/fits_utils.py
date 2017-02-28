@@ -30,192 +30,6 @@ from . import scrub
 from . import utils as tut
 from . import settings
 
-#DOC: vvv
-# All bets are off in the original FITS file does not contain all of these.
-RAW_REQUIRED_FIELDS = set([
-    #!'OBSERVAT',
-    'TELESCOP',
-    # 'PROPOSER', #!!! will use PROPID when PROPOSER doesn't exist in raw hdr
-])
-
-
-# These fields are required to construct the Archive filename and path.
-# Some may be common with INGEST_REQUIRED (below).
-FILENAME_REQUIRED_FIELDS = set([
-    'DATE-OBS',  # triplespec doesn't have it; comes from other field
-
-    # for BASENAME
-    'DTSITE',
-    'DTTELESC',
-    'DTINSTRU',
-    'OBSTYPE',
-    'PROCTYPE',
-    'PRODTYPE',
-
-    # for PATH (dome)
-    'DTCALDAT',
-    'DTTELESC',
-    'DTPROPID',
-
-    # for PATH (pipeline)
-    #! 'DTSUBMIT',
-    #! 'PLQUEUE',
-    #! 'PLQNAME',
-])
-
-# To be able to ingest a fits file into the archive, all of these must
-# be present in the header.
-# The commented out lines are Requirements per document, but did not seem to
-# be required in Legacy code.
-INGEST_REQUIRED_FIELDS = set([
-    'SIMPLE',
-    'OBSERVAT', # needed for std filename
-    'DTPROPID', # observing proposal ID
-    'DTCALDAT', # calendar date from observing schedule
-    'DTTELESC', # needed to construct full file path in archive
-    'DTACQNAM', # file name supplied at telescope; User knows only THIS name
-    'DTNSANAM', # file name in archive (renamed from user supplied)
-    'DTSITE',   # Required for standard file name (pg 9, "File Naming Conv...")
-    'DTTELESC', # Required for standard file name (pg 9, "File Naming Conv...")
-    'DTINSTRU', # Required for standard file name (pg 9, "File Naming Conv...")
-])
-
-# We should try to fill these fields were practical. They are used in
-# the archive. Under the portal they may affect ability to query or
-# show as the results of queries.  If any of these are missing just
-# before ingest, a warning will be logged indicating the missing
-# fields.
-INGEST_RECOMMENDED_FIELDS = set([
-    'INSTRUME', # !!! moved from RAW_REQUIRED to satisfy:
-                # /scraped/mtn_raw/ct15m-echelle/chi150724.1000.fits
-    'DTACQNAM',
-    'DTCALDAT', # calendar date from observing schedule
-    'DTCOPYRI', # copyright holder of data (ADDED!!!)
-    'DTINSTRU',
-    'DTNSANAM',
-    'DTOBSERV',
-    'DTPI',
-    'DTPIAFFL',
-    'DTPROPID', # observing proposal ID
-    'DTSITE',
-    'DTTELESC',
-    'DTTITLE',
-    'PROCTYPE',
-    'PRODTYPE',
-    'OBSID',
-#   'DTACCOUN', # observing account name
-#   'DTACQUIS', # host name of data acquisition computer
-#   'DTOBSERV', # scheduling institution
-#   'DTPIAFFL', # PI affiliation 
-#   'DTPUBDAT', # calendar date of public release 
-#   'DTUTC',
-])    
-#DOC: ^^^
-
-# Fields used in hdr_calc_funcs.py
-SUPPORT_FIELDS = set([
-    'IMAGETYP',
-    'DATE-OBS',
-    'TIME-OBS',
-    'DATE',
-    'PROPID',
-    #!'PLDSID',
-    #!'PLQUEUE',
-    #!'PLQNAME',
-    ])
-
-USED_FIELDS = (RAW_REQUIRED_FIELDS
-               | FILENAME_REQUIRED_FIELDS
-               | INGEST_REQUIRED_FIELDS
-               | INGEST_RECOMMENDED_FIELDS
-               | SUPPORT_FIELDS)
-
-
-def print_header(msg, hdr=None, fits_filename=None):
-    """Provide HDR or FITS_FILENAME"""
-    if hdr == None:
-        hdulist = pyfits.open(fits_filename) 
-        hdr = hdulist[0].header # use only first in list.
-    # Print without blank cards or trailing whitespace
-    hdrstr = hdr.tostring(sep='\n',padding=False)
-    print('{}: '.format(msg))
-    print(*[s.rstrip() for s in hdrstr.splitlines()
-            if s.strip() != ''],
-          sep='\n')
-
-    
-    
-# It seems unconscionably complex for Ingest to require extra lines be
-# prepended to the text of the fits header.  The only reason those
-# same 5 fields couldn't be added to the header itself is that one of
-# them is 9 characters but fits limites field names to 8 characters.
-# Once Ingest made the decision to require special non-header fields,
-# it should have just defined exactly what it needed (not prepended);
-# including defining what is optional.  There is no published
-# "contract" for what exactly should be sent to Ingest via TCP!
-def get_archive_header(fits_file, checksum):
-    "Get the 'header' that archive ingest wants to see sent to it over TCP"
-    # Only look at first/primary HDU?!!! (Header Data Unit)
-    hdu = pyfits.open(fits_file)[0] # can be compressed
-    #hdr_keys = set(hdu.header.keys())
-    params = dict(filename=fits_file,
-                  filesize=os.path.getsize(fits_file),
-                  checksum=checksum,
-                  hdr=hdu.header,
-              )
-    return """\
-#filename = {filename}
-#reference = {filename}
-#filetype = UNKNOWN
-#filesize = {filesize} bytes
-#file_md5 = {checksum}
-
-{hdr}
-""".format(**params)
-
-def missing_in_hdr(hdr, required_fields):
-    hdr_keys = set(hdr.keys())
-    missing = required_fields - hdr_keys
-    return missing
-
-def missing_in_raw_hdr(hdr):
-    """Header from original FITS input to TADA doesn't contain minimum
- acceptable fields."""
-    return missing_in_hdr(hdr, RAW_REQUIRED_FIELDS)
-
-def missing_in_filename_hdr(hdr):
-    """Header from FITS doesn't contain minimum fields acceptable for
- generating standard filename."""
-    return missing_in_hdr(hdr, FILENAME_REQUIRED_FIELDS)
-
-def missing_in_archive_hdr(hdr):
-    """Header from FITS doesn't contain minimum fields acceptable for
- Archive Ingest."""
-    return missing_in_hdr(hdr, INGEST_REQUIRED_FIELDS)
-
-def missing_in_recommended_hdr(hdr):
-    "Header from FITS doesn't contain all fields recommended for ingest."
-    return missing_in_hdr(hdr, INGEST_RECOMMENDED_FIELDS)
-
-#! def valid_header(fits_file):
-#!     """Read FITS metadata and insure it has what we need. 
-#! Raise exception if not."""
-#!     try:
-#!         # Only look at first/primary HDU?!!! (Header Data Unit)
-#!         hdulist = pyfits.open(fits_file) # can be compressed
-#!         hdr = hdulist[0].header
-#!     except Exception as err:
-#!         raise tex.InvalidHeader('Metadata keys could not be read: {}'
-#!                                        .format(err))
-#!     missing = missing_in_raw_hdr(hdr)
-#!     if len(missing) > 0:
-#!         raise tex.HeaderMissingKeys(
-#!             'Missing required metadata keys: {} in file {}'
-#!             .format(missing, hdr.get(DTACQNAM,'NA')))
-#!     return True
-
-
-
 # EXAMPLE compliant header (included here for descriptions):
 """    
 SIMPLE  =                    T / File conforms to FITS standard
@@ -364,6 +178,193 @@ DATASUM = '0         '          /  checksum of data records
 """    
 
 
+#!#DOC: vvv
+#!# All bets are off in the original FITS file does not contain all of these.
+#!RAW_REQUIRED_FIELDS = set([
+#!    #!'OBSERVAT',
+#!    'TELESCOP',
+#!    # 'PROPOSER', #!!! will use PROPID when PROPOSER doesn't exist in raw hdr
+#!])
+#!
+#!# These fields are required to construct the Archive filename and path.
+#!# Some may be common with INGEST_REQUIRED (below).
+#!FILENAME_REQUIRED_FIELDS = set([
+#!    'DATE-OBS',  # triplespec doesn't have it; comes from other field
+#!
+#!    # for BASENAME
+#!    'DTSITE',
+#!    'DTTELESC',
+#!    'DTINSTRU',
+#!    'OBSTYPE',
+#!    'PROCTYPE',
+#!    'PRODTYPE',
+#!
+#!    # for PATH (dome)
+#!    'DTCALDAT',
+#!    'DTTELESC',
+#!    'DTPROPID',
+#!
+#!    # for PATH (pipeline)
+#!    #! 'DTSUBMIT',
+#!    #! 'PLQUEUE',
+#!    #! 'PLQNAME',
+#!])
+#!
+#!# To be able to ingest a fits file into the archive, all of these must
+#!# be present in the header.
+#!# The commented out lines are Requirements per document, but did not seem to
+#!# be required in Legacy code.
+#!INGEST_REQUIRED_FIELDS = set([
+#!    'SIMPLE',
+#!    'OBSERVAT', # needed for std filename
+#!    'DTPROPID', # observing proposal ID
+#!    'DTCALDAT', # calendar date from observing schedule
+#!    'DTTELESC', # needed to construct full file path in archive
+#!    'DTACQNAM', # file name supplied at telescope; User knows only THIS name
+#!    'DTNSANAM', # file name in archive (renamed from user supplied)
+#!    'DTSITE',   # Required for standard file name (pg 9, "File Naming Conv...")
+#!    'DTTELESC', # Required for standard file name (pg 9, "File Naming Conv...")
+#!    'DTINSTRU', # Required for standard file name (pg 9, "File Naming Conv...")
+#!])
+#!
+#!# We should try to fill these fields were practical. They are used in
+#!# the archive. Under the portal they may affect ability to query or
+#!# show as the results of queries.  If any of these are missing just
+#!# before ingest, a warning will be logged indicating the missing
+#!# fields.
+#!INGEST_RECOMMENDED_FIELDS = set([
+#!    'INSTRUME', # !!! moved from RAW_REQUIRED to satisfy:
+#!                # /scraped/mtn_raw/ct15m-echelle/chi150724.1000.fits
+#!    'DTACQNAM',
+#!    'DTCALDAT', # calendar date from observing schedule
+#!    'DTCOPYRI', # copyright holder of data (ADDED!!!)
+#!    'DTINSTRU',
+#!    'DTNSANAM',
+#!    'DTOBSERV',
+#!    'DTPI',
+#!    'DTPIAFFL',
+#!    'DTPROPID', # observing proposal ID
+#!    'DTSITE',
+#!    'DTTELESC',
+#!    'DTTITLE',
+#!    'PROCTYPE',
+#!    'PRODTYPE',
+#!    'OBSID',
+
+#!#   'DTACCOUN', # observing account name
+#!#   'DTACQUIS', # host name of data acquisition computer
+#!#   'DTOBSERV', # scheduling institution
+#!#   'DTPIAFFL', # PI affiliation 
+#!#   'DTPUBDAT', # calendar date of public release 
+#!#   'DTUTC',
+#!])    
+#!#DOC: ^^^
+#!
+#!# Fields used in hdr_calc_funcs.py
+#!SUPPORT_FIELDS = set([
+#!    'IMAGETYP',
+#!    'DATE-OBS',
+#!    'TIME-OBS',
+#!    'DATE',
+#!    'PROPID',
+#!    #!'PLDSID',
+#!    #!'PLQUEUE',
+#!    #!'PLQNAME',
+#!    ])
+
+USED_FIELDS = (settings.RAW_REQUIRED_FIELDS
+               | settings.FILENAME_REQUIRED_FIELDS
+               | settings.INGEST_REQUIRED_FIELDS
+               | settings.INGEST_RECOMMENDED_FIELDS
+               | settings.SUPPORT_FIELDS)
+
+
+def print_header(msg, hdr=None, fits_filename=None):
+    """Provide HDR or FITS_FILENAME"""
+    if hdr == None:
+        hdulist = pyfits.open(fits_filename) 
+        hdr = hdulist[0].header # use only first in list.
+    # Print without blank cards or trailing whitespace
+    hdrstr = hdr.tostring(sep='\n',padding=False)
+    print('{}: '.format(msg))
+    print(*[s.rstrip() for s in hdrstr.splitlines()
+            if s.strip() != ''],
+          sep='\n')
+
+    
+    
+# It seems unconscionably complex for Ingest to require extra lines be
+# prepended to the text of the fits header.  The only reason those
+# same 5 fields couldn't be added to the header itself is that one of
+# them is 9 characters but fits limites field names to 8 characters.
+# Once Ingest made the decision to require special non-header fields,
+# it should have just defined exactly what it needed (not prepended);
+# including defining what is optional.  There is no published
+# "contract" for what exactly should be sent to Ingest via TCP!
+def get_archive_header(fits_file, checksum):
+    "Get the 'header' that archive ingest wants to see sent to it over TCP"
+    # Only look at first/primary HDU?!!! (Header Data Unit)
+    hdu = pyfits.open(fits_file)[0] # can be compressed
+    #hdr_keys = set(hdu.header.keys())
+    params = dict(filename=fits_file,
+                  filesize=os.path.getsize(fits_file),
+                  checksum=checksum,
+                  hdr=hdu.header,
+              )
+    return """\
+#filename = {filename}
+#reference = {filename}
+#filetype = UNKNOWN
+#filesize = {filesize} bytes
+#file_md5 = {checksum}
+
+{hdr}
+""".format(**params)
+
+def missing_in_hdr(hdr, required_fields):
+    hdr_keys = set(hdr.keys())
+    missing = required_fields - hdr_keys
+    return missing
+
+def missing_in_raw_hdr(hdr):
+    """Header from original FITS input to TADA doesn't contain minimum
+ acceptable fields."""
+    return missing_in_hdr(hdr, settings.RAW_REQUIRED_FIELDS)
+
+def missing_in_filename_hdr(hdr):
+    """Header from FITS doesn't contain minimum fields acceptable for
+ generating standard filename."""
+    return missing_in_hdr(hdr, settings.FILENAME_REQUIRED_FIELDS)
+
+def missing_in_archive_hdr(hdr):
+    """Header from FITS doesn't contain minimum fields acceptable for
+ Archive Ingest."""
+    return missing_in_hdr(hdr, settings.INGEST_REQUIRED_FIELDS)
+
+def missing_in_recommended_hdr(hdr):
+    "Header from FITS doesn't contain all fields recommended for ingest."
+    return missing_in_hdr(hdr, settings.INGEST_RECOMMENDED_FIELDS)
+
+#! def valid_header(fits_file):
+#!     """Read FITS metadata and insure it has what we need. 
+#! Raise exception if not."""
+#!     try:
+#!         # Only look at first/primary HDU?!!! (Header Data Unit)
+#!         hdulist = pyfits.open(fits_file) # can be compressed
+#!         hdr = hdulist[0].header
+#!     except Exception as err:
+#!         raise tex.InvalidHeader('Metadata keys could not be read: {}'
+#!                                        .format(err))
+#!     missing = missing_in_raw_hdr(hdr)
+#!     if len(missing) > 0:
+#!         raise tex.HeaderMissingKeys(
+#!             'Missing required metadata keys: {} in file {}'
+#!             .format(missing, hdr.get(DTACQNAM,'NA')))
+#!     return True
+
+
+
+
 def validate_raw_hdr(hdr, orig_fullname):
     missing = missing_in_raw_hdr(hdr)
     #!logging.debug('EXECUTE fu.validate_raw_hdr(); missing={}'.format(missing))
@@ -506,7 +507,7 @@ def show_hdr_values(msg, hdr):
     """Show the values for 'interesting' header fields"""
     #!for key in RAW_REQUIRED_FIELDS.union(INGEST_REQUIRED_FIELDS):
     print('{}: '.format(msg), end='')
-    for key in RAW_REQUIRED_FIELDS:
+    for key in settings.RAW_REQUIRED_FIELDS:
         print('{}="{}"'.format(key,hdr.get(key,'<not given>')),end=', ')
     print()
 
@@ -609,6 +610,20 @@ def get_hdr_as_dict(fitsfile):
     hdict['COMMENT'] = 'MODIFIED:{}'.format(','.join(modified_keys))
     return hdict
 
+FLOAT_FIELDS =  [#'BSCALE', 'BZERO',
+    'DATAMAX', 'DATAMIN',
+    'PSCAL', 'PZERO',
+    'TSCAL', 'TZERO',
+    'CRPIX', 'CRVAL', 'CDELT', 'CROTA', 'PC', 'CD',
+    'PV', 'CRDER', 'CSYER',
+    'EPOCH', 'EQUINOX',
+    #'DATE-OBS', # standard calls this Float and String
+    'MJD-OBS', 'MJD-AVG',
+    'LONPOLE', 'LATPOLE', 
+    'OBSGEO-Z', 'OBSGEO-Y', 'OBSGEO-Z',
+    'RESTFRQ', 'RESTWAV',
+    'VELANGL', 'VELOSYS', 'ZSOURCE']
+
 
 # FITS standard 3.0 (July 2010) defines these fields as floats:
 #  BSCALE, BZERO,
@@ -623,24 +638,11 @@ def get_hdr_as_dict(fitsfile):
 #  VELANGLa, VELOSYSa, ZSOURCEa
 def scrub_fits(fitsfname):
     """Fix some violations against FITS standard (3.0) IN PLACE."""
-    float_fields =  [#'BSCALE', 'BZERO',
-                     'DATAMAX', 'DATAMIN',
-                     'PSCAL', 'PZERO',
-                     'TSCAL', 'TZERO',
-                     'CRPIX', 'CRVAL', 'CDELT', 'CROTA', 'PC', 'CD',
-                     'PV', 'CRDER', 'CSYER',
-                     'EPOCH', 'EQUINOX',
-                     #'DATE-OBS', # standard calls this Float and String
-                     'MJD-OBS', 'MJD-AVG',
-                     'LONPOLE', 'LATPOLE', 
-                     'OBSGEO-Z', 'OBSGEO-Y', 'OBSGEO-Z',
-                     'RESTFRQ', 'RESTWAV',
-                     'VELANGL', 'VELOSYS', 'ZSOURCE']
 
     hdulist = pyfits.open(fitsfname, mode='update')
     for hdu in hdulist:
         # Remove any fields defined by standard as FLOAT whos value is NOT float.
-        for kw in float_fields:
+        for kw in FLOAT_FIELDS:
             hdr = hdu.header
             if (kw in hdr) and (type(hdr[kw]) is str):
                 try:
@@ -690,7 +692,7 @@ def fits_compliant(fits_file_list,
               'These fields MUST be in raw fits header (or provided by '
               'options at submit time). If not, field calculation will not '
               'be attempted, and ingest will be aborted: \n\n1.\t{}'
-              .format( '\n1.\t'.join(sorted(RAW_REQUIRED_FIELDS))))
+              .format( '\n1.\t'.join(sorted(settings.RAW_REQUIRED_FIELDS))))
         print()
         print('## FILENAME_REQUIRED_FIELDS:\n'
               'These fields MUST be in hdr to be able to calculate standard '
@@ -698,14 +700,14 @@ def fits_compliant(fits_file_list,
               'be calculated from raw fits fields and options provided '
               'at submit time. If any of these fields are not in hdr after '
               'calculation, ingest will be aborted: \n\n1.\t{}'
-              .format( '\n1.\t'.join(sorted(FILENAME_REQUIRED_FIELDS))))
+              .format( '\n1.\t'.join(sorted(settings.FILENAME_REQUIRED_FIELDS))))
         print()
         print('##INGEST_REQUIRED_FIELDS:\n'
               'These fields MUST be in hdr given to Ingest. They may '
               'be calculated from raw fits fields and options provided '
               'at submit time. If any of these fields are not in hdr after '
               'calculation, ingest will be aborted: \n\n1.\t{}'
-              .format( '\n1.\t'.join(sorted(INGEST_REQUIRED_FIELDS))))
+              .format( '\n1.\t'.join(sorted(settings.INGEST_REQUIRED_FIELDS))))
         print()
         print('## SUPPORT_FIELDS:\n'
               'These fields are used by hdr_cacl_funcs.py '
@@ -713,14 +715,14 @@ def fits_compliant(fits_file_list,
               'They are likely required, but it depends on the personality '
               'and pipeline uses.'
               '\n\n1.\t{}'
-              .format( '\n1.\t'.join(sorted(SUPPORT_FIELDS))))
+              .format( '\n1.\t'.join(sorted(settings.SUPPORT_FIELDS))))
         print()
         print('## INGEST_RECOMMENDED_FIELDS:\n'
               'These fields SHOULD be in hdr given to Ingest. They may '
               'be calculated from raw fits fields and options provided '
               'at submit time. If any of these fields are not in hdr after '
               'calculation, portal queries may lack features: \n\n1.\t{}'
-              .format( '\n1.\t'.join(sorted(INGEST_RECOMMENDED_FIELDS))))
+              .format( '\n1.\t'.join(sorted(settings.INGEST_RECOMMENDED_FIELDS))))
         print()
 
 

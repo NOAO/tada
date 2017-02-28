@@ -36,12 +36,24 @@ def main():
     fm.genObsTable('/etc/tada/obstype_table.yaml')
     fm.genProcTable('/etc/tada/proctype_table.yaml')
     fm.genProdTable('/etc/tada/prodtype_table.yaml')
+    fm.genRawReqTable('/etc/tada/raw_required_table.yaml')
+    fm.genFilenameReqTable('/etc/tada/filename_required_table.yaml')    
+    fm.genIngestReqTable('/etc/tada/ingest_required_table.yaml')
+    fm.genIngestRecTable('/etc/tada/ingest_recommended_table.yaml')
+    fm.genSupportReqTable('/etc/tada/support_required_table.yaml')
+    fm.genFloatTable('/etc/tada/float_table.yaml')
     print("""\
 Wrote TADA tables to: 
   /etc/tada/prefix_table.yaml
   /etc/tada/obstype_table.yaml
   /etc/tada/proctype_table.yaml
   /etc/tada/prodtype_table.yaml
+
+  /etc/tada/raw_required_table.yaml
+  /etc/tada/ingest_required_table.yaml
+  /etc/tada/ingest_recommended_table.yaml
+  /etc/tada/support_required_table.yaml
+  /etc/tada/float_table.yaml
   """)
 
 if __name__ == '__main__':

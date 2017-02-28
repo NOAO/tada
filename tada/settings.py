@@ -33,4 +33,9 @@ obsLUT = tut.read_obstype_yaml()
 procLUT = tut.read_proctype_yaml()
 prodLUT = tut.read_prodtype_yaml()
 
-
+RAW_REQUIRED_FIELDS = tut.read_rawreq_yaml()
+FILENAME_REQUIRED_FIELDS = tut.read_fnreq_yaml()
+INGEST_REQUIRED_FIELDS = tut.read_ingestreq_yaml()
+INGEST_RECOMMENDED_FIELDS = tut.read_ingestrec_yaml()
+SUPPORT_FIELDS = tut.read_supportreq_yaml()
+FLOAT_FIELDS = tut.read_float_yaml()
