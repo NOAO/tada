@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export PATH=/sandbox/tada-cli/scripts:$PATH
+export PATH=/sandbox/tada-cli/scripts:/opt/tada-cli/scripts:$PATH
 
 function zero_archive_timeout () {
     sed -i.bak 's/arch_timeout:.*/arch_timeout: 0/' /etc/tada/hiera.yaml
