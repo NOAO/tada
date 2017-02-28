@@ -94,7 +94,7 @@ testLog db2_3_log "pylogfilter $plog \"$MARKER\" $FITS"
 ############
 
 FITS=$tdata/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits
-testCommand db2_5 "faildrop 10 $FITS 20160610 kp4m-mosaic3" "^\#" n 0 
+testCommand db2_5 "faildrop $FTO $FITS 20160610 kp4m-mosaic3" "^\#" n 0 
 testLog db2_5_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 # This one takes longish! Could not find smaller file that astropy fixes

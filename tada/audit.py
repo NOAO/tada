@@ -31,7 +31,8 @@ class Auditor():
     
     def __init__(self):
         self.con = sqlite3.connect('/var/log/tada/audit.db')
-        self.timeout = (6.05, 7) # (connect, read) in seconds
+        #!self.timeout = (6.05, 7) # (connect, read) in seconds
+        self.timeout = 9 
         self.mars_port = settings.mars_port
         self.mars_host = settings.mars_host
         self.do_svc = settings.do_audit
