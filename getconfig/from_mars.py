@@ -4,7 +4,7 @@ import json
 import requests
 import yaml
 import logging
-#!from tada import settings
+from tada import settings
 
 def getMarsTadaJson(urlleaf):
     host=settings.mars_host
