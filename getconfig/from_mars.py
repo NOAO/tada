@@ -7,10 +7,11 @@ import logging
 #!from tada import settings
 
 def getMarsTadaJson(urlleaf):
-    #!host=settings.mars_host
-    #!port=settings.mars_port
-    #url = 'http://{}:{}/tada/{}'.format(host,port, urlleaf)
-    url = 'http://mars:8000/tada/{}'.format(urlleaf)
+    host=settings.mars_host
+    port=settings.mars_port
+    url = 'http://{}:{}/tada/{}'.format(host, port, urlleaf)
+    #!url = 'http://mars:8000/tada/{}'.format(urlleaf)
+    #url = 'http://mars.vagrant.noao.edu:8000/tada/{}'.format(urlleaf)
     try:
         r = requests.get(url)
 
