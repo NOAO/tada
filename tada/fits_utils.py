@@ -476,7 +476,7 @@ Include fields in hdr needed to construct new filename that fullfills standards.
                 calc_funcs.append(func)
             except:
                 raise Exception('Function name "{}" given in option "calchdr"'
-                                ' does not exist in tada/hdr_calc_funcs.py'
+                                ' does not exist in MARSHOST/admin/tada/hdrfunc/'
                                 .format(funcname))
     logging.debug('calc_funcs={}'.format([f.__name__ for f in calc_funcs]))
     for calcfunc in calc_funcs:
@@ -485,8 +485,10 @@ Include fields in hdr needed to construct new filename that fullfills standards.
         except Exception as ex:
             raise tex.InvalidHeader(
                 'Could not apply hdr_calc_funcs ({}) to {}; {}'
-                .format(funcname, orig_fullname, ex))
-        logging.debug('[{}] new field values={}'.format(calcfunc.__name__, new))
+                .format(calcfunc.__name__, fname, ex))
+                #!.format(funcname, orig_fullname, ex))
+        logging.debug('Apply {} to {}; new field values={}'
+                      .format(calcfunc.__name__, fname, new))
         hdr.update(new)
 
     #new = hf.set_dtpropid(hdr, **kwargs)

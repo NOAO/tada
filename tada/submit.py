@@ -189,8 +189,7 @@ RETURN: irods location of hdr file.
         newhdr['DTNSANAM'] = 'NA' 
         fu.validate_raw_hdr(newhdr, orig_fullname)
         try:
-            fu.fix_hdr(newhdr, mirror_fname,
-                       options, opt_params, **kwargs)
+            fu.fix_hdr(newhdr, mirror_fname, options, opt_params, **kwargs)
         except tex.IngestRejection:
             raise
         except tex.BadPropid as bpe:
