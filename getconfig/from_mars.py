@@ -9,9 +9,10 @@ from tada import settings
 def getMarsTadaJson(urlleaf):
     host=settings.mars_host
     port=settings.mars_port
-    url = 'http://{}:{}/tada/{}'.format(host, port, urlleaf)
+    url = 'http://{}:{}/tada/{}/'.format(host, port, urlleaf)
     #!url = 'http://mars:8000/tada/{}'.format(urlleaf)
-    #url = 'http://mars.vagrant.noao.edu:8000/tada/{}'.format(urlleaf)
+    #url = 'http://mars.vagrant.noao.edu:8000/tada/{}/'.format(urlleaf)
+    print('DBG: Getting TADA data from url = {}'.format(url))
     try:
         r = requests.get(url)
 
@@ -88,3 +89,30 @@ def genFloatTable(yamlfilename):
     return
 
 
+##############################################################################
+
+# WARNING: Tricky stuff lurks inside here. Think twice before modifying!
+def genHdrFuncs(pythonfilename):
+    """Write Python code from JSON data"""
+
+    jsondata = getMarsTadaJson('hdrfuncs')
+    inkws = set()
+    outkws = set()
+    with open(pythonfilename, 'w') as pfile:
+        for d in jsondata:
+            inkws.update(d['inkeywords'])
+            outkws.update(d['outkeywords'])
+            if d['documentation'] == '':
+                d['documentation'] = 'hdr function: {name}'.format(**d)
+            print('''
+def {name}(orig, **kwargs):
+    """{documentation}"""
+    {definition}
+{name}.inkws = set({inkeywords})
+{name}.outkws = set({outkeywords})
+'''.format(**d),
+                  file=pfile )
+        print('in_keywords={}'.format(set(inkws)), file=pfile)
+        print('out_keywords={}'.format(set(outkws)), file=pfile)
+    return
+    

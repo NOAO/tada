@@ -82,7 +82,7 @@ def read_prodtype_yaml():
 ##############################################################################
 def read_name_set_yaml(yamlfile):
     if not os.path.exists(yamlfile):
-        return dict()
+        return set()
 
     try:
         res = read_yaml(yamlfile)
@@ -143,3 +143,25 @@ def dict_str(dict):
     return '[' + ', '.join(['{}={}' for k,v in dict.items()]) + ']'
 
 
+# WARNING: tricky stuff lurks inside here
+def dynamic_load(pyfilename):
+    if not os.path.exists(pyfilename):
+        return dict()
+
+    myfuncs = dict()
+    with open(pyfilename) as pf:
+        codestr = pf.read()
+        exec(codestr,globals(), myfuncs)
+    return myfuncs
+
+def dynamic_load_hdr_funcs():
+    """\
+RETURNS: localdict,  such that:
+  localdict[funcname]     => func
+     func.inkws  => [kw1, kw2, ...]
+     func.outkws => [...]
+  localdict[in_keywords]  => [kw, ...] (union of inkws  for ALL funcs)
+  localdict[out_keywords] => [kw, ...] (union of outkws for ALL funcs)
+  func(orig, **kwargs) => newhdrdict
+"""
+    return dynamic_load('/etc/tada/hdr_funcs.py')

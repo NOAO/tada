@@ -32,6 +32,7 @@ def main():
     logging.getLogger().setLevel(log_level)
     logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
+    fm.genHdrFuncs('/etc/tada/hdr_funcs.py')
     fm.genPrefixTable('/etc/tada/prefix_table.yaml')
     fm.genObsTable('/etc/tada/obstype_table.yaml')
     fm.genProcTable('/etc/tada/proctype_table.yaml')
@@ -44,6 +45,8 @@ def main():
     fm.genFloatTable('/etc/tada/float_table.yaml')
     print("""\
 Wrote TADA tables to: 
+  /etc/tada/hdr_funcs.py
+
   /etc/tada/prefix_table.yaml
   /etc/tada/obstype_table.yaml
   /etc/tada/proctype_table.yaml

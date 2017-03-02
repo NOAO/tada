@@ -39,3 +39,6 @@ INGEST_REQUIRED_FIELDS = tut.read_ingestreq_yaml()
 INGEST_RECOMMENDED_FIELDS = tut.read_ingestrec_yaml()
 SUPPORT_FIELDS = tut.read_supportreq_yaml()
 FLOAT_FIELDS = tut.read_float_yaml()
+
+# see ../getconfig/from_mars.py for detail of dict format
+HDR_FUNCS = tut.dynamic_load_hdr_funcs() # dict[funcname]=func

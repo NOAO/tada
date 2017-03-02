@@ -23,7 +23,7 @@ from astropy.utils.exceptions import AstropyWarning, AstropyUserWarning
  
 from . import file_naming as fn
 from . import exceptions as tex
-from . import hdr_calc_funcs as hf
+#from . import hdr_calc_funcs as hf
 from . import hdr_calc_utils as hcu
 from . import scrub
 #from . import config 
@@ -471,7 +471,8 @@ Include fields in hdr needed to construct new filename that fullfills standards.
     if calc_param != None:
         for funcname in calc_param:
             try:
-                func = eval('hf.'+funcname)
+                #!func = eval('hf.'+funcname)
+                func = settings.HDR_FUNCS[funcname]
                 calc_funcs.append(func)
             except:
                 raise Exception('Function name "{}" given in option "calchdr"'
@@ -596,7 +597,9 @@ def get_hdr_as_dict(fitsfile):
 
     hdict = dict()
     hdulist = pyfits.open(fitsfile)
-    for field in USED_FIELDS | hf.calc_func_source_fields:
+    for field in (USED_FIELDS
+                  | settings.HDR_FUNCS['in_keywords']
+                  | settings.HDR_FUNCS['out_keywords']):
         if field in hdulist[0].header:
             # use existing Primary HDU field
             hdict[field] = hdulist[0].header[field]
