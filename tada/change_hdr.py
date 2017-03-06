@@ -38,7 +38,8 @@ def main():
     "Parse command line arguments and do the work."
     #!print('EXECUTING: %s\n\n' % (' '.join(sys.argv)))
     parser = argparse.ArgumentParser(
-        description='My shiny new python program',
+        description='Modify header of FITS file from YAML containing '
+        'hdr keyword name/value pairs.',
         epilog='EXAMPLE: %(prog)s a b"'
         )
     parser.add_argument('--version', action='version', version='1.0.1')
@@ -47,7 +48,8 @@ def main():
     parser.add_argument('outfile', help='Output FITS file')
 
     parser.add_argument('changes', type=argparse.FileType('r'),
-                        help='Input YAML file containing new FITS hdr name/value pairs')
+                        help='Input YAML file containing new FITS '
+                        'hdr name/value pairs')
 
     parser.add_argument('--loglevel',
                         help='Kind of diagnostic output',
