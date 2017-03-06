@@ -291,6 +291,21 @@ def print_header(msg, hdr=None, fits_filename=None):
             if s.strip() != ''],
           sep='\n')
 
+def changed_kw_str(funcname, hdr, new, outkws):
+    """RETURN: string explaining what changed from HDR to NEW"""
+    hset = set(hdr.keys())
+    nset = set(new.keys()) | outkws
+    added = nset - hset
+    oldvals = dict()
+    for k in added:
+        oldvals[k] = hdr[k]
+    msg = ('Applied {} which added/modified fields ({}). Old values were: {}'
+           .format(funcname,
+                   added,
+                   ', '.join(['{}={}'.format(k,w) for (k,w) in oldvals.items()])
+                   ))
+    return msg
+
     
     
 # It seems unconscionably complex for Ingest to require extra lines be
@@ -468,6 +483,7 @@ Include fields in hdr needed to construct new filename that fullfills standards.
 
     calc_param = opt_params.get('calchdr',None)
     calc_funcs = []
+    origkws = set(hdr.keys())
     if calc_param != None:
         for funcname in calc_param:
             try:
@@ -480,16 +496,32 @@ Include fields in hdr needed to construct new filename that fullfills standards.
                                 .format(funcname))
     logging.debug('calc_funcs={}'.format([f.__name__ for f in calc_funcs]))
     for calcfunc in calc_funcs:
+        funcname = calcfunc.__name__
         try:
+            if not calcfunc.inkws.issubset(origkws):
+                missing = calcfunc.inkws.difference(origkws)
+                msg = ('Some keywords ({}) required (per inkeywords) by HDR'
+                       ' FUNC "{}" are not in the header of file "{}". '
+                       ' SOLUTIONS: Fix FITS, change HDR FUNC inkeywords')
+                raise tex.InvalidHeader(msg.format(', '.join(missing),
+                                                   funcname, fname))
             new = calcfunc(hdr, **kwargs)
+            if not calcfunc.outkws.issubset(new.keys()):
+                missing = calcfunc.outkws.difference(new.keys())
+                msg = ('Some keywords ({}) produced (per outkeywords) by HDR'
+                       ' FUNC "{}" are not in the new header of file "{}". '
+                       ' SOLUTION: Fix HDR FUNC defintion or change'
+                       ' outkeywords')
+                raise tex.InvalidHeader(msg.format(', '.join(missing),
+                                                   funcname, fname))
         except Exception as ex:
             raise tex.InvalidHeader(
                 'Could not apply hdr_calc_funcs ({}) to {}; {}'
-                .format(calcfunc.__name__, fname, ex))
-                #!.format(funcname, orig_fullname, ex))
+                .format(funcname, fname, ex))
         logging.debug('Apply {} to {}; new field values={}'
-                      .format(calcfunc.__name__, fname, new))
+                      .format(funcname, fname, new))
         hdr.update(new)
+        hdr['HISTORY'] = changed_kw_str(funcname, hdr, new, calcfunc.outkws)
 
     #new = hf.set_dtpropid(hdr, **kwargs)
     new = set_dtpropid(hdr, **kwargs) # !!! Emitted warning ref orig_fullname
@@ -615,20 +647,20 @@ def get_hdr_as_dict(fitsfile):
     hdict['COMMENT'] = 'MODIFIED:{}'.format(','.join(modified_keys))
     return hdict
 
-FLOAT_FIELDS =  [#'BSCALE', 'BZERO',
-    'DATAMAX', 'DATAMIN',
-    'PSCAL', 'PZERO',
-    'TSCAL', 'TZERO',
-    'CRPIX', 'CRVAL', 'CDELT', 'CROTA', 'PC', 'CD',
-    'PV', 'CRDER', 'CSYER',
-    'EPOCH', 'EQUINOX',
-    #'DATE-OBS', # standard calls this Float and String
-    'MJD-OBS', 'MJD-AVG',
-    'LONPOLE', 'LATPOLE', 
-    'OBSGEO-Z', 'OBSGEO-Y', 'OBSGEO-Z',
-    'RESTFRQ', 'RESTWAV',
-    'VELANGL', 'VELOSYS', 'ZSOURCE']
-
+#!FLOAT_FIELDS =  [#'BSCALE', 'BZERO',
+#!    'DATAMAX', 'DATAMIN',
+#!    'PSCAL', 'PZERO',
+#!    'TSCAL', 'TZERO',
+#!    'CRPIX', 'CRVAL', 'CDELT', 'CROTA', 'PC', 'CD',
+#!    'PV', 'CRDER', 'CSYER',
+#!    'EPOCH', 'EQUINOX',
+#!    #'DATE-OBS', # standard calls this Float and String
+#!    'MJD-OBS', 'MJD-AVG',
+#!    'LONPOLE', 'LATPOLE', 
+#!    'OBSGEO-X', 'OBSGEO-Y', 'OBSGEO-Z',
+#!    'RESTFRQ', 'RESTWAV',
+#!    'VELANGL', 'VELOSYS', 'ZSOURCE']
+#!
 
 # FITS standard 3.0 (July 2010) defines these fields as floats:
 #  BSCALE, BZERO,
@@ -647,7 +679,7 @@ def scrub_fits(fitsfname):
     hdulist = pyfits.open(fitsfname, mode='update')
     for hdu in hdulist:
         # Remove any fields defined by standard as FLOAT whos value is NOT float.
-        for kw in FLOAT_FIELDS:
+        for kw in settings.FLOAT_FIELDS:
             hdr = hdu.header
             if (kw in hdr) and (type(hdr[kw]) is str):
                 try:

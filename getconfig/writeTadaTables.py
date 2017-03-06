@@ -43,6 +43,7 @@ def main():
     fm.genIngestRecTable('/etc/tada/ingest_recommended_table.yaml')
     fm.genSupportReqTable('/etc/tada/support_required_table.yaml')
     fm.genFloatTable('/etc/tada/float_table.yaml')
+    fm.genErrCodeTable('/etc/tada/errcode_table.yaml')
     print("""\
 Wrote TADA tables to: 
   /etc/tada/hdr_funcs.py
@@ -57,6 +58,7 @@ Wrote TADA tables to:
   /etc/tada/ingest_recommended_table.yaml
   /etc/tada/support_required_table.yaml
   /etc/tada/float_table.yaml
+  /etc/tada/errcode_table.yaml
   """)
 
 if __name__ == '__main__':

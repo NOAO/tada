@@ -88,10 +88,16 @@ def genFloatTable(yamlfilename):
         yaml.dump(jsondata, yamlfile)
     return
 
+def genErrCodeTable(yamlfilename):
+    jsondata = getMarsTadaJson('errcodes')
+    with open(yamlfilename, 'w') as yamlfile:
+        yaml.dump(jsondata, yamlfile)
+    return
+
 
 ##############################################################################
 
-# WARNING: Tricky stuff lurks inside here. Think twice before modifying!
+# WARNING: Tricky stuff lurks inside here. Think twice before modifying!!
 def genHdrFuncs(pythonfilename):
     """Write Python code from JSON data"""
 

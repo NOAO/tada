@@ -4,6 +4,7 @@ import time
 import traceback
 import sys
 import os.path
+import re
 
 
 def read_yaml(yamlfile):
@@ -79,6 +80,27 @@ def read_proctype_yaml():
     return read_name_code_yaml('/etc/tada/proctype_table.yaml')
 def read_prodtype_yaml():
     return read_name_code_yaml('/etc/tada/prodtype_table.yaml')
+
+##############################################################################
+def read_errcode_list_yaml(yamlfile):
+    if not os.path.exists(yamlfile):
+        return list()
+
+    try:
+        res = read_yaml(yamlfile)
+    except Exception as err:
+        logging.error('Could not read YAML file {}; {}'
+                      .format(yamlfile, err))
+        raise
+
+    # INPUT: [dict(name, regexp),...]
+    # OUPUT: [(ERRCODE, MatchREGEXP, ShortDesc), ...]
+    ll = [(d['name'], re.compile(d['regexp']), None) for d in res]
+    return ll
+
+def read_errcode_yaml():
+    return read_errcode_list_yaml('/etc/tada/errcode_table.yaml')
+
 ##############################################################################
 def read_name_set_yaml(yamlfile):
     if not os.path.exists(yamlfile):
@@ -94,7 +116,6 @@ def read_name_set_yaml(yamlfile):
     # INPUT: [dict(name, comment),...]
     # OUPUT: set([name, ...])
     return set([d['name'] for d in res])
-
 
 def read_rawreq_yaml():
     return read_name_set_yaml('/etc/tada/raw_required_table.yaml')
@@ -149,9 +170,13 @@ def dynamic_load(pyfilename):
         return dict()
 
     myfuncs = dict()
-    with open(pyfilename) as pf:
-        codestr = pf.read()
-        exec(codestr,globals(), myfuncs)
+    try:
+        with open(pyfilename) as pf:
+            codestr = pf.read()
+            exec(codestr,globals(), myfuncs)
+    except Exception as err:
+        logging.error('Error executing python code in ({});{}'
+                      .format(pyfilename, err))
     return myfuncs
 
 def dynamic_load_hdr_funcs():
