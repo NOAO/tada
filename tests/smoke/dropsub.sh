@@ -114,7 +114,7 @@ function wait_for_match () { # (fitsfile, tele_inst) => $STATUS
     done
     echo "!"
     echo "Found file: $FITS"
-    echo "# Found file after $tries seconds."
+    echo "# Found file after $tries seconds in AUDITDB ($AUDITDB)."
     if [ "$tries" -gt "$MAX_FOUND_TIME" ]; then
         MAX_FOUND_TIME=$tries
     fi
@@ -193,8 +193,10 @@ EOF
     curl -H "Content-Type: application/json" \
          -d @$JSONFILE \
          http://$marshost:8000/audit/source/ > /dev/null 2>&1
-    rsync -az --password-file ~/.tada/rsync.pwd \
-      $DROPCACHE/ tada@$boxhost::dropbox
+    rsync -az --password-file ~/.tada/rsync.pwd $DROPCACHE/ tada@$boxhost::dropbox
+    #!cmd="rsync -az --password-file ~/.tada/rsync.pwd $DROPCACHE/ tada@$boxhost::dropbox"
+    #!echo "DBG-EXECUTE: $cmd"
+    #!eval $cmd
 
     # wait for file to make it through, and capture ingest status
     wait_for_match $TIMEOUT $FITSFILE ${TELE_INST}

@@ -131,6 +131,7 @@ def decodeIngestResponse(response):
 
 
 def errcode(response):
+    logging.debug('Lookup error code for: "{}"'.format(response))
     for name, regex, desc in settings.ERRMAP:
         if regex == None:
             continue # ignore

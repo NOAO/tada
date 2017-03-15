@@ -50,8 +50,10 @@ MAX_DROP_WAIT_TIME=10  # max seconds from file drop to ingest/reject
 plog="/var/log/tada/pop.log"
 MARKER="`date '+%Y-%m-%d %H:%M:%S'` START-SMOKE-TEST"
 echo $MARKER >> $plog
+echo $MARKER >> /var/log/tada/pop-detail.log
+echo "Using log MARKER=$MARKER"
 PTO=25 # timeout to use when we expect ingest PASS; driven by webservices?
-FTO=10 # timeout to use when we expect ingest FAIL; driven by webservices?
+FTO=20 # timeout to use when we expect ingest FAIL; driven by webservices?
 # To estimate timeout for FITS transfer use dropsub.sh:up_secs
 
 
