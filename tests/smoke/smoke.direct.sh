@@ -57,7 +57,7 @@ zero_archive_timeout
 testCommand fs7a_2 "fsub $newfits ops-fakearcoiris" "^\#" n 2
 restore_archive_timeout
 testIrods fs7a_1b_irods $HDR
-rm $newfits
+#!rm $newfits
 
 ###########################################
 #echo "WARNING: ignoring remainder of tests"
