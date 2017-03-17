@@ -2,6 +2,8 @@
 # Run this after code modifications.  Installs tada python stuff from source.
 # Run as sudo (typically under vagrant as vagrant user, no venv active).
 #
+# SEE ALSO: scripts/tada-valley-install.sh
+#
 # EXAMPLES:
 #  sudo /sandbox/tada-tools/dev-scripts/install.sh
 #  sudo install.sh -c   # clean first
@@ -54,6 +56,7 @@ fi
 repodir=${1:-/sandbox}
 installprefix=/opt/tada/venv
 echo "Installing FROM repo: $repodir to $installprefix" 
+
 ##############################################################################
 
 #!if [ "$CLEAN" = "YES" ]; then
@@ -64,7 +67,7 @@ echo "Installing FROM repo: $repodir to $installprefix"
 
 source /opt/tada/venv/bin/activate
 
-##########################################################
+##################################################
 ### Force install of python packages from source
 ###
 echo "Install: dataq.."
@@ -72,9 +75,11 @@ pushd $repodir/dataq > /dev/null
 #echo "WARNING: NOT rebuilding dataq software!!! in install.sh"
 #! sudo python3 setup.py install --force
 #! pylint --rcfile=pylint.rc dataq/
-python3 setup.py install --force --prefix $installprefix
+#python3 setup.py install --force --prefix $installprefix
+python3 setup.py install --force 
 popd > /dev/null
 ###
+
 echo "Install: tada.."
 pushd $repodir/tada > /dev/null
 #!sudo python3 setup.py install --force
@@ -88,7 +93,8 @@ if [ $pylintstatus -eq 2 ]; then
     echo "pylint ERROR message for TADA"
     exit 2
 fi
-python3 setup.py install --force --prefix $installprefix
+#!python3 setup.py install --force --prefix $installprefix
+python3 setup.py install --force 
 popd > /dev/null
 ###
 ##########################################################
