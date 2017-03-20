@@ -22,6 +22,12 @@ OPTIONS:
 
 hostname:: Name of valley host to run test on (default vagrant valley)
 
+EXAMPLES:
+   # For Dev (vagrant) test 
+   cd ~/sandbox/vagrant-tada; ~/sandbox/tada/tests/smoke/run-smoke-as-tester.sh
+
+   # For PAT test
+   ~/sandbox/tada/tests/smoke/run-smoke-as-tester.sh val.pat.sdm.noao.edu
 "
 
 VERBOSE=0
@@ -58,10 +64,6 @@ if [ $# -lt $RAC ]; then
 fi
 
 
-#echo "PROGRESS=$PROGRESS"
-#echo "VERBOSE=$VERBOSE"
-#echo "Remaining arguments:"
-#for arg do echo '--> '"\`$arg'" ; done
 
 HOSTNAME=${1:-vagrant}
 
