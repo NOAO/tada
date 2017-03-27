@@ -314,7 +314,7 @@ def unprotected_submit(ifname, md5sum):
     """Try to modify headers and submit FITS to archive. If anything fails 
 more than N times, move the queue entry to Inactive. (where N is the 
 configuration field: maximum_errors_per_record)
-    ifname:: absolute path (mountain_mirror)
+    ifname:: absolute path (cache)
 """
     logging.debug('EXECUTING unprotected_submit({}, {})'.format(ifname, md5sum))
     noarc_root =  '/var/tada/anticache'
@@ -418,7 +418,6 @@ checksum:: checksum of original file
             persona_options=popts,
             persona_params=pprms,
             moddir=None)
-
     except: # Exception as err:
         raise
     (success, ops_msg) = http_archive_ingest(new_ihdr, origfname=origfname)
