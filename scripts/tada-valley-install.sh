@@ -13,6 +13,7 @@ source /opt/tada/venv/bin/activate
 dir=`pwd`
 #e.g. cd /opt/tada
 echo "Running install on dir: $dir"
+
 python3 setup.py install --force >> $LOG
 installTadaTables                >> $LOG
 echo "Installed TADA version: $VERSION" >> $LOG

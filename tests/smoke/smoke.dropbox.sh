@@ -148,6 +148,10 @@ testLog db6_1_log "pylogfilter $plog \"$MARKER\" $FITS"
 ###
 ##############################################################################
 
+ENDMARKER="`date '+%Y-%m-%d %H:%M:%S'` END-SMOKE-TEST"
+echo $ENDMARKER >> $plog
+echo $ENDMARKER >> /var/log/tada/pop-detail.log
+
 echo "MAX_FOUND_TIME=$MAX_FOUND_TIME"
 emins=$((`date +'%s'` - tic))
 echo "# Completed dropbox test: " `date` " in $emins seconds"
