@@ -70,12 +70,11 @@ class Auditor():
         return True
 
 
-    def log_audit(self, md5sum, origfname, success,
-                  archfile, err,
+    def log_audit(self, md5sum, origfname, success, archfile, err,
                   orighdr=None, newhdr=None):
         """Log audit record to MARS.
         origfname:: absolute dome filename
-        md5sum]:: checksum of dome file
+        md5sum:: checksum of dome file
         success:: True, False, None; True iff ingest succeeded
         archfile:: base filename of file in archive (if ingested)
         orighdr:: dict; orginal FITS header field/values
@@ -91,16 +90,12 @@ class Auditor():
                           .format(md5sum, origfname, success,
                                   archfile, archerr,
                                   orighdr, newhdr, self.do_svc))
-            #!if not success:
-            #!    logging.error('log_audit; archive ingest error: {}'
-            #!                  .format(archerr))
 
             now = datetime.datetime.now().isoformat()
             today = datetime.date.today().isoformat()
-
             obsday = newhdr.get('DTCALDAT', orighdr.get('DTCALDAT', today))
             if ('DTCALDAT' not in newhdr) and ('DTCALDAT' not in orighdr):
-                logging.info(('Could not find DTCALDAT in orighdr of {},'
+                logging.info(('Could not find DTCALDAT in newhdr,orighdr of {},'
                               ' using TODAY as observation day.')
                              .format(origfname))
             tele = newhdr.get('DTTELESC', orighdr.get('DTTELESC', 'UNKNOWN'))
@@ -133,7 +128,8 @@ class Auditor():
                 try:
                     self.update_svc(recdic)
                 except Exception as ex:
-                    logging.error('Could not update remote audit record; {}'.format(ex))
+                    logging.error('Could not update remote audit record; {}'
+                                  .format(ex))
             else:
                 logging.debug('Did not update via audit service')
         except Exception as ex:
@@ -178,7 +174,8 @@ class Auditor():
         ddict = dict()
         for k in fnames:
             ddict[k] = recdic[k]
-        logging.debug('Adding audit record via {}; json={}'.format(uri, ddict))
+        logging.debug('Updating audit record via {}; json={}'
+                      .format(uri, ddict))
         try:
             req = requests.post(uri, json=ddict, timeout=self.timeout)
             #logging.debug('auditor.update_svc: response={}'.format(req.text))

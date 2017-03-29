@@ -310,16 +310,16 @@ def file_type(filename):
         type = 'shell script'
     return type
 
-def unprotected_submit(ifname, md5sum):
+def unprotected_submit(ifname, dome_md5):
     """Try to modify headers and submit FITS to archive. If anything fails 
 more than N times, move the queue entry to Inactive. (where N is the 
 configuration field: maximum_errors_per_record)
     ifname:: absolute path (cache)
 """
-    logging.debug('EXECUTING unprotected_submit({}, {})'.format(ifname, md5sum))
+    logging.debug('EXECUTING unprotected_submit({}, {})'.format(ifname, dome_md5))
     noarc_root =  '/var/tada/anticache'
     mirror_root = '/var/tada/cache'    
-    auditor.set_fstop(md5sum, 'valley:cache', host=socket.getfqdn())
+    auditor.set_fstop(dome_md5, 'valley:cache', host=socket.getfqdn())
 
     try:
         ftype = file_type(ifname)
@@ -327,32 +327,34 @@ configuration field: maximum_errors_per_record)
         raise
     except Exception as ex:
         logging.error('Execution failed: {}; ifname={}'.format(ex, ifname))
-        raise tex.IngestRejection(md5sum, ifname, ex, dict())
+        raise tex.IngestRejection(dome_md5, ifname, ex, dict())
         
     destfname = None
     if 'FITS' == ftype :  # is FITS
         msg = 'FITS_file'
         popts, pprms = fu.get_options_dict(ifname) # .yaml 
         origfname = pprms['filename']
-        destfname = submit_to_archive(ifname, md5sum)
+        destfname,newhdr = submit_to_archive(ifname, dome_md5)
         logging.debug('SUCCESSFUL submit; {} as {}'.format(ifname, destfname))
         os.remove(ifname)
         optfname = ifname + ".options"
         logging.debug('Remove possible options file: {}'.format(optfname))
         if os.path.exists(optfname):
             os.remove(optfname)
+
     else: # not FITS
         destfname = ifname.replace(mirror_root, noarc_root)
         os.makedirs(os.path.dirname(destfname), exist_ok=True)
         shutil.move(ifname, destfname)
-        auditor.set_fstop(md5sum, 'valley:anticache', host=socket.getfqdn())
+        auditor.set_fstop(dome_md5, 'valley:anticache', host=socket.getfqdn())
         msg = 'Non-FITS file: {}'.format(ifname)
         #! logging.warning('Failed to mv non-fits file from mirror on Valley.')
-        auditor.set_fstop(md5sum, 'mountain:anticache', host=socket.getfqdn())
+        auditor.set_fstop(dome_md5, 'mountain:anticache', host=socket.getfqdn())
         # Remove files if noarc_root is taking up too much space (FIFO)!!!
-        raise tex.IngestRejection(md5sum, ifname, msg, dict())
+        raise tex.IngestRejection(dome_md5, ifname, msg, dict())
         
-    auditor.set_fstop(md5sum,'archive')
+    auditor.set_fstop(dome_md5,'archive')
+    auditor.log_audit(dome_md5, origfname, True, destfname, '', newhdr=newhdr)
     return True
 # END unprotected_submit() action
 
@@ -433,7 +435,7 @@ checksum:: checksum of original file
                  .format(origfname, destfname))
     auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
                       orighdr=popts, newhdr=changed)
-    return destfname
+    return destfname, changed
 
 
 def protected_direct_submit(fitsfile, moddir,
