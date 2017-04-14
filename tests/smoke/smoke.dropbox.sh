@@ -51,6 +51,7 @@ plog="/var/log/tada/pop.log"
 MARKER="`date '+%Y-%m-%d %H:%M:%S'` START-SMOKE-TEST"
 echo $MARKER >> $plog
 FTO=10 # timeout to use when we expect ingest failure; driven by webservices?
+PTO=18 # timeout to use when we expect ingest pass; driven by webservices?
 # To estimate timeout for FITS transfer use dropsub.sh:up_secs
 
 mtn_plog=~/.tada/mountain-logs/pop.log
@@ -69,11 +70,17 @@ mtn_wlog_start=`cat $mtn_wlog | wc -l`
 #!testLog db1_1_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 # pass-pass fitsverify
-# uncompressed (compress on the fly); allow extra time for compression
+# uncompressed (comprss on the fly) when BITPIX=-32
 FITS=$tdata/short-drop/20110101/ct13m-andicam/ir141225.0179.fits
-testCommand db2_6 "passdrop 10 $FITS 20110101 ct13m-andicam" "^\#" n 0
+## =>  mtn/20141225/ct13m/smarts/c13a_141226_070040_ori_tTADASMOKE.fits.fz
+testCommand db2_6 "passdrop $PTO $FITS 20110101 ct13m-andicam" "^\#" n 0
 testLog db2_6_log "pylogfilter $plog \"$MARKER\" $FITS"
 
+# uncompressed (compress on the fly) when BITPIX is NOT -32
+FITS=$tdata/scrape/20160315/ct4m-arcoiris/SV_f0064.fits
+## => 20160322/ct4m/2016A-0612/c4ai_160322_234217_gri_t846000_TADASMOKE.fits.fz
+testCommand db2_6b "passdrop $PTO $FITS 20160315 ct4m-arcoiris" "^\#" n 0
+testLog db2_6b_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 ############
 ### All three (obj_355, obj_355a, obj_355b) have same checksum!!!
@@ -86,7 +93,7 @@ testCommand db2_2 "dropfile $FTO $FITS 20160909 bad-instrum 1" "^\#" n 9
 testLog db2_2_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 FITS=$tdata/short-drop/20141220/wiyn-whirc/obj_355.fits.fz
-testCommand db2_3 "passdrop 18 $FITS 20141220 wiyn-whirc" "^\#" n 0
+testCommand db2_3 "passdrop $PTO $FITS 20141220 wiyn-whirc" "^\#" n 0
 testLog db2_3_log "pylogfilter $plog \"$MARKER\" $FITS"
 ### 
 ############
@@ -123,7 +130,7 @@ testLog db5_1_log "mtnlogrun $mtn_wlog ${mtn_wlog_start}"
 
 # FITS not readable by Astropy, but CFITSIO (fitscopy) will correct it on mtn
 FITS="$tdata/noastropy/20161230/soar-goodman/0084.leia.fits"
-testCommand db6_1 "passdrop 18 $FITS 20161230 soar-goodman" "^\#" n 0
+testCommand db6_1 "passdrop $PTO $FITS 20161230 soar-goodman" "^\#" n 0
 testLog db6_1_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 ###########################################

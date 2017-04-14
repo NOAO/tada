@@ -21,18 +21,22 @@ def remove_if_exists(filename):
     except:
         pass
 
+def fpack(*args):
+    # for floating point 
+    # $FPACK -Y -g -q 0 ${BASEFILE}.fits
+    fpackcmd = '/usr/local/bin/fpack'
+    cmd=[fpackcmd] + list(args)
+    logging.debug('fpack: CMD={}'.format(' '.join(cmd)))
+    subprocess.run(cmd, check=True)
+    
 def fpack_to(fitsfile, outfile, force=True):
     """Fpack FITSFILE into OUTFILE (or copy if already fpacked).
     If OUTFILE (.fz) already exists, overwrite IFF force=True.
     RETURN: True IFF fpack was run on this invocation.
     """
-    # for floating point 
-    # $FPACK -Y -g -q 0 ${BASEFILE}.fits
-    fpackcmd = '/usr/local/bin/fpack'
     fitscopycmd = '/usr/local/bin/fitscopy'
     logging.debug('fpack_to({}, {})'.format(fitsfile, outfile))
     tmpoutfile = None
-
     if force==False and os.path.exists(outfile):
         logging.warning('fpack_to: Outfile already exists. Doing nothing. {}'
                         .format(outfile))
@@ -44,12 +48,12 @@ def fpack_to(fitsfile, outfile, force=True):
     else: # compress on the fly
         try:
             remove_if_exists(outfile)
-            #!subprocess.call([fitscopycmd, fitsfile, outfile])
             subprocess.run([fitscopycmd, fitsfile, outfile], check=True)
             hdr = fu.get_hdr_as_dict(outfile)
 
             # FPACK BUG workaround.
-            # Despite documentation, fpack will not compress in place if file ends with ".fz"
+            # Despite documentation, fpack will not compress in place
+            # if file ends with ".fz"
             if outfile[-3:] == '.fz':
                 tmpoutfile = outfile + 'z'  # now: *.fits.fzz
                 os.rename(outfile, tmpoutfile)
@@ -58,12 +62,12 @@ def fpack_to(fitsfile, outfile, force=True):
                 or hdr.get('BITPIX',None) == -64):
                 # is floating point image
                 # Default options are lossy. Use lossless options instead.
-                #!subprocess.call([fpackcmd, '-C', '-F', '-g', '-q', 0,outfile])
-                subprocess.run([fpackcmd, '-C', '-F', '-g', '-q', 0, tmpoutfile],
-                               check=True)
+                #!subprocess.run([fpackcmd,'-C','-F','-g','-q',0, tmpoutfile],
+                #!               check=True)
+                fpack('-Y', '-C', '-F', '-g', '-q', 0, tmpoutfile)
             else:
-                #!subprocess.call([fpackcmd, '-C', '-F', outfile])
-                subprocess.run([fpackcmd, '-C', '-F', tmpoutfile], check=True)
+                #!subprocess.run([fpackcmd, '-C', '-F', tmpoutfile], check=True)
+                fpack('-Y', '-C', '-F', tmpoutfile)
 
             # FPACK BUG workaround.
             if tmpoutfile:
@@ -82,16 +86,21 @@ def fpack_to(fitsfile, outfile, force=True):
 
 def main():
     "Parse command line arguments and do the work."
-    print('EXECUTING: %s\n\n' % (' '.join(sys.argv)))
     parser = argparse.ArgumentParser(
-        description='FPACK as used in TADA',
+        description='''\
+FPACK as used in TADA. 
+Uses CFITSIO to copy .fits file to fix some errors that
+will trip up astropy. If the infile is *.fz, file is assumed to be compressed
+and no attempt to fpack is done.  If its *.fits, fpack is run.  The options
+used in fpack depend on value of BITPIX.  Value of -32 or -64 treated one way, all other values treated another.
+''',
         epilog='EXAMPLE: %(prog)s a b"'
         )
-    parser.add_argument('--version', action='version', version='1.0.1')
+    parser.add_argument('--version', action='version', version='1.2')
     parser.add_argument('infile', type=argparse.FileType('r'),
-                        help='Input file')
+                        help='Input FITS file')
     parser.add_argument('outfile', type=argparse.FileType('w'),
-                        help='Output output')
+                        help='Output FITS file')
 
     parser.add_argument('--loglevel',
                         help='Kind of diagnostic output',
@@ -99,8 +108,10 @@ def main():
                                  'INFO', 'DEBUG'],
                         default='WARNING')
     args = parser.parse_args()
-    #!args.outfile.close()
-    #!args.outfile = args.outfile.name
+    args.infile.close()
+    args.infile = args.infile.name
+    args.outfile.close()
+    args.outfile = args.outfile.name
 
     #!print 'My args=',args
     #!print 'infile=',args.infile
@@ -113,7 +124,7 @@ def main():
                         datefmt='%m-%d %H:%M')
     logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
-    fpack_to(args.infile, args.outfile, force=False)
+    fpack_to(args.infile, args.outfile)
 
 if __name__ == '__main__':
     main()
