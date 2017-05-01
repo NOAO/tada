@@ -49,7 +49,7 @@ def fpack_to(fitsfile, outfile, force=True):
         try:
             remove_if_exists(outfile)
             subprocess.run([fitscopycmd, fitsfile, outfile], check=True)
-            hdr = fu.get_hdr_as_dict(outfile)
+            is_fp = fu.is_floatingpoint(outfile)
 
             # FPACK BUG workaround.
             # Despite documentation, fpack will not compress in place
@@ -58,20 +58,18 @@ def fpack_to(fitsfile, outfile, force=True):
                 tmpoutfile = outfile + 'z'  # now: *.fits.fzz
                 os.rename(outfile, tmpoutfile)
 
-            if (hdr.get('BITPIX',None) == -32
-                or hdr.get('BITPIX',None) == -64):
+            if is_fp:
                 # is floating point image
                 # Default options are lossy. Use lossless options instead.
-                #!subprocess.run([fpackcmd,'-C','-F','-g','-q',0, tmpoutfile],
-                #!               check=True)
-                fpack('-Y', '-C', '-F', '-g', '-q', 0, tmpoutfile)
+                fpack('-Y', '-C', '-F', '-g', '-q', '0', tmpoutfile)
+                # "fpack -L" should yield: "tiled_gzip"
             else:
-                #!subprocess.run([fpackcmd, '-C', '-F', tmpoutfile], check=True)
                 fpack('-Y', '-C', '-F', tmpoutfile)
-
+                # "fpack -L" should yield: "tiled_rice"
+                
             # FPACK BUG workaround.
             if tmpoutfile:
-                os.rename(tmpoutfile, outfile)                
+                os.rename(tmpoutfile, outfile)
 
         except subprocess.CalledProcessError as ex:
             logging.error('FAILED fpack_to: {}; returncode={}'

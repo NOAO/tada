@@ -73,7 +73,7 @@ mtn_wlog_start=`cat $mtn_wlog | wc -l`
 # uncompressed (comprss on the fly) when BITPIX=-32
 FITS=$tdata/short-drop/20110101/ct13m-andicam/ir141225.0179.fits
 ## =>  mtn/20141225/ct13m/smarts/c13a_141226_070040_ori_tTADASMOKE.fits.fz
-testCommand db2_6 "passdrop $PTO $FITS 20110101 ct13m-andicam" "^\#" n 0
+testCommand db2_6 "passdrop $PTO $FITS 20110101 ct13m-andicam" "^\#" y 0
 testLog db2_6_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 # uncompressed (compress on the fly) when BITPIX is NOT -32

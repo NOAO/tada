@@ -609,6 +609,15 @@ def get_hdr_as_dict(fitsfile):
     hdict['COMMENT'] = 'MODIFIED:{}'.format(','.join(modified_keys))
     return hdict
 
+def is_floatingpoint(fitsfile):
+    hdulist = pyfits.open(fitsfile)
+    fpimage=False
+    for hdu in hdulist:
+        hdr = hdu.header
+        if hdr.get('BITPIX',None) == -32 or hdr.get('BITPIX',None) == -64:
+            fpimage=True
+    return fpimage
+
 
 # FITS standard 3.0 (July 2010) defines these fields as floats:
 #  BSCALE, BZERO,
