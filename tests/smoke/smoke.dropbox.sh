@@ -73,12 +73,14 @@ mtn_wlog_start=`cat $mtn_wlog | wc -l`
 # uncompressed (comprss on the fly) when BITPIX=-32
 FITS=$tdata/short-drop/20110101/ct13m-andicam/ir141225.0179.fits
 ## =>  mtn/20141225/ct13m/smarts/c13a_141226_070040_ori_tTADASMOKE.fits.fz
+# "fpack -L" should yield: "tiled_gzip"
 testCommand db2_6 "passdrop $PTO $FITS 20110101 ct13m-andicam" "^\#" y 0
 testLog db2_6_log "pylogfilter $plog \"$MARKER\" $FITS"
 
 # uncompressed (compress on the fly) when BITPIX is NOT -32
 FITS=$tdata/scrape/20160315/ct4m-arcoiris/SV_f0064.fits
 ## => 20160322/ct4m/2016A-0612/c4ai_160322_234217_gri_t846000_TADASMOKE.fits.fz
+# "fpack -L" should yield: "tiled_rice"
 testCommand db2_6b "passdrop $PTO $FITS 20160315 ct4m-arcoiris" "^\#" n 0
 testLog db2_6b_log "pylogfilter $plog \"$MARKER\" $FITS"
 
