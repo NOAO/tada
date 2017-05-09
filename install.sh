@@ -102,7 +102,7 @@ popd > /dev/null
 ##########################################################
 
 sudo rm /var/log/tada/audit.db
-sqlite3 /var/log/tada/audit.db < /sandbox/puppet-tada/files/audit-schema.sql
+sqlite3 /var/log/tada/audit.db < /etc/tada/audit-schema.sql
 chmod a+rw /var/log/tada/audit.db 
 
 sudo rm /var/log/tada/*.err

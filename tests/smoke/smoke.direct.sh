@@ -48,7 +48,7 @@ testIrods fs7a_1a_irods $HDR
 fits="$tdata/scrape/20160315/ct4m-arcoiris/SV_f0064.fits"
 newfits=/tmp/changed.fits.fz
 # expect failure because 1815A-0801 not in DB
-testCommand cf1 "change_fits $fits $newfits $tdata/basic/change.yaml" y
+testCommand cf1 "change_fits $fits $newfits $tdata/basic/change.yaml" n 0
 testCommand fs7a_1 "fsub $newfits ops-fakearcoiris" "^\#" n 2
 testIrods fs7a_1b_irods $HDR
 # invoke TIMEOUT on connection to Ingest Service
