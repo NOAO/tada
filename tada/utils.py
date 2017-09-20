@@ -49,9 +49,9 @@ def read_sti_yaml():
     # OUPUT: dict[(site, telescope,instrument)] => prefix
     lut = dict()
     for d in res:
-        lut[(d['site__name'],
-             d['telescope__name'],
-             d['instrument__name']
+        lut[(d['site'],
+             d['telescope'],
+             d['instrument']
         )] = d['prefix']
     
     return lut

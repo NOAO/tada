@@ -422,6 +422,13 @@ def fitsverify(fname):
     return True
 
 def set_dtpropid(orig, **kwargs):
+    pid = hcu.ws_get_propid(orig.get('DTCALDAT'),
+                            orig.get('DTTELESC'),
+                            orig.get('DTINSTRU'),
+                            orig.get('DTPROPID', orig.get('PROPID', None)))
+    return {'DTPROPID': pid}
+    
+def OLD_set_dtpropid(orig, **kwargs):
     pids = hcu.ws_lookup_propids(orig.get('DTCALDAT'),
                                  orig.get('DTTELESC'),
                                  orig.get('DTINSTRU'),
