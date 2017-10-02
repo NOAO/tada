@@ -42,7 +42,7 @@ def main():
         'hdr keyword name/value pairs.',
         epilog='EXAMPLE: %(prog)s a b"'
         )
-    parser.add_argument('--version', action='version', version='1.0.1')
+    parser.add_argument('--version', action='version', version='1.1.1')
     parser.add_argument('infile', type=argparse.FileType('r'),
                         help='Input FITS file')
     parser.add_argument('outfile', help='Output FITS file')

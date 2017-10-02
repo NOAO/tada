@@ -146,6 +146,7 @@ def submit(rec, qname):
     try:
         ts.unprotected_submit(rec['filename'], rec['checksum'])
     except tex.IngestRejection as ex:
+        logging.error('IngestRejection from actions.submit(); {}'.format(ex))
         tut.log_traceback()        
         try:
             auditor.log_audit(ex.md5sum, ex.origfilename, False, '',
@@ -154,8 +155,7 @@ def submit(rec, qname):
             # At this point, we must ignore the error and move on.
             logging.exception('Error in log_audit after ingest reject; {}'
                               .format(err))
-            return False
-        
+        return False
     except Exception as ex:
         logging.error('Do not let errors fall through this far!!!')
         logging.error(traceback.format_exc())
@@ -163,4 +163,8 @@ def submit(rec, qname):
                        ' rec={}; qname={}; {}')
                       .format(rec, qname, ex))
         return False
-    return True
+    else:
+        logging.debug('Completed actions.submit({})'.format(rec['filename']))
+        return True
+    logging.error('SHOULD NOT HAPPEN. Fell thru bottom of actions.submit()')
+    
