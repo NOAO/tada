@@ -17,16 +17,11 @@ given: Telescope, Instrument, Date of observation.
            .format(host, port, telescope, instrument, date, hdrpid))
     logging.debug('MARS: get PROPID from schedule; url = {}'.format(url))
     pid = None
-    try:
-        r = requests.get(url, timeout=timeout)
-        response = r.text
-        logging.debug('MARS: server response="{}"'.format(response))
-        return response
-    except Exception as ex:
-        logging.error('MARS: Error contacting schedule service via {}; {}'
-                      .format(url, ex))
-        return None
-    return pid # Should never happen
+    r = requests.get(url, timeout=timeout)
+    response = r.text
+    logging.debug('MARS: server response="{}"'.format(response))
+    response.raise_for_status()
+    return response
 
 def ws_get_propid(date, telescope, instrument, hdr_pid):
     """Return propid suitiable for use in DB."""
