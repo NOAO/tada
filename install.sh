@@ -7,7 +7,7 @@
 #   (which is used to provision under Puppet)
 #
 # EXAMPLES:
-#  sudo /sandbox/tada-tools/dev-scripts/install.sh
+#  sudo /sandbox/tada/install.sh
 #  sudo install.sh -c   # clean first
 #
 

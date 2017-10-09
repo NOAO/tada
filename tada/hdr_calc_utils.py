@@ -2,7 +2,7 @@
 import logging
 import requests
 from . import settings
-
+from . import exceptions as tex
 
 ##############################################################################
 
@@ -20,29 +20,38 @@ given: Telescope, Instrument, Date of observation.
     r = requests.get(url, timeout=timeout)
     response = r.text
     logging.debug('MARS: server response="{}"'.format(response))
-    response.raise_for_status()
-    return response
+    if r.status_code == 200:
+        logging.debug('MARS: server status ok')
+        return response
+    else:
+        msg = ('Error ({}) in MARS webservice call ({}); {}.'
+               .format(r.status_code, url,response))
+        logging.error(msg)
+        raise tex.MarsWebserviceError(msg)
+
 
 def ws_get_propid(date, telescope, instrument, hdr_pid):
     """Return propid suitiable for use in DB."""
     host=settings.mars_host
     port=settings.mars_port
     if host == None or port == None:
-        logging.error('Missing MARS host ({}) or port ({}).'.format(host,port))
-        return None
+        msg = 'Missing MARS host ({}) or port ({}).'.format(host,port)
+        logging.error(msg)
+        raise tex.MarsWebserviceError(msg)
 
     # telescope, instrument, date = ('kp4m', 'kosmos', '2016-02-01')
     logging.debug('WS schedule lookup; '
                   'DTCALDAT="{}", DTTELESC="{}", DTINSTRU="{}"'
                   .format(date, telescope, instrument))
-    pid = None
     try:
         pid = http_get_propid_for_db(telescope, instrument, date, hdr_pid,
                                      host=host, port=port)
-    except:
-        logging.error(('Failed Propid lookup via mars for'
-                       'tele={}, instr={}, date={}, hdrpid={}, host={}, port={}')
-                      .format(telescope, instrument, date, hdr_pid, host, port))
+    except Exception as err:
+        msg = ('Failed Propid lookup via mars for '
+               'tele={}, instr={}, date={}, hdrpid={}, host={}, port={}; {}')\
+               .format(telescope, instrument, date, hdr_pid, host, port, err)
+        logging.error(msg)
+        raise tex.MarsWebserviceError(msg)
     return pid
 
 # propid=`curl 'http://127.0.0.1:8000/schedule/propid/kp4m/kosmos/2016-02-01/'`
