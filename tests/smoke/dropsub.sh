@@ -234,7 +234,7 @@ function mtnlogrun () {
     local log=$1
     local start=$2
 
-    tail -n +$((start+1)) $log \
+    tail -n +$((start+1)) $log | sort \
         | grep  "INFO \| WARNING \| ERROR " | cut -d' ' -f3- 
 }
 
