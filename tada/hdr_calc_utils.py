@@ -48,8 +48,8 @@ def ws_get_propid(date, telescope, instrument, hdr_pid):
                                      host=host, port=port)
     except Exception as err:
         msg = ('Failed Propid lookup via mars for '
-               'tele={}, instr={}, date={}, hdrpid={}, host={}, port={}; {}')\
-               .format(telescope, instrument, date, hdr_pid, host, port, err)
+               'tele={}, instr={}, date={}, hdrpid={}; {}')\
+               .format(telescope, instrument, date, hdr_pid, err)
         logging.error(msg)
         raise tex.MarsWebserviceError(msg)
     return pid
