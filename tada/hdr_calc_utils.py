@@ -25,7 +25,7 @@ given: Telescope, Instrument, Date of observation.
         return response
     else:
         msg = ('Error ({}) in MARS webservice call ({}); {}.'
-               .format(r.status_code, url,response))
+               .format(r.status_code, url.replace(host,'mars.host'), response))
         logging.error(msg)
         raise tex.MarsWebserviceError(msg)
 
