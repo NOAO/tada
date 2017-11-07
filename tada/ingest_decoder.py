@@ -141,6 +141,6 @@ def errcode(response):
         elif response == '':
             return 'none'
     logging.error('errcode cannot code for error message: {}; {}'
-                  .format(response, traceback.format_exc))
+                  .format(response, traceback.format_exc()))
     return 'UNKNOWN'
 

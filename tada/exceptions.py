@@ -50,6 +50,10 @@ class ArchiveWebserviceProblem(SubmitException):
     "Exception on opening or reading Archive URL."
     pass
 
+class MarsWebserviceError(SubmitException):
+    "Error connecting to MARS web service."
+    pass
+
 class CannotModifyHeader(SubmitException):
     "Exception when untrapped part of updating FITS header fails."
     pass

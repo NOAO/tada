@@ -464,7 +464,7 @@ def OLD_set_dtpropid(orig, **kwargs):
             return {'DTPROPID': pids[0]}
     return {'DTPROPID': 'NONE'} # this should never happen!
 
-def fix_hdr(hdr, fname, options, opt_params, **kwargs):
+def fix_hdr(hdr, fname, options, opt_params, ignore_schedule=False, **kwargs):
     '''
 SIDE-EFFECT: Modify hdr dict in place to suit Archive Ingest. 
 Include fields in hdr needed to construct new filename that fullfills standards.
@@ -531,7 +531,11 @@ Include fields in hdr needed to construct new filename that fullfills standards.
         hdr['HISTORY'] = changed_kw_str(funcname, hdr, new, calcfunc.outkws)
 
     #new = hf.set_dtpropid(hdr, **kwargs)
-    new = set_dtpropid(hdr, **kwargs) # !!! Emitted warning ref orig_fullname
+    if ignore_schedule:
+        new = {}
+    else:
+        new = set_dtpropid(hdr, **kwargs) # !!! Emitted warning ref orig_fullname
+
     logging.debug('Updating DTPROPID from {} => {}'
                   .format(hdr.get('DTPROPID'),
                           new.get('DTPROPID')))
@@ -718,17 +722,14 @@ def scrub_fits(fitsfname):
 #   find /data/raw -name "*.fits*" -print0 | xargs --null  fits_compliant
 def fits_compliant(fits_file_list,
                    personalities=[],
-                   quiet=False,
-                   ignore_recommended=False,
+                   quiet=False, ignore_recommended=False,
                    show_values=False, show_header=False, show_stdfname=True,
-                   required=False, verbose=False,
-                   trace=False):
+                   required=False, verbose=False, trace=False):
     """Check FITS file for complaince with Archive Ingest."""
     import warnings
 
     logging.debug('EXECUTING fits_compliant({}, personalities={}, '
-                  'quiet={}, '
-                  'show_values={}, show_header={}, show_stdfname={}, '
+                  'quiet={}, show_values={}, show_header={}, show_stdfname={}, '
                   'required={}, verbose={}, trace={})'
                   .format(fits_file_list, personalities, quiet,
                           show_values, show_header, show_stdfname,
@@ -820,7 +821,7 @@ def fits_compliant(fits_file_list,
             missing_raw = missing_in_raw_hdr(hdr)
             if len(missing_raw) == 0:
                 #!fname_fields = modify_hdr(hdr, ffile, options, opt_params)
-                fix_hdr(hdr, ffile, options, opt_params)
+                fix_hdr(hdr, ffile, options, opt_params, ignore_schedule=True)
                 missing_cooked = missing_in_archive_hdr(hdr)
                 missing_recommended = missing_in_recommended_hdr(hdr)
         except Exception as err:
@@ -974,6 +975,7 @@ def main():
                    ignore_recommended=args.ignore_recommended,
                    show_values=args.values,
                    show_header=args.header,
+                   #show_stdfname=False, #!!!
                    trace=args.trace )
     
 
@@ -982,3 +984,4 @@ if __name__ == '__main__':
     main()
 
  
+

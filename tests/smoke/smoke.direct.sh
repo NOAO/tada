@@ -63,15 +63,21 @@ testIrods fs7a_1b_irods $HDR
 ###########################################
 #echo "WARNING: ignoring remainder of tests"
 #exit $return_code
-###########################################a
+###########################################
 
-
+###########################################
+### FITS Compliant (fcom)
+###
 ## bad DATE-OBS content
 testCommand fc1_1 "fcom $tdata/basic/kp109391.fits.fz" "^\#" n 0
 
 # compliant
 testCommand fc2_1 "fcom $tdata/basic/kptest.fits" "^\#" n
+###########################################
 
+###########################################
+### FITS Submit (fsub)
+###
 #!# fpack on the fly
 #!unpacked="$tdata/scrape/20160314/kp4m-mosaic3/mos3.75675.fits  kp4m-mosaic3"
 #!testCommand fs0_1 "fsub $unpacked" "^\#" n
@@ -86,11 +92,6 @@ testCommand fs2_1 "fsub $file2" "^\#" n
 
 ## compliant FITS with no options (BUT, already inserted above so ingest FAIL)
 testCommand fs2b_1 "fsub $file2" "^\#" n 2
-
-###########################################
-#echo "WARNING: ignoring remainder of tests"
-#exit $return_code
-###########################################a
 
 
 ## bad format for DATE-OBS
@@ -117,6 +118,12 @@ testCommand fs8_1 "fsub $tdata/broken/20160203/kp4m-newfirm/nhs_1.fits.fz" "^\#"
 # FITS header is missing required metadata fields (PROCTYPE, PRODTYPE)
 testCommand fs9_1 "fsub $tdata/broken/20160203/kp/kptest.fits.fz" "^\#" n 1
 
+
+
+###########################################
+#echo "WARNING: ignoring remainder of tests"
+#exit $return_code
+###########################################a
 
 
 
