@@ -5,6 +5,7 @@
 import re
 import xml.etree.ElementTree as ET
 import logging
+import traceback
 from . import settings
 
 '''
@@ -139,6 +140,7 @@ def errcode(response):
             return name
         elif response == '':
             return 'none'
-    logging.error('errcode cannot code for error message: {}'.format(response))
+    logging.error('errcode cannot code for error message: {}; {}'
+                  .format(response, traceback.format_exc))
     return 'UNKNOWN'
 
