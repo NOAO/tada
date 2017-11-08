@@ -3,8 +3,9 @@
 # Run this after code modifications.  Installs tada python stuff from source.
 # Run as sudo (typically under vagrant as vagrant user, no venv active).
 #
-# SEE ALSO: scripts/tada-valley-install.sh
+# SEE ALSO: /opt/tada/scripts/tada-valley-install.sh
 #   (which is used to provision under Puppet)
+# SIMILARLY: /opt/data-queue/scripts/dataq-valley-install.sh
 #
 # EXAMPLES:
 #  sudo /sandbox/tada/install.sh

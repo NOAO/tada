@@ -44,6 +44,7 @@ function testIrods () {
 ## Ignore lines that start with COMMENT (defaults to ";")
 ##
 function testCommand () {
+    local pwd=`pwd`
   proc=testCommand
   testName="$1" # No Spaces; e.g. CCUE
   CMD="$2"
@@ -100,7 +101,6 @@ function testCommand () {
   tn="3/3"
   if ! diff $sto/$GOLD.clean $sto/$actual.clean > $sto/$diff;  then
       cat $sto/$diff
-      pwd=`pwd`
       echo ""
       echo "To accept current results: cp $sto/$actual $pwd/$GOLD"
       echo "*** $proc FAILED [$testName] ($tn; got UNEXPECTED STDOUT) ***"
@@ -118,6 +118,7 @@ function testCommand () {
 ## Ignore lines that match regular expression VARIANT (defaults to "^;")
 ##
 function testOutput () { 
+    local pwd=`pwd`
   proc=testOutput
   testName="$1" # No Spaces; e.g. CCUE
   output=$2
@@ -129,7 +130,6 @@ function testOutput () {
   totalcnt=$((totalcnt + 1))
   
   if [ ! -f $GOLD ]; then
-      pwd=`pwd`
       echo "Could not find: $GOLD"
       echo "To accept current output: cp $output $pwd/$GOLD"
       failcnt=$((failcnt + 1))
@@ -149,7 +149,6 @@ function testOutput () {
           echo "  $sto/$diff"
           echo ""
       fi
-      pwd=`pwd`
       echo ""
       echo "To accept current results: cp $pwd/$output $pwd/$GOLD"
       echo "*** $proc  FAILED  [$testName] (got UNEXPECTED output in: $output) ***"
@@ -172,11 +171,11 @@ function testLog () {
     local proc="testLog"
     local displayOutputP="y"      # or "n" to save stdout to file only
     local diff="${output}.diff"
+    local pwd=`pwd`
 
     totalcnt=$((totalcnt + 1))
 
     if [ ! -f $GOLD ]; then
-	pwd=`pwd`
 	echo "Could not find: $GOLD"
 	echo "To accept current output: cp $output $pwd/$GOLD"
 	failcnt=$((failcnt + 1))
@@ -185,8 +184,11 @@ function testLog () {
 
     eval "${filter}" > $sto/$output
 
-    if ! diff $GOLD $sto/$output > $sto/$diff;  then
+    sort $pwd/$GOLD > $sto/$GOLD.sorted
+    sort $sto/$output > $sto/$output.sorted
+    if ! diff $sto/$GOLD.sorted $sto/$output.sorted > $sto/$diff;  then
 	if [ "y" = "$displayOutputP" ]; then
+            echo "  $sto/$diff"
             cat $sto/$diff
 	else
             echo ""
@@ -194,7 +196,6 @@ function testLog () {
             echo "  $sto/$diff"
             echo ""
 	fi
-	pwd=`pwd`
 	echo ""
 	echo "To accept current results: cp $sto/$output $pwd/$GOLD"
 	echo "*** $proc  FAILED  [$testName] (got UNEXPECTED output in: $output) ***"
