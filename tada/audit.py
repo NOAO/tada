@@ -1,6 +1,9 @@
 """Suppport audit records.  There are two flavors.  One is in
 sqllite DB on each valley machine.  One is via MARS service (a
 composite of all domes and valleys).
+
+Insure: Everything Submitted is Audited
+("Submitted" includes Direct Submit and copied to Dropbox)
 """
 
 import logging
