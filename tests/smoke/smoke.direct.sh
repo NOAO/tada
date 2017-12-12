@@ -124,7 +124,7 @@ testCommand fs9_1 "fsub $tdata/broken/20160203/kp/kptest.fits.fz" "^\#" n 1
 fits=$tdata/scrape/20110101/ct13m-andicam/ir141225.0179.fits.fz
 newfits=/tmp/changed2.fits.fz
 $tadadir/tada/change_hdus.py $fits $newfits $tdata/change_propid.yaml
-testCommand fs10_1  "fsub $newfits ct13m-andicam" "^\#" n
+testCommand fs10_1  "fsub $newfits ct13m-andicam" "^\#" y 1
 
 
 ###########################################

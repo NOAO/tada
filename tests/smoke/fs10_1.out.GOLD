@@ -1,3 +1,2 @@
-SUCCESS: archived /tmp/changed2.fits.fz 
-# Added provisional name for c13a_141226_070040_ori_tTADASMOKE.fits.fz
-
+EXECUTED: /opt/tada/venv/bin/direct_submit -p /var/tada/personalities/ops/smoke.yaml -p /tmp/changed2.fits.fz.yaml -p /var/tada/personalities/ct13m-andicam/ct13m-andicam.yaml /tmp/changed2.fits.fz
+Rejected ingest of /tmp/changed2.fits.fz. REASON: Failed Propid lookup via mars for tele=ct13m, instr=andicam, date=2014-12-25, hdrpid=smarts; Error (400) in MARS webservice call (http://mars.host:8000/schedule/dbpropid/ct13m/andicam/2014-12-25/smarts/); Propid from hdr (smarts) not in scheduled list of Propids ['2015B-0267']; Telescope=ct13m, Instrument=andicam, Date=2014-12-25.

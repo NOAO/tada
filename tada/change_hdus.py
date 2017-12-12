@@ -7,7 +7,7 @@
 import sys
 import argparse
 import logging
-import magic
+#import magic
 import os.path
 from pathlib import PurePath
 import subprocess

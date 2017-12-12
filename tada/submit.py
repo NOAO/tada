@@ -195,6 +195,8 @@ RETURN: irods location of hdr file.
         except tex.BadPropid as bpe:
             raise tex.IngestRejection(md5sum, orig_fullname, str(bpe), newhdr)
         except Exception as err:
+            auditor.log_audit(md5sum, orig_fullname, False, '',
+                              err, newhdr=newhdr)
             raise tex.IngestRejection(md5sum, orig_fullname, err, newhdr)
         fu.validate_cooked_hdr(newhdr, orig_fullname)
         if opt_params.get('VERBOSE', False):

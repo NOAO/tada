@@ -70,7 +70,7 @@ def http_get_propids_from_schedule(telescope, instrument, date,
         r = requests.get(url, timeout=timeout)
         response = r.text
         logging.debug('MARS: server response="{}"'.format(response))
-        propids = [pid.strip() for pid in response.split(',')]
+        propids = [pid.strip() for pid in response.split(','])
         return propids
     except Exception as ex:
         logging.error('MARS: Error contacting schedule service via {}; {}'
