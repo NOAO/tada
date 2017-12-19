@@ -3,8 +3,10 @@
 # Run this after code modifications.  Installs tada python stuff from source.
 # Run as sudo (typically under vagrant as vagrant user, no venv active).
 #
-# SEE ALSO: /opt/tada/scripts/tada-valley-install.sh
-#   (which is used to provision under Puppet)
+# SEE ALSO:
+#   /opt/tada/scripts/tada-valley-install.sh
+#     (which is used to provision under Puppet)
+#   sudo /sandbox/tada/scripts/updateTadaTables.sh
 # SIMILARLY: /opt/data-queue/scripts/dataq-valley-install.sh
 #
 # EXAMPLES:
@@ -26,7 +28,7 @@ PROGRESS=0
 CLEAN="NO"
 while getopts "hcv:" opt; do
     case $opt in
-	    c)
+	c)
             CLEAN="YES"
             ;;
 	    h)

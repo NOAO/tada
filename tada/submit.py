@@ -195,8 +195,7 @@ RETURN: irods location of hdr file.
         except tex.BadPropid as bpe:
             raise tex.IngestRejection(md5sum, orig_fullname, str(bpe), newhdr)
         except Exception as err:
-            auditor.log_audit(md5sum, orig_fullname, False, '',
-                              err, newhdr=newhdr)
+            #!auditor.log_audit(md5sum, orig_fullname, False, '',  err, newhdr=newhdr)
             raise tex.IngestRejection(md5sum, orig_fullname, err, newhdr)
         fu.validate_cooked_hdr(newhdr, orig_fullname)
         if opt_params.get('VERBOSE', False):
@@ -313,12 +312,13 @@ def file_type(filename):
     return type
 
 def unprotected_submit(ifname, dome_md5):
-    """Try to modify headers and submit FITS to archive. If anything fails 
+    """Called from ACTION queue.
+Try to modify headers and submit FITS to archive. If anything fails 
 more than N times, move the queue entry to Inactive. (where N is the 
 configuration field: maximum_errors_per_record)
     ifname:: absolute path (cache)
 """
-    logging.debug('EXECUTING unprotected_submit({}, {})'.format(ifname, dome_md5))
+    logging.debug('EXECUTING unprotected_submit: {}, {}'.format(ifname, dome_md5))
     noarc_root =  '/var/tada/anticache'
     mirror_root = '/var/tada/cache'    
     auditor.set_fstop(dome_md5, 'valley:cache', host=socket.getfqdn())
@@ -356,9 +356,9 @@ configuration field: maximum_errors_per_record)
         raise tex.IngestRejection(dome_md5, ifname, msg, dict())
         
     auditor.set_fstop(dome_md5,'archive')
-    auditor.log_audit(dome_md5, origfname, True, destfname, '', newhdr=newhdr)
+    #!auditor.log_audit(dome_md5, origfname, True, destfname, '', newhdr=newhdr)
     return True
-# END unprotected_submit() action
+# END unprotected_submit action
 
 
 ##########
@@ -407,6 +407,7 @@ checksum:: checksum of original file
     logging.debug('submit_to_archive({})'.format(ifname))
     
     #!popts, pprms = fu.get_options_dict(ifname + ".options")
+    orighdr = fu.get_hdr_as_dict(ifname)
     popts, pprms = fu.get_options_dict(ifname) # .yaml 
     logging.debug('submit_to_archive(popts={},pprms={})'.format(popts, pprms))
     origfname = pprms['filename']
@@ -429,80 +430,78 @@ checksum:: checksum of original file
     if moddir != None:
         os.remove(modfits)
 
+    auditor.log_audit(md5sum, origfname, success, destfname, ops_msg, orighdr=orighdr, newhdr=changed)
     if not success:
-        raise tex.IngestRejection(md5sum, origfname, ops_msg, popts)
+        raise tex.IngestRejection(md5sum, origfname, ops_msg, orighdr)
 
     iu.irods_put331(modfits, destfname) # iput renamed FITS
     logging.info('SUCCESSFUL submit_to_archive; {} as {}'
                  .format(origfname, destfname))
-    auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
-                      orighdr=popts, newhdr=changed)
     return destfname, changed
 
 
-def protected_direct_submit(fitsfile, moddir,
-                  personality=None, # dictionary from YAML 
-                  trace=False):
-    """Blocking submit to archive without Queue. 
-Waits for ingest service to complete and returns its formated result.
-Traps for reasonable errors and returns those in returned value. 
-So, caller should not have to put this function in try/except."""
-    logging.debug('EXECUTING: protected_direct_submit({}, personality={},'
-                  'moddir={})'
-                  .format(fitsfile, personality,  moddir))
-    md5sum = md5(fitsfile)
-    ok = True  
-    statusmsg = None
-    if 'FITS image data' not in str(magic.from_file(fitsfile)):
-        errmsg = 'Cannot ingest non-FITS file: {}'.format(fitsfile)
-        logging.error(errmsg)
-        auditor.log_audit(md5sum, fitsfile, False, '', errmsg)
-        return (False, errmsg)
-
-
-    if personality == None:
-        personality = dict(params={}, options={})
-    if 'filename' not in personality['params']:
-        personality['params']['filename'] = fitsfile
-
-    pprms = personality['params']
-    popts = personality['options']
-    md5sum = pprms['md5sum']
-    logging.debug('direct_submit: popts={}'.format(popts))
-    logging.debug('direct_submit: pprms={}'.format(pprms))
-    origfname = fitsfile
-    try:
-        new_ihdr, destfname, changed, modfits = prep_for_ingest(fitsfile,
-                                                                md5sum,
-                                                       persona_options=popts,
-                                                       persona_params=pprms,
-                                                       moddir=moddir)
-    except Exception as err:
-        tut.trace_if(trace)
-        msg = str(err)
-        logging.error(msg)
-        auditor.log_audit(md5sum, origfname, False, '', str(err), newhdr=popts)
-        return (False, msg)
-
-    success, ops_msg = http_archive_ingest(new_ihdr, origfname=origfname)
-    auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
-                      orighdr=popts, newhdr=changed)
-    if not success:
-        if moddir != None:
-            os.remove(modfits)
-            logging.debug('DBG: Removed modfits={}; moddir={}'
-                          .format(modfits, moddir))
-        return(False, 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg))
-    else:
-        # iput renamed, modified FITS
-        iu.irods_put331(modfits, destfname) # iput renamed FITS
-        if moddir != None:
-            os.remove(modfits)
-            logging.debug('DBG: Removed modfits={}; moddir={}'
-                          .format(modfits, moddir))
-        return(True, 'SUCCESS: archived {} as {}'.format(fitsfile, destfname))
-    return (ok, statusmsg)
-    # END: protected_direct_submit()
+#!def protected_direct_submit(fitsfile, moddir,
+#!                  personality=None, # dictionary from YAML 
+#!                  trace=False):
+#!    """Blocking submit to archive without Queue. 
+#!Waits for ingest service to complete and returns its formated result.
+#!Traps for reasonable errors and returns those in returned value. 
+#!So, caller should not have to put this function in try/except."""
+#!    logging.debug('EXECUTING: protected_direct_submit({}, personality={},'
+#!                  'moddir={})'
+#!                  .format(fitsfile, personality,  moddir))
+#!    md5sum = md5(fitsfile)
+#!    ok = True  
+#!    statusmsg = None
+#!    if 'FITS image data' not in str(magic.from_file(fitsfile)):
+#!        errmsg = 'Cannot ingest non-FITS file: {}'.format(fitsfile)
+#!        logging.error(errmsg)
+#!        auditor.log_audit(md5sum, fitsfile, False, '', errmsg)
+#!        return (False, errmsg)
+#!
+#!
+#!    if personality == None:
+#!        personality = dict(params={}, options={})
+#!    if 'filename' not in personality['params']:
+#!        personality['params']['filename'] = fitsfile
+#!
+#!    pprms = personality['params']
+#!    popts = personality['options']
+#!    md5sum = pprms['md5sum']
+#!    logging.debug('direct_submit: popts={}'.format(popts))
+#!    logging.debug('direct_submit: pprms={}'.format(pprms))
+#!    origfname = fitsfile
+#!    try:
+#!        new_ihdr, destfname, changed, modfits = prep_for_ingest(fitsfile,
+#!                                                                md5sum,
+#!                                                       persona_options=popts,
+#!                                                       persona_params=pprms,
+#!                                                       moddir=moddir)
+#!    except Exception as err:
+#!        tut.trace_if(trace)
+#!        msg = str(err)
+#!        logging.error(msg)
+#!        auditor.log_audit(md5sum, origfname, False, '', str(err), newhdr=popts)
+#!        return (False, msg)
+#!
+#!    success, ops_msg = http_archive_ingest(new_ihdr, origfname=origfname)
+#!    auditor.log_audit(md5sum, origfname, success, destfname, ops_msg, orighdr=popts, newhdr=changed)
+#!    if not success:
+#!        if moddir != None:
+#!            os.remove(modfits)
+#!            logging.debug('DBG: Removed modfits={}; moddir={}'
+#!                          .format(modfits, moddir))
+#!        return(False, 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg))
+#!    else:
+#!        # iput renamed, modified FITS
+#!        iu.irods_put331(modfits, destfname) # iput renamed FITS
+#!        if moddir != None:
+#!            os.remove(modfits)
+#!            logging.debug('DBG: Removed modfits={}; moddir={}'
+#!                          .format(modfits, moddir))
+#!        return(True, 'SUCCESS: archived {} as {}'.format(fitsfile, destfname))
+#!    return (ok, statusmsg)
+#!    # END: protected_direct_submit()
     
 ##############################################################################
 def direct_submit(fitsfile, moddir,
@@ -528,6 +527,7 @@ def direct_submit(fitsfile, moddir,
     statuscode = 0    # for sys.exit(statuscode)
     statusmsg = 'NA'
 
+    orighdr = fu.get_hdr_as_dict(fitsfile)
     popts = dict()
     pprms = dict()
     for pf in personality_files:
@@ -552,21 +552,18 @@ def direct_submit(fitsfile, moddir,
             persona_params=pprms,
             moddir=moddir)
     except Exception as err:
-        auditor.log_audit(md5sum, origfname, False, '', str(err),
-                          orighdr=popts, newhdr=changed)
-        auditor.set_fstop(md5sum, 'valley:direct', host=socket.getfqdn())
-
         tut.trace_if(trace)
         statusmsg = str(err)
         #statusmsg = err.errmsg
         success = False
         statuscode = 1
+        auditor.log_audit(md5sum, origfname, False, '', str(err), orighdr=orighdr, newhdr=changed)
+        auditor.set_fstop(md5sum, 'valley:direct', host=socket.getfqdn())
         sys.exit(statusmsg)
 
         
     success, ops_msg = http_archive_ingest(new_ihdr, origfname=origfname)
-    auditor.log_audit(md5sum, origfname, success, destfname, ops_msg,
-                      orighdr=popts, newhdr=changed)
+    auditor.log_audit(md5sum, origfname, success, destfname, ops_msg, orighdr=orighdr, newhdr=changed)
     auditor.set_fstop(md5sum, 'valley:direct', host=socket.getfqdn())
     if not success:
         statusmsg = 'FAILED: {} not archived; {}'.format(fitsfile, ops_msg)

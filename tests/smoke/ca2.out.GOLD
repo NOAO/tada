@@ -1,0 +1,2 @@
+logcnt uri=http://mars.vagrant.noao.edu:8000/audit/marslogcnt/
+errors(field,expected,actual)=[('WARNING', 0, 27), ('ERROR', 0, 34)]

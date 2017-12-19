@@ -42,6 +42,19 @@ testCommand ps2_1 "fsub $tdata/basic/obj_355_VR_v1_TADAPIPE.fits.fz pipeline-mos
 #!exit $return_code
 ###########################################
 
+#!###########################################
+#!### pipeline_submit
+#!###
+#!function psubmit () {
+#!    ffile=$1; shift
+#!    #msg=`pipeline_submit $ffile 2>&1`
+#!    #!status=$?
+#!    pipeline_submit $ffile 2>&1 | perl -pe 's|as /noao-tuc-z1/.*||'
+#!}
+#!
+#!testCommand ps1_1 "psubmit $tdata/basic/uofa-mandle.jpg" "^\#" n
+#!testCommand ps2_1 "psubmit $tdata/basic/c4d_130901_031805_oow_g_d2.fits.fz" "^\#" n
+
 
 ##############################################################################
 
@@ -59,3 +72,7 @@ fi
 cd $origdir
 #exit $return_code
 return $return_code
+
+
+
+

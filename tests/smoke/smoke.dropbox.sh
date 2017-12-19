@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 # AUTHORS:    S. Pothier
 # PURPOSE:    Wrapper for smoke test
 #   Use mountain dropbox to ingest files. Run from Valley.

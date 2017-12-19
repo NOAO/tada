@@ -1,0 +1,32 @@
+# <UNDER CONSTRUCTION>
+
+# DEV and TEST notes
+
+* Testing
+After code change it may be necessary to install on BOTH Valley and
+Mountain.  Use "install.sh".
+
+The preferred way to run tests right after dev changes is with
+  /sandbox/tada/tests/smoke/smoke.all.sh
+Run on Valley (vagrant, after install of fresh software to Valley and
+maybe Mtn) as "tester" user with venv loaded.
+
+* Trouble-shooting
+# dropbox
+
+The MARS audit app provides help in tracking FITS files through our
+system. 
+
+** Focusing on audit changes
+If you are trying to keep track of just a couple files (audit
+records) that you keep submitting, it may be useful to use
+/admin/audit/auditrecord/ to mark all audit records as "HIDE" and use
+the "HIDE=False" fitler to display only non-HIDE records.  Each time a
+record is updated, its HIDE field will be reset to False so it will
+become visible in the filtered list.
+
+** Recent audit records
+Useful MARS services:
+- /audit/recent/ :: list of audit records updated today
+- /audit/recentcnt/ :: number of occurances of various audit field
+     values

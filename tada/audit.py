@@ -4,6 +4,9 @@ composite of all domes and valleys).
 
 Insure: Everything Submitted is Audited
 ("Submitted" includes Direct Submit and copied to Dropbox)
+
+DECISION via Slack on 12/15/2017 (Sean, Steve):
+  "If TADA fails to audit, it should abort ingest."
 """
 
 import logging
@@ -89,7 +92,8 @@ class Auditor():
 
         try:
             archerr = str(err)
-            logging.debug('log_audit({}, {},{},{},{},{},{} do_svc={})'
+            logging.debug(('log_audit({}, {},{},{},{},'
+                           'orighdr={} newhdr={} do_svc={})')
                           .format(md5sum, origfname, success,
                                   archfile, archerr,
                                   orighdr, newhdr, self.do_svc))
@@ -172,7 +176,7 @@ class Auditor():
                   'obsday', 'telescope', 'instrument',
                   'srcpath', 'updated', 'submitted',
                   'success', 'archerr', 'errcode', 'archfile',
-                  'metadata',
+                  # 'metadata',
         ]
         ddict = dict()
         for k in fnames:
@@ -181,11 +185,13 @@ class Auditor():
                       .format(uri, ddict))
         try:
             req = requests.post(uri, json=ddict, timeout=self.timeout)
-            #logging.debug('auditor.update_svc: response={}'.format(req.text))
+            logging.debug('auditor.update_svc: response={}, status={}, json={}'
+                          .format(req.text, req.status_code, ddict))
+            req.raise_for_status()
             #return req.text
         except  Exception as err:
-            logging.error('AUDIT: Error contacting service via "{}"; {}'
-                          .format(uri, str(err)))
+            logging.error('MARS audit svc "{}"; {}; {}'
+                          .format(uri, req.text, str(err)))
             return False
         logging.debug('DONE: Adding audit record')
         return True

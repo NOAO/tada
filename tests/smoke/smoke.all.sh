@@ -12,6 +12,7 @@ mastertotalcnt=0
 
 SCRIPT=$(readlink -e $0)     #Absolute path to this script
 SCRIPTDIR=$(dirname $SCRIPT) #Absolute path this script is in
+# SCRIPTDIR=/sandbox/tada/tests/smoke/
 
 #rm /var/log/tada/pop*.log
 date > /var/log/tada/pop.log
@@ -49,7 +50,8 @@ popd > /dev/null 2>&1
 
 ####
 # Make sure hosts and services are running!
-source $SCRIPTDIR/smoke.system.sh; tally smoke.system
+source $SCRIPTDIR/smoke.system.sh
+tally smoke.system
 
 ####
 # Test Valley only behavior

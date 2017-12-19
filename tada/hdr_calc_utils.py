@@ -24,10 +24,10 @@ given: Telescope, Instrument, Date of observation.
         logging.debug('MARS: server status ok')
         return response
     else:
-        msg = ('Error ({}) in MARS webservice call ({}); {}.'
+        msg = ('{}:MARS svc={}; {}.'
                .format(r.status_code, url.replace(host,'mars.host'), response))
-        logging.error(msg)
-        raise tex.MarsWebserviceError(msg)
+        logging.info(msg)
+        raise tex.MarsWebserviceError(response)
 
 
 def ws_get_propid(date, telescope, instrument, hdr_pid):
@@ -36,7 +36,7 @@ def ws_get_propid(date, telescope, instrument, hdr_pid):
     port=settings.mars_port
     if host == None or port == None:
         msg = 'Missing MARS host ({}) or port ({}).'.format(host,port)
-        logging.error(msg)
+        logging.info(msg)
         raise tex.MarsWebserviceError(msg)
 
     # telescope, instrument, date = ('kp4m', 'kosmos', '2016-02-01')
@@ -47,11 +47,11 @@ def ws_get_propid(date, telescope, instrument, hdr_pid):
         pid = http_get_propid_for_db(telescope, instrument, date, hdr_pid,
                                      host=host, port=port)
     except Exception as err:
-        msg = ('Failed Propid lookup via mars for '
+        msg = ('Failed Propid lookup '
                'tele={}, instr={}, date={}, hdrpid={}; {}')\
                .format(telescope, instrument, date, hdr_pid, err)
-        logging.error(msg)
-        raise tex.MarsWebserviceError(msg)
+        logging.info(msg)
+        raise tex.MarsWebserviceError(err)
     return pid
 
 # propid=`curl 'http://127.0.0.1:8000/schedule/propid/kp4m/kosmos/2016-02-01/'`
@@ -70,7 +70,7 @@ def http_get_propids_from_schedule(telescope, instrument, date,
         r = requests.get(url, timeout=timeout)
         response = r.text
         logging.debug('MARS: server response="{}"'.format(response))
-        propids = [pid.strip() for pid in response.split(','])
+        propids = [pid.strip() for pid in response.split(',')]
         return propids
     except Exception as ex:
         logging.error('MARS: Error contacting schedule service via {}; {}'
