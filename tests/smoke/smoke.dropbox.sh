@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 # AUTHORS:    S. Pothier
 # PURPOSE:    Wrapper for smoke test
 #   Use mountain dropbox to ingest files. Run from Valley.
@@ -63,8 +63,15 @@ rsync -az --password-file ~/.tada/rsync.pwd tada@$MTNHOST::logs ~/.tada/mountain
 mtn_plog_start=`cat $mtn_plog | wc -l`
 mtn_wlog_start=`cat $mtn_wlog | wc -l`
 
+# Clear MARS log in preparation for counting WARNINGS and ERRORS
+curl 'http://mars.vagrant.noao.edu:8000/audit/marsclearlog/'; echo
+curl 'http://mars.vagrant.noao.edu:8000/audit/hideall/'; echo
+
+
 ##############################################################################
 ### Tests
+
+
 
 ## As of 2/7/2017 this will PASS INGEST because scrub_fits() fixes the header.
 #!# fail-fail (fitsverify against 1. mtn dropbox, 2. val to-be-ingested-fits)
@@ -72,14 +79,16 @@ mtn_wlog_start=`cat $mtn_wlog | wc -l`
 #!testCommand db1_1 "faildrop $FTO $FITS 20110101 wiyn-bench" "^\#" n 0
 #!testLog db1_1_log "pylogfilter $plog \"$MARKER\" $FITS"
 
+## success=TRUE
 # pass-pass fitsverify
 # uncompressed (comprss on the fly) when BITPIX=-32
 FITS=$tdata/short-drop/20110101/ct13m-andicam/ir141225.0179.fits
 ## =>  mtn/20141225/ct13m/smarts/c13a_141226_070040_ori_tTADASMOKE.fits.fz
 # "fpack -L" should yield: "tiled_gzip"
-testCommand db2_6 "passdrop $PTO $FITS 20110101 ct13m-andicam" "^\#" y 0
+testCommand db2_6 "passdrop $PTO $FITS 20110101 ct13m-andicam" "^\#" n 0
 testLog db2_6_log "pylogfilter $plog \"$MARKER\" $FITS"
 
+## success=TRUE
 # uncompressed (compress on the fly) when BITPIX is NOT -32
 FITS=$tdata/scrape/20160315/ct4m-arcoiris/SV_f0064.fits
 ## => 20160322/ct4m/2016A-0612/c4ai_160322_234217_gri_t846000_TADASMOKE.fits.fz
@@ -91,22 +100,26 @@ testLog db2_6b_log "pylogfilter $plog \"$MARKER\" $FITS"
 ### All three (obj_355, obj_355a, obj_355b) have same checksum!!!
 ### Causes trouble with collisions (on dq, auditdb)
 ###
+## success=FALSE
 # Will not have a personality for "bad-instrum" (tele-instrum)
 # when monitor needs it.  So fail on MOUNTAIN hence timeout on valley.
 FITS=$tdata/short-drop/20160909/bad-instrum/obj_355b.fits.fz
 testCommand db2_2 "dropfile $FTO $FITS 20160909 bad-instrum 1" "^\#" n 9
 testLog db2_2_log "pylogfilter $plog \"$MARKER\" $FITS"
 
+## success=TRUE
 FITS=$tdata/short-drop/20141220/wiyn-whirc/obj_355.fits.fz
 testCommand db2_3 "passdrop $PTO $FITS 20141220 wiyn-whirc" "^\#" n 0
 testLog db2_3_log "pylogfilter $plog \"$MARKER\" $FITS"
 ### 
 ############
 
+## success=FALSE
 FITS=$tdata/short-drop/20160610/kp4m-mosaic3/mos3.badprop.fits
 testCommand db2_5 "faildrop $FTO $FITS 20160610 kp4m-mosaic3" "^\#" n 0 
 testLog db2_5_log "pylogfilter $plog \"$MARKER\" $FITS"
 
+## success=TRUE
 # This one takes longish! Could not find smaller file that astropy fixes
 # (original fails fitsverify, to-be-ingested passes verify)
 # 57 seconds to iputr 71,222,400 bytes @ 10mbps
@@ -133,10 +146,20 @@ rsync -az --password-file ~/.tada/rsync.pwd tada@$MTNHOST::logs ~/.tada/mountain
 testLog db4_1_log "mtnlogrun $mtn_plog ${mtn_plog_start}"
 testLog db5_1_log "mtnlogrun $mtn_wlog ${mtn_wlog_start}"
 
+## success=TRUE
 # FITS not readable by Astropy, but CFITSIO (fitscopy) will correct it on mtn
 FITS="$tdata/noastropy/20161230/soar-goodman/0084.leia.fits"
-testCommand db6_1 "passdrop $PTO $FITS 20161230 soar-goodman" "^\#" n 0
+testCommand db6_1 "passdrop $PTO $FITS 20161230 soar-goodman" "^\#" y 0
 testLog db6_1_log "pylogfilter $plog \"$MARKER\" $FITS"
+
+
+
+##############################################################################
+### Check AUDIT and LOG counts
+
+
+cmd="$tadadir/scripts/check_audit.py --success_True 5 --success_False 2"
+testCommand cadb1 "$cmd" "^\#" n 0
 
 ###########################################
 #echo "WARNING: ignoring remainder of tests"

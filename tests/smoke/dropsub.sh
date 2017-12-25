@@ -34,6 +34,8 @@ function setup_dropbox_tests () {
     rm $SMOKEDB
     sqlite3 $SMOKEDB "$CREATE_SMOKEDB"
     chmod a+rw $SMOKEDB
+    rm -rf ~tester/.tada/mountain-logs
+    rm -rf ~tester/.tada/dropcache
     echo "COMPLETED setup for dropbox tests"
 }
 

@@ -27,7 +27,7 @@ return_code=0
 SMOKEOUT="$sto/README-smoke-results.direct.txt"
 
 echo "# "
-echo "# Starting tests in \"smoke.direct.sh\"  [allow 2 minutes] ..."
+echo "# Starting tests in \"smoke.direct.sh\"  [allow 4 minutes] ..."
 echo "# "
 source tada-smoke-setup.sh
 
@@ -38,6 +38,7 @@ source tada-smoke-setup.sh
 
 # Clear MARS log in preparation for counting WARNINGS and ERRORS
 curl 'http://mars.vagrant.noao.edu:8000/audit/marsclearlog/'; echo
+curl 'http://mars.vagrant.noao.edu:8000/audit/hideall/'; echo
 
 
 ###########################################
@@ -151,7 +152,7 @@ testCommand fs9_1 "fsub $tdata/broken/20160203/kp/kptest.fits.fz" "^\#" n 1
 # Modify to fail due to PROPID mismatch with schedule
 fits=$tdata/scrape/20160314/kp4m-mosaic3/mos3.75870.fits.fz
 newfits=/tmp/changed2.fits.fz
-$tadadir/tada/change_hdus.py $fits $newfits $tdata/change_propid.yaml > /dev/null
+$tadadir/tada/change_hdus.py $fits $newfits $tdata/change_propid.yaml > /dev/null 2>&1
 # /schedule/dbpropid/kp4m/mosaic3/2001-01-01/2016A-0453/
 # To test, slot should contain list that does NOT include 2016A-0453
 testCommand fs10_1  "fsub $newfits" "^\#" y 1
@@ -166,8 +167,10 @@ testCommand fs10_1  "fsub $newfits" "^\#" y 1
 #!testCommand ca02 "$cmd" "^\#" n 0
 
 # 11 fsub (same number of audit records)
-cmd="$tadadir/scripts/check_audit.py --success_True 4 --success_False 7"
+cmd="$tadadir/scripts/check_audit.py --success_True 4 --success_False 6"
 testCommand ca1 "$cmd" "^\#" n 0
+#! echo "WARNING: did NOT verify AUDIT success=True/False counts!!!"
+
 ## There are still lots of errors in mars log
 #! cmd="$tadadir/scripts/check_log.py --ERROR 0 --WARNING 0"
 #! testCommand ca2 "$cmd" "^\#" n 0

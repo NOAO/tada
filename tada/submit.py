@@ -16,6 +16,8 @@ import magic
 import yaml
 import hashlib
 import socket
+import warnings
+from astropy.utils.exceptions import AstropyUserWarning
 
 from . import fits_utils as fu
 from . import file_naming as fn
@@ -26,6 +28,8 @@ from . import config
 from . import audit
 from . import utils as tut
 from . import settings
+
+warnings.simplefilter('ignore', category=AstropyUserWarning)
 
 auditor = audit.Auditor()
 
@@ -514,6 +518,7 @@ def direct_submit(fitsfile, moddir,
                   'moddir={}, target={})'
                   .format(fitsfile, personality, personality_files,
                           moddir, target))
+    warnings.simplefilter('ignore', category=AstropyUserWarning)
     md5sum = md5(fitsfile)
 
     if 'FITS image data' not in str(magic.from_file(fitsfile)):

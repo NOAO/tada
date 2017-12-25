@@ -48,6 +48,10 @@ popd > /dev/null 2>&1
 ####
 ##############################################################################
 
+echo "# "
+echo "# Starting tests in \"smoke.all.sh\"  [allow 17 minutes on chimp] ..."
+echo "# "
+
 ####
 # Make sure hosts and services are running!
 source $SCRIPTDIR/smoke.system.sh

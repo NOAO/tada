@@ -38,10 +38,10 @@ class Auditor():
     def __init__(self):
         self.con = sqlite3.connect('/var/log/tada/audit.db')
         #!self.timeout = (6.05, 7) # (connect, read) in seconds
-        self.timeout = 9 
+        self.timeout = 12 
         self.mars_port = settings.mars_port
         self.mars_host = settings.mars_host
-        self.do_svc = settings.do_audit
+        #self.do_svc = settings.do_audit
         #!self.fstops = set(['dome',
         #!                   'mountain:dropbox',
         #!                   'mountain:queue',
@@ -55,8 +55,6 @@ class Auditor():
 
     def set_fstop(self, md5sum, fstop, host=None):
         """Update audit service with hhe most downstream stop of FITS file"""
-        if not self.do_svc:
-            return False
         if host == '' or host == None:
             host = socket.getfqdn() # this host
         logging.debug('AUDIT.set_fstop({}, {}, {})'.format(md5sum, fstop, host))
@@ -93,10 +91,10 @@ class Auditor():
         try:
             archerr = str(err)
             logging.debug(('log_audit({}, {},{},{},{},'
-                           'orighdr={} newhdr={} do_svc={})')
+                           'orighdr={} newhdr={})')
                           .format(md5sum, origfname, success,
                                   archfile, archerr,
-                                  orighdr, newhdr, self.do_svc))
+                                  orighdr, newhdr))
 
             now = datetime.datetime.now().isoformat()
             today = datetime.date.today().isoformat()
@@ -125,20 +123,20 @@ class Auditor():
                           archfile=os.path.basename(archfile),
                           metadata=orighdr)
             logging.debug('log_audit: recdic={}'.format(recdic))
+            logging.info('log_audit: SUCCESS={success}, SRCPATH={srcpath}'
+                         .format(**recdic))
             try:
                 self.update_local(recdic)
             except Exception as ex:
                 logging.error('Could not update local audit.db; {}'.format(ex))
 
-            if self.do_svc:
-                logging.debug('Update audit via service')
-                try:
-                    self.update_svc(recdic)
-                except Exception as ex:
-                    logging.error('Could not update remote audit record; {}'
-                                  .format(ex))
+            #!logging.debug('Update audit via service')
+            try:
+                self.update_svc(recdic)
+            except Exception as ex:
+                logging.error('Could not update audit record; {}'.format(ex))
             else:
-                logging.debug('Did not update via audit service')
+                logging.debug('Updated audit')
         except Exception as ex:
             logging.error('auditor.log_audit() failed: {}'.format(ex))
         logging.debug('DONE: log_audit')
@@ -190,8 +188,8 @@ class Auditor():
             req.raise_for_status()
             #return req.text
         except  Exception as err:
-            logging.error('MARS audit svc "{}"; {}; {}'
-                          .format(uri, req.text, str(err)))
+            logging.error('MARS audit svc "{}"; {}; {}; json={}'
+                          .format(uri, req.text, str(err), ddict))
             return False
         logging.debug('DONE: Adding audit record')
         return True
