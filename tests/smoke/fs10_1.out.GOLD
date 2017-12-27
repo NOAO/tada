@@ -1,2 +1,2 @@
 EXECUTED: /opt/tada/venv/bin/direct_submit -p /var/tada/personalities/ops/smoke.yaml -p /tmp/changed2.fits.fz.yaml /tmp/changed2.fits.fz
-Rejected ingest of /tmp/changed2.fits.fz. REASON: Propid from hdr (2016A-0453) not in scheduled list of Propids ['2017A-0932', '2017A-0935']; Telescope=kp4m, Instrument=mosaic3, Date=2001-01-01
+Rejected ingest of /tmp/changed2.fits.fz. REASON: Failed Propid lookup via mars for tele=kp4m, instr=mosaic3, date=2001-01-01, hdrpid=2016A-0453; Error (400) in MARS webservice call (http://mars.host:8000/schedule/dbpropid/kp4m/mosaic3/2001-01-01/2016A-0453/); Propid from hdr (2016A-0453) not in scheduled list of Propids ['2017A-0932', '2017A-0935']; Telescope=kp4m, Instrument=mosaic3, Date=2001-01-01.
