@@ -37,9 +37,9 @@ source tada-smoke-setup.sh
 ##############################################################################
 
 # Clear MARS log in preparation for counting WARNINGS and ERRORS
-curl 'http://mars.vagrant.noao.edu:8000/audit/marsclearlog/'; echo
-curl 'http://mars.vagrant.noao.edu:8000/audit/hideall/'; echo
-
+curl 'http://mars.vagrant.noao.edu:8000/audit/marsclearlog/' > /dev/null 2>&1
+curl 'http://mars.vagrant.noao.edu:8000/audit/hideall/' > /dev/null 2>&1
+echo "Cleared MARS log and HIDE-ALL audit records"
 
 ###########################################
 ###
@@ -102,7 +102,7 @@ testCommand fc2_1 "fcom $tdata/basic/kptest.fits" "^\#" n
 #!unpacked="$tdata/scrape/20160314/kp4m-mosaic3/mos3.75675.fits  kp4m-mosaic3"
 #!testCommand fs0_1 "fsub $unpacked" "^\#" n
 
-## success=FALSE
+## success does not apply (FALSE)
 ## non-FITS; (reject, not try to ingest)
 testCommand fs1_1 "fsub $tdata/basic/uofa-mandle.jpg" "^\#" n 1
 
@@ -167,9 +167,10 @@ testCommand fs10_1  "fsub $newfits" "^\#" n 1
 #!testCommand ca02 "$cmd" "^\#" n 0
 
 # 11 fsub (same number of audit records)
-cmd="$tadadir/scripts/check_audit.py --success_True 4 --success_False 2"
+cmd="$tadadir/scripts/check_audit.py --success_True 4 --success_False 6"
 testCommand ca1 "$cmd" "^\#" n 0
-echo "Reconsider how many success=true/false audit records to expect (6 false)!!!"
+echo "Reconsider how many success=true/false audit records to expect!!!"
+echo "   (really expect: 4=True, 6=False)"
 #! echo "WARNING: did NOT verify AUDIT success=True/False counts!!!"
 
 ## There are still lots of errors in mars log

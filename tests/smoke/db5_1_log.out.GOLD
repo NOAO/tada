@@ -5,5 +5,7 @@
     monitors.py:220 INFO     Pushed /var/tada/data/dropbox/20141220/wiyn-whirc/obj_355.fits.fz to cache: /var/tada/cache/.queue/20141220/wiyn-whirc/obj_355.fits.fz
     monitors.py:204 WARNING  Dropbox file (mos3.badprop.fits) is invalid FITS. Trying to continue anyhow. Verify failed: /usr/local/bin/fitsverify -e -q mos3.badprop.fits
     monitors.py:220 INFO     Pushed /var/tada/data/dropbox/20160610/kp4m-mosaic3/mos3.badprop.fits to cache: /var/tada/cache/.queue/20160610/kp4m-mosaic3/mos3.badprop.fits.fz
+    monitors.py:204 WARNING  Dropbox file (0084.leia.fits) is invalid FITS. Trying to continue anyhow. Verify failed: /usr/local/bin/fitsverify -e -q 0084.leia.fits
+    monitors.py:220 INFO     Pushed /var/tada/data/dropbox/20161230/soar-goodman/0084.leia.fits to cache: /var/tada/cache/.queue/20161230/soar-goodman/0084.leia.fits.fz
     monitors.py:204 WARNING  Dropbox file (mos3.75870.fits.fz) is invalid FITS. Trying to continue anyhow. Verify failed: /usr/local/bin/fitsverify -e -q mos3.75870.fits.fz
     monitors.py:220 INFO     Pushed /var/tada/data/dropbox/20160314/kp4m-mosaic3/mos3.75870.fits.fz to cache: /var/tada/cache/.queue/20160314/kp4m-mosaic3/mos3.75870.fits.fz

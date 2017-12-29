@@ -36,7 +36,9 @@ function setup_dropbox_tests () {
     chmod a+rw $SMOKEDB
     rm -rf ~tester/.tada/mountain-logs
     rm -rf ~tester/.tada/dropcache
-    echo "COMPLETED setup for dropbox tests"
+    echo "COMPLETED setup for dropbox tests. "
+    echo "   Removed ~tester/.tada/mountain-logs/"
+    echo "   Removed ~tester/.tada/dropcache/"
 }
 
 # Estimate time to upload FITS (iput) at rate=10mbps
@@ -85,6 +87,17 @@ function record_expected () {
     #gen-audit-records.sh -d $day -t $tele -i $inst -n $marshost $fits>/dev/null
 }
 
+# Wait for FITSFILE to appear in MARS AUDIT service.
+# curl "http://localhost:8000/audit/query/20161229/soar/goodman/0084.leia.fits/"    
+function wait_for_audit_match() {
+    local TIMEOUT=$1 # seconds
+    local FITS=$2 # full path to source FITS file
+    local TELE_INST=$3
+    IFS='-' read  tele inst <<< "$TELE_INST"
+    base=`basename $FITS`
+    q="$DAY/$tele/$inst/$base/"
+    }
+    
 # Wait for FITSFILE to appear in AUDITDB.
 # If timeout, RETURN=9. Else, if EXPECTED=ACTUAL RETURN=0, else RETURN=1
 # MUST match against specific (fits,tele,instrum) record. NOT just fits.
