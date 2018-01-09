@@ -37,8 +37,8 @@ source tada-smoke-setup.sh
 ##############################################################################
 
 # Clear MARS log in preparation for counting WARNINGS and ERRORS
-curl 'http://mars.vagrant.noao.edu:8000/audit/marsclearlog/' > /dev/null 2>&1
-curl 'http://mars.vagrant.noao.edu:8000/audit/hideall/' > /dev/null 2>&1
+curl "http://$MARSHOST:8000/audit/marsclearlog/" > /dev/null 2>&1
+curl "http://$MARSHOST:8000/audit/hideall/"      > /dev/null 2>&1
 echo "Cleared MARS log and HIDE-ALL audit records"
 
 ###########################################

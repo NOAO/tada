@@ -12,16 +12,17 @@ import requests
 from pprint import pprint,pformat
 
 def compare_counts(expected=None,
-                   uri='http://localhost:8000/audit/recentcnt/',
+                   marshost='mars1.sdm.noao.edu',
                    #secs to wait for any bytes
                    timeout=10 ):
     """The work-horse function."""
+    uri='http://{}:8000/audit/unhidecnt/'.format(marshost)
     r = requests.get(uri, timeout=timeout)
     #print('svc response: \n{}'.format(pformat(r.json())))
     actual = r.json()
     #print('expected={}'.format(expected))
     errors = list() #  [(field, expected, actual), ...]
-    ignore = ['loglevel', 'uri', 'version']
+    ignore = ['loglevel', 'marshost', 'version']
     for k,v in expected.items():
         if k in ignore: continue
         if v == None:
@@ -45,9 +46,10 @@ def main():
         epilog='EXAMPLE: %(prog)s a b"'
         )
     parser.add_argument('--version', action='version', version='1.0.1')
-    parser.add_argument('--uri',
-                        default='http://mars.vagrant.noao.edu:8000/audit/unhidecnt/',
-                        help='MARS service that gives audit counts')
+    parser.add_argument('--marshost', '-m',
+                        #default='mars.vagrant.noao.edu',
+                        default='mars1.sdm.noao.edu',   # env(MARSHOST)
+                        help='MARS host that provides web-service for audit counts')
     parser.add_argument('--errcode_DUPFITS', type=int)
     parser.add_argument('--errcode_NOPROP', type=int)
     parser.add_argument('--success_True', type=int)
@@ -72,7 +74,7 @@ def main():
                         datefmt='%m-%d %H:%M')
     logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
-    errors = compare_counts(uri=args.uri, expected=vars(args))
+    errors = compare_counts(marshost=args.marshost, expected=vars(args))
     if len(errors) > 0:
         print('errors(field,expected,actual)={}'.format(errors))
     else:
