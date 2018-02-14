@@ -8,11 +8,13 @@ dq_host = hiera['dq_host']
 dq_port = hiera['dq_port']
 dq_loglevel = hiera['dq_loglevel']
 dq_unblock_timeout = hiera.get('dq_unblock_timeout',0)
+natica_timeout = hiera['natica_timeout']
 natica_host = hiera['natica_host']
 natica_port = hiera['natica_port']
+mountain_host = hiera['mountain_host']
 valley_host = hiera['valley_host']
-mars_host = hiera['mars_host']
-mars_port = hiera['mars_port']
+#mars_host = hiera['mars_host']
+#mars_port = hiera['mars_port']
 do_audit = hiera.get('do_audit', True)
 
 maximum_queue_size  = tada['maximum_queue_size']

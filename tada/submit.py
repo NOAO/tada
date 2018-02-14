@@ -46,26 +46,26 @@ Archive Ingest via REST-like interface.
 RETURN: (statusBool, message, operatorMessage)"""
     logging.debug('EXECUTING: http_archive_ingest({})'
                   .format(hdr_ipath))
-    timeout = settings.arch_timeout
-    archserver_url = ('http://{}:{}/'.format(settings.arch_host,
-                                             settings.arch_port))
+    timeout = settings.natica_timeout
+    ingest_url = ('http://{}:{}/'.format(settings.natica_host,
+                                         settings.natica_port))
     payload = dict(hdrUri=ipfx+hdr_ipath)
-    logging.debug('archserver_url={}, prms={}, timeout={}'
-                  .format(archserver_url, payload, timeout))
+    logging.debug('ingest_url={}, prms={}, timeout={}'
+                  .format(ingest_url, payload, timeout))
 
     response = ''
     try:
         tut.tic()
-        r = requests.get(archserver_url, params=payload, timeout=timeout)
+        r = requests.get(ingest_url, params=payload, timeout=timeout)
         response = r.text
-        logging.debug('archserver full url = {}'.format(r.url))
+        logging.debug('ingest full url = {}'.format(r.url))
         elapsed = tut.toc()
-        logging.debug('archserver response({:.2f}): {}'
+        logging.debug('ingest response({:.2f}): {}'
                       .format(elapsed, response))
     except Exception as err:
         success = False
         ops_msg= ('Problem in opening or reading connection to: {}{}; {}'
-                  .format(archserver_url, payload, err))
+                  .format(ingest_url, payload, err))
     else:
         success, ops_msg, mtype, itype = idec.decodeIngestResponse(response)
         logging.debug('ARCH server: success={}, msg={}, errcode={}'

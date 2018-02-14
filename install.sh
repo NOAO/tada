@@ -60,7 +60,7 @@ fi
 
 repodir=${1:-/sandbox}
 installprefix=/opt/tada/venv
-echo "Installing FROM repo: $repodir to $installprefix" 
+echo "Installing (natica) FROM repo: $repodir to $installprefix" 
 
 ##############################################################################
 
@@ -75,18 +75,16 @@ source /opt/tada/venv/bin/activate
 ##################################################
 ### Force install of python packages from source
 ###
-echo "Install: dataq.."
-pushd $repodir/dataq > /dev/null
-#echo "WARNING: NOT rebuilding dataq software!!! in install.sh"
-#! sudo python3 setup.py install --force
-#! pylint --rcfile=pylint.rc dataq/
-#python3 setup.py install --force --prefix $installprefix
-python3 setup.py install --force 
-popd > /dev/null
+#!echo "Install: dataq.."
+#!pushd $repodir/dataq > /dev/null
+echo "WARNING: NOT rebuilding dataq software!!! in install.sh"
+#!pylint --rcfile=pylint.rc dataq/
+#!python3 setup.py install --force 
+#!popd > /dev/null
 ###
 
 echo "Install: tada.."
-pushd $repodir/tada > /dev/null
+pushd $repodir/tadanat > /dev/null
 #!sudo python3 setup.py install --force
 pylint -E tada/
 pylintstatus=$?
@@ -104,9 +102,6 @@ popd > /dev/null
 ###
 ##########################################################
 
-sudo rm /var/log/tada/audit.db
-sqlite3 /var/log/tada/audit.db < /etc/tada/audit-schema.sql
-chmod a+rw /var/log/tada/audit.db 
 
 sudo rm /var/log/tada/*.err
 sudo service dqd restart > /dev/null

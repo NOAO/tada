@@ -32,8 +32,8 @@ given: Telescope, Instrument, Date of observation.
 
 def ws_get_propid(date, telescope, instrument, hdr_pid):
     """Return propid suitiable for use in DB."""
-    host=settings.mars_host
-    port=settings.mars_port
+    host=settings.natica_host
+    port=settings.natica_port
     if host == None or port == None:
         msg = 'Missing MARS host ({}) or port ({}).'.format(host,port)
         logging.info(msg)
@@ -84,8 +84,8 @@ def ws_lookup_propids(date, telescope, instrument, **kwargs):
 -OR- [] if cannot reach service
 -OR- ['NEED-DEFAULT.'<tel>.<inst>] if service reachable but lookup fails."""
     logging.debug('ws_lookup_propids; kwargs={}'.format(kwargs))
-    host=settings.mars_host
-    port=settings.mars_port
+    host=settings.natica_host
+    port=settings.natica_port
     if host == None or port == None:
         logging.error('Missing MARS host ({}) or port ({}).'.format(host,port))
         return []

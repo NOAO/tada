@@ -26,8 +26,8 @@ class Auditor():
     def __init__(self):
         #!self.timeout = (6.05, 7) # (connect, read) in seconds
         self.timeout = 12 
-        self.mars_port = settings.mars_port
-        self.mars_host = settings.mars_host
+        self.natica_port = settings.natica_port
+        self.natica_host = settings.natica_host
         #!self.fstops = set(['dome',
         #!                   'mountain:dropbox',
         #!                   'mountain:queue',
@@ -45,7 +45,7 @@ class Auditor():
             host = socket.getfqdn() # this host
         logging.debug('AUDIT.set_fstop({}, {}, {})'.format(md5sum, fstop, host))
         uri = ('http://{}:{}/audit/fstop/{}/{}/{}/'
-               .format(self.mars_host, self.mars_port, md5sum, fstop, host))
+               .format(self.natica_host, self.natica_port, md5sum, fstop, host))
 
         machine = fstop.split(':')[0]
         logging.debug('DBG-0: fstop uri={}'.format(uri))
@@ -126,11 +126,12 @@ class Auditor():
     
     def update_svc(self, recdic):
         """Add audit record to svc."""
-        if self.mars_host == None or self.mars_port == None:
+        if self.natica_host == None or self.natica_port == None:
             logging.error('Missing AUDIT host ({}) or port ({}).'
-                          .format(self.mars_host, self.mars_port))
+                          .format(self.natica_host, self.natica_port))
             return False
-        uri = 'http://{}:{}/audit/update/'.format(self.mars_host, self.mars_port)
+        uri = 'http://{}:{}/audit/update/'.format(self.natica_host,
+                                                  self.natica_port)
         fnames = ['md5sum',
                   'obsday', 'telescope', 'instrument',
                   'srcpath', 'updated', 'submitted',
