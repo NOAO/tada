@@ -64,7 +64,7 @@ def validate_config(cfg, fname=None, qnames=None):
 
 def get_config(queue_names,
                yaml_filename='/etc/tada/tada.conf',
-               hiera_filename='/etc/tada/hiera.yaml',
+               hiera_filename='/etc/tada/from-hiera.yaml',
                validate=False):
     """Read multi-queue config from yaml_filename.  Validate its
 contents. Insure queue_names are all in the list of named queues."""

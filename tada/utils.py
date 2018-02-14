@@ -14,7 +14,7 @@ def read_yaml(yamlfile):
 
 # Add "schema" validation for each kind of yaml read!!!
 def read_hiera_yaml():
-    yamlfile = '/etc/tada/hiera.yaml'
+    yamlfile = '/etc/tada/from-hiera.yaml'
     try:
         res = read_yaml(yamlfile)
     except Exception as err:

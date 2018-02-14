@@ -1,5 +1,4 @@
-"""Suppport audit records.  There are two flavors.  One is in
-sqllite DB on each valley machine.  One is via MARS service (a
+"""Suppport audit records via MARS service (a
 composite of all domes and valleys).
 
 Insure: Everything Submitted is Audited
@@ -10,11 +9,8 @@ DECISION via Slack on 12/15/2017 (Sean, Steve):
 """
 
 import logging
-import sqlite3
 import datetime
 import hashlib
-#import urllib.request
-#import json
 import requests
 import os.path
 import socket
@@ -23,25 +19,15 @@ from . import ingest_decoder as dec
 from . import utils as tut
 from . import settings
 
-#!def md5(fname):
-#!    hash_md5 = hashlib.md5()
-#!    with open(fname, "rb") as f:
-#!        for chunk in iter(lambda: f.read(4096), b""):
-#!            hash_md5.update(chunk)
-#!    return hash_md5.hexdigest()
-
-
 
 class Auditor():
     "Maintain audit records both locally (valley) and via MARS service"
     
     def __init__(self):
-        self.con = sqlite3.connect('/var/log/tada/audit.db')
         #!self.timeout = (6.05, 7) # (connect, read) in seconds
         self.timeout = 12 
         self.mars_port = settings.mars_port
         self.mars_host = settings.mars_host
-        #self.do_svc = settings.do_audit
         #!self.fstops = set(['dome',
         #!                   'mountain:dropbox',
         #!                   'mountain:queue',
@@ -125,10 +111,6 @@ class Auditor():
             logging.debug('log_audit: recdic={}'.format(recdic))
             logging.info('log_audit: SUCCESS={success}, SRCPATH={srcpath}'
                          .format(**recdic))
-            try:
-                self.update_local(recdic)
-            except Exception as ex:
-                logging.error('Could not update local audit.db; {}'.format(ex))
 
             #!logging.debug('Update audit via service')
             try:
@@ -141,27 +123,6 @@ class Auditor():
             logging.error('auditor.log_audit() failed: {}'.format(ex))
         logging.debug('DONE: log_audit')
         
-    # FIRST something like: sqlite3 audit.db < sql/audit-schema.sql
-    def update_local(self, recdic):
-        "Add audit record to local sqlite DB. (in case service is down)"
-        logging.debug('update_local ({})'.format(recdic,))
-        fnames = ['md5sum',
-                  'obsday', 'telescope', 'instrument',
-                  'srcpath',
-                  'updated', #'recorded',
-                  'submitted',
-                  'success',  'archerr', 'archfile',   ]
-        values = [recdic[k] for k in fnames]
-        lut = dict(updated='recorded') # rename fields
-        fnames = [lut.get(k,k) for k in fnames]
-        
-        #! logging.debug('update_local ({}) = {}'.format(fnames,values))
-        # replace the non-primary key values with new values.
-        sql = ('INSERT OR REPLACE INTO audit ({}) VALUES ({})'
-               .format(','.join(fnames),
-                       (('?,' * len(fnames))[:-1])))
-        self.con.execute(sql, tuple(values))
-        self.con.commit()
     
     def update_svc(self, recdic):
         """Add audit record to svc."""
