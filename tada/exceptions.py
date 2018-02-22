@@ -1,9 +1,8 @@
 import logging
 
-from . import config
 from . import audit
 from . import utils as tut
-from . import settings
+
 
 auditor = audit.Auditor()
 

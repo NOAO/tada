@@ -1,0 +1,47 @@
+TADA for use with NATICA is much simplied compared to TADA with LSA.
+This is a record of the repo changes to convert TADALSA into TADANAT.  
+
+
+* Original files
+
+| DO | FILE                    | Reason                               |
+|----+-------------------------+--------------------------------------|
+| r  | actions.py              |                                      |
+| M  | audit.py                |                                      |
+| D  | change_hdr.py           | use "change_hdus.py" instead         |
+| k  | change_hdus.py          | keep for OPS                         |
+| D  | config.py               |                                      |
+| D  | dateobs.py              | not used                             |
+| D  | diag.py                 | not used                             |
+| M  | exceptions.py           | remove LSA related !!!               |
+| D  | file_naming.py          | moved into mars/natica               |
+|    | fits_utils.py           |                                      |
+| r  | fpack.py                | compress before xfer mtn->val        |
+| D  | generate_files.py       | not used (except test non-ingest)    |
+| D  | get_schedule.py         | not used                             |
+| D  | hdr_calc_funcs.py       | Now stored in mars DB                |
+| D  | hdr_calc_utils.py       | 2 funcs used moved to fits_utils.py  |
+| D  | header_change.py        | not used                             |
+| D  | icmd.py                 | all use of iRODS removed             |
+| D  | ingest_decoder.py       | only applicable to LSA ingest svc    |
+| D  | irods331.py             | all use of iRODS removed             |
+| D  | irods_utils.py          | all use of iRODS removed             |
+| D  | make_network_diagram.py | not used                             |
+| r  | monitors.py             | dropbox                              |
+| D  | personality2yaml.py     | all personalities already converted  |
+| D  | reformat_yaml.py        | reformat of yaml completed           |
+|    | scrub.py                | move into mars/natica !!!            |
+| r  | settings.py             | (renamed to tada_settings)           |
+| M  | submit.py               | Essential intfc to ingest svc !!!    |
+| M  | utils.py                | read directly from MARS services !!! |
+| r  | watch_drops.py          | dropbox                              |
+|----+-------------------------+--------------------------------------|
+
+
+
+DO codes:
+- D :: Delete
+- M :: Modify
+- r :: required
+- k :: keep
+

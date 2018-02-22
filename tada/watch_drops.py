@@ -13,7 +13,6 @@ import yaml
 
 #from . import config
 from .monitors import push_drops
-from . import settings
 
 ##############################################################################
 

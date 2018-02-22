@@ -15,9 +15,9 @@ import requests
 import os.path
 import socket
 
-from . import ingest_decoder as dec
+#from . import ingest_decoder as dec
 from . import utils as tut
-from . import settings
+from . import tada_settings as ts
 
 
 class Auditor():
@@ -26,8 +26,8 @@ class Auditor():
     def __init__(self):
         #!self.timeout = (6.05, 7) # (connect, read) in seconds
         self.timeout = 12 
-        self.natica_port = settings.natica_port
-        self.natica_host = settings.natica_host
+        self.natica_port = ts.natica_port
+        self.natica_host = ts.natica_host
         #!self.fstops = set(['dome',
         #!                   'mountain:dropbox',
         #!                   'mountain:queue',
@@ -105,7 +105,8 @@ class Auditor():
                           submitted=now,
                           success=success,
                           archerr=archerr,
-                          errcode=dec.errcode(archerr),
+                          #errcode=dec.errcode(archerr), @@@
+                          errcode=archerr, # @@@
                           archfile=os.path.basename(archfile),
                           metadata=orighdr)
             logging.debug('log_audit: recdic={}'.format(recdic))

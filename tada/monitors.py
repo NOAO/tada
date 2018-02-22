@@ -15,7 +15,7 @@ import re
 import hashlib
 import socket
 
-from . import config
+
 from . import audit
 from . import fits_utils as fu
 from . import utils as tut
@@ -30,7 +30,7 @@ import watchdog.observers
 #from . import submit as ts
 from . import fpack as fp
 
-from . import settings
+from . import tada_settings as ts
 auditor = audit.Auditor()
 
 ##############################################################################
@@ -94,9 +94,9 @@ YAML file will be transfered with FITS because its in same directory..
             #!logging.debug('EXECUTING: {}'.format(cmdstr))
             #!subprocess.check_call(cmdstr, shell=True)
             logging.debug('EXECUTING: push_direct; redis_port="{}"'
-                          .format(settings.redis_port))
+                          .format(ts.redis_port))
             ru.push_direct(socket.getfqdn(), # this host
-                           settings.redis_port, #qcfg['redis_port'],
+                           ts.redis_port, #qcfg['redis_port'],
                            fullfname,
                            md5sum)
         except Exception as err:

@@ -12,7 +12,7 @@ import logging
 import magic
 from pprint import pprint
 
-
+import requests
 import astropy.io.fits as pyfits
 import os.path
 from pathlib import PurePath
@@ -21,14 +21,13 @@ import subprocess
 import yaml
 from astropy.utils.exceptions import AstropyWarning, AstropyUserWarning
  
-from . import file_naming as fn
+#from . import file_naming as fn
 from . import exceptions as tex
-#from . import hdr_calc_funcs as hf
-from . import hdr_calc_utils as hcu
+#!from . import hdr_calc_utils as hcu
 from . import scrub
 #from . import config 
 from . import utils as tut
-from . import settings
+from . import tada_settings as ts
 
 # EXAMPLE compliant header (included here for descriptions):
 """    
@@ -272,11 +271,11 @@ DATASUM = '0         '          /  checksum of data records
 #!    #!'PLQNAME',
 #!    ])
 
-USED_FIELDS = (settings.RAW_REQUIRED_FIELDS
-               | settings.FILENAME_REQUIRED_FIELDS
-               | settings.INGEST_REQUIRED_FIELDS
-               | settings.INGEST_RECOMMENDED_FIELDS
-               | settings.SUPPORT_FIELDS)
+USED_FIELDS = (ts.RAW_REQUIRED_FIELDS
+               | ts.FILENAME_REQUIRED_FIELDS
+               | ts.INGEST_REQUIRED_FIELDS
+               | ts.INGEST_RECOMMENDED_FIELDS
+               | ts.SUPPORT_FIELDS)
 
 
 def print_header(msg, hdr=None, fits_filename=None):
@@ -344,21 +343,21 @@ def missing_in_hdr(hdr, required_fields):
 def missing_in_raw_hdr(hdr):
     """Header from original FITS input to TADA doesn't contain minimum
  acceptable fields."""
-    return missing_in_hdr(hdr, settings.RAW_REQUIRED_FIELDS)
+    return missing_in_hdr(hdr, ts.RAW_REQUIRED_FIELDS)
 
 def missing_in_filename_hdr(hdr):
     """Header from FITS doesn't contain minimum fields acceptable for
  generating standard filename."""
-    return missing_in_hdr(hdr, settings.FILENAME_REQUIRED_FIELDS)
+    return missing_in_hdr(hdr, ts.FILENAME_REQUIRED_FIELDS)
 
 def missing_in_archive_hdr(hdr):
     """Header from FITS doesn't contain minimum fields acceptable for
  Archive Ingest."""
-    return missing_in_hdr(hdr, settings.INGEST_REQUIRED_FIELDS)
+    return missing_in_hdr(hdr, ts.INGEST_REQUIRED_FIELDS)
 
 def missing_in_recommended_hdr(hdr):
     "Header from FITS doesn't contain all fields recommended for ingest."
-    return missing_in_hdr(hdr, settings.INGEST_RECOMMENDED_FIELDS)
+    return missing_in_hdr(hdr, ts.INGEST_RECOMMENDED_FIELDS)
 
 #! def valid_header(fits_file):
 #!     """Read FITS metadata and insure it has what we need. 
@@ -421,48 +420,60 @@ def fitsverify(fname):
     logging.debug('{} PASSED fitsverify()'.format(fname))
     return True
 
+# propid=`curl 'http://127.0.0.1:8000/schedule/propid/kp4m/kosmos/2016-02-01/'`
+def http_get_propid_for_db(telescope, instrument, date, hdrpid,
+                           timeout=10, #secs to wait for any bytes
+                           host=None, port=8000) :
+    '''Use MARS web-service to get PROPID to use in DB 
+given: Telescope, Instrument, Date of observation.  
+    '''
+    url = ('http://{}:{}/schedule/dbpropid/{}/{}/{}/{}/'
+           .format(host, port, telescope, instrument, date, hdrpid))
+    logging.debug('MARS: get PROPID from schedule; url = {}'.format(url))
+    pid = None
+    r = requests.get(url, timeout=timeout)
+    response = r.text
+    logging.debug('MARS: server response="{}"'.format(response))
+    if r.status_code == 200:
+        logging.debug('MARS: server status ok')
+        return response
+    else:
+        msg = ('{}:MARS svc={}; {}.'
+               .format(r.status_code, url.replace(host,'mars.host'), response))
+        logging.info(msg)
+        raise tex.MarsWebserviceError(response)
+
+def ws_get_propid(date, telescope, instrument, hdr_pid):
+    """Return propid suitiable for use in DB."""
+    host=ts.natica_host
+    port=ts.natica_port
+    if host == None or port == None:
+        msg = 'Missing MARS host ({}) or port ({}).'.format(host,port)
+        logging.info(msg)
+        raise tex.MarsWebserviceError(msg)
+
+    # telescope, instrument, date = ('kp4m', 'kosmos', '2016-02-01')
+    logging.debug('WS schedule lookup; '
+                  'DTCALDAT="{}", DTTELESC="{}", DTINSTRU="{}"'
+                  .format(date, telescope, instrument))
+    try:
+        pid = http_get_propid_for_db(telescope, instrument, date, hdr_pid,
+                                     host=host, port=port)
+    except Exception as err:
+        msg = ('Failed Propid lookup '
+               'tele={}, instr={}, date={}, hdrpid={}; {}')\
+               .format(telescope, instrument, date, hdr_pid, err)
+        logging.info(msg)
+        raise tex.MarsWebserviceError(err)
+    return pid
+
 def set_dtpropid(orig, **kwargs):
-    pid = hcu.ws_get_propid(orig.get('DTCALDAT'),
+    pid = ws_get_propid(orig.get('DTCALDAT'),
                             orig.get('DTTELESC'),
                             orig.get('DTINSTRU'),
                             orig.get('DTPROPID', orig.get('PROPID', None)))
     return {'DTPROPID': pid}
     
-def OLD_set_dtpropid(orig, **kwargs):
-    pids = hcu.ws_lookup_propids(orig.get('DTCALDAT'),
-                                 orig.get('DTTELESC'),
-                                 orig.get('DTINSTRU'),
-                                 **kwargs)
-    if len(pids) == 0:
-        return {'DTPROPID': 'NONE'} # no svc connect?
-    logging.debug('Schedule propids ({}, {}, {}) = {}'
-                  .format(orig.get('DTCALDAT'),
-                          orig.get('DTTELESC'),
-                          orig.get('DTINSTRU'),
-                          pids))
-
-    hdrpid = orig.get('DTPROPID', orig.get('PROPID', None))
-    if hdrpid in pids:
-        return {'DTPROPID': hdrpid}
-    else:
-        if len(pids) > 1: # split night
-            if '<!DOCTYPE html>' == pids[0]:
-                err = ('MARS lookup of ({}, {}, {}) for {} got error'
-                       .format(orig.get('DTCALDAT'),
-                               orig.get('DTTELESC'),
-                               orig.get('DTINSTRU'),
-                               hdrpid))
-            else:
-                err = ('Propid from hdr ({}) not in scheduled list of Propids {}'
-                       .format(hdrpid, pids))
-            raise tex.BadPropid(err)
-        else: # not split, hdr doesn't match schedule
-            logging.warning((
-            'Ignoring header propid {} that does not match schedule. '
-                'Using "{}" from schedule.')
-                .format(hdrpid, pids[0]))
-            return {'DTPROPID': pids[0]}
-    return {'DTPROPID': 'NONE'} # this should never happen!
 
 def fix_hdr(hdr, fname, options, opt_params, ignore_schedule=False, **kwargs):
     '''
@@ -495,7 +506,7 @@ Include fields in hdr needed to construct new filename that fullfills standards.
         for funcname in calc_param:
             try:
                 #!func = eval('hf.'+funcname)
-                func = settings.HDR_FUNCS[funcname]
+                func = ts.HDR_FUNCS[funcname]
                 calc_funcs.append(func)
             except:
                 raise Exception('Function name "{}" given in option "calchdr"'
@@ -553,7 +564,7 @@ def show_hdr_values(msg, hdr):
     """Show the values for 'interesting' header fields"""
     #!for key in RAW_REQUIRED_FIELDS.union(INGEST_REQUIRED_FIELDS):
     print('{}: '.format(msg), end='')
-    for key in settings.RAW_REQUIRED_FIELDS:
+    for key in ts.RAW_REQUIRED_FIELDS:
         print('{}="{}"'.format(key,hdr.get(key,'<not given>')),end=', ')
     print()
 
@@ -643,8 +654,8 @@ def get_hdr_as_dict(fitsfile):
     hdict = dict()
     hdulist = pyfits.open(fitsfile)
     for field in (USED_FIELDS
-                  | settings.HDR_FUNCS['in_keywords']
-                  | settings.HDR_FUNCS['out_keywords']):
+                  | ts.HDR_FUNCS['in_keywords']
+                  | ts.HDR_FUNCS['out_keywords']):
         if field in hdulist[0].header:
             # use existing Primary HDU field
             hdict[field] = hdulist[0].header[field]
@@ -702,7 +713,7 @@ def scrub_fits(fitsfname):
     hdulist = pyfits.open(fitsfname, mode='update')
     for hdu in hdulist:
         # Remove any fields defined by standard as FLOAT whos value is NOT float.
-        for kw in settings.FLOAT_FIELDS:
+        for kw in ts.FLOAT_FIELDS:
             hdr = hdu.header
             if (kw in hdr) and (type(hdr[kw]) is str):
                 try:
@@ -720,187 +731,187 @@ def scrub_fits(fitsfname):
 
 # EXAMPLE:
 #   find /data/raw -name "*.fits*" -print0 | xargs --null  fits_compliant
-def fits_compliant(fits_file_list,
-                   personalities=[],
-                   quiet=False, ignore_recommended=False,
-                   show_values=False, show_header=False, show_stdfname=True,
-                   required=False, verbose=False, trace=False):
-    """Check FITS file for complaince with Archive Ingest."""
-    import warnings
-
-    logging.debug('EXECUTING fits_compliant({}, personalities={}, '
-                  'quiet={}, show_values={}, show_header={}, show_stdfname={}, '
-                  'required={}, verbose={}, trace={})'
-                  .format(fits_file_list, personalities, quiet,
-                          show_values, show_header, show_stdfname,
-                          required, verbose, trace))
-
-    warnings.simplefilter('error',AstropyWarning)
-    warnings.simplefilter('error',AstropyUserWarning)
-
-    if personalities == None:
-        personalities = []
-    bad = 0
-    bad_files = set()
-    exception_cnt = 0
-    if required:
-        print()
-        print('## RAW_REQUIRED_FIELDS:\n'
-              'These fields MUST be in raw fits header (or provided by '
-              'options at submit time). If not, field calculation will not '
-              'be attempted, and ingest will be aborted: \n\n1.\t{}'
-              .format( '\n1.\t'.join(sorted(settings.RAW_REQUIRED_FIELDS))))
-        print()
-        print('## FILENAME_REQUIRED_FIELDS:\n'
-              'These fields MUST be in hdr to be able to calculate standard '
-              'Archive filename and path. They may '
-              'be calculated from raw fits fields and options provided '
-              'at submit time. If any of these fields are not in hdr after '
-              'calculation, ingest will be aborted: \n\n1.\t{}'
-              .format( '\n1.\t'.join(sorted(settings.FILENAME_REQUIRED_FIELDS))))
-        print()
-        print('##INGEST_REQUIRED_FIELDS:\n'
-              'These fields MUST be in hdr given to Ingest. They may '
-              'be calculated from raw fits fields and options provided '
-              'at submit time. If any of these fields are not in hdr after '
-              'calculation, ingest will be aborted: \n\n1.\t{}'
-              .format( '\n1.\t'.join(sorted(settings.INGEST_REQUIRED_FIELDS))))
-        print()
-        print('## SUPPORT_FIELDS:\n'
-              'These fields are used by hdr_cacl_funcs.py '
-              '(aka Mapping functions) or Pipeline. '
-              'They are likely required, but it depends on the personality '
-              'and pipeline uses.'
-              '\n\n1.\t{}'
-              .format( '\n1.\t'.join(sorted(settings.SUPPORT_FIELDS))))
-        print()
-        print('## INGEST_RECOMMENDED_FIELDS:\n'
-              'These fields SHOULD be in hdr given to Ingest. They may '
-              'be calculated from raw fits fields and options provided '
-              'at submit time. If any of these fields are not in hdr after '
-              'calculation, portal queries may lack features: \n\n1.\t{}'
-              .format( '\n1.\t'.join(sorted(settings.INGEST_RECOMMENDED_FIELDS))))
-        print()
-
-
-    
-    all_missing_raw = set()
-    all_missing_cooked = set()
-    all_missing_recommended = set()
-    options = dict()
-    opt_params = dict()
-    for p in personalities:
-        opts, prms = get_personality_dict(p)
-        options.update(opts)
-        opt_params.update(prms)
-    #!print('DBG: options={}, opt_params={}'.format(options, opt_params))
-    for ffile in fits_file_list:
-        is_text = (magic.from_file(ffile).decode() == 'ASCII text')
-        valid = True
-        missing_raw = []
-        missing_cooked = []
-        missing_recommended = []
-        #!fname_fields = None
-        try:
-            #!valid_header(ffile)
-            if is_text:
-                logging.debug('fits_compliant: {} is TEXT header'.format(ffile))
-                hdr = hdrtxt_to_hdr(ffile)
-            else:
-                # use only first in list.
-                #! hdr = pyfits.open(ffile)[0].header
-                hdr = get_hdr_as_dict(ffile)
-            hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname, here to pass validate
-            #! hdr['DTACQNAM'] = ffile
-
-            if opt_params.get('OPS_PREAPPLY_UPDATE','no') == 'yes': #!!!
-                apply_options(options, hdr)
-            if show_header:
-                print('Post modify:')
-                pprint(hdr)
-            missing_raw = missing_in_raw_hdr(hdr)
-            if len(missing_raw) == 0:
-                #!fname_fields = modify_hdr(hdr, ffile, options, opt_params)
-                fix_hdr(hdr, ffile, options, opt_params, ignore_schedule=True)
-                missing_cooked = missing_in_archive_hdr(hdr)
-                missing_recommended = missing_in_recommended_hdr(hdr)
-        except Exception as err:
-            exception_cnt += 1
-            print('EXCEPTION in fits_compliant on {}: {}'.format(ffile, err))
-            tut.trace_if(trace)
-            valid = False
-            bad_files.add(ffile)
-            bad += 1
-            continue
-
-        all_missing_raw.update(missing_raw)
-        all_missing_cooked.update(missing_cooked)
-        all_missing_recommended.update(missing_recommended)
-        if (len(missing_raw) + len(missing_cooked)) > 0:
-            valid = False
-        new_basename = 'NA'
-        if show_stdfname:
-            try:
-                new_basename = fn.generate_fname(hdr, fn.fits_extension(ffile),
-                                                 orig=ffile,
-                                                 require_known=False)
-            except Exception as ex:
-                logging.warning('Could not generate archive fname; {}'.format(ex))
-            if not quiet:
-                print('{} produced from {}'.format(new_basename, ffile))
-        if show_values:
-            show_hdr_values('Post modify', hdr) # only "interesting" ones
-
-        if valid:
-            if not quiet:
-                print('{}:\t IS compliant'.format(ffile))
-        else:
-            bad_files.add(ffile)
-            bad += 1
-            if ignore_recommended:
-                print('{}:\t NOT compliant; '
-                      'Missing fields or bad content; '
-                      'raw: {}, cooked: {}, exceptions: {}'
-                      .format(ffile,
-                              sorted(missing_raw),
-                              sorted(missing_cooked),
-                              exception_cnt,
-                  ))
-            else:
-                print('{}:\t NOT compliant; '
-                      'Missing fields or bad content; '
-                      'raw: {}, cooked: {}, recommended: {}, '
-                      'exceptions: {}'
-                      .format(ffile,
-                              sorted(missing_raw),
-                              sorted(missing_cooked),
-                              sorted(missing_recommended),
-                              exception_cnt,
-                  ))
-    # END for ffile
-
-    if (verbose and (bad > 0)):
-        print('Non-complaint files: {}'.format(', '.join(bad_files)))
-
-    if len(fits_file_list) > 0:
-        recom_cnt = 0 if ignore_recommended else len(all_missing_recommended)
-        if (len(all_missing_raw) + len(all_missing_cooked)+ recom_cnt) > 0:
-            print('Fields missing from at least one file:\n'
-                  '   Raw:         {}\n'
-                  '   Cooked:      {}\n'
-                  '   Recommended: {}\n'
-                  '   Exceptions:  {}\n'
-                  '   (Cooked & Recommended exclude files that have missing '
-                  'Raw fields)'
-                  .format(sorted(all_missing_raw),
-                          sorted(all_missing_cooked),
-                          sorted(all_missing_recommended),
-                          exception_cnt,
-                  ))
-        print('\n{} of {} files are compliant (for Archive Ingest)'
-              .format(len(fits_file_list)-bad, len(fits_file_list)))
-        if exception_cnt > 0:
-            sys.exit('Abnormal termination due to exception(s)')
+#!def fits_compliant(fits_file_list,
+#!                   personalities=[],
+#!                   quiet=False, ignore_recommended=False,
+#!                   show_values=False, show_header=False, show_stdfname=True,
+#!                   required=False, verbose=False, trace=False):
+#!    """Check FITS file for complaince with Archive Ingest."""
+#!    import warnings
+#!
+#!    logging.debug('EXECUTING fits_compliant({}, personalities={}, '
+#!                  'quiet={}, show_values={}, show_header={}, show_stdfname={}, '
+#!                  'required={}, verbose={}, trace={})'
+#!                  .format(fits_file_list, personalities, quiet,
+#!                          show_values, show_header, show_stdfname,
+#!                          required, verbose, trace))
+#!
+#!    warnings.simplefilter('error',AstropyWarning)
+#!    warnings.simplefilter('error',AstropyUserWarning)
+#!
+#!    if personalities == None:
+#!        personalities = []
+#!    bad = 0
+#!    bad_files = set()
+#!    exception_cnt = 0
+#!    if required:
+#!        print()
+#!        print('## RAW_REQUIRED_FIELDS:\n'
+#!              'These fields MUST be in raw fits header (or provided by '
+#!              'options at submit time). If not, field calculation will not '
+#!              'be attempted, and ingest will be aborted: \n\n1.\t{}'
+#!              .format( '\n1.\t'.join(sorted(ts.RAW_REQUIRED_FIELDS))))
+#!        print()
+#!        print('## FILENAME_REQUIRED_FIELDS:\n'
+#!              'These fields MUST be in hdr to be able to calculate standard '
+#!              'Archive filename and path. They may '
+#!              'be calculated from raw fits fields and options provided '
+#!              'at submit time. If any of these fields are not in hdr after '
+#!              'calculation, ingest will be aborted: \n\n1.\t{}'
+#!              .format( '\n1.\t'.join(sorted(ts.FILENAME_REQUIRED_FIELDS))))
+#!        print()
+#!        print('##INGEST_REQUIRED_FIELDS:\n'
+#!              'These fields MUST be in hdr given to Ingest. They may '
+#!              'be calculated from raw fits fields and options provided '
+#!              'at submit time. If any of these fields are not in hdr after '
+#!              'calculation, ingest will be aborted: \n\n1.\t{}'
+#!              .format( '\n1.\t'.join(sorted(ts.INGEST_REQUIRED_FIELDS))))
+#!        print()
+#!        print('## SUPPORT_FIELDS:\n'
+#!              'These fields are used by hdr_cacl_funcs.py '
+#!              '(aka Mapping functions) or Pipeline. '
+#!              'They are likely required, but it depends on the personality '
+#!              'and pipeline uses.'
+#!              '\n\n1.\t{}'
+#!              .format( '\n1.\t'.join(sorted(ts.SUPPORT_FIELDS))))
+#!        print()
+#!        print('## INGEST_RECOMMENDED_FIELDS:\n'
+#!              'These fields SHOULD be in hdr given to Ingest. They may '
+#!              'be calculated from raw fits fields and options provided '
+#!              'at submit time. If any of these fields are not in hdr after '
+#!              'calculation, portal queries may lack features: \n\n1.\t{}'
+#!              .format( '\n1.\t'.join(sorted(ts.INGEST_RECOMMENDED_FIELDS))))
+#!        print()
+#!
+#!
+#!    
+#!    all_missing_raw = set()
+#!    all_missing_cooked = set()
+#!    all_missing_recommended = set()
+#!    options = dict()
+#!    opt_params = dict()
+#!    for p in personalities:
+#!        opts, prms = get_personality_dict(p)
+#!        options.update(opts)
+#!        opt_params.update(prms)
+#!    #!print('DBG: options={}, opt_params={}'.format(options, opt_params))
+#!    for ffile in fits_file_list:
+#!        is_text = (magic.from_file(ffile).decode() == 'ASCII text')
+#!        valid = True
+#!        missing_raw = []
+#!        missing_cooked = []
+#!        missing_recommended = []
+#!        #!fname_fields = None
+#!        try:
+#!            #!valid_header(ffile)
+#!            if is_text:
+#!                logging.debug('fits_compliant: {} is TEXT header'.format(ffile))
+#!                hdr = hdrtxt_to_hdr(ffile)
+#!            else:
+#!                # use only first in list.
+#!                #! hdr = pyfits.open(ffile)[0].header
+#!                hdr = get_hdr_as_dict(ffile)
+#!            hdr['DTNSANAM'] = 'NA' # we will set after we generate_fname, here to pass validate
+#!            #! hdr['DTACQNAM'] = ffile
+#!
+#!            if opt_params.get('OPS_PREAPPLY_UPDATE','no') == 'yes': #!!!
+#!                apply_options(options, hdr)
+#!            if show_header:
+#!                print('Post modify:')
+#!                pprint(hdr)
+#!            missing_raw = missing_in_raw_hdr(hdr)
+#!            if len(missing_raw) == 0:
+#!                #!fname_fields = modify_hdr(hdr, ffile, options, opt_params)
+#!                fix_hdr(hdr, ffile, options, opt_params, ignore_schedule=True)
+#!                missing_cooked = missing_in_archive_hdr(hdr)
+#!                missing_recommended = missing_in_recommended_hdr(hdr)
+#!        except Exception as err:
+#!            exception_cnt += 1
+#!            print('EXCEPTION in fits_compliant on {}: {}'.format(ffile, err))
+#!            tut.trace_if(trace)
+#!            valid = False
+#!            bad_files.add(ffile)
+#!            bad += 1
+#!            continue
+#!
+#!        all_missing_raw.update(missing_raw)
+#!        all_missing_cooked.update(missing_cooked)
+#!        all_missing_recommended.update(missing_recommended)
+#!        if (len(missing_raw) + len(missing_cooked)) > 0:
+#!            valid = False
+#!        new_basename = 'NA'
+#!        if show_stdfname:
+#!            try:
+#!                new_basename = fn.generate_fname(hdr, fn.fits_extension(ffile),
+#!                                                 orig=ffile,
+#!                                                 require_known=False)
+#!            except Exception as ex:
+#!                logging.warning('Could not generate archive fname; {}'.format(ex))
+#!            if not quiet:
+#!                print('{} produced from {}'.format(new_basename, ffile))
+#!        if show_values:
+#!            show_hdr_values('Post modify', hdr) # only "interesting" ones
+#!
+#!        if valid:
+#!            if not quiet:
+#!                print('{}:\t IS compliant'.format(ffile))
+#!        else:
+#!            bad_files.add(ffile)
+#!            bad += 1
+#!            if ignore_recommended:
+#!                print('{}:\t NOT compliant; '
+#!                      'Missing fields or bad content; '
+#!                      'raw: {}, cooked: {}, exceptions: {}'
+#!                      .format(ffile,
+#!                              sorted(missing_raw),
+#!                              sorted(missing_cooked),
+#!                              exception_cnt,
+#!                  ))
+#!            else:
+#!                print('{}:\t NOT compliant; '
+#!                      'Missing fields or bad content; '
+#!                      'raw: {}, cooked: {}, recommended: {}, '
+#!                      'exceptions: {}'
+#!                      .format(ffile,
+#!                              sorted(missing_raw),
+#!                              sorted(missing_cooked),
+#!                              sorted(missing_recommended),
+#!                              exception_cnt,
+#!                  ))
+#!    # END for ffile
+#!
+#!    if (verbose and (bad > 0)):
+#!        print('Non-complaint files: {}'.format(', '.join(bad_files)))
+#!
+#!    if len(fits_file_list) > 0:
+#!        recom_cnt = 0 if ignore_recommended else len(all_missing_recommended)
+#!        if (len(all_missing_raw) + len(all_missing_cooked)+ recom_cnt) > 0:
+#!            print('Fields missing from at least one file:\n'
+#!                  '   Raw:         {}\n'
+#!                  '   Cooked:      {}\n'
+#!                  '   Recommended: {}\n'
+#!                  '   Exceptions:  {}\n'
+#!                  '   (Cooked & Recommended exclude files that have missing '
+#!                  'Raw fields)'
+#!                  .format(sorted(all_missing_raw),
+#!                          sorted(all_missing_cooked),
+#!                          sorted(all_missing_recommended),
+#!                          exception_cnt,
+#!                  ))
+#!        print('\n{} of {} files are compliant (for Archive Ingest)'
+#!              .format(len(fits_file_list)-bad, len(fits_file_list)))
+#!        if exception_cnt > 0:
+#!            sys.exit('Abnormal termination due to exception(s)')
 
 
 ##############################################################################
@@ -968,15 +979,16 @@ def main():
     logging.debug('Debug output is enabled in %s !!!', sys.argv[0])
 
     # fits_compliant /data/raw/nhs_2014_n14_299403.fits
-    fits_compliant(args.infiles,
-                   personalities=args.personality,
-                   quiet=args.quiet,
-                   required=args.required,
-                   ignore_recommended=args.ignore_recommended,
-                   show_values=args.values,
-                   show_header=args.header,
-                   #show_stdfname=False, #!!!
-                   trace=args.trace )
+    #!fits_compliant(args.infiles,
+    #!               personalities=args.personality,
+    #!               quiet=args.quiet,
+    #!               required=args.required,
+    #!               ignore_recommended=args.ignore_recommended,
+    #!               show_values=args.values,
+    #!               show_header=args.header,
+    #!               #show_stdfname=False, #!!!
+    #!               trace=args.trace )
+
     
 
 if __name__ == '__main__':

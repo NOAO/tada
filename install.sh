@@ -79,7 +79,7 @@ source /opt/tada/venv/bin/activate
 #!pushd $repodir/dataq > /dev/null
 echo "WARNING: NOT rebuilding dataq software!!! in install.sh"
 #!pylint --rcfile=pylint.rc dataq/
-#!python3 setup.py install --force 
+#!python3 setup.py install --force --prefix $installprefix
 #!popd > /dev/null
 ###
 
@@ -96,8 +96,8 @@ if [ $pylintstatus -eq 2 ]; then
     echo "pylint ERROR message for TADA"
     exit 2
 fi
-#!python3 setup.py install --force --prefix $installprefix
-python3 setup.py install --force 
+python3 setup.py install --force --prefix $installprefix
+#python3 setup.py install --force 
 popd > /dev/null
 ###
 ##########################################################
@@ -126,6 +126,12 @@ fi
 
 sudo chown tada.tada /var/log/tada/dqcli*.log
 sudo chmod 777 /var/log/tada/dqcli*.log
+
+# clear logs
+truncate -s 0 /var/log/tada/*
+
+
+
 
 echo "### INSTALLED: `date`"
 echo "############################################################"
