@@ -150,7 +150,7 @@ md5sum:: checksum of original file from dome
 
     #!if md5sum == None:
     #!    md5sum = md5(fitspath)
-    md5sum = params.get('md5sum'),
+    md5sum = params.get('md5sum')
     fitscache = str(PurePath(cachedir,
                              md5sum + ''.join(PurePath(fitspath).suffixes)))
     apply_personality(fitspath, fitscache, persdict)
