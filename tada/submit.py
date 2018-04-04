@@ -142,12 +142,13 @@ md5sum:: checksum of original file from dome
     """
     #!validate_original_fits(fitspath) # raise on invalid
 
-    # Apply personality to FITS in-place (roughly "prep_for_ingest")
+    ####################
+    ## Apply personality to FITS in-place (roughly "prep_for_ingest")
+    ##
     if personality_yaml == None:
         personality_yaml = fitspath+'.yaml'
     persdict = get_personality(personality_yaml)
     params = persdict['params']
-
     #!if md5sum == None:
     #!    md5sum = md5(fitspath)
     md5sum = params.get('md5sum')
@@ -155,7 +156,9 @@ md5sum:: checksum of original file from dome
                              md5sum + ''.join(PurePath(fitspath).suffixes)))
     apply_personality(fitspath, fitscache, persdict)
 
-    # ingest NATICA service
+    #########
+    ## ingest via NATICA service
+    ##
     (status,jmsg) = http_archive_ingest(
         fitscache,
         md5sum=md5sum,
