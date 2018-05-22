@@ -1,7 +1,8 @@
 #!/bin/bash
-# This for use under DEVELOPMENT.
+# This for use under DEVELOPMENT (NATICA system).
 # Run this after code modifications.  Installs tada python stuff from source.
 # Run as sudo (typically under vagrant as vagrant user, no venv active).
+# Usually has to be run on both Mountain and Valley hosts.
 #
 # SEE ALSO:
 #   /opt/tada/scripts/tada-valley-install.sh
@@ -10,7 +11,7 @@
 # SIMILARLY: /opt/data-queue/scripts/dataq-valley-install.sh
 #
 # EXAMPLES:
-#  sudo /sandbox/tada/install.sh
+#  sudo /sandbox/tadanat/install.sh
 #  sudo install.sh -c   # clean first
 #
 
@@ -75,17 +76,16 @@ source /opt/tada/venv/bin/activate
 ##################################################
 ### Force install of python packages from source
 ###
-#!echo "Install: dataq.."
-#!pushd $repodir/dataq > /dev/null
-echo "WARNING: NOT rebuilding dataq software!!! in install.sh"
-#!pylint --rcfile=pylint.rc dataq/
-#!python3 setup.py install --force --prefix $installprefix
-#!popd > /dev/null
+#!echo "WARNING: NOT rebuilding dataq software!!! in install.sh"
+echo "Install: dataq.."
+pushd $repodir/dataq > /dev/null
+pylint -E dataq/
+python3 setup.py install --force --prefix $installprefix
+popd > /dev/null
 ###
 
 echo "Install: tada.."
 pushd $repodir/tadanat > /dev/null
-#!sudo python3 setup.py install --force
 pylint -E tada/
 pylintstatus=$?
 if [ $pylintstatus -eq 1 ]; then

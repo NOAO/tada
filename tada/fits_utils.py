@@ -596,17 +596,17 @@ def get_personality_dict(personality_file):
             yd = yaml.safe_load(yy)
             options = yd.get('options', {})
             opt_params = yd.get('params', {})
-    elif PurePath(personality_file).suffix == '.personality':
-        cmd = 'source {}; echo $TADAOPTS'.format(personality_file)
-        optstr = subprocess.check_output(['bash', '-c', cmd ]).decode()
-        for opt in optstr.replace('-o ', '').split():
-            k, v = opt.split('=')
-            if k[0] != '_':
-                continue
-            if k[1] == '_':
-                opt_params[k[2:]] = v
-            else:
-                options[k[1:]] = v.replace('_', ' ')                
+#!    elif PurePath(personality_file).suffix == '.personality':
+#!        cmd = 'source {}; echo $TADAOPTS'.format(personality_file)
+#!        optstr = subprocess.check_output(['bash', '-c', cmd ]).decode()
+#!        for opt in optstr.replace('-o ', '').split():
+#!            k, v = opt.split('=')
+#!            if k[0] != '_':
+#!                continue
+#!            if k[1] == '_':
+#!                opt_params[k[2:]] = v
+#!            else:
+#!                options[k[1:]] = v.replace('_', ' ')                
 
         if 'calchdr' in opt_params:
             opt_params['calchdr'] = opt_params['calchdr'].split(',')

@@ -117,7 +117,8 @@ def network_move(rec, qname):
                             ))
         # Any failure means put back on queue. Keep queue handling
         # outside of actions where possible.
-        # raise # Do NOT raise exception since we will re-do rsync next time around
+        #! raise
+        # Do NOT raise exception since we will re-do rsync next time around
         return False
 
     # successfully transfered to Valley
@@ -153,32 +154,7 @@ def submit(rec, qname):
         msg = ('File ({}) not ingested; {}'.format(fitsfile, err))
         logging.exception(msg)
         ok = False
+    auditor.set_fstop(md5sum, 'natica:submit', ts.valley_host)
     return ok
 
-    
-##!def OLD_submit(rec, qname):
-##!    try:
-##!        tsub.unprotected_submit(rec['filename'], rec['checksum'])
-##!    except tex.IngestRejection as ex:
-##!        logging.error('IngestRejection from actions.submit(); {}'.format(ex))
-##!        tut.log_traceback()        
-##!        try:
-##!            auditor.log_audit(ex.md5sum, ex.origfilename, False, '',
-##!                              ex.errmsg, newhdr=ex.newhdr)
-##!        except Exception as err:
-##!            # At this point, we must ignore the error and move on.
-##!            logging.exception('Error in log_audit after ingest reject; {}'
-##!                              .format(err))
-##!        return False
-##!    except Exception as ex:
-##!        logging.error('Do not let errors fall through this far!!!')
-##!        logging.error(traceback.format_exc())
-##!        logging.error(('Failed to run action "submit" from dataq.'
-##!                       ' rec={}; qname={}; {}')
-##!                      .format(rec, qname, ex))
-##!        return False
-##!    else:
-##!        logging.debug('Completed actions.submit({})'.format(rec['filename']))
-##!        return True
-##!    logging.error('SHOULD NOT HAPPEN. Fell thru bottom of actions.submit()')
     
