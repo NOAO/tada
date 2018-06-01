@@ -38,10 +38,10 @@ auditor = audit.Auditor()
 
 def network_move(rec, qname):
     "Transfer from Mountain to Valley"
-    logging.debug('EXECUTING network_move()')
+    logging.debug('EXECUTING actions.network_move(rec="{}", qname="{}")'
+                  .format(rec,qname))
     thishost = socket.getfqdn()
     md5sum = rec['checksum']
-
     auditor.set_fstop(md5sum, 'mountain:cache', thishost)
 
     tempfname = rec['filename']  # absolute path (in temp cache)
@@ -143,9 +143,15 @@ def network_move(rec, qname):
 
 def submit(rec, qname):
     """ACTION done against record popped from dataqueue"""
+    logging.debug('EXECUTING actions.submit(rec="{}", qname="{}")'
+                  .format(rec,qname))
     ok = False
     fitsfile = rec['filename']
+    thishost = socket.getfqdn()
     md5sum = rec['checksum']
+
+    auditor.set_fstop(md5sum, 'valley:cache', thishost)
+
     try:
         status,jmsg = tsub.submit_to_archive(fitsfile)
         ok = status
@@ -155,6 +161,8 @@ def submit(rec, qname):
         logging.exception(msg)
         ok = False
     auditor.set_fstop(md5sum, 'natica:submit', ts.valley_host)
+    logging.debug('DONE actions.submit(rec="{}", qname="{}"); fstop=natica:submit'
+                  .format(rec,qname))
     return ok
 
     

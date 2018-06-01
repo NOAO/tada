@@ -84,6 +84,9 @@ python3 setup.py install --force --prefix $installprefix
 popd > /dev/null
 ###
 
+#!echo 
+#!echo "WARNING: NOT rebuilding tada software!!! (in install.sh)"
+#!echo 
 echo "Install: tada.."
 pushd $repodir/tadanat > /dev/null
 pylint -E tada/
@@ -97,7 +100,6 @@ if [ $pylintstatus -eq 2 ]; then
     exit 2
 fi
 python3 setup.py install --force --prefix $installprefix
-#python3 setup.py install --force 
 popd > /dev/null
 ###
 ##########################################################
@@ -127,7 +129,7 @@ fi
 sudo chown tada.tada /var/log/tada/dqcli*.log
 sudo chmod 777 /var/log/tada/dqcli*.log
 
-# clear logs
+echo "Clear logs /var/log/tada/*"
 truncate -s 0 /var/log/tada/*
 
 
