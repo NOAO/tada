@@ -26,7 +26,7 @@ def fpack(*args):
     # $FPACK -Y -g -q 0 ${BASEFILE}.fits
     fpackcmd = '/usr/local/bin/fpack'
     cmd=[fpackcmd] + list(args)
-    logging.debug('fpack: CMD={}'.format(' '.join(cmd)))
+    logging.debug('fpack: CMD={}'.format(cmd))
     subprocess.run(cmd, check=True)
     
 def fpack_to(fitsfile, outfile, force=True):
