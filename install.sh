@@ -1,6 +1,6 @@
 #!/bin/bash
 # This for use under DEVELOPMENT (NATICA system).
-# Run this after code modifications.  Installs tada python stuff from source.
+# Run this after code modifications.  Installs TADA python stuff from source.
 # Run as sudo (typically under vagrant as vagrant user, no venv active).
 # Usually has to be run on both Mountain and Valley hosts.
 #
@@ -76,12 +76,12 @@ source /opt/tada/venv/bin/activate
 ##################################################
 ### Force install of python packages from source
 ###
-#!echo "WARNING: NOT rebuilding dataq software!!! in install.sh"
-echo "Install: dataq.."
-pushd $repodir/dataq > /dev/null
-pylint -E dataq/
-python3 setup.py install --force --prefix $installprefix
-popd > /dev/null
+echo "WARNING: NOT rebuilding dataq software!!! in install.sh"
+#! echo "Install: dataq.."
+#! pushd $repodir/dataq > /dev/null
+#! pylint -E dataq/
+#! python3 setup.py install --force --prefix $installprefix
+#! popd > /dev/null
 ###
 
 #!echo 

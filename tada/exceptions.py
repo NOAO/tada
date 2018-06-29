@@ -86,16 +86,19 @@ class NotInLut(Exception):
     "A used key was not found in an internal LookUp Table"
     pass
 
-class IrodsContentException(Exception):
-    "Irods contains something that prevents ingest"
-    pass
-
-class FailedIrodsCommand(Exception):
-    "iRODS iCOMMAND failed"
-    pass
-
+#!class IrodsContentException(Exception):
+#!    "Irods contains something that prevents ingest"
+#!    pass
+#!
+#!class FailedIrodsCommand(Exception):
+#!    "iRODS iCOMMAND failed"
+#!    pass
+#!
 
 class SuccessfulNonIngest(Exception):
     "We did not ingest. On purpose. (e.g. dry-run)"
     pass
     
+class BadHdrFunc(Exception):
+    "Could not execute hdr function against a specific header"
+    pass

@@ -23,6 +23,7 @@ import errno
 
 from . import exceptions as tex
 from . import tada_settings as ts
+import tada.hdrfunclib.hdr_funcs as hf
 
 ##############################################################################
 
@@ -92,6 +93,31 @@ def apply_personality(srcfits, destfits, persdict):
     hdulist[0].header['DTTELESC'] = hdulist[0].header['DTTELESC'].lower()
     hdulist[0].header['DTINSTRU'] = hdulist[0].header['DTINSTRU'].lower()
 
+    ##########################
+    ## Apply "Header Functions" (programatic transformations to FITS hdr).
+    ##
+    calc_param = persdict['params'].get('calchdr',None)
+    calc_funcs = []
+    if calc_param != None:
+        for funcname in calc_param:
+            try:
+                func = eval('hf.'+funcname)
+                #func = settings.HDR_FUNCS[funcname]
+                calc_funcs.append(func)
+                #!logging.error('hdrfunc use DISABLED')
+            except:
+                raise Exception('Function name "{}" given in option "calchdr"'
+                                ' does not exist in tada/hdrfunclib/hdr_funcs.py'
+                                .format(funcname))
+        # Apply hdr funcs
+        hdr = hdulist[0].header
+        for calcfunc in calc_funcs:
+            logging.info('Running hdrfunc: {}'.format(calcfunc.__name__))
+            new = calcfunc(hdr)
+            hdr.update(new)
+            #hdr['HISTORY'] = changed_kw_str(funcname, hdr, new, calcfunc.outkws) @@@
+    
+    ## Write transformed FITS
     silentremove(destfits)
     hdulist.writeto(destfits, output_verify='fix')
     logging.debug('Applied personality ({}) to {}'.format(persdict, destfits))

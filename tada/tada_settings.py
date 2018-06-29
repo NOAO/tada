@@ -40,4 +40,4 @@ ERRMAP = tut.read_errcode_yaml()
 
 # see ../getconfig/from_mars.py for detail of dict format
 # also utils.py:dynamic_load_hdr_funcs()
-HDR_FUNCS = tut.dynamic_load_hdr_funcs() # dict[funcname]=func
+#! HDR_FUNCS = tut.dynamic_load_hdr_funcs() # dict[funcname]=func

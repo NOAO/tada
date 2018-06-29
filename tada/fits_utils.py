@@ -28,6 +28,8 @@ from . import scrub
 #from . import config 
 from . import utils as tut
 from . import tada_settings as ts
+import tada.hdrfunclib.hdr_decorators as hd
+import tada.hdrfunclib.hdr_funcs as hf
 
 # EXAMPLE compliant header (included here for descriptions):
 """    
@@ -505,41 +507,42 @@ Include fields in hdr needed to construct new filename that fullfills standards.
     if calc_param != None:
         for funcname in calc_param:
             try:
-                #!func = eval('hf.'+funcname)
-                func = ts.HDR_FUNCS[funcname]
+                func = eval('hf.'+funcname)
+                #!func = ts.HDR_FUNCS[funcname]
                 calc_funcs.append(func)
+                #!logging.error('hdrfunc use DISABLED')
             except:
                 raise Exception('Function name "{}" given in option "calchdr"'
                                 ' does not exist in MARSHOST/admin/tada/hdrfunc/'
                                 .format(funcname))
-    logging.debug('calc_funcs={}'.format([f.__name__ for f in calc_funcs]))
-    for calcfunc in calc_funcs:
-        funcname = calcfunc.__name__
-        try:
-            if not calcfunc.inkws.issubset(origkws):
-                missing = calcfunc.inkws.difference(origkws)
-                msg = ('Some keywords ({}) required (per inkeywords) by HDR'
-                       ' FUNC "{}" are not in the header of file "{}". '
-                       ' SOLUTIONS: Fix FITS, change HDR FUNC inkeywords')
-                raise tex.InvalidHeader(msg.format(', '.join(missing),
-                                                   funcname, fname))
-            new = calcfunc(hdr, **kwargs)
-            if not calcfunc.outkws.issubset(new.keys()):
-                missing = calcfunc.outkws.difference(new.keys())
-                msg = ('Some keywords ({}) produced (per outkeywords) by HDR'
-                       ' FUNC "{}" are not in the new header of file "{}". '
-                       ' SOLUTION: Fix HDR FUNC defintion or change'
-                       ' outkeywords')
-                raise tex.InvalidHeader(msg.format(', '.join(missing),
-                                                   funcname, fname))
-        except Exception as ex:
-            raise tex.InvalidHeader(
-                'Could not apply hdr_calc_funcs ({}) to {}; {}'
-                .format(funcname, fname, ex))
-        logging.debug('Apply {} to {}; new field values={}'
-                      .format(funcname, fname, new))
-        hdr.update(new)
-        hdr['HISTORY'] = changed_kw_str(funcname, hdr, new, calcfunc.outkws)
+    logging.error('calc_funcs={}'.format([f.__name__ for f in calc_funcs]))
+    #!for calcfunc in calc_funcs:
+    #!    funcname = calcfunc.__name__
+    #!    try:
+    #!        if not calcfunc.inkws.issubset(origkws):
+    #!            missing = calcfunc.inkws.difference(origkws)
+    #!            msg = ('Some keywords ({}) required (per inkeywords) by HDR'
+    #!                   ' FUNC "{}" are not in the header of file "{}". '
+    #!                   ' SOLUTIONS: Fix FITS, change HDR FUNC inkeywords')
+    #!            raise tex.InvalidHeader(msg.format(', '.join(missing),
+    #!                                               funcname, fname))
+    #!        new = calcfunc(hdr, **kwargs)
+    #!        if not calcfunc.outkws.issubset(new.keys()):
+    #!            missing = calcfunc.outkws.difference(new.keys())
+    #!            msg = ('Some keywords ({}) produced (per outkeywords) by HDR'
+    #!                   ' FUNC "{}" are not in the new header of file "{}". '
+    #!                   ' SOLUTION: Fix HDR FUNC defintion or change'
+    #!                   ' outkeywords')
+    #!            raise tex.InvalidHeader(msg.format(', '.join(missing),
+    #!                                               funcname, fname))
+    #!    except Exception as ex:
+    #!        raise tex.InvalidHeader(
+    #!            'Could not apply hdr_calc_funcs ({}) to {}; {}'
+    #!            .format(funcname, fname, ex))
+    #!    logging.debug('Apply {} to {}; new field values={}'
+    #!                  .format(funcname, fname, new))
+    #!    hdr.update(new)
+    #!    hdr['HISTORY'] = changed_kw_str(funcname, hdr, new, calcfunc.outkws)
 
     #new = hf.set_dtpropid(hdr, **kwargs)
     if ignore_schedule:
@@ -653,9 +656,7 @@ def get_hdr_as_dict(fitsfile):
 
     hdict = dict()
     hdulist = pyfits.open(fitsfile)
-    for field in (USED_FIELDS
-                  | ts.HDR_FUNCS['in_keywords']
-                  | ts.HDR_FUNCS['out_keywords']):
+    for field in (USED_FIELDS | hd.all_in_keywords | hd.all_out_keywords):
         if field in hdulist[0].header:
             # use existing Primary HDU field
             hdict[field] = hdulist[0].header[field]
