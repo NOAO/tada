@@ -147,10 +147,7 @@ def submit(rec, qname):
                   .format(rec,qname))
     ok = False
     fitsfile = rec['filename']
-    thishost = socket.getfqdn()
-    md5sum = rec['checksum']
 
-    auditor.set_fstop(md5sum, 'valley:cache', thishost)
 
     try:
         status,jmsg = tsub.submit_to_archive(fitsfile)
@@ -160,7 +157,6 @@ def submit(rec, qname):
         msg = ('File ({}) not ingested; {}'.format(fitsfile, err))
         logging.exception(msg)
         ok = False
-    auditor.set_fstop(md5sum, 'natica:submit', ts.valley_host)
     logging.debug('DONE actions.submit(rec="{}", qname="{}"); fstop=natica:submit'
                   .format(rec,qname))
     return ok

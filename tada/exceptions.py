@@ -55,7 +55,7 @@ ingest if file is known to be invalid before hand)."""
                       .format(self.md5sum, self.origfilename,
                               self.errmsg, self.newhdr))
         # Don't know why. Following does show in mars.
-        #auditor.log_audit(md5sum,origfilename, False, '', errmsg, newhdr=newhdr)
+        auditor.log_audit(md5sum,origfilename, False, '', errmsg, newhdr=newhdr)
 
     def __str__(self):
         return str('Rejected ingest of {}. REASON: {}'

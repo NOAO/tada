@@ -18,7 +18,7 @@ import socket
 #from . import ingest_decoder as dec
 from . import utils as tut
 from . import tada_settings as ts
-
+import tada.errorcoding as ec
 
 class Auditor():
     "Maintain audit records both locally (valley) and via MARS service"
@@ -76,10 +76,10 @@ class Auditor():
 
         try:
             archerr = str(err)
-            logging.debug(('log_audit({}, {},{},{},{},'
+            logging.debug(('log_audit(md5={}, origfn={},success={},archfn={},err={},'
                            'orighdr={} newhdr={})')
                           .format(md5sum, origfname, success,
-                                  archfile, archerr,
+                                  archfile, err,
                                   orighdr, newhdr))
 
             now = datetime.datetime.now().isoformat()
@@ -105,9 +105,10 @@ class Auditor():
                           submitted=now,
                           success=success,
                           archerr=archerr,
-                          #errcode=dec.errcode(archerr), @@@
-                          errcode=archerr, # @@@
-                          archfile=os.path.basename(archfile),
+                          reason=archerr,
+                          errcode=ec.code_err(archerr), #@@@
+                          #errcode=archerr, # @@@
+                          archfile=os.path.basename(archfile) if archfile else '',
                           metadata=orighdr)
             logging.debug('log_audit: recdic={}'.format(recdic))
             logging.info('log_audit: SUCCESS={success}, SRCPATH={srcpath}'
@@ -121,7 +122,7 @@ class Auditor():
             else:
                 logging.debug('Updated audit')
         except Exception as ex:
-            logging.error('auditor.log_audit() failed: {}'.format(ex))
+            logging.exception('auditor.log_audit() failed: {}'.format(ex))
         logging.debug('DONE: log_audit')
         
     
@@ -136,13 +137,13 @@ class Auditor():
         fnames = ['md5sum',
                   'obsday', 'telescope', 'instrument',
                   'srcpath', 'updated', 'submitted',
-                  'success', 'archerr', 'errcode', 'archfile',
+                  'success', 'archerr', 'errcode', 'archfile', 'reason',
                   # 'metadata',
         ]
         ddict = dict()
         for k in fnames:
             ddict[k] = recdic[k]
-        logging.debug('Updating audit record via {}; json={}'
+        logging.debug('Updating audit record via uri={}; ddict={}'
                       .format(uri, ddict))
         try:
             req = requests.post(uri, json=ddict, timeout=self.timeout)

@@ -16,6 +16,7 @@ import yaml
 import hashlib
 from pathlib import PurePath
 import collections
+import socket
 
 import astropy.io.fits as pyfits
 import requests
@@ -23,9 +24,12 @@ import errno
 
 from . import exceptions as tex
 from . import tada_settings as ts
+from . import audit
 import tada.hdrfunclib.hdr_funcs as hf
 
 ##############################################################################
+
+auditor = audit.Auditor()
 
 def silentremove(filename):
     try:
@@ -63,6 +67,18 @@ def hdudictlist(fitsfile):
         hdu.verify('fix')
     return [collections.OrderedDict(hdu.header.items()) for hdu in hdulist]
 
+def flat_hdudict(fitsfile):
+    """Combine key/value pairs from all HDUs into a single dict (returned).
+    If key appears in multiple HDUs, first one wins."""
+    hdulist = pyfits.open(fitsfile)
+    hdudict = dict()
+    for hdu in hdulist:
+        hdu.verify('fix')
+        for k,v in hdu.header.items():
+            if k not in hdudict:
+                hdudict[k] = v
+    return hdudict
+
 ##############################################################################
 
 #!def validate_original_fits(fitsfilepath):
@@ -81,17 +97,20 @@ def apply_personality(srcfits, destfits, persdict):
     """Use personality file in FITS dir to modify FITS hdr in place."""
 
     #origfname = persdict['params']['filename']
+    #!hdulist = pyfits.open(srcfits)
+    hdu0dict = flat_hdudict(srcfits)
+    logging.debug('DBG: srcfits ({}) hdulist={}'.format(srcfits, hdu0dict))
+
     # Apply personality changes
-    hdulist = pyfits.open(srcfits)
     changed = set()
     for k,v in persdict['options'].items():
         #!logging.debug('apply_personality {}={}'.format(k,v))
         # overwrite with explicit fields from personality
-        hdulist[0].header[k] = v  
-        changed.add(k)
+        hdu0dict[k] = v  
+        #!changed.add(k) # @@@ disabled because not using hdulist[0].header directly
     # DB uses lowercase for all Telescopes and Instruments
-    hdulist[0].header['DTTELESC'] = hdulist[0].header['DTTELESC'].lower()
-    hdulist[0].header['DTINSTRU'] = hdulist[0].header['DTINSTRU'].lower()
+    hdu0dict['DTTELESC'] = hdu0dict['DTTELESC'].lower()
+    hdu0dict['DTINSTRU'] = hdu0dict['DTINSTRU'].lower()
 
     ##########################
     ## Apply "Header Functions" (programatic transformations to FITS hdr).
@@ -102,23 +121,23 @@ def apply_personality(srcfits, destfits, persdict):
         for funcname in calc_param:
             try:
                 func = eval('hf.'+funcname)
-                #func = settings.HDR_FUNCS[funcname]
                 calc_funcs.append(func)
-                #!logging.error('hdrfunc use DISABLED')
             except:
                 raise Exception('Function name "{}" given in option "calchdr"'
                                 ' does not exist in tada/hdrfunclib/hdr_funcs.py'
                                 .format(funcname))
         # Apply hdr funcs
-        hdr = hdulist[0].header
+        logging.debug('Apply personality to  hdu0dict={}'.format(hdu0dict))
         for calcfunc in calc_funcs:
             logging.info('Running hdrfunc: {}'.format(calcfunc.__name__))
-            new = calcfunc(hdr)
-            hdr.update(new)
+            new = calcfunc(hdu0dict)
+            hdu0dict.update(new)
             #hdr['HISTORY'] = changed_kw_str(funcname, hdr, new, calcfunc.outkws) @@@
     
     ## Write transformed FITS
     silentremove(destfits)
+    hdulist = pyfits.open(srcfits)
+    hdulist[0].header.update(hdu0dict)
     hdulist.writeto(destfits, output_verify='fix')
     logging.debug('Applied personality ({}) to {}'.format(persdict, destfits))
     return dict(persdict['params'].items())
@@ -133,6 +152,7 @@ def md5(fname):
         
 def http_archive_ingest(modifiedfits, md5sum=None, overwrite=False):
     """Deliver FITS to NATICA webservice for ingest."""
+    logging.debug('DBG: http_archive_ingest: START')
     if md5sum == None:
         md5sum = md5(modifiedfits)        
     f = open(modifiedfits, 'rb')
@@ -148,9 +168,6 @@ def http_archive_ingest(modifiedfits, md5sum=None, overwrite=False):
                       files={'file':f})
     logging.debug('http_archive_ingest: {}, {}'.format(r.status_code,r.text))
     return (r.status_code, r.text)
-
-
-
 
 def submit_to_archive(fitspath,
                       #md5sum=None,
@@ -168,6 +185,8 @@ md5sum:: checksum of original file from dome
     """
     #!validate_original_fits(fitspath) # raise on invalid
 
+    thishost = socket.getfqdn()
+
     ####################
     ## Apply personality to FITS in-place (roughly "prep_for_ingest")
     ##
@@ -178,10 +197,15 @@ md5sum:: checksum of original file from dome
     #!if md5sum == None:
     #!    md5sum = md5(fitspath)
     md5sum = params.get('md5sum')
+    auditor.set_fstop(md5sum, 'valley:cache', thishost)
     fitscache = str(PurePath(cachedir,
                              md5sum + ''.join(PurePath(fitspath).suffixes)))
-    apply_personality(fitspath, fitscache, persdict)
-
+    try:
+        apply_personality(fitspath, fitscache, persdict)
+    except Exception as ex:
+        auditor.log_audit(md5sum, fitspath, False, '', ex)
+        return False, str(ex)
+    
     #########
     ## ingest via NATICA service
     ##
@@ -193,6 +217,7 @@ md5sum:: checksum of original file from dome
         # Remove cache files; FITS + YAML
         os.remove(fitscache) 
         logging.debug('Ingest SUCCESS: {}; {}'.format(fitspath, jmsg))
+        auditor.log_audit(md5sum, fitspath, True, None, None)
     else:  # FAILURE
         #! logging.error('Ingest FAIL: {} ({}); {}'
         #!               .format(fitspath, fitscache, jmsg))
@@ -202,9 +227,11 @@ md5sum:: checksum of original file from dome
         force_move(fitscache, anticachedir)
         #!msg = ('Failed to ingest using natica/store webservice with {}; {}'
         #!       .format(fitscache, jmsg))
+        auditor.log_audit(md5sum, fitspath, False, '', jmsg)
         return False, jmsg
 
 
+    #!auditor.set_fstop(md5sum, 'natica:submit', ts.valley_host)
     # !!! update AUDIT record. At-rest in Archive(success), or Anti-cache(fail)
 
     #return jmsg.get('archive_filename', 'NA')
