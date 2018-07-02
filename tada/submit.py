@@ -123,9 +123,10 @@ def apply_personality(srcfits, destfits, persdict):
                 func = eval('hf.'+funcname)
                 calc_funcs.append(func)
             except:
-                raise Exception('Function name "{}" given in option "calchdr"'
-                                ' does not exist in tada/hdrfunclib/hdr_funcs.py'
-                                .format(funcname))
+                raise tex.BadHdrFunc(
+                    'Function name "{}" given in option "calchdr"'
+                    ' does not exist in tada/hdrfunclib/hdr_funcs.py'
+                    .format(funcname))
         # Apply hdr funcs
         logging.debug('Apply personality to  hdu0dict={}'.format(hdu0dict))
         for calcfunc in calc_funcs:
@@ -166,8 +167,8 @@ def http_archive_ingest(modifiedfits, md5sum=None, overwrite=False):
                       params=dict(overwrite=13) if overwrite else dict(),
                       data=dict(md5sum=md5sum),
                       files={'file':f})
-    logging.debug('http_archive_ingest: {}, {}'.format(r.status_code,r.text))
-    return (r.status_code, r.text)
+    logging.debug('http_archive_ingest: {}, {}'.format(r.status_code,r.json()))
+    return (r.status_code, r.json())
 
 def submit_to_archive(fitspath,
                       #md5sum=None,
@@ -202,8 +203,12 @@ md5sum:: checksum of original file from dome
                              md5sum + ''.join(PurePath(fitspath).suffixes)))
     try:
         apply_personality(fitspath, fitscache, persdict)
+    except tex.BaseTadaException as bte:
+        reason = bte.error_message
+        auditor.log_audit(md5sum, fitspath, False, '', reason)
+        return False, reason
     except Exception as ex:
-        auditor.log_audit(md5sum, fitspath, False, '', ex)
+        auditor.log_audit(md5sum, fitspath, False, '', str(ex))
         return False, str(ex)
     
     #########
@@ -217,7 +222,8 @@ md5sum:: checksum of original file from dome
         # Remove cache files; FITS + YAML
         os.remove(fitscache) 
         logging.debug('Ingest SUCCESS: {}; {}'.format(fitspath, jmsg))
-        auditor.log_audit(md5sum, fitspath, True, None, None)
+        ## log_audit(md5sum, origfname, success, archfile, reason,**kwargs)
+        auditor.log_audit(md5sum, fitspath, True, None, '')
     else:  # FAILURE
         #! logging.error('Ingest FAIL: {} ({}); {}'
         #!               .format(fitspath, fitscache, jmsg))
@@ -227,7 +233,7 @@ md5sum:: checksum of original file from dome
         force_move(fitscache, anticachedir)
         #!msg = ('Failed to ingest using natica/store webservice with {}; {}'
         #!       .format(fitscache, jmsg))
-        auditor.log_audit(md5sum, fitspath, False, '', jmsg)
+        auditor.log_audit(md5sum, fitspath, False, '', jmsg['errorMessage'])
         return False, jmsg
 
 

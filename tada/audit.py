@@ -60,7 +60,7 @@ class Auditor():
         return True
 
 
-    def log_audit(self, md5sum, origfname, success, archfile, err,
+    def log_audit(self, md5sum, origfname, success, archfile, reason,
                   orighdr=None, newhdr=None):
         """Log audit record to MARS.
         origfname:: absolute dome filename
@@ -75,27 +75,28 @@ class Auditor():
         if newhdr == None: newhdr = dict()
 
         try:
-            archerr = str(err)
+            assert isinstance(reason, str)
             logging.debug(('log_audit(md5={}, origfn={},success={},archfn={},err={},'
                            'orighdr={} newhdr={})')
                           .format(md5sum, origfname, success,
-                                  archfile, err,
+                                  archfile, reason,
                                   orighdr, newhdr))
 
             now = datetime.datetime.now().isoformat()
-            today = datetime.date.today().isoformat()
-            obsday = newhdr.get('DTCALDAT', orighdr.get('DTCALDAT', today))
-            if ('DTCALDAT' not in newhdr) and ('DTCALDAT' not in orighdr):
-                logging.info(('Could not find DTCALDAT in newhdr,orighdr of {},'
-                              ' using TODAY as observation day.')
-                             .format(origfname))
+            #! today = datetime.date.today().isoformat()
+            #! obsday = newhdr.get('DTCALDAT', orighdr.get('DTCALDAT', today))
+            #! if ('DTCALDAT' not in newhdr) and ('DTCALDAT' not in orighdr):
+            #!     logging.info(('Could not find DTCALDAT in newhdr,orighdr of {},'
+            #!                   ' using TODAY as observation day.')
+            #!                  .format(origfname))
+
             tele = newhdr.get('DTTELESC', orighdr.get('DTTELESC', 'UNKNOWN'))
             instrum = newhdr.get('DTINSTRU', orighdr.get('DTINSTRU', 'UNKNOWN'))
             recdic = dict(md5sum=md5sum,
                           # obsday,telescope,instrument; provided by dome
                           #    unless dome never created audit record, OR
                           #    prep error prevented creating new header
-                          obsday=obsday,
+                          #! obsday=obsday,
                           telescope=tele.lower(),
                           instrument=instrum.lower(),
                           #
@@ -104,10 +105,8 @@ class Auditor():
                           #
                           submitted=now,
                           success=success,
-                          archerr=archerr,
-                          reason=archerr,
-                          errcode=ec.code_err(archerr), #@@@
-                          #errcode=archerr, # @@@
+                          reason=reason,
+                          errcode=ec.code_err(reason),
                           archfile=os.path.basename(archfile) if archfile else '',
                           metadata=orighdr)
             logging.debug('log_audit: recdic={}'.format(recdic))
@@ -137,12 +136,13 @@ class Auditor():
         fnames = ['md5sum',
                   'obsday', 'telescope', 'instrument',
                   'srcpath', 'updated', 'submitted',
-                  'success', 'archerr', 'errcode', 'archfile', 'reason',
+                  'success', 'errcode', 'archfile', 'reason',
                   # 'metadata',
         ]
         ddict = dict()
         for k in fnames:
-            ddict[k] = recdic[k]
+            if k in recdic:
+                ddict[k] = recdic[k]
         logging.debug('Updating audit record via uri={}; ddict={}'
                       .format(uri, ddict))
         try:
