@@ -225,14 +225,9 @@ md5sum:: checksum of original file from dome
         ## log_audit(md5sum, origfname, success, archfile, reason,**kwargs)
         auditor.log_audit(md5sum, fitspath, True, None, '')
     else:  # FAILURE
-        #! logging.error('Ingest FAIL: {} ({}); {}'
-        #!               .format(fitspath, fitscache, jmsg))
-
         # move FITS + YAML on failure
         force_copy(personality_yaml, anticachedir)
         force_move(fitscache, anticachedir)
-        #!msg = ('Failed to ingest using natica/store webservice with {}; {}'
-        #!       .format(fitscache, jmsg))
         auditor.log_audit(md5sum, fitspath, False, '', jmsg['errorMessage'])
         return False, jmsg
 
