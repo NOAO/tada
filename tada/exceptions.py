@@ -17,14 +17,19 @@ class BaseTadaException(Exception):
     def get_subclass_name(self):
         return self.__class__.__name__
     
-    def __init__(self, error_message, error_code=None):
+    def __init__(self, error_message, error_code='TADAERR'):
         Exception.__init__(self)
         self.error_message = error_message
         self.error_code = error_code
         self.traceback = traceback.format_exc()
         logging.error('TADA-{}({}): {}'
-                      .format(self.get_subclass_name(), error_code, error_message))
+                      .format(self.get_subclass_name(),
+                              error_code,
+                              error_message))
         
+    def __str__(self):
+        return self.error_message
+
     def to_dict(self):
         return {'errorMessage': self.error_message,
                 'errorCode': self.error_code  }
