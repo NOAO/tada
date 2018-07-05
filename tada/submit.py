@@ -99,7 +99,7 @@ def apply_personality(srcfits, destfits, persdict):
     #origfname = persdict['params']['filename']
     #!hdulist = pyfits.open(srcfits)
     hdu0dict = flat_hdudict(srcfits)
-    logging.debug('DBG: srcfits ({}) hdulist={}'.format(srcfits, hdu0dict))
+    #!logging.debug('DBG: srcfits ({}) hdulist={}'.format(srcfits, hdu0dict))
 
     # Apply personality changes
     changed = set()
@@ -128,9 +128,9 @@ def apply_personality(srcfits, destfits, persdict):
                     ' does not exist in tada/hdrfunclib/hdr_funcs.py'
                     .format(funcname))
         # Apply hdr funcs
-        logging.debug('Apply personality to  hdu0dict={}'.format(hdu0dict))
+        #!logging.debug('Apply personality to  hdu0dict={}'.format(hdu0dict))
         for calcfunc in calc_funcs:
-            logging.info('Running hdrfunc: {}'.format(calcfunc.__name__))
+            #!logging.info('Running hdrfunc: {}'.format(calcfunc.__name__))
             new = calcfunc(hdu0dict)
             hdu0dict.update(new)
             #hdr['HISTORY'] = changed_kw_str(funcname, hdr, new, calcfunc.outkws) @@@
@@ -140,7 +140,7 @@ def apply_personality(srcfits, destfits, persdict):
     hdulist = pyfits.open(srcfits)
     hdulist[0].header.update(hdu0dict)
     hdulist.writeto(destfits, output_verify='fix')
-    logging.debug('Applied personality ({}) to {}'.format(persdict, destfits))
+    #!logging.debug('Applied personality ({}) to {}'.format(persdict, destfits))
     return dict(persdict['params'].items())
 
 def md5(fname):
