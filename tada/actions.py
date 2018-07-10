@@ -148,7 +148,6 @@ def submit(rec, qname):
     ok = False
     fitsfile = rec['filename']
 
-
     try:
         status,jmsg = tsub.submit_to_archive(fitsfile)
         ok = status
