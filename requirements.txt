@@ -6,15 +6,17 @@ astropy==2.0.3
 decorator==3.4.0
 docutils==0.12
 nose==1.3.4
-numpy==1.11.0
+#! numpy==1.11.0
 pathtools==0.1.2
 pkginfo==1.1
+pylint==2.0.0
 pyparsing==2.0.2
 python-dateutil==2.4.2
 python-magic==0.4.6
 redis==2.10.5
 requests==2.4.3
-six==1.7.3
+#!six==1.7.3
+six==1.11.0
 #tada==0.2.12
 twine==1.3.1
 watchdog==0.8.3

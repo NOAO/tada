@@ -92,6 +92,8 @@ class Auditor():
 
             tele = newhdr.get('DTTELESC', orighdr.get('DTTELESC', 'UNKNOWN'))
             instrum = newhdr.get('DTINSTRU', orighdr.get('DTINSTRU', 'UNKNOWN'))
+            errcode = '' if success else ec.code_err(reason)
+            reason = '' if success else reason
             recdic = dict(md5sum=md5sum,
                           # obsday,telescope,instrument; provided by dome
                           #    unless dome never created audit record, OR
@@ -106,7 +108,7 @@ class Auditor():
                           submitted=now,
                           success=success,
                           reason=reason,
-                          errcode=ec.code_err(reason),
+                          errcode=errcode,
                           archfile=os.path.basename(archfile) if archfile else '',
                           metadata=orighdr)
             logging.debug('log_audit: recdic={}'.format(recdic))

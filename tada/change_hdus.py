@@ -12,6 +12,7 @@ import os.path
 from pathlib import PurePath
 import subprocess
 import shutil
+from pprint import pformat
 
 import astropy.io.fits as pyfits
 import yaml
@@ -40,6 +41,7 @@ def apply_changes(fitsfile, updates_yaml):
         hdu = int(hdudict['_hdu'])
         del hdudict['_hdu']
         fitshdr = hdulist[hdu].header
+        logging.debug('apply_changes: {}'.format(pformat(hdudict)))
         fitshdr.update(hdudict)
     hdulist.close(output_verify='fix')         # now FITS header is MODIFIED
     return None

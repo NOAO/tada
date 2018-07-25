@@ -1,8 +1,9 @@
 """\
 Convert error TADA REASON into short (10 char) ERRCODE.
 """
-
 import re
+import logging
+import traceback
 
 # Table mapping REGEXP that matches a long-error to desired ERRCODE.
 # ERRCODE max len = 10 char
@@ -14,9 +15,12 @@ ERRMAP = [ # (ERRCODE, MatchREGEX, Example), ...
 ]
 
 def code_err(reason):
+    logging.debug('DBG: lookup code_err for: \"{}\"'.format(reason))
     for code, regex, example in ERRMAP:
         if regex.match(reason):
             return code[:10]
+    logging.warning('Unknown TADA error: \"{}\"'.format(reason))
+    logging.debug('TADA errorcoding Traceback:{}'.format(traceback.format_exc()))
     return 'TADAERR'
 
     
