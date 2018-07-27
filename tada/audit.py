@@ -117,7 +117,7 @@ class Auditor():
 
             #!logging.debug('Update audit via service')
             try:
-                self.update_svc(recdic)
+                self.update_audit(md5sum, recdic)
             except Exception as ex:
                 logging.error('Could not update audit record; {}'.format(ex))
             else:
@@ -127,7 +127,7 @@ class Auditor():
         logging.debug('DONE: log_audit')
         
     
-    def update_svc(self, recdic):
+    def update_audit(self, md5sum, recordDict):
         """Add audit record to svc."""
         if self.natica_host == None or self.natica_port == None:
             logging.error('Missing AUDIT host ({}) or port ({}).'
@@ -135,21 +135,21 @@ class Auditor():
             return False
         uri = 'http://{}:{}/audit/update/'.format(self.natica_host,
                                                   self.natica_port)
-        fnames = ['md5sum',
+        fnames = [#'md5sum',
                   'obsday', 'telescope', 'instrument',
                   'srcpath', 'updated', 'submitted',
                   'success', 'errcode', 'archfile', 'reason',
                   # 'metadata',
         ]
-        ddict = dict()
+        ddict = dict(md5sum=md5sum)
         for k in fnames:
-            if k in recdic:
-                ddict[k] = recdic[k]
+            if k in recordDict:
+                ddict[k] = recordDict[k]
         logging.debug('Updating audit record via uri={}; ddict={}'
                       .format(uri, ddict))
         try:
             req = requests.post(uri, json=ddict, timeout=self.timeout)
-            logging.debug('auditor.update_svc: response={}, status={}, json={}'
+            logging.debug('auditor.update_audit: response={}, status={}, json={}'
                           .format(req.text, req.status_code, ddict))
             req.raise_for_status()
             #return req.text

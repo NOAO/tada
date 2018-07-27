@@ -76,12 +76,14 @@ source /opt/tada/venv/bin/activate
 ##################################################
 ### Force install of python packages from source
 ###
-#!echo "WARNING: NOT rebuilding dataq software!!! in install.sh"
-echo "Install: dataq.."
-pushd $repodir/dataq > /dev/null
-pylint -E dataq/
-python3 setup.py install --force --prefix $installprefix
-popd > /dev/null
+echo "#######################################################"
+echo "WARNING: NOT rebuilding dataq software!!! in install.sh"
+echo "#######################################################"
+#!echo "Install: dataq.."
+#!pushd $repodir/dataq > /dev/null
+#!pylint -E dataq/
+#!python3 setup.py install --force --prefix $installprefix
+#!popd > /dev/null
 ###
 
 #!echo 

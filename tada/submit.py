@@ -22,6 +22,7 @@ import astropy.io.fits as pyfits
 import requests
 import errno
 
+
 from . import exceptions as tex
 from . import tada_settings as ts
 from . import audit
@@ -154,19 +155,21 @@ def md5(fname):
 def http_archive_ingest(modifiedfits, md5sum=None, overwrite=False):
     """Deliver FITS to NATICA webservice for ingest."""
     logging.debug('DBG: http_archive_ingest: START')
+
     if md5sum == None:
         md5sum = md5(modifiedfits)        
-    f = open(modifiedfits, 'rb')
+        
     #urls = 'http://0.0.0.0:8000/natica/store/'
     urls = 'http://{host}:{port}/{path}/'.format(host=ts.natica_host,
                                                  port=ts.natica_port,
                                                  path='natica/store')
     
-    logging.debug('http_archive_ingest: urls={}'.format(urls))
+    logging.debug('http_archive_ingest: urls={}, modifiedfits={}'
+                  .format(urls, modifiedfits))
     r = requests.post(urls,
                       params=dict(overwrite=13) if overwrite else dict(),
                       data=dict(md5sum=md5sum),
-                      files={'file':f})
+                      files={'file': open(modifiedfits, 'rb')})
     logging.debug('http_archive_ingest: {}, {}'.format(r.status_code,r.json()))
     return (r.status_code, r.json())
 
@@ -184,9 +187,8 @@ fitspath:: full path of original fits file (in cache). There must be a
 
 md5sum:: checksum of original file from dome
     """
+    logging.debug('submit_to_archive: fitspath={}'.format(fitspath))
     #!validate_original_fits(fitspath) # raise on invalid
-
-    thishost = socket.getfqdn()
 
     ####################
     ## Apply personality to FITS in-place (roughly "prep_for_ingest")
@@ -198,17 +200,19 @@ md5sum:: checksum of original file from dome
     #!if md5sum == None:
     #!    md5sum = md5(fitspath)
     md5sum = params.get('md5sum')
-    auditor.set_fstop(md5sum, 'valley:cache', thishost)
+    auditor.set_fstop(md5sum, 'valley:cache')
     fitscache = str(PurePath(cachedir,
                              md5sum + ''.join(PurePath(fitspath).suffixes)))
     try:
         apply_personality(fitspath, fitscache, persdict)
     except tex.BaseTadaException as bte:
         reason = bte.error_message
-        auditor.log_audit(md5sum, fitspath, False, '', reason)
+        #!auditor.log_audit(md5sum, fitspath, False, '', reason)
+        auditor.update_audit(md5sum, dict(success=False, reason=reason))
         return False, reason
     except Exception as ex:
-        auditor.log_audit(md5sum, fitspath, False, '', str(ex))
+        #!auditor.log_audit(md5sum, fitspath, False, '', str(ex))
+        auditor.update_audit(md5sum, dict(success=False, reason=str(ex)))
         return False, str(ex)
     
     #########
@@ -222,13 +226,15 @@ md5sum:: checksum of original file from dome
         # Remove cache files; FITS + YAML
         os.remove(fitscache) 
         logging.debug('Ingest SUCCESS: {}; {}'.format(fitspath, jmsg))
-        ## log_audit(md5sum, origfname, success, archfile, reason,**kwargs)
-        auditor.log_audit(md5sum, fitspath, True, None, '')
+        #!auditor.log_audit(md5sum, fitspath, True, None, '')
+        auditor.update_audit(md5sum, dict(success=True))
     else:  # FAILURE
         # move FITS + YAML on failure
         force_copy(personality_yaml, anticachedir)
         force_move(fitscache, anticachedir)
-        auditor.log_audit(md5sum, fitspath, False, '', jmsg['errorMessage'])
+        #!auditor.log_audit(md5sum, fitspath, False, '', jmsg['errorMessage'])
+        auditor.update_audit(md5sum,
+                             dict(success=False, reason=jmsg['errorMessage']))
         return False, jmsg
 
 

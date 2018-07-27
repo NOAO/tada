@@ -40,9 +40,9 @@ def network_move(rec, qname):
     "Transfer from Mountain to Valley"
     logging.debug('EXECUTING actions.network_move(rec="{}", qname="{}")'
                   .format(rec,qname))
-    thishost = socket.getfqdn()
     md5sum = rec['checksum']
-    auditor.set_fstop(md5sum, 'mountain:cache', thishost)
+    thishost = socket.getfqdn()
+    auditor.set_fstop(md5sum, 'mountain:cache')
 
     tempfname = rec['filename']  # absolute path (in temp cache)
     fname = tempfname.replace('/cache/.queue/', '/cache/')
@@ -122,7 +122,7 @@ def network_move(rec, qname):
         return False
 
     # successfully transfered to Valley
-    auditor.set_fstop(md5sum, 'valley:cache', ts.valley_host)
+    auditor.set_fstop(md5sum, 'valley:cache')
     logging.debug('rsync output:{}'.format(out))
     logging.info('Successfully moved file from {} to VALLEY'.format(newfname))
     logging.debug('VALLEY transfer is: {}'.format(sync_root))
@@ -137,7 +137,7 @@ def network_move(rec, qname):
                       .format(ts.valley_host, ex))
         logging.error('push_to_q stack: {}'.format(du.trace_str()))
         raise
-    auditor.set_fstop(md5sum, 'valley:queue', ts.valley_host)
+    auditor.set_fstop(md5sum, 'valley:queue')
     return True
     # END network_move
 
@@ -147,8 +147,10 @@ def submit(rec, qname):
                   .format(rec,qname))
     ok = False
     fitsfile = rec['filename']
+    md5sum = rec['checksum']
 
     try:
+        auditor.set_fstop(md5sum, 'valley:cache')
         status,jmsg = tsub.submit_to_archive(fitsfile)
         ok = status
         logging.debug('Submit results: status={}, msg={}'.format(status,jmsg))

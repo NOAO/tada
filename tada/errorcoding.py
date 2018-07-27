@@ -12,6 +12,11 @@ ERRMAP = [ # (ERRCODE, MatchREGEX, Example), ...
      re.compile(r"Missing FITS field "),
      'Missing FITS field \"DTPROPID\" in /home2/images/20161101/SO2016B-015.013'
     ),
+    # 123456789_
+    ('NOSCHED',
+     re.compile(r"No propids in schedule slot: "),
+     "No propids in schedule slot: Telescope=kp4m, Instrument=kosmos, Date=2099-09-28"
+     ),
 ]
 
 def code_err(reason):
