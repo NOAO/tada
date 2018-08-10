@@ -92,10 +92,12 @@ def get_personality(pers_file):
     #! validate personality file (wrt JSON schema), raise if invalid
     with open(pers_file) as yy:
         yd = yaml.safe_load(yy) # raise Exception if yaml doesn't exist
+    logging.debug('get_personality({})'.format(pers_file))
     return yd
 
 def apply_personality(srcfits, destfits, persdict):
-    """Use personality file in FITS dir to modify FITS hdr in place."""
+    """Use personality file in FITS dir (read into PERSDICT) to transform
+SRCFITS to DESTFITS."""
 
     #origfname = persdict['params']['filename']
     #!hdulist = pyfits.open(srcfits)
@@ -131,8 +133,8 @@ def apply_personality(srcfits, destfits, persdict):
         # Apply hdr funcs
         #!logging.debug('Apply personality to  hdu0dict={}'.format(hdu0dict))
         for calcfunc in calc_funcs:
-            #!logging.info('Running hdrfunc: {}'.format(calcfunc.__name__))
             new = calcfunc(hdu0dict)
+            logging.info('Ran hdrfunc: {}=>{}'.format(calcfunc.__name__, new))
             hdu0dict.update(new)
             #hdr['HISTORY'] = changed_kw_str(funcname, hdr, new, calcfunc.outkws) @@@
     
@@ -141,7 +143,8 @@ def apply_personality(srcfits, destfits, persdict):
     hdulist = pyfits.open(srcfits)
     hdulist[0].header.update(hdu0dict)
     hdulist.writeto(destfits, output_verify='fix')
-    #!logging.debug('Applied personality ({}) to {}'.format(persdict, destfits))
+    logging.debug('Applied personality {}({}) => {}'
+                  .format(srcfits, persdict, destfits))
     return dict(persdict['params'].items())
 
 def md5(fname):
@@ -224,7 +227,9 @@ md5sum:: checksum of original file from dome
         overwrite=params.get('overwrite', False) or overwrite )
     if status == 200:  # SUCCESS
         # Remove cache files; FITS + YAML
+        #!logging.warning('NOT removing cache:{}'.format(fitscache))
         os.remove(fitscache) 
+
         logging.debug('Ingest SUCCESS: {}; {}'.format(fitspath, jmsg))
         #!auditor.log_audit(md5sum, fitspath, True, None, '')
         auditor.update_audit(md5sum, dict(success=True))
@@ -232,6 +237,8 @@ md5sum:: checksum of original file from dome
         # move FITS + YAML on failure
         force_copy(personality_yaml, anticachedir)
         force_move(fitscache, anticachedir)
+        logging.debug('Ingest failed, moved {},{} => {}'
+                      .format(personality_yaml,fitscache, anticachedir))
         #!auditor.log_audit(md5sum, fitspath, False, '', jmsg['errorMessage'])
         auditor.update_audit(md5sum,
                              dict(success=False, reason=jmsg['errorMessage']))
