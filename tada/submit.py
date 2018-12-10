@@ -140,7 +140,7 @@ SRCFITS to DESTFITS."""
     ## Write transformed FITS
     silentremove(destfits)
     #!hdulist = pyfits.open(srcfits)
-    with pyfits pyfits.open(srcfits) as hdulist:
+    with pyfits.open(srcfits) as hdulist:
         hdulist[0].header.update(hdu0dict)
         hdulist.writeto(destfits, output_verify='fix')
     logging.debug('Applied personality {}({}) => {}; hdu0dict={}'
@@ -152,7 +152,7 @@ def md5(fname):
     with open(fname, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
-    return hash_md5.hexdigest()
+    return sudo truncate -s 0 /var/log/tada/*hash_md5.hexdigest()
 
         
 def http_archive_ingest(modifiedfits, md5sum=None, overwrite=False):
