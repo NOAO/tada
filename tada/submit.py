@@ -152,7 +152,7 @@ def md5(fname):
     with open(fname, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
-    return sudo truncate -s 0 /var/log/tada/*hash_md5.hexdigest()
+    return hash_md5.hexdigest()
 
         
 def http_archive_ingest(modifiedfits, md5sum=None, overwrite=False):
