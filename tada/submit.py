@@ -136,15 +136,15 @@ SRCFITS to DESTFITS."""
             new = calcfunc(hdu0dict)
             logging.info('Ran hdrfunc: {}=>{}'.format(calcfunc.__name__, new))
             hdu0dict.update(new)
-            #hdr['HISTORY'] = changed_kw_str(funcname, hdr, new, calcfunc.outkws) @@@
     
     ## Write transformed FITS
     silentremove(destfits)
-    hdulist = pyfits.open(srcfits)
-    hdulist[0].header.update(hdu0dict)
-    hdulist.writeto(destfits, output_verify='fix')
-    logging.debug('Applied personality {}({}) => {}'
-                  .format(srcfits, persdict, destfits))
+    #!hdulist = pyfits.open(srcfits)
+    with pyfits pyfits.open(srcfits) as hdulist:
+        hdulist[0].header.update(hdu0dict)
+        hdulist.writeto(destfits, output_verify='fix')
+    logging.debug('Applied personality {}({}) => {}; hdu0dict={}'
+                  .format(srcfits, persdict, destfits, hdu0dict))
     return dict(persdict['params'].items())
 
 def md5(fname):
