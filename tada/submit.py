@@ -143,8 +143,8 @@ SRCFITS to DESTFITS."""
     with pyfits.open(srcfits) as hdulist:
         hdulist[0].header.update(hdu0dict)
         hdulist.writeto(destfits, output_verify='fix')
-    logging.debug('Applied personality {}({}) => {}; hdu0dict={}'
-                  .format(srcfits, persdict, destfits, hdu0dict))
+    #!logging.debug('Applied personality {}({}) => {}; hdu0dict={}'
+    #!              .format(srcfits, persdict, destfits, hdu0dict)) # BIG@@@
     return dict(persdict['params'].items())
 
 def md5(fname):
@@ -155,40 +155,53 @@ def md5(fname):
     return hash_md5.hexdigest()
 
         
-def http_archive_ingest(modifiedfits, md5sum=None, overwrite=False):
+def http_archive_ingest(modifiedfits, ingestparams):
     """Deliver FITS to NATICA webservice for ingest."""
-    logging.debug('DBG: http_archive_ingest: START')
-
-    if md5sum == None:
-        md5sum = md5(modifiedfits)        
-        
     #urls = 'http://0.0.0.0:8000/natica/store/'
-    urls = 'http://{host}:{port}/{path}/'.format(host=ts.natica_host,
-                                                 port=ts.natica_port,
-                                                 path='natica/store')
-    
-    logging.debug('http_archive_ingest: urls={}, modifiedfits={}'
-                  .format(urls, modifiedfits))
+    urls = ('http://{host}:{port}/natica/store/{source}/'
+            .format(host=ts.natica_host,
+                    port=ts.natica_port,
+                    source=ingestparams.get('source',None),
+            ))
+    logging.debug('http_archive_ingest: urls={}, modifiedfits={}, ingestprms={}'
+                  .format(urls, modifiedfits, ingestparams))
+    md5sum=ingestparams.get('md5sum',md5(modifiedfits))
+    source=ingestparams.get('source','dome')
+    #! if ingestparams.get('overwrite',False):
+    #!     # used to avoid "accidental" use of OVERWRITE in URL. Less important
+    #!     # when used in form-encoded data.
+    #!     ingestparams['overwrite'] = 13  
+    formdict = ingestparams.copy()
+
     r = requests.post(urls,
-                      params=dict(overwrite=13) if overwrite else dict(),
-                      data=dict(md5sum=md5sum),
+                      #! params=ingestparams,      # URL query string
+                      #! data=dict(md5sum=md5sum),
+                      data=formdict, # form-encoded data for POST
                       files={'file': open(modifiedfits, 'rb')})
     logging.debug('http_archive_ingest: {}, {}'.format(r.status_code,r.json()))
     return (r.status_code, r.json())
 
 def submit_to_archive(fitspath,
-                      #md5sum=None,
+                      personality_yaml=None, #default to buddy of fitspath
                       overwrite=False,
-                      personality_yaml=None,
                       cachedir='/var/tada/cache',
                       anticachedir='/var/tada/anticache'):
     """Ingest a FITS file into the archive if possible.  Involves renaming to 
-satisfy filename standards. 
+satisfy filename standards. Called directly from DQ Action.
 
 fitspath:: full path of original fits file (in cache). There must be a 
     personality file in <fitspath>.yaml to be used to modify FITS.
 
-md5sum:: checksum of original file from dome
+personality_yaml :: "options" (fields) and "params" to use for this FITS file
+    Defaults to <fitspath>.yaml
+
+overwrite :: Overwrite DB data and FITS file (in archive)
+
+cachedir :: Location for modified FITS (personality applied) before passing
+    to ingest serivce.
+
+anticachedir :: Location to store modified FITS if ingest fails.
+
     """
     logging.debug('submit_to_archive: fitspath={}'.format(fitspath))
     #!validate_original_fits(fitspath) # raise on invalid
@@ -199,10 +212,11 @@ md5sum:: checksum of original file from dome
     if personality_yaml == None:
         personality_yaml = fitspath+'.yaml'
     persdict = get_personality(personality_yaml)
-    params = persdict['params']
-    #!if md5sum == None:
-    #!    md5sum = md5(fitspath)
-    md5sum = params.get('md5sum')
+    inparams = persdict['params'] #INgestPARAMeters: use for ingest of this file
+    inparams.setdefault('source','dome')
+    if overwrite:
+        inparams['overwrite'] = overwrite 
+    md5sum = inparams.get('md5sum')
     auditor.set_fstop(md5sum, 'valley:cache')
     fitscache = str(PurePath(cachedir,
                              md5sum + ''.join(PurePath(fitspath).suffixes)))
@@ -210,28 +224,22 @@ md5sum:: checksum of original file from dome
         apply_personality(fitspath, fitscache, persdict)
     except tex.BaseTadaException as bte:
         reason = bte.error_message
-        #!auditor.log_audit(md5sum, fitspath, False, '', reason)
         auditor.update_audit(md5sum, dict(success=False, reason=reason))
         return False, reason
     except Exception as ex:
-        #!auditor.log_audit(md5sum, fitspath, False, '', str(ex))
         auditor.update_audit(md5sum, dict(success=False, reason=str(ex)))
         return False, str(ex)
     
     #########
     ## ingest via NATICA service
     ##
-    (status,jmsg) = http_archive_ingest(
-        fitscache,
-        md5sum=md5sum,
-        overwrite=params.get('overwrite', False) or overwrite )
+    (status,jmsg) = http_archive_ingest(fitscache, inparams) #####
     if status == 200:  # SUCCESS
         # Remove cache files; FITS + YAML
         #!logging.warning('NOT removing cache:{}'.format(fitscache))
         os.remove(fitscache) 
 
         logging.debug('Ingest SUCCESS: {}; {}'.format(fitspath, jmsg))
-        #!auditor.log_audit(md5sum, fitspath, True, None, '')
         auditor.update_audit(md5sum, dict(success=True))
     else:  # FAILURE
         # move FITS + YAML on failure
@@ -239,16 +247,10 @@ md5sum:: checksum of original file from dome
         force_move(fitscache, anticachedir)
         logging.debug('Ingest failed, moved {},{} => {}'
                       .format(personality_yaml,fitscache, anticachedir))
-        #!auditor.log_audit(md5sum, fitspath, False, '', jmsg['errorMessage'])
         auditor.update_audit(md5sum,
                              dict(success=False, reason=jmsg['errorMessage']))
         return False, jmsg
 
-
-    #!auditor.set_fstop(md5sum, 'natica:submit', ts.valley_host)
-    # !!! update AUDIT record. At-rest in Archive(success), or Anti-cache(fail)
-
-    #return jmsg.get('archive_filename', 'NA')
     return True, jmsg
     # END: submit_to_archive()
     
