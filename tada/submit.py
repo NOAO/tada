@@ -177,7 +177,7 @@ def http_archive_ingest(modifiedfits, ingestparams):
                       #! params=ingestparams,      # URL query string
                       #! data=dict(md5sum=md5sum),
                       data=formdict, # form-encoded data for POST
-                      files={'file': open(modifiedfits, 'rb')})
+                      files={'fitsfname': open(modifiedfits, 'rb')})
     logging.debug('http_archive_ingest: {}, {}'.format(r.status_code,r.json()))
     return (r.status_code, r.json())
 
