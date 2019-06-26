@@ -4,15 +4,15 @@ from . import utils as tut
 hiera = tut.read_hiera_yaml()
 tada = tut.read_tada_yaml()
 
-dq_host = hiera['dq_host']
-dq_port = hiera['dq_port']
+dq_host = hiera.get('dq_host',None)
+dq_port = hiera.get('dq_port',None)
 dq_loglevel = hiera['dq_loglevel']
 dq_unblock_timeout = hiera.get('dq_unblock_timeout',0)
 natica_timeout = hiera['natica_timeout']
 natica_host = hiera['natica_host']
 natica_port = hiera['natica_port']
-mountain_host = hiera['test_mtn_host']
-valley_host = hiera['valley_host']
+mountain_host = hiera.get('test_mtn_host',None)
+valley_host = hiera.get('valley_host',None)
 #mars_host = hiera['mars_host']
 #mars_port = hiera['mars_port']
 do_audit = hiera.get('do_audit', True)
