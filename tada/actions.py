@@ -16,6 +16,7 @@ import dataq.dqutils as du
 import dataq.red_utils as ru
 
 from . import submit as tsub
+from natica.externals import store_ext
 from . import fits_utils as fu
 #!from . import diag
 #!from . import config
